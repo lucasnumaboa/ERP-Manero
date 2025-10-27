@@ -1,10 +1,10 @@
-# ERP Maneiro
+# ERP manero
 
-![ERP Maneiro](icon.png)
+![ERP manero](icon.png)
 
 ## 📋 Sobre o Projeto
 
-O **ERP Maneiro** é um sistema de gestão empresarial completo e moderno, desenvolvido para atender às necessidades de pequenas e médias empresas. O projeto está em **fase inicial de desenvolvimento** e será expandido com diversos módulos no futuro.
+O **ERP manero** é um sistema de gestão empresarial completo e moderno, desenvolvido para atender às necessidades de pequenas e médias empresas. O projeto está em **fase inicial de desenvolvimento** e será expandido com diversos módulos no futuro.
 
 ### 🚀 Status do Projeto
 - ✅ **Fase Inicial** - Sistema base funcional
@@ -25,7 +25,7 @@ O **ERP Maneiro** é um sistema de gestão empresarial completo e moderno, desen
 
 ## 🏗️ Arquitetura do Sistema
 
-O ERP Maneiro é construído com uma arquitetura moderna e escalável:
+O ERP manero é construído com uma arquitetura moderna e escalável:
 
 ### Backend (API REST)
 - **FastAPI** - Framework Python de alta performance
@@ -161,8 +161,8 @@ pandas==2.1.1
 ### 1. Configuração Inicial
 ```bash
 # Clone o repositório
-git clone https://github.com/seu-usuario/ERP-Maneiro.git
-cd ERP-Maneiro
+git clone https://github.com/seu-usuario/ERP-manero.git
+cd ERP-manero
 
 # Instale as dependências
 pip install -r requirements.txt
@@ -189,14 +189,14 @@ O sistema será iniciado automaticamente e estará disponível em:
 
 Após a instalação, utilize as credenciais padrão para acessar o sistema:
 
-- **Email**: `admin@erpmaneiro.com`
+- **Email**: `admin@erpmanero.com`
 - **Senha**: `admin123`
 
 > ⚠️ **Importante**: Altere a senha padrão após o primeiro acesso por questões de segurança.
 
 ## 🌐 Integração com APIFast
 
-O ERP Maneiro utiliza a tecnologia **APIFast** para garantir alta performance e escalabilidade:
+O ERP manero utiliza a tecnologia **APIFast** para garantir alta performance e escalabilidade:
 
 ![APIFast](apifast.JPG)
 
@@ -211,7 +211,7 @@ O ERP Maneiro utiliza a tecnologia **APIFast** para garantir alta performance e 
 ## 📁 Estrutura do Projeto
 
 ```
-ERP-Maneiro/
+ERP-manero/
 ├── backend/                 # API Backend (FastAPI)
 │   ├── routers/            # Módulos da API
 │   │   ├── usuarios.py     # Gestão de usuários
@@ -320,9 +320,9 @@ Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalh
 
 Para suporte técnico ou dúvidas:
 
-- **Email**: admin@erpmaneiro.com
-- **Issues**: [GitHub Issues](https://github.com/seu-usuario/ERP-Maneiro/issues)
-- **Documentação**: [Wiki do Projeto](https://github.com/seu-usuario/ERP-Maneiro/wiki)
+- **Email**: admin@erpmanero.com
+- **Issues**: [GitHub Issues](https://github.com/seu-usuario/ERP-manero/issues)
+- **Documentação**: [Wiki do Projeto](https://github.com/seu-usuario/ERP-manero/wiki)
 
 ## 🏆 Agradecimentos
 
@@ -333,4 +333,4 @@ Para suporte técnico ou dúvidas:
 
 ---
 
-**ERP Maneiro** - Gestão empresarial simples, moderna e eficiente! 🚀
+**ERP manero** - Gestão empresarial simples, moderna e eficiente! 🚀
