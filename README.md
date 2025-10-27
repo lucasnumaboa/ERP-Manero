@@ -1,6 +1,6 @@
 # ERP manero
 
-![ERP manero](icon.png)
+<img src="icon.png" alt="ERP Maneiro" width="150" height="150">
 
 ## 📋 Sobre o Projeto
 
