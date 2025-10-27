@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Maneiro - Relatórios</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/modulos.css">
+    <link rel="stylesheet" href="css/submenu.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Menu Lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="img/icon.png" alt="ERP Maneiro" class="logo-img">
+                <button id="toggleSidebar" class="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="userName">Carregando...</h3>
+                    <p id="userRole">Carregando...</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li>
+                        <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    </li>
+                    <li>
+                        <a href="produtos.html"><i class="fas fa-box"></i> Produtos</a>
+                    </li>
+                    <li>
+                        <a href="clientes.html"><i class="fas fa-users"></i> Clientes</a>
+                    </li>
+                    <li>
+                        <a href="vendas.html"><i class="fas fa-shopping-cart"></i> Vendas</a>
+                    </li>
+                    <li>
+                        <a href="vendedores.html"><i class="fas fa-user-tie"></i> Vendedores</a>
+                    </li>
+                    <li>
+                        <a href="compras.html"><i class="fas fa-truck"></i> Compras</a>
+                    </li>
+                    <li>
+                        <a href="fornecedores.html"><i class="fas fa-industry"></i> Fornecedores</a>
+                    </li>
+                    <li>
+                        <a href="estoque.html"><i class="fas fa-warehouse"></i> Estoque</a>
+                    </li>
+
+                    <!-- Relatórios removido -->
+                    <li>
+                        <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
+                    </li>
+                    <li class="logout">
+                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-search">
+                    <input type="text" placeholder="Pesquisar relatórios...">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
+                <div class="header-actions">
+                    <button class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </button>
+                    <button class="profile-btn">
+                        <i class="fas fa-user"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="page-header">
+                    <h1>Relatórios</h1>
+                    <p>Análise de dados e relatórios gerenciais</p>
+                </div>
+
+                <!-- Filtros de Relatórios -->
+                <div class="actions-bar">
+                    <div class="filter-group">
+                        <label for="filterDataInicio">Data Início:</label>
+                        <input type="date" id="filterDataInicio">
+                    </div>
+                    <div class="filter-group">
+                        <label for="filterDataFim">Data Fim:</label>
+                        <input type="date" id="filterDataFim">
+                    </div>
+                    <button class="btn-primary" id="btnGerarRelatorio">
+                        <i class="fas fa-file-export"></i> Gerar Relatório
+                    </button>
+                    <button class="btn-outline" id="btnExportarPDF">
+                        <i class="fas fa-file-pdf"></i> Exportar PDF
+                    </button>
+                    <button class="btn-outline" id="btnExportarExcel">
+                        <i class="fas fa-file-excel"></i> Exportar Excel
+                    </button>
+                </div>
+
+                <!-- Categorias de Relatórios -->
+                <div class="report-categories">
+                    <div class="category-card active" data-category="vendas">
+                        <i class="fas fa-shopping-cart"></i>
+                        <h3>Vendas</h3>
+                    </div>
+                    <div class="category-card" data-category="compras">
+                        <i class="fas fa-truck"></i>
+                        <h3>Compras</h3>
+                    </div>
+
+                    <div class="category-card" data-category="estoque">
+                        <i class="fas fa-warehouse"></i>
+                        <h3>Estoque</h3>
+                    </div>
+                    <div class="category-card" data-category="clientes">
+                        <i class="fas fa-users"></i>
+                        <h3>Clientes</h3>
+                    </div>
+                    <div class="category-card" data-category="geral">
+                        <i class="fas fa-chart-line"></i>
+                        <h3>Geral</h3>
+                    </div>
+                </div>
+
+                <!-- Conteúdo dos Relatórios -->
+                <div class="report-content active" id="report-vendas">
+                    <div class="report-header">
+                        <h2>Relatório de Vendas</h2>
+                        <p>Período: <span id="periodoVendas">01/07/2025 a 31/07/2025</span></p>
+                    </div>
+
+                    <!-- Gráficos e Indicadores -->
+                    <div class="report-summary">
+                        <div class="summary-card">
+                            <h3>Total de Vendas</h3>
+                            <p class="summary-value">R$ 45.750,00</p>
+                            <p class="summary-change positive">+12% vs mês anterior</p>
+                        </div>
+                        <div class="summary-card">
+                            <h3>Quantidade</h3>
+                            <p class="summary-value">87</p>
+                            <p class="summary-change positive">+5% vs mês anterior</p>
+                        </div>
+                        <div class="summary-card">
+                            <h3>Ticket Médio</h3>
+                            <p class="summary-value">R$ 525,86</p>
+                            <p class="summary-change positive">+7% vs mês anterior</p>
+                        </div>
+                        <div class="summary-card">
+                            <h3>Produtos Vendidos</h3>
+                            <p class="summary-value">243</p>
+                            <p class="summary-change positive">+15% vs mês anterior</p>
+                        </div>
+                    </div>
+
+                    <!-- Gráficos -->
+                    <div class="report-charts">
+                        <div class="chart-container">
+                            <h3>Vendas por Dia</h3>
+                            <div class="chart-placeholder">
+                                <!-- Aqui entraria um gráfico real -->
+                                <div class="mock-line-chart"></div>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <h3>Top 5 Produtos</h3>
+                            <div class="chart-placeholder">
+                                <!-- Aqui entraria um gráfico real -->
+                                <div class="mock-bar-chart"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Dados -->
+                    <div class="table-container">
+                        <h3>Detalhamento de Vendas</h3>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Cliente</th>
+                                    <th>Produtos</th>
+                                    <th>Valor</th>
+                                    <th>Forma Pagamento</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>05/07/2025</td>
+                                    <td>Cliente A</td>
+                                    <td>3 itens</td>
+                                    <td>R$ 1.250,00</td>
+                                    <td>Cartão de Crédito</td>
+                                    <td><span class="status-badge finalizada">Finalizada</span></td>
+                                </tr>
+                                <tr>
+                                    <td>07/07/2025</td>
+                                    <td>Cliente B</td>
+                                    <td>2 itens</td>
+                                    <td>R$ 3.450,00</td>
+                                    <td>PIX</td>
+                                    <td><span class="status-badge finalizada">Finalizada</span></td>
+                                </tr>
+                                <tr>
+                                    <td>10/07/2025</td>
+                                    <td>Cliente C</td>
+                                    <td>5 itens</td>
+                                    <td>R$ 750,00</td>
+                                    <td>Dinheiro</td>
+                                    <td><span class="status-badge finalizada">Finalizada</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Outros relatórios seriam exibidos aqui -->
+                <div class="report-content" id="report-compras">
+                    <div class="report-header">
+                        <h2>Relatório de Compras</h2>
+                        <p>Selecione um período e clique em "Gerar Relatório"</p>
+                    </div>
+                </div>
+
+
+                <div class="report-content" id="report-estoque">
+                    <div class="report-header">
+                        <h2>Relatório de Estoque</h2>
+                        <p>Selecione um período e clique em "Gerar Relatório"</p>
+                    </div>
+                </div>
+
+                <div class="report-content" id="report-clientes">
+                    <div class="report-header">
+                        <h2>Relatório de Clientes</h2>
+                        <p>Selecione um período e clique em "Gerar Relatório"</p>
+                    </div>
+                </div>
+                <div class="report-content" id="report-geral">
+                    <div class="report-header">
+                        <h2>Relatório Geral</h2>
+                        <p>Período: <span id="periodoGeral">01/07/2025 a 31/07/2025</span></p>
+                    </div>
+                    <div class="report-summary" id="geral-summary">
+                        <!-- Cards serão inseridos aqui pela JS -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/relatorios.js"></script>
+</body>
+</html>

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuração da API - ERP Maneiro</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .config-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        .status-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .status-online {
+            background-color: #28a745;
+        }
+        .status-offline {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="config-container bg-white">
+            <h2 class="text-center mb-4">Configuração da API</h2>
+            
+            <div class="alert alert-info">
+                <p><strong>Configuração atual:</strong></p>
+                <p>URL da API: <span id="current-api-url">Carregando...</span></p>
+                <p>Status: 
+                    <span class="status-indicator" id="api-status-indicator"></span>
+                    <span id="api-status-text">Verificando...</span>
+                </p>
+            </div>
+            
+            <form id="api-config-form">
+                <div class="form-group">
+                    <label for="api-url">Nova URL da API:</label>
+                    <input type="text" class="form-control" id="api-url" placeholder="http://seu-dominio-ou-ip:8000" required>
+                    <small class="form-text text-muted">Exemplo: http://192.168.1.100:8000 ou http://meudominio.com:8000</small>
+                </div>
+                
+                <div class="form-group mt-3">
+                    <button type="submit" class="btn btn-primary">Salvar Configuração</button>
+                    <button type="button" class="btn btn-secondary" id="test-connection">Testar Conexão</button>
+                </div>
+            </form>
+            
+            <div class="mt-4">
+                <div id="connection-result" class="alert d-none"></div>
+            </div>
+            
+            <div class="mt-4">
+                <h5>Instruções:</h5>
+                <ol>
+                    <li>Insira a URL completa da API, incluindo protocolo (http:// ou https://) e porta.</li>
+                    <li>Clique em "Testar Conexão" para verificar se a API está acessível.</li>
+                    <li>Clique em "Salvar Configuração" para aplicar a nova URL.</li>
+                    <li>Após salvar, você precisará fazer login novamente no sistema.</li>
+                </ol>
+            </div>
+            
+            <div class="mt-3 text-center">
+                <a href="index.html" class="btn btn-outline-secondary">Voltar para Login</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // URL padrão caso não consiga buscar do banco
+            let currentApiUrl = localStorage.getItem('api_base_url') || 'http://localhost:8000';
+            
+            // Buscar configurações do banco de dados
+            const token = localStorage.getItem('erp_token');
+            fetch(`${currentApiUrl}/api/configuracoes/`, {
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : ''
+                }
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Não foi possível obter as configurações');
+                    }
+                })
+                .then(configs => {
+                    // Procurar a configuração link_api
+                    const linkApiConfig = configs.find(config => config.chave === 'link_api');
+                    if (linkApiConfig && linkApiConfig.valor) {
+                        currentApiUrl = linkApiConfig.valor;
+                        // Atualizar o localStorage com o valor do banco
+                        localStorage.setItem('api_base_url', currentApiUrl);
+                    }
+                    
+                    // Exibir a URL atual da API
+                    document.getElementById('current-api-url').textContent = currentApiUrl;
+                    
+                    // Preencher o campo com a URL atual
+                    document.getElementById('api-url').value = currentApiUrl;
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar configurações:', error);
+                    // Em caso de erro, usar o valor do localStorage
+                    document.getElementById('current-api-url').textContent = currentApiUrl;
+                    document.getElementById('api-url').value = currentApiUrl;
+                })
+                .finally(() => {
+                    // Verificar o status da API atual
+                    checkApiStatus(currentApiUrl);
+                });
+            
+            // Formulário de configuração
+            document.getElementById('api-config-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                let newApiUrl = document.getElementById('api-url').value.trim();
+                
+                // Se o campo estiver vazio, usar localhost:8000
+                if (newApiUrl === '') {
+                    newApiUrl = 'http://localhost:8000';
+                    showResult('Campo vazio. Usando URL padrão: ' + newApiUrl, 'info');
+                } else if (!isValidUrl(newApiUrl)) {
+                    showResult('URL inválida. Certifique-se de incluir o protocolo (http:// ou https://).', 'danger');
+                    return;
+                }
+                
+                // Salvar a nova URL no backend usando o endpoint correto
+                const token = localStorage.getItem('erp_token');
+                if (token) {
+                    fetch(`${currentApiUrl}/api/configuracoes/link_api?valor=${encodeURIComponent(newApiUrl)}`, {
+                        method: 'PUT',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        }
+                    })
+                .then(response => {
+                     if (response.ok) {
+                         localStorage.setItem('api_base_url', newApiUrl);
+                         showResult('Configuração salva com sucesso no servidor e localmente! Redirecionando para a página de login...', 'success');
+                     } else {
+                         throw new Error('Falha ao salvar no servidor');
+                     }
+                 })
+                 .catch(error => {
+                     console.error('Erro ao salvar configuração:', error);
+                     localStorage.setItem('api_base_url', newApiUrl);
+                     showResult('Configuração salva apenas localmente. Não foi possível salvar no servidor.', 'warning');
+                 });
+                 } else {
+                     // Se não tiver token, apenas salva localmente
+                     localStorage.setItem('api_base_url', newApiUrl);
+                     showResult('Configuração salva apenas localmente. Faça login como administrador para salvar no servidor.', 'warning');
+                 }
+                
+                // Redirecionar para a página de login após 2 segundos
+                setTimeout(() => {
+                    localStorage.removeItem('erp_token');
+                    localStorage.removeItem('erp_token_type');
+                    localStorage.removeItem('erp_user_data');
+                    window.location.href = 'index.html';
+                }, 2000);
+            });
+            
+            // Botão de teste de conexão
+            document.getElementById('test-connection').addEventListener('click', function() {
+                let apiUrl = document.getElementById('api-url').value.trim();
+                
+                // Se o campo estiver vazio, usar localhost:8000
+                if (apiUrl === '') {
+                    apiUrl = 'http://localhost:8000';
+                    showResult('Campo vazio. Usando URL padrão: ' + apiUrl, 'info');
+                } else if (!isValidUrl(apiUrl)) {
+                    showResult('URL inválida. Certifique-se de incluir o protocolo (http:// ou https://).', 'danger');
+                    return;
+                }
+                
+                testApiConnection(apiUrl);
+            });
+        });
+        
+        // Verificar se a URL é válida
+        function isValidUrl(url) {
+            try {
+                new URL(url);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+        
+        // Verificar o status da API
+        function checkApiStatus(apiUrl) {
+            const statusIndicator = document.getElementById('api-status-indicator');
+            const statusText = document.getElementById('api-status-text');
+            
+            // Configurar timeout para a requisição
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 segundos de timeout
+            
+            fetch(`${apiUrl}/api/configuracoes/status`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                signal: controller.signal
+            })
+                .then(response => {
+                    clearTimeout(timeoutId);
+                    if (response.ok) {
+                        statusIndicator.className = 'status-indicator status-online';
+                        statusText.textContent = 'Online';
+                        return response.json();
+                    } else {
+                        statusIndicator.className = 'status-indicator status-offline';
+                        statusText.textContent = 'Erro: ' + response.status;
+                        throw new Error(`Erro ${response.status}`);
+                    }
+                })
+                .then(data => {
+                    // Se a URL da API no servidor for diferente da testada
+                    if (data && data.config && data.config.api_url && data.config.api_url !== apiUrl) {
+                        showResult(`A URL da API no servidor (${data.config.api_url}) é diferente da URL local (${apiUrl}). Considere usar a URL do servidor.`, 'warning');
+                        document.getElementById('api-url').value = data.config.api_url;
+                        // Atualizar a URL da API no localStorage
+                        localStorage.setItem('api_base_url', data.config.api_url);
+                        document.getElementById('current-api-url').textContent = data.config.api_url;
+                    }
+                    
+                    // Mostrar informações adicionais do servidor
+                    if (data && data.server) {
+                        const serverInfo = document.createElement('div');
+                        serverInfo.className = 'alert alert-info mt-2';
+                        serverInfo.innerHTML = `
+                            <p><strong>Informações do servidor:</strong></p>
+                            <p>Hostname: ${data.server.hostname}</p>
+                            <p>IP: ${data.server.ip}</p>
+                        `;
+                        document.getElementById('connection-result').innerHTML = '';
+                        document.getElementById('connection-result').appendChild(serverInfo);
+                        document.getElementById('connection-result').classList.remove('d-none');
+                    }
+                })
+                .catch(error => {
+                    clearTimeout(timeoutId);
+                    statusIndicator.className = 'status-indicator status-offline';
+                    
+                    if (error.name === 'AbortError') {
+                        statusText.textContent = 'Timeout (Servidor não respondeu)';
+                    } else if (error.message.includes('Failed to fetch')) {
+                        statusText.textContent = 'Offline (Não acessível)';
+                    } else {
+                        statusText.textContent = 'Offline: ' + error.message;
+                    }
+                    
+                    console.error('Erro ao verificar status da API:', error);
+                    
+                    // Tentar endpoint alternativo se o primeiro falhar
+                    tryAlternativeEndpoint(apiUrl, statusIndicator, statusText);
+                });
+        }
+        
+        // Tentar endpoint alternativo se o principal falhar
+        function tryAlternativeEndpoint(apiUrl, statusIndicator, statusText) {
+            // Tentar o endpoint raiz como fallback
+            fetch(`${apiUrl}/`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                signal: (new AbortController()).signal
+            })
+            .then(response => {
+                if (response.ok) {
+                    statusIndicator.className = 'status-indicator status-online';
+                    statusText.textContent = 'Online (endpoint raiz)';
+                    showResult('API está online, mas o endpoint de status não está disponível. A API pode estar em uma versão antiga.', 'warning');
+                }
+            })
+            .catch(() => {
+                // Já estamos mostrando o erro do endpoint principal, não precisamos fazer nada aqui
+            });
+        }
+        
+        // Testar conexão com a API
+        function testApiConnection(apiUrl) {
+            const resultDiv = document.getElementById('connection-result');
+            resultDiv.className = 'alert alert-info';
+            resultDiv.textContent = 'Testando conexão...';
+            resultDiv.classList.remove('d-none');
+            
+            // Configurar timeout para a requisição
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 segundos de timeout
+            
+            fetch(`${apiUrl}/api/configuracoes/status`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                signal: controller.signal
+            })
+                .then(response => {
+                    clearTimeout(timeoutId);
+                    if (response.ok) {
+                        return response.json()
+                            .then(data => {
+                                if (data && data.status === 'online') {
+                                    let message = `Conexão bem-sucedida! API está online.`;
+                                    
+                                    // Adicionar informações do servidor
+                                    if (data.server) {
+                                        message += ` Servidor: ${data.server.hostname} (${data.server.ip})`;
+                                    }
+                                    
+                                    showResult(message, 'success');
+                                    
+                                    // Se a URL no servidor for diferente da testada, sugerir usar a do servidor
+                                    if (data.config && data.config.api_url && data.config.api_url !== apiUrl) {
+                                        document.getElementById('api-url').value = data.config.api_url;
+                                        showResult(`A URL da API no servidor (${data.config.api_url}) é diferente da URL que você está testando. O campo foi atualizado com a URL do servidor.`, 'warning');
+                                    }
+                                    
+                                    // Mostrar informações detalhadas do servidor
+                                    if (data.server) {
+                                        const serverInfo = document.createElement('div');
+                                        serverInfo.className = 'alert alert-info mt-2';
+                                        serverInfo.innerHTML = `
+                                            <p><strong>Informações do servidor:</strong></p>
+                                            <p>Hostname: ${data.server.hostname}</p>
+                                            <p>IP: ${data.server.ip}</p>
+                                            <p>URL configurada: ${data.config?.api_url || 'Não disponível'}</p>
+                                        `;
+                                        document.getElementById('connection-result').appendChild(serverInfo);
+                                    }
+                                } else {
+                                    showResult(`Conexão estabelecida, mas o servidor reportou status: ${data.status || 'desconhecido'}`, 'warning');
+                                }
+                            })
+                            .catch(() => {
+                                showResult('Conexão bem-sucedida, mas a resposta não é JSON válido.', 'warning');
+                            });
+                    } else {
+                        showResult(`Erro ao conectar: ${response.status} ${response.statusText}`, 'danger');
+                        throw new Error(`Erro ${response.status}`);
+                    }
+                })
+                .catch(error => {
+                    clearTimeout(timeoutId);
+                    if (error.name === 'AbortError') {
+                        // Já tratado pelo timeout acima
+                    } else if (error.message.includes('Failed to fetch')) {
+                        showResult(`Falha na conexão: Não foi possível conectar ao servidor. Verifique se a URL está correta e se o servidor está acessível.`, 'danger');
+                    } else {
+                        showResult(`Falha na conexão: ${error.message}. Verifique se a URL está correta e se a API está acessível.`, 'danger');
+                    }
+                });
+        }
+        
+        // Exibir resultado
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('connection-result');
+            resultDiv.className = `alert alert-${type}`;
+            resultDiv.textContent = message;
+            resultDiv.classList.remove('d-none');
+        }
+    </script>
+</body>
+</html>

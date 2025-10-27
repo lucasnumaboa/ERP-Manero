@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Maneiro - Produtos</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/produtos.css">
+    <link rel="stylesheet" href="css/submenu.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Menu Lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="img/icon.png" alt="ERP Maneiro" class="logo-img">
+                <button id="toggleSidebar" class="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="userName">Carregando...</h3>
+                    <p id="userRole">Carregando...</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li>
+                        <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    </li>
+                    <li class="active">
+                        <a href="produtos.html"><i class="fas fa-box"></i> Produtos</a>
+                    </li>
+                    <li>
+                        <a href="categorias.html"><i class="fas fa-tags"></i> Categorias</a>
+                    </li>
+                    <li>
+                        <a href="clientes.html"><i class="fas fa-users"></i> Clientes</a>
+                    </li>
+                    <li>
+                        <a href="vendas.html"><i class="fas fa-shopping-cart"></i> Vendas</a>
+                    </li>
+                    <li>
+                        <a href="vendedores.html"><i class="fas fa-user-tie"></i> Vendedores</a>
+                    </li>
+                    <li>
+                        <a href="compras.html"><i class="fas fa-truck"></i> Compras</a>
+                    </li>
+                    <li>
+                        <a href="fornecedores.html"><i class="fas fa-industry"></i> Fornecedores</a>
+                    </li>
+                    <li>
+                        <a href="estoque.html"><i class="fas fa-warehouse"></i> Estoque</a>
+                    </li>
+
+                    <!-- Relatórios removido -->
+                    <li>
+                        <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
+                    </li>
+                    <li class="logout">
+                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-search">
+                    <input type="text" placeholder="Pesquisar produtos...">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
+                <div class="header-actions">
+                    <button class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </button>
+                    <button class="profile-btn">
+                        <i class="fas fa-user"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="page-header">
+                    <h1>Gerenciamento de Produtos</h1>
+                    <p>Cadastre, edite e gerencie seus produtos</p>
+                </div>
+
+                <!-- Ações de Produtos -->
+                <div class="actions-bar">
+                    <div class="actions-left">
+                        <button class="btn-primary" id="btnNovoProduto">
+                            <i class="fas fa-plus"></i> Novo Produto
+                        </button>
+                        <button class="btn-outline" id="btnImportarProdutos">
+                            <i class="fas fa-file-import"></i> Importar
+                        </button>
+                        <button class="btn-outline" id="btnExportarProdutos">
+                            <i class="fas fa-file-export"></i> Exportar
+                        </button>
+                    </div>
+                    
+                    <div class="actions-right">
+                        <div class="filter-group">
+                            <label for="filtroPesquisa">Pesquisar:</label>
+                            <input type="text" id="filtroPesquisa" placeholder="Digite para pesquisar..." class="search-input">
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="filtroCategoria">Categoria:</label>
+                            <select id="filtroCategoria">
+                                <option value="">Todas</option>
+                                <option value="1">Eletrônicos</option>
+                                <option value="2">Móveis</option>
+                                <option value="3">Vestuário</option>
+                                <option value="4">Alimentos</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="filtroStatus">Status:</label>
+                            <select id="filtroStatus">
+                                <option value="">Todos</option>
+                                <option value="true">Ativo</option>
+                                <option value="false">Inativo</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela de Produtos -->
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Nome</th>
+                                <th>Categoria</th>
+                                <th>Preço de Venda</th>
+                                <th>Estoque</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="produtosTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center">Carregando produtos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginação -->
+                <div class="pagination">
+                    <button class="btn-page" disabled><i class="fas fa-chevron-left"></i></button>
+                    <button class="btn-page active">1</button>
+                    <button class="btn-page">2</button>
+                    <button class="btn-page">3</button>
+                    <button class="btn-page"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de Novo/Editar Produto -->
+    <div class="modal" id="produtoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Novo Produto</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="produtoForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="codigo">Código</label>
+                            <input type="text" id="codigo" name="codigo" required readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="nome">Nome</label>
+                            <input type="text" id="nome" name="nome" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="descricao">Descrição</label>
+                        <textarea id="descricao" name="descricao" rows="3"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="preco_custo">Preço de Custo</label>
+                            <input type="text" id="preco_custo" name="preco_custo" inputmode="decimal" pattern="[0-9,]*" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="preco_venda">Preço de Venda</label>
+                            <input type="text" id="preco_venda" name="preco_venda" inputmode="decimal" pattern="[0-9,]*" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="estoque_minimo">Estoque Mínimo</label>
+                            <input type="number" id="estoque_minimo" name="estoque_minimo" value="5">
+                        </div>
+                        <div class="form-group">
+                            <label for="categoria_id">Categoria</label>
+                            <div class="input-with-action">
+                                <select id="categoria_id" name="categoria_id" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="1">Eletrônicos</option>
+                                    <option value="2">Móveis</option>
+                                    <option value="3">Vestuário</option>
+                                    <option value="4">Alimentos</option>
+                                </select>
+                                <a href="categorias.html" class="btn-link" title="Gerenciar Categorias" target="_blank">
+                                    <i class="fas fa-plus-circle"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="ativo" name="ativo" checked>
+                            <span class="checkmark"></span>
+                            Produto Ativo
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnCancelar">Cancelar</button>
+                <button class="btn-primary" id="btnSalvar">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/pagination.js"></script>
+    <script src="js/produtos.js"></script>
+    <script src="js/setupModals.js"></script>
+    <script src="js/filtro-pesquisa.js"></script>
+</body>
+</html>

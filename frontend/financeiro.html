@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Maneiro - Financeiro</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/modulos.css">
+    <link rel="stylesheet" href="css/submenu.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Menu Lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="img/icon.png" alt="ERP Maneiro" class="logo-img">
+                <button id="toggleSidebar" class="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="userName">Carregando...</h3>
+                    <p id="userRole">Carregando...</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li>
+                        <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    </li>
+                    <li>
+                        <a href="produtos.html"><i class="fas fa-box"></i> Produtos</a>
+                    </li>
+                    <li>
+                        <a href="clientes.html"><i class="fas fa-users"></i> Clientes</a>
+                    </li>
+                    <li>
+                        <a href="vendas.html"><i class="fas fa-shopping-cart"></i> Vendas</a>
+                    </li>
+                    <li>
+                        <a href="vendedores.html"><i class="fas fa-user-tie"></i> Vendedores</a>
+                    </li>
+                    <li>
+                        <a href="compras.html"><i class="fas fa-truck"></i> Compras</a>
+                    </li>
+                    <li>
+                        <a href="fornecedores.html"><i class="fas fa-industry"></i> Fornecedores</a>
+                    </li>
+                    <li>
+                        <a href="estoque.html"><i class="fas fa-warehouse"></i> Estoque</a>
+                    </li>
+                    <li class="active">
+                        <a href="financeiro.html"><i class="fas fa-chart-line"></i> Financeiro</a>
+                    </li>
+                    <li>
+                        <a href="relatorios.html"><i class="fas fa-file-alt"></i> Relatórios</a>
+                    </li>
+                    <li>
+                        <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
+                    </li>
+                    <li class="logout">
+                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-search">
+                    <input type="text" placeholder="Pesquisar transações...">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
+                <div class="header-actions">
+                    <button class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </button>
+                    <button class="profile-btn">
+                        <i class="fas fa-user"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="page-header">
+                    <h1>Gestão Financeira</h1>
+                    <p>Controle de contas a pagar, receber e fluxo de caixa</p>
+                </div>
+
+                <!-- Cards de Resumo Financeiro -->
+                <div class="dashboard-cards">
+                    <div class="card">
+                        <div class="card-icon green">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Contas a Receber</h3>
+                            <p class="card-value" id="valor-contas-receber">Carregando...</p>
+                            <p class="card-change" id="variacao-contas-receber"></p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon red">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Contas a Pagar</h3>
+                            <p class="card-value" id="valor-contas-pagar">Carregando...</p>
+                            <p class="card-change" id="variacao-contas-pagar"></p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon blue">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Saldo em Caixa</h3>
+                            <p class="card-value" id="valor-saldo-caixa">Carregando...</p>
+                            <p class="card-change" id="variacao-saldo-caixa"></p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon purple">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Lucro Líquido</h3>
+                            <p class="card-value" id="valor-lucro-liquido">Carregando...</p>
+                            <p class="card-change" id="variacao-lucro-liquido"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Abas Financeiras -->
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="contas-receber">Contas a Receber</button>
+                    <button class="tab-btn" data-tab="contas-pagar">Contas a Pagar</button>
+                    <button class="tab-btn" data-tab="fluxo-caixa">Fluxo de Caixa</button>
+                    <button class="tab-btn" data-tab="lancamentos">Lançamentos</button>
+                </div>
+
+                <!-- Conteúdo das Abas -->
+                <div class="tab-content active" id="contas-receber">
+                    <div class="actions-bar">
+                        <button class="btn-primary" id="btnNovoRecebimento">
+                            <i class="fas fa-plus"></i> Novo Recebimento
+                        </button>
+                        <div class="filter-group">
+                            <label for="filterStatusReceber">Status:</label>
+                            <select id="filterStatusReceber">
+                                <option value="">Todos</option>
+                                <option value="pendente">Pendente</option>
+                                <option value="pago">Pago</option>
+                                <option value="atrasado">Atrasado</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="filterPeriodoReceber">Período:</label>
+                            <select id="filterPeriodoReceber">
+                                <option value="hoje">Hoje</option>
+                                <option value="semana">Esta Semana</option>
+                                <option value="mes" selected>Este Mês</option>
+                                <option value="trimestre">Este Trimestre</option>
+                                <option value="ano">Este Ano</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Cliente</th>
+                                    <th>Descrição</th>
+                                    <th>Vencimento</th>
+                                    <th>Valor</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contasReceberTableBody">
+                                <!-- Os dados serão carregados dinamicamente pelo JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="contas-pagar">
+                    <div class="actions-bar">
+                        <button class="btn-primary" id="btnNovoPagamento">
+                            <i class="fas fa-plus"></i> Novo Pagamento
+                        </button>
+                        <div class="filter-group">
+                            <label for="filterStatusPagar">Status:</label>
+                            <select id="filterStatusPagar">
+                                <option value="">Todos</option>
+                                <option value="pendente">Pendente</option>
+                                <option value="pago">Pago</option>
+                                <option value="atrasado">Atrasado</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="filterPeriodoPagar">Período:</label>
+                            <select id="filterPeriodoPagar">
+                                <option value="hoje">Hoje</option>
+                                <option value="semana">Esta Semana</option>
+                                <option value="mes" selected>Este Mês</option>
+                                <option value="trimestre">Este Trimestre</option>
+                                <option value="ano">Este Ano</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Fornecedor</th>
+                                    <th>Descrição</th>
+                                    <th>Vencimento</th>
+                                    <th>Valor</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contasPagarTableBody">
+                                <!-- Os dados serão carregados dinamicamente pelo JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="fluxo-caixa">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Fluxo de Caixa - Julho 2025</h3>
+                            <div class="chart-controls">
+                                <button class="btn-outline btn-sm">Diário</button>
+                                <button class="btn-outline btn-sm active">Semanal</button>
+                                <button class="btn-outline btn-sm">Mensal</button>
+                            </div>
+                        </div>
+                        <div class="chart-placeholder" id="fluxo-caixa-chart">
+                            <!-- O gráfico será gerado dinamicamente pelo JavaScript -->
+                            <div class="chart-legend">
+                                <div class="legend-item">
+                                    <div class="legend-color entrada"></div>
+                                    <span>Entradas</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color saida"></div>
+                                    <span>Saídas</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="lancamentos">
+                    <div class="actions-bar">
+                        <button class="btn-primary" id="btnNovoLancamento">
+                            <i class="fas fa-plus"></i> Novo Lançamento
+                        </button>
+                        <div class="filter-group">
+                            <label for="filterTipoLancamento">Tipo:</label>
+                            <select id="filterTipoLancamento">
+                                <option value="">Todos</option>
+                                <option value="entrada">Entrada</option>
+                                <option value="saida">Saída</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="filterPeriodoLancamento">Período:</label>
+                            <select id="filterPeriodoLancamento">
+                                <option value="hoje">Hoje</option>
+                                <option value="semana">Esta Semana</option>
+                                <option value="mes" selected>Este Mês</option>
+                                <option value="trimestre">Este Trimestre</option>
+                                <option value="ano">Este Ano</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Data</th>
+                                    <th>Descrição</th>
+                                    <th>Tipo</th>
+                                    <th>Categoria</th>
+                                    <th>Valor</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lancamentosTableBody">
+                                <!-- Os dados serão carregados dinamicamente pelo JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de Novo Recebimento -->
+    <div class="modal" id="recebimentoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="recebimentoModalTitle">Novo Recebimento</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="recebimentoForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cliente_id_recebimento">Cliente</label>
+                            <select id="cliente_id_recebimento" name="cliente_id" required>
+                                <option value="">Selecione...</option>
+                                <option value="1">Cliente A</option>
+                                <option value="2">Cliente B</option>
+                                <option value="3">Cliente C</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="descricao_recebimento">Descrição</label>
+                            <input type="text" id="descricao_recebimento" name="descricao" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="valor_recebimento">Valor</label>
+                            <input type="number" id="valor_recebimento" name="valor" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="data_vencimento_recebimento">Data de Vencimento</label>
+                            <input type="date" id="data_vencimento_recebimento" name="data_vencimento" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="status_recebimento">Status</label>
+                            <select id="status_recebimento" name="status" required>
+                                <option value="pendente">Pendente</option>
+                                <option value="pago">Pago</option>
+                                <option value="atrasado">Atrasado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="forma_pagamento_recebimento">Forma de Pagamento</label>
+                            <select id="forma_pagamento_recebimento" name="forma_pagamento">
+                                <option value="">Selecione...</option>
+                                <option value="dinheiro">Dinheiro</option>
+                                <option value="cartao_credito">Cartão de Crédito</option>
+                                <option value="cartao_debito">Cartão de Débito</option>
+                                <option value="pix">PIX</option>
+                                <option value="boleto">Boleto</option>
+                                <option value="transferencia">Transferência</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="observacoes_recebimento">Observações</label>
+                        <textarea id="observacoes_recebimento" name="observacoes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnCancelarRecebimento">Cancelar</button>
+                <button class="btn-primary" id="btnSalvarRecebimento">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Lançamento -->
+    <div class="modal" id="lancamentoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="lancamentoModalTitle">Novo Lançamento</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="lancamentoForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="descricao_lancamento">Descrição</label>
+                            <input type="text" id="descricao_lancamento" name="descricao" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="tipo_lancamento">Tipo</label>
+                            <select id="tipo_lancamento" name="tipo" required>
+                                <option value="entrada">Entrada</option>
+                                <option value="saida">Saída</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="categoria_lancamento">Categoria</label>
+                            <select id="categoria_lancamento" name="categoria_id">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="valor_lancamento">Valor</label>
+                            <input type="number" id="valor_lancamento" name="valor" step="0.01" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="data_lancamento">Data</label>
+                            <input type="date" id="data_lancamento" name="data" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cliente_id_lancamento">Cliente (opcional)</label>
+                            <select id="cliente_id_lancamento" name="cliente_id">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="observacao_lancamento">Observação</label>
+                        <textarea id="observacao_lancamento" name="observacao" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnCancelarLancamento">Cancelar</button>
+                <button class="btn-primary" id="btnSalvarLancamento">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Pagamento -->
+    <div class="modal" id="pagamentoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="pagamentoModalTitle">Novo Pagamento</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="pagamentoForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fornecedor_id_pagamento">Fornecedor</label>
+                            <select id="fornecedor_id_pagamento" name="fornecedor_id" required>
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="descricao_pagamento">Descrição</label>
+                            <input type="text" id="descricao_pagamento" name="descricao" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="valor_pagamento">Valor</label>
+                            <input type="number" id="valor_pagamento" name="valor" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="data_vencimento_pagamento">Data de Vencimento</label>
+                            <input type="date" id="data_vencimento_pagamento" name="data_vencimento" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="status_pagamento">Status</label>
+                            <select id="status_pagamento" name="status" required>
+                                <option value="pendente">Pendente</option>
+                                <option value="pago">Pago</option>
+                                <option value="atrasado">Atrasado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="categoria_pagamento">Categoria</label>
+                            <select id="categoria_pagamento" name="categoria_id">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="forma_pagamento_pagamento">Forma de Pagamento</label>
+                            <select id="forma_pagamento_pagamento" name="forma_pagamento">
+                                <option value="">Selecione...</option>
+                                <option value="dinheiro">Dinheiro</option>
+                                <option value="cartao_credito">Cartão de Crédito</option>
+                                <option value="cartao_debito">Cartão de Débito</option>
+                                <option value="pix">PIX</option>
+                                <option value="boleto">Boleto</option>
+                                <option value="transferencia">Transferência</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="observacoes_pagamento">Observações</label>
+                        <textarea id="observacoes_pagamento" name="observacoes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnCancelarPagamento">Cancelar</button>
+                <button class="btn-primary" id="btnSalvarPagamento">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/tabs.js"></script>
+    <script src="js/financeiro-api.js"></script>
+    <script src="js/setupModals.js"></script>
+    <script src="js/financeiro-modals.js"></script>
+    <script src="js/financeiro.js"></script>
+</body>
+</html>

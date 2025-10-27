@@ -1,0 +1,1446 @@
+/* Estilos específicos para os módulos: clientes, vendas, compras e financeiro */
+
+/* Ações de módulos */
+.actions-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    background-color: white;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    gap: 1rem;
+}
+
+.actions-left {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.actions-right {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+/* Botões */
+.btn-primary {
+    background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s;
+    font-weight: 500;
+    box-shadow: 0 4px 6px rgba(102, 126, 234, 0.25);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #1f6da8 0%, #2980b9 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+    background-color: #f8f9fa;
+    color: #444;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.btn-secondary:hover {
+    background-color: #e9ecef;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid #007bff;
+    color: #007bff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    min-width: 140px;
+    margin-top: 1.5rem;
+}
+
+.btn-outline:hover {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.btn-sm {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.85rem;
+}
+
+/* Filtros */
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.filter-group label {
+    font-size: 0.9rem;
+    color: #555;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.filter-group select {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    min-width: 120px;
+    transition: border-color 0.3s;
+}
+
+.filter-group select:focus {
+    border-color: var(--secondary-color);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+/* Tabela de dados */
+.table-container {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    margin: 1.5rem;
+    border: 1px solid #e9ecef;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 1.25rem 1.5rem;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: middle;
+}
+
+.data-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+    border-top: 1px solid #dee2e6;
+}
+
+.data-table tbody tr:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.data-table th {
+    background-color: #f9f9f9;
+    font-weight: 600;
+    color: #555;
+}
+
+.data-table tbody tr {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.data-table tbody tr:hover {
+    background-color: #f5f7fa;
+}
+
+/* Status badges */
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+/* Status para compras */
+.status-pendente {
+    background-color: rgba(243, 156, 18, 0.1);
+    color: #f39c12; /* Amarelo */
+}
+
+.status-aprovada {
+    background-color: rgba(230, 126, 34, 0.1);
+    color: #e67e22; /* Laranja */
+}
+
+.status-recebida {
+    background-color: rgba(46, 204, 113, 0.1);
+    color: #2ecc71; /* Verde */
+}
+
+.status-cancelada {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: #e74c3c; /* Vermelho */
+}
+
+/* Status gerais */
+.status-active, .status-pago, .finalizada {
+    background-color: rgba(46, 204, 113, 0.1);
+    color: var(--success-color);
+}
+
+.status-inactive {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: var(--danger-color);
+}
+
+.status-pendente {
+    background-color: rgba(241, 196, 15, 0.1);
+    color: #f39c12;
+}
+
+.status-atrasado {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: var(--danger-color);
+}
+
+/* Botões de ação na tabela */
+.table-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.table-actions .btn {
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: all 0.15s ease-in-out;
+    border: 1px solid transparent;
+}
+
+.table-actions .btn-primary {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.table-actions .btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+    transform: translateY(-1px);
+}
+
+.table-actions .btn-info {
+    background-color: #17a2b8;
+    color: white;
+    border-color: #17a2b8;
+}
+
+.table-actions .btn-info:hover {
+    background-color: #138496;
+    border-color: #138496;
+    transform: translateY(-1px);
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-edit {
+    color: var(--secondary-color);
+}
+
+.btn-edit:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+.btn-delete {
+    color: var(--danger-color);
+}
+
+.btn-delete:hover {
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
+.btn-view {
+    color: var(--dark-color);
+}
+
+.btn-view:hover {
+    background-color: rgba(52, 73, 94, 0.1);
+}
+
+.btn-check {
+    color: var(--success-color);
+}
+
+.btn-check:hover {
+    background-color: rgba(46, 204, 113, 0.1);
+}
+
+/* Paginação */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1.5rem;
+    padding: 1rem 0;
+}
+
+.btn-page {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ddd;
+    background-color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-page:hover {
+    border-color: var(--secondary-color);
+    color: var(--secondary-color);
+}
+
+.btn-page.active {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    color: white;
+}
+
+.btn-page:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Modais */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Estilos específicos para modais de clientes */
+.modal .form-group {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+.modal .form-group label {
+    position: static;
+    order: -1;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #555;
+    text-align: left;
+}
+
+.modal .form-group input,
+.modal .form-group select,
+.modal .form-group textarea {
+    order: 1;
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.modal.active {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 12px;
+    width: 90vw;
+    max-width: min(700px, 90vw);
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: modalFadeIn 0.3s;
+    margin: 0;
+}
+
+.modal-lg {
+    width: 95vw;
+    max-width: min(1200px, 95vw);
+    max-height: 90vh;
+}
+
+/* Responsividade para diferentes tamanhos de tela */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95vw;
+        max-width: 95vw;
+        max-height: 90vh;
+        margin: 10px;
+    }
+    
+    .modal-lg {
+        width: 98vw;
+        max-width: 98vw;
+        max-height: 95vh;
+    }
+}
+
+@media (min-width: 1920px) {
+    .modal-content {
+        max-width: 800px;
+    }
+    
+    .modal-lg {
+        max-width: 1400px;
+    }
+}
+
+@media (min-width: 2560px) {
+    .modal-content {
+        max-width: 1000px;
+    }
+    
+    .modal-lg {
+        max-width: 1600px;
+    }
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+    padding: 18px 25px;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+    border-radius: 12px 12px 0 0;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: white;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-header h2 i {
+    font-size: 1.1rem;
+}
+
+.close-modal {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+    transition: all 0.2s ease;
+}
+
+.close-modal:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+/* Estilos específicos para o modal de cliente */
+.modal-body .form-group {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1.25rem;
+    width: 100%;
+}
+
+.modal-body .form-group label {
+    position: static !important;
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #555;
+    text-align: left;
+    z-index: 1;
+}
+
+.modal-body .form-group input,
+.modal-body .form-group select,
+.modal-body .form-group textarea {
+    position: static !important;
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    background-color: #fff;
+}
+
+.modal-body .form-group input:focus,
+.modal-body .form-group select:focus,
+.modal-body .form-group textarea:focus {
+    border-color: #2980b9;
+    box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.15);
+    outline: none;
+}
+
+.modal-body {
+    padding: 25px;
+    background-color: #f8f9fa;
+    background-image: 
+        linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    border-radius: 0 0 12px 12px;
+}
+
+.modal-body .form-group {
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.modal-footer {
+    padding: 18px 25px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    background-color: #fff;
+    border-radius: 0 0 12px 12px;
+}
+
+/* Formulário */
+.form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    flex: 1;
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #555;
+    text-align: left;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Checkbox personalizado */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-left: 3.5rem;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    color: #495057;
+    font-weight: 500;
+}
+
+.checkbox-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: 20px;
+    width: 20px;
+    background-color: white;
+    border-radius: 4px;
+    border: 2px solid #ced4da;
+    transition: all 0.15s ease-in-out;
+    transform: translateY(-50%);
+}
+
+.checkbox-container:hover input ~ .checkmark {
+    background-color: #ccc;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+    background-color: var(--secondary-color);
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.checkbox-container .checkmark:after {
+    left: 7px;
+    top: 3px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+/* Seção de título */
+.section-title {
+    margin: 1.5rem 0 1rem;
+    font-size: 1.2rem;
+    color: var(--dark-color);
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+/* Total row */
+.total-row {
+    margin-top: 1rem;
+    background-color: #f9f9f9;
+    padding: 0.75rem;
+    border-radius: 4px;
+    align-items: center;
+}
+
+.total-label {
+    margin-bottom: 0;
+}
+
+.total-label label {
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.total-value {
+    text-align: right;
+    margin-bottom: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+/* Cards de resumo financeiro */
+.dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.card-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.card-icon.green {
+    background-color: var(--success-color);
+}
+
+.card-icon.red {
+    background-color: var(--danger-color);
+}
+
+.card-icon.blue {
+    background-color: var(--secondary-color);
+}
+
+.card-icon.purple {
+    background-color: #9b59b6;
+}
+
+.card-info {
+    flex: 1;
+}
+
+.card-info h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+    color: #777;
+}
+
+.card-value {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.card-change {
+    margin: 0.25rem 0 0;
+    font-size: 0.85rem;
+}
+
+.card-change.positive {
+    color: var(--success-color);
+}
+
+.card-change.negative {
+    color: var(--danger-color);
+}
+
+/* Abas */
+.tabs {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    position: relative;
+    z-index: 1;
+}
+
+.tab-btn {
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-weight: 500;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 10;
+    white-space: nowrap;
+}
+
+.tab-btn:hover {
+    color: var(--secondary-color);
+}
+
+.tab-btn.active {
+    color: var(--secondary-color);
+    border-bottom-color: var(--secondary-color);
+}
+
+.tab-content {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.tab-content.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Gráficos */
+.chart-container {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.chart-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--dark-color);
+}
+
+.chart-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.chart-placeholder {
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+}
+
+.mock-chart {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #ddd;
+}
+
+.chart-bar {
+    flex: 1;
+    background-color: #eee;
+    margin: 0 0.5rem;
+    border-radius: 4px 4px 0 0;
+    position: relative;
+}
+
+.chart-bar.entrada {
+    background-color: rgba(46, 204, 113, 0.7);
+}
+
+.chart-bar.saida {
+    background-color: rgba(231, 76, 60, 0.7);
+}
+
+.chart-legend {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.legend-color {
+    width: 15px;
+    height: 15px;
+    border-radius: 3px;
+}
+
+.legend-color.entrada {
+    background-color: rgba(46, 204, 113, 0.7);
+}
+
+.legend-color.saida {
+    background-color: rgba(231, 76, 60, 0.7);
+}
+
+/* Estilos específicos para a página de configurações */
+.configurations-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding: 3rem 2rem;
+    background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+    border-radius: 16px;
+    color: white;
+    box-shadow: 0 8px 32px rgba(41, 128, 185, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.configurations-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="20" cy="80" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    pointer-events: none;
+}
+
+.configurations-header h1 {
+    margin: 0 0 0.8rem 0;
+    font-size: 2.2rem;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+}
+
+.configurations-header h1 i {
+    margin-right: 0.8rem;
+    color: #2980b9;
+    font-size: 1.3rem;
+}
+
+.configurations-subtitle {
+    margin: 0;
+    font-size: 1.15rem;
+    opacity: 0.95;
+    font-weight: 400;
+    position: relative;
+    z-index: 1;
+}
+
+.settings-card {
+    background-color: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    padding: 0;
+    margin: 1.5rem;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.03);
+    transition: all 0.3s ease;
+}
+
+.settings-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 2.5rem 4rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    position: relative;
+}
+
+.card-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 2rem;
+    right: 2rem;
+    height: 3px;
+    background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+    border-radius: 2px;
+}
+
+.card-header h2 {
+    margin: 0 0 0.8rem 0;
+    color: #2c3e50;
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+}
+
+.card-header h2 i {
+    margin-right: 0.8rem;
+    color: #2980b9;
+    font-size: 1.3rem;
+}
+
+.card-description {
+    margin: 0;
+    color: #6c757d;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.configurations-content {
+    padding: 3rem 4rem;
+}
+
+/* Estilos para melhorar espaçamento dos filtros e opções */
+.filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    padding: 2.5rem 3rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+    border: 1px solid #e9ecef;
+}
+
+.filter-container .filter-group {
+    margin: 0.75rem 0;
+    padding: 0.5rem 0;
+}
+
+.filter-container .filter-group:first-child {
+    margin-top: 0;
+}
+
+.filter-container .filter-group:last-child {
+    margin-bottom: 0;
+}
+
+/* Definição removida - estava conflitando com o checkbox personalizado */
+
+/* Espaçamento adicional para elementos de configuração */
+.configurations-header {
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.configurations-header h1 {
+    margin-bottom: 0.5rem;
+}
+
+.configurations-subtitle {
+    margin-bottom: 0;
+    color: #6c757d;
+}
+
+/* Espaçamento geral do conteúdo para evitar elementos colados na borda */
+.content {
+    padding: 2.5rem 3rem;
+}
+
+.page-header {
+    margin-bottom: 1.5rem;
+    padding: 0 0.5rem;
+}
+
+/* Melhorar espaçamento dos badges de status */
+.badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-block;
+    margin: 0.25rem;
+    border: 1px solid transparent;
+}
+
+.badge-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-color: #c3e6cb;
+    padding: 0.4rem 0.8rem;
+    margin: 0.25rem;
+}
+
+.badge-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-color: #f5c6cb;
+    padding: 0.4rem 0.8rem;
+    margin: 0.25rem;
+}
+
+.badge-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border-color: #ffeaa7;
+    padding: 0.4rem 0.8rem;
+    margin: 0.25rem;
+}
+
+/* Espaçamento específico para elementos de formulário */
+.form-group {
+    margin-bottom: 2rem;
+    padding: 0 1rem;
+}
+
+.form-row {
+    margin-bottom: 1.5rem;
+    padding: 0 1rem;
+}
+
+.form-group label {
+    margin-bottom: 0.75rem;
+    display: block;
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    width: 100%;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #2980b9;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.1);
+}
+
+/* Espaçamento específico para botões dentro de formulários */
+.form-group .btn-primary,
+.form-group .btn-outline {
+    margin: 1rem 1rem 0 1rem;
+    padding: 0.75rem 2rem;
+}
+
+/* Espaçamento para actions-bar */
+.actions-bar {
+    margin: 2rem 1.5rem;
+    padding: 1.5rem 2rem;
+}
+
+.loading-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #6c757d;
+}
+
+.loading-state i {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    color: #2980b9;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-state p {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 5rem 2rem;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    color: #e9ecef;
+}
+
+.empty-state h3 {
+    margin: 0 0 0.8rem 0;
+    font-size: 1.4rem;
+    color: #495057;
+    font-weight: 600;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 1.1rem;
+    line-height: 1.5;
+}
+
+/* Melhorias na tabela de configurações */
+#configuracoes-container .table {
+    margin-bottom: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: none;
+}
+
+#configuracoes-container .table thead th {
+    background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+    color: white;
+    border: none;
+    font-weight: 700;
+    padding: 1.2rem 1.5rem;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    position: relative;
+}
+
+#configuracoes-container .table thead th:first-child {
+    border-top-left-radius: 12px;
+}
+
+#configuracoes-container .table thead th:last-child {
+    border-top-right-radius: 12px;
+}
+
+#configuracoes-container .table tbody tr {
+    transition: all 0.3s ease;
+    border: none;
+}
+
+#configuracoes-container .table tbody tr:hover {
+    background: linear-gradient(135deg, rgba(41, 128, 185, 0.05) 0%, rgba(52, 152, 219, 0.05) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+#configuracoes-container .table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 12px;
+}
+
+#configuracoes-container .table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 12px;
+}
+
+#configuracoes-container .table tbody td {
+    padding: 1.2rem 1.5rem;
+    vertical-align: middle;
+    border-color: rgba(0, 0, 0, 0.03);
+    border-top: 1px solid rgba(0, 0, 0, 0.03);
+    font-size: 0.95rem;
+}
+
+#configuracoes-container .table tbody td:first-child {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+#configuracoes-container .table tbody td:nth-child(2) {
+    font-family: 'Courier New', monospace;
+    background-color: rgba(102, 126, 234, 0.05);
+    border-radius: 6px;
+    margin: 0.2rem 0;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.9rem;
+}
+
+#configuracoes-container .btn {
+    margin: 0 0.3rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#configuracoes-container .btn-primary {
+    background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+    border: none;
+    color: white;
+}
+
+#configuracoes-container .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(41, 128, 185, 0.4);
+}
+
+#configuracoes-container .btn-danger {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee0979 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 6px rgba(238, 9, 121, 0.25);
+}
+
+#configuracoes-container .btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+}
+
+/* Correção para os formulários de configurações */
+#profileForm .form-group,
+#passwordForm .form-group,
+#preferencesForm .form-group,
+#empresaForm .form-group,
+#sistemaForm .form-group,
+#backupConfigForm .form-group {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+#profileForm .form-group label,
+#passwordForm .form-group label,
+#preferencesForm .form-group label,
+#empresaForm .form-group label,
+#sistemaForm .form-group label,
+#backupConfigForm .form-group label {
+    position: static;
+    order: -1;
+    margin-bottom: 0.5rem;
+}
+
+#profileForm .form-group input,
+#passwordForm .form-group input,
+#preferencesForm .form-group input,
+#empresaForm .form-group input,
+#sistemaForm .form-group input,
+#backupConfigForm .form-group input,
+#profileForm .form-group select,
+#passwordForm .form-group select,
+#preferencesForm .form-group select,
+#empresaForm .form-group select,
+#sistemaForm .form-group select,
+#backupConfigForm .form-group select {
+    order: 1;
+}
+
+/* Estilos para checkbox nas configurações */
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 200px;
+}
+
+.filter-group label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.filter-group select {
+    padding: 0.75rem 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    background-color: white;
+    font-size: 0.95rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.filter-group select:focus {
+    border-color: #007bff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.checkbox-item input[type="checkbox"] {
+    width: auto;
+    margin-right: 0.5rem;
+}
+
+.checkbox-item label {
+    margin-bottom: 0 !important;
+    display: inline !important;
+}
+
+/* Responsividade */
+@media (max-width: 992px) {
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .actions-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .dashboard-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .tabs {
+        flex-wrap: wrap;
+    }
+    
+    .tab-btn {
+        flex: 1;
+        text-align: center;
+    }
+}

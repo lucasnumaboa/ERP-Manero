@@ -1,0 +1,26 @@
+/* Estilos de status na página de vendas */
+
+/* Linha da tabela por status */
+tr.status-pendente td {
+    background-color: rgba(243, 156, 18, 0.1);
+}
+tr.status-finalizada td {
+    background-color: rgba(46, 204, 113, 0.1);
+}
+tr.status-cancelada td {
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
+/* Badges de status */
+.status-badge.pendente {
+    background-color: rgba(243, 156, 18, 0.1) !important;
+    color: #f39c12 !important;
+}
+.status-badge.finalizada {
+    background-color: rgba(46, 204, 113, 0.1) !important;
+    color: #2ecc71 !important;
+}
+.status-badge.cancelada {
+    background-color: rgba(231, 76, 60, 0.1) !important;
+    color: #e74c3c !important;
+}

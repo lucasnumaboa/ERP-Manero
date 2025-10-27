@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Maneiro - Vendas</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/modulos.css">
+    <link rel="stylesheet" href="css/vendas.css">
+    <link rel="stylesheet" href="css/submenu.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Menu Lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="img/icon.png" alt="ERP Maneiro" class="logo-img">
+                <button id="toggleSidebar" class="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="userName">Carregando...</h3>
+                    <p id="userRole">Carregando...</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li>
+                        <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    </li>
+                    <li>
+                        <a href="produtos.html"><i class="fas fa-box"></i> Produtos</a>
+                    </li>
+                    <li>
+                        <a href="clientes.html"><i class="fas fa-users"></i> Clientes</a>
+                    </li>
+                    <li class="active">
+                        <a href="vendas.html"><i class="fas fa-shopping-cart"></i> Vendas</a>
+                    </li>
+                    <li>
+                        <a href="vendedores.html"><i class="fas fa-user-tie"></i> Vendedores</a>
+                    </li>
+                    <li>
+                        <a href="compras.html"><i class="fas fa-truck"></i> Compras</a>
+                    </li>
+                    <li>
+                        <a href="fornecedores.html"><i class="fas fa-industry"></i> Fornecedores</a>
+                    </li>
+                    <li>
+                        <a href="estoque.html"><i class="fas fa-warehouse"></i> Estoque</a>
+                    </li>
+
+                    <!-- Relatórios removido -->
+                    <li>
+                        <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
+                    </li>
+                    <li class="logout">
+                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-search">
+                    <input type="text" placeholder="Pesquisar vendas...">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
+                <div class="header-actions">
+                    <button class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </button>
+                    <button class="profile-btn">
+                        <i class="fas fa-user"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="page-header">
+                    <h1>Gerenciamento de Vendas</h1>
+                    <p>Registre e gerencie suas vendas</p>
+                </div>
+
+                <!-- Ações de Vendas -->
+                <div class="actions-bar">
+                    <div class="actions-left">
+                        <button class="btn-primary" id="btnNovaVenda">
+                            <i class="fas fa-plus"></i> Nova Venda
+                        </button>
+                        <button class="btn-outline" id="btnImportarVendas">
+                            <i class="fas fa-file-import"></i> Importar
+                        </button>
+                    </div>
+                    <div class="actions-right">
+                        <div class="filter-group">
+                            <label for="filtroPesquisa">Pesquisar:</label>
+                            <input type="text" id="filtroPesquisa" placeholder="Digite para pesquisar..." class="search-input">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros adicionais -->
+                <div class="filters-container" style="display: flex; align-items: center; margin-top: 10px; margin-bottom: 10px;">
+                    <div class="filter-group" style="display: inline-flex; align-items: center; margin-right: 15px;">
+                        <label for="filterCliente" style="margin-right: 5px;">Cliente:</label>
+                        <select id="filterCliente" style="width: 150px;">
+                            <option value="">Todos</option>
+                            <option value="1">Cliente A</option>
+                            <option value="2">Cliente B</option>
+                            <option value="3">Cliente C</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="display: inline-flex; align-items: center; margin-right: 15px;">
+                        <label for="filterStatus" style="margin-right: 5px;">Status:</label>
+                        <select id="filterStatus" style="width: 120px;">
+                            <option value="">Todos</option>
+                            <option value="pendente">Pendente</option>
+                            <option value="finalizada">Finalizada</option>
+                            <option value="cancelada">Cancelada</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tabela de Vendas -->
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Cliente</th>
+                                <th>Data</th>
+                                <th>Valor Total</th>
+                                <th>Status</th>
+                                <th>Vendedor</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vendasTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center">Carregando vendas...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginação -->
+                <div class="pagination">
+                    <button class="btn-page" disabled><i class="fas fa-chevron-left"></i></button>
+                    <button class="btn-page active">1</button>
+                    <button class="btn-page">2</button>
+                    <button class="btn-page">3</button>
+                    <button class="btn-page"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de Nova/Editar Venda -->
+    <div class="modal" id="vendaModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2 id="modalTitle">Nova Venda</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="vendaForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cliente_id">Cliente</label>
+                            <select id="cliente_id" name="cliente_id" required>
+                                <option value="">Selecione...</option>
+                                <option value="1">Cliente A</option>
+                                <option value="2">Cliente B</option>
+                                <option value="3">Cliente C</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="data_entrega">Data de Entrega</label>
+                            <input type="date" id="data_entrega" name="data_entrega" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="vendedor_id">Vendedor</label>
+                            <select id="vendedor_id" name="vendedor_id">
+                                <option value="0">Selecione...</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <h3 class="section-title">Itens da Venda</h3>
+                    <div class="actions-inline">
+                        <button type="button" class="btn-outline" id="btnAdicionarItem">
+                            <i class="fas fa-plus"></i> Adicionar Item
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table" id="itensVendaTable">
+                            <thead>
+                                <tr>
+                                    <th>Produto</th>
+                                    <th>Quantidade</th>
+                                    <th>Preço Unit.</th>
+                                    <th>Subtotal</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itensVendaTableBody">
+                                <tr>
+                                    <td colspan="5" class="text-center">Nenhum item adicionado</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="5" class="text-right">
+                                        <!-- Removed duplicate button -->
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    
+                    <div class="form-row total-row">
+                        <div class="form-group total-label">
+                            <label>Valor Total:</label>
+                        </div>
+                        <div class="form-group total-value">
+                            <span id="valorTotal">R$ 0,00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="forma_pagamento">Forma de Pagamento</label>
+                            <select id="forma_pagamento" name="forma_pagamento" required>
+                                <option value="">Selecione...</option>
+                                <option value="dinheiro">Dinheiro</option>
+                                <option value="cartao_credito">Cartão de Crédito</option>
+                                <option value="cartao_debito">Cartão de Débito</option>
+                                <option value="pix">PIX</option>
+                                <option value="boleto">Boleto</option>
+                                <option value="transferencia">Transferência</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">Status</label>
+                            <select id="status" name="status" required>
+                                <option value="pendente">Pendente</option>
+                                <option value="finalizada">Finalizada</option>
+                                <option value="cancelada">Cancelada</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="observacoes">Observações</label>
+                        <textarea id="observacoes" name="observacoes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnCancelar">Cancelar</button>
+                <button class="btn-primary" id="btnSalvar">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Adicionar Item -->
+    <div class="modal" id="itemModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Adicionar Item</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="itemForm">
+                    <div class="form-group">
+                        <label for="produto_id">Produto</label>
+                        <select id="produto_id" name="produto_id" required>
+                            <option value="">Selecione...</option>
+                            <option value="1">Smartphone XYZ</option>
+                            <option value="2">Notebook ABC</option>
+                            <option value="3">Mesa de Escritório</option>
+                            <option value="4">Camiseta Básica</option>
+                            <option value="5">Café Premium</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="quantidade">Quantidade</label>
+                            <input type="number" id="quantidade" name="quantidade" min="1" value="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="preco_unitario">Preço Unitário</label>
+                            <input type="number" id="preco_unitario" name="preco_unitario" step="0.01" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Subtotal</label>
+                            <input type="text" id="subtotal" readonly>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnCancelarItem">Cancelar</button>
+                <button class="btn-primary" id="btnAdicionarItemConfirm">Adicionar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/pagination.js"></script>
+    <script src="js/setupModals.js"></script>
+    <script src="js/vendas.js"></script>
+    <script src="js/filtro-pesquisa.js"></script>
+</body>
+</html>

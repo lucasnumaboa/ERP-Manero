@@ -1,0 +1,180 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from database import get_db_cursor
+from auth import get_current_user
+from models import UserInDB
+
+router = APIRouter()
+
+@router.get("/")
+async def get_dashboard_data(month_year: str = None, current_user: UserInDB = Depends(get_current_user)):
+    """
+    Retorna os dados para o dashboard, incluindo:
+    - Total de vendas
+    - Número de clientes
+    - Número de pedidos
+    - Total de lucro
+    - Vendas recentes
+    - Produtos mais vendidos
+    
+    Parâmetros:
+    - month_year: Filtro de mês/ano nos formatos 'MM_YYYY' ou 'YYYY-MM'
+    """
+    with get_db_cursor() as cursor:
+        # Prepara a condição de filtro por mês/ano
+        date_filter = ""
+        if month_year:
+            try:
+                # Suporta tanto o formato MM_YYYY quanto YYYY-MM
+                if '_' in month_year:
+                    month, year = month_year.split('_')
+                elif '-' in month_year:
+                    year, month = month_year.split('-')
+                else:
+                    raise ValueError("Formato de month_year inválido")
+                
+                date_filter = f"WHERE EXTRACT(YEAR FROM data_pedido) = {year} AND EXTRACT(MONTH FROM data_pedido) = {month}"
+            except Exception as e:
+                # Em caso de erro no processamento, não aplica filtro
+                print(f"Erro ao processar month_year '{month_year}': {str(e)}")
+                date_filter = ""
+        
+        # Total de vendas
+        query_vendas = f"""
+            SELECT COALESCE(SUM(valor_total), 0) as total_vendas 
+            FROM pedidos_venda
+            {date_filter}
+        """
+        cursor.execute(query_vendas)
+        total_vendas = cursor.fetchone()["total_vendas"]
+        
+        # Número de clientes (ativos no período)
+        if date_filter:
+            query_clientes = f"""
+                SELECT COUNT(DISTINCT cliente_id) as total_clientes 
+                FROM pedidos_venda
+                {date_filter}
+            """
+        else:
+            query_clientes = "SELECT COUNT(*) as total_clientes FROM clientes WHERE ativo = TRUE"
+        
+        cursor.execute(query_clientes)
+        total_clientes = cursor.fetchone()["total_clientes"]
+        
+        # Número de pedidos
+        query_pedidos = f"""
+            SELECT COUNT(*) as total_pedidos 
+            FROM pedidos_venda
+            {date_filter}
+        """
+        cursor.execute(query_pedidos)
+        total_pedidos = cursor.fetchone()["total_pedidos"]
+        
+        # Total de lucro (estimativa simples baseada em preço de venda - preço de custo)
+        query_lucro = f"""
+            SELECT COALESCE(SUM((p.preco_venda - p.preco_custo) * i.quantidade), 0) as total_lucro
+            FROM itens_pedido_venda i
+            JOIN produtos p ON i.produto_id = p.id
+            JOIN pedidos_venda pv ON i.pedido_id = pv.id
+            WHERE pv.status = 'finalizada'
+            {' AND ' + date_filter.replace('WHERE', '') if date_filter else ''}
+        """
+        cursor.execute(query_lucro)
+        total_lucro = cursor.fetchone()["total_lucro"]
+        
+        # Vendas recentes
+        query_vendas_recentes = f"""
+            SELECT pv.id, pv.codigo, p.nome as cliente_nome, 
+                   pv.valor_total, pv.status, pv.data_pedido
+            FROM pedidos_venda pv
+            JOIN parceiros p ON pv.cliente_id = p.id
+            {date_filter}
+            ORDER BY pv.data_pedido DESC
+            LIMIT 5
+        """
+        cursor.execute(query_vendas_recentes)
+        vendas_recentes = cursor.fetchall()
+        
+        # Produtos mais vendidos
+        query_produtos = f"""
+            SELECT p.id, p.nome, SUM(i.quantidade) as quantidade_vendida,
+                   SUM(i.quantidade * i.preco_unitario) as valor_total
+            FROM itens_pedido_venda i
+            JOIN produtos p ON i.produto_id = p.id
+            JOIN pedidos_venda pv ON i.pedido_id = pv.id
+            {date_filter}
+            GROUP BY p.id, p.nome
+            ORDER BY quantidade_vendida DESC
+            LIMIT 5
+        """
+        cursor.execute(query_produtos)
+        produtos_mais_vendidos = cursor.fetchall()
+        
+        # Número de vendedores (ativos no período)
+        if date_filter:
+            query_vendedores = f"""
+                SELECT COUNT(DISTINCT vendedor_id) as total_vendedores 
+                FROM pedidos_venda
+                {date_filter}
+                AND vendedor_id IS NOT NULL
+            """
+        else:
+            query_vendedores = "SELECT COUNT(*) as total_vendedores FROM vendedores WHERE ativo = TRUE"
+        
+        cursor.execute(query_vendedores)
+        total_vendedores = cursor.fetchone()["total_vendedores"]
+        
+        # Vendas por período (últimos 6 meses ou dentro do mês selecionado por dia)
+        if month_year:
+            query_vendas_periodo = f"""
+                SELECT 
+                    TO_CHAR(data_pedido, 'DD/MM/YYYY') as periodo,
+                    COALESCE(SUM(valor_total), 0) as valor
+                FROM pedidos_venda
+                {date_filter}
+                GROUP BY TO_CHAR(data_pedido, 'DD/MM/YYYY')
+                ORDER BY MIN(data_pedido) ASC
+                LIMIT 31
+            """
+        else:
+            query_vendas_periodo = """
+                SELECT 
+                    TO_CHAR(data_pedido, 'MM/YYYY') as periodo,
+                    COALESCE(SUM(valor_total), 0) as valor
+                FROM pedidos_venda
+                WHERE data_pedido >= CURRENT_DATE - INTERVAL '6 months'
+                GROUP BY TO_CHAR(data_pedido, 'MM/YYYY')
+                ORDER BY MIN(data_pedido) ASC
+                LIMIT 6
+            """
+        
+        cursor.execute(query_vendas_periodo)
+        vendas_por_periodo = cursor.fetchall()
+
+        # Calcular variação percentual (simulada para este exemplo)
+        # Em uma implementação real, você compararia com o mês anterior
+        
+        return {
+            "vendas": {
+                "total": total_vendas,
+                "variacao": 12  # Percentual de variação (exemplo)
+            },
+            "clientes": {
+                "total": total_clientes,
+                "variacao": 5  # Percentual de variação (exemplo)
+            },
+            "vendedores": {
+                "total": total_vendedores,
+                "variacao": 2  # Percentual de variação (exemplo)
+            },
+            "pedidos": {
+                "total": total_pedidos,
+                "variacao": 8  # Percentual de variação (exemplo)
+            },
+            "lucro": {
+                "total": total_lucro,
+                "variacao": 15  # Percentual de variação (exemplo)
+            },
+            "vendas_recentes": vendas_recentes,
+            "produtos_mais_vendidos": produtos_mais_vendidos,
+            "vendas_por_periodo": vendas_por_periodo
+        }

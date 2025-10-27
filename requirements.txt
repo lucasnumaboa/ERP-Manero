@@ -1,0 +1,11 @@
+fastapi==0.104.1
+uvicorn==0.23.2
+python-dotenv==1.0.0
+mysql-connector-python==8.1.0
+python-multipart==0.0.6
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+pydantic==2.4.2
+openpyxl==3.1.2
+xlsxwriter==3.1.2
+pandas==2.1.1

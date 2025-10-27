@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Maneiro - Consulta de Estoque</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/modulos.css">
+    <link rel="stylesheet" href="css/submenu.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .estoque-baixo {
+            background-color: rgba(255, 0, 0, 0.1);
+        }
+        .badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .badge-success {
+            background-color: #28a745;
+            color: white;
+        }
+        .badge-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .badge-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .mov-entrada {
+            background-color: rgba(40, 167, 69, 0.1);
+        }
+        .mov-saida {
+            background-color: rgba(220, 53, 69, 0.1);
+        }
+        .mov-ajuste {
+            background-color: rgba(255, 193, 7, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Menu Lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="img/icon.png" alt="ERP Maneiro" class="logo-img">
+                <button id="toggleSidebar" class="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="userName">Carregando...</h3>
+                    <p id="userRole">Carregando...</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li>
+                        <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    </li>
+                    <li>
+                        <a href="produtos.html"><i class="fas fa-box"></i> Produtos</a>
+                    </li>
+                    <li>
+                        <a href="clientes.html"><i class="fas fa-users"></i> Clientes</a>
+                    </li>
+                    <li>
+                        <a href="vendas.html"><i class="fas fa-shopping-cart"></i> Vendas</a>
+                    </li>
+                    <li>
+                        <a href="vendedores.html"><i class="fas fa-user-tie"></i> Vendedores</a>
+                    </li>
+                    <li>
+                        <a href="compras.html"><i class="fas fa-truck"></i> Compras</a>
+                    </li>
+                    <li>
+                        <a href="fornecedores.html"><i class="fas fa-industry"></i> Fornecedores</a>
+                    </li>
+                    <li class="active">
+                        <a href="estoque.html"><i class="fas fa-warehouse"></i> Estoque</a>
+                    </li>
+
+                    <!-- Relatórios removido -->
+                    <li>
+                        <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
+                    </li>
+                    <li class="logout">
+                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-search">
+                    <input type="text" placeholder="Pesquisar produtos...">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
+                <div class="header-actions">
+                    <button class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </button>
+                    <button class="profile-btn">
+                        <i class="fas fa-user"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="page-header">
+                    <h1>Consulta de Estoque</h1>
+                    <p>Visualize e gerencie o estoque de produtos</p>
+                </div>
+
+                <!-- Filtros de Estoque -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-filter"></i> Filtros de Estoque</h2>
+                    </div>
+                    <div class="card-description">
+                        Configure os filtros para visualizar os produtos em estoque
+                    </div>
+                    <div class="filter-container">
+                        <div class="filter-group">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="filtroAbaixoMinimo">
+                                <span class="checkmark"></span>
+                                Produtos abaixo do estoque mínimo
+                            </label>
+                        </div>
+                        <div class="filter-group">
+                            <label for="filtroCategoria">Categoria:</label>
+                            <select id="filtroCategoria">
+                                <option value="">Todas as categorias</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <button class="btn-outline" id="btnLimparFiltros">Limpar Filtros</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela de Estoque -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-warehouse"></i> Produtos em Estoque</h2>
+                    </div>
+                    <div class="card-description">
+                        Visualize e gerencie o estoque de produtos
+                    </div>
+                    <div class="configurations-content">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Nome</th>
+                                        <th>Categoria</th>
+                                        <th class="text-center">Estoque Atual</th>
+                                        <th class="text-center">Estoque Mínimo</th>
+                                        <th class="text-right">Preço de Venda</th>
+                                        <th class="actions-column">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="estoqueTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center">Carregando produtos...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paginação -->
+                <div class="pagination">
+                    <button class="btn-page"><i class="fas fa-chevron-left"></i></button>
+                    <button class="btn-page active">1</button>
+                    <button class="btn-page">2</button>
+                    <button class="btn-page">3</button>
+                    <button class="btn-page"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de Histórico de Movimentações -->
+    <div class="modal" id="historicoModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2 id="historicoModalTitle"><i class="fas fa-history"></i> Histórico de Movimentações</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo</th>
+                                    <th class="text-center">Quantidade</th>
+                                    <th>Motivo</th>
+                                    <th>Documento</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historicoTableBody">
+                                <tr>
+                                    <td colspan="5" class="text-center">Carregando histórico...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="btnFecharHistorico">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Nova Movimentação -->
+    <div class="modal" id="movimentacaoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="movimentacaoModalTitle">Nova Movimentação</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="movimentacaoForm">
+                    <input type="hidden" id="produto_id" name="produto_id">
+                    
+                    <div class="form-group">
+                        <label for="tipo">Tipo de Movimentação</label>
+                        <select id="tipo" name="tipo" required>
+                            <option value="entrada">Entrada</option>
+                            <option value="saida">Saída</option>
+                            <option value="ajuste">Ajuste</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="quantidade">Quantidade</label>
+                        <input type="number" id="quantidade" name="quantidade" min="1" value="1" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="motivo">Motivo</label>
+                        <input type="text" id="motivo" name="motivo" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="documento_referencia">Documento de Referência (opcional)</label>
+                        <input type="text" id="documento_referencia" name="documento_referencia">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnCancelarMovimentacao">Cancelar</button>
+                <button class="btn-primary" id="btnSalvarMovimentacao">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/pagination.js"></script>
+    <script src="js/setupModals.js"></script>
+    <script src="js/estoque.js"></script>
+    <script src="js/filtro-pesquisa.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,54 @@
+/* Estilos para o submenu de categorias */
+.sidebar-nav li {
+    position: relative;
+}
+
+.dropdown-icon {
+    position: absolute;
+    right: 15px;
+    transition: transform 0.3s ease;
+}
+
+.category-submenu {
+    background-color: rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.submenu-item {
+    display: flex !important;
+    align-items: center;
+    padding: 0.8rem 1.5rem 0.8rem 2.5rem !important;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.submenu-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.submenu-item i {
+    margin-right: 0.8rem;
+    width: 16px;
+    text-align: center;
+    font-size: 0.9em;
+}
+
+/* Responsividade para o submenu */
+@media (max-width: 992px) {
+    .category-submenu {
+        position: absolute;
+        left: 70px;
+        top: 0;
+        width: 180px;
+        z-index: 1000;
+        background-color: var(--dark-color);
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    
+    .submenu-item {
+        padding: 0.8rem 1rem !important;
+    }
+}

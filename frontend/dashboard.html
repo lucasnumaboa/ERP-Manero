@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Maneiro - Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/submenu.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Menu Lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="img/icon.png" alt="ERP Maneiro" class="logo-img">
+                <button id="toggleSidebar" class="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="userName">Carregando...</h3>
+                    <p id="userRole">Carregando...</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="active">
+                        <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    </li>
+                    <li>
+                        <a href="produtos.html"><i class="fas fa-box"></i> Produtos</a>
+                    </li>
+                    <li>
+                        <a href="clientes.html"><i class="fas fa-users"></i> Clientes</a>
+                    </li>
+                    <li>
+                        <a href="vendas.html"><i class="fas fa-shopping-cart"></i> Vendas</a>
+                    </li>
+                    <li>
+                        <a href="vendedores.html"><i class="fas fa-user-tie"></i> Vendedores</a>
+                    </li>
+                    <li>
+                        <a href="compras.html"><i class="fas fa-truck"></i> Compras</a>
+                    </li>
+                    <li>
+                        <a href="fornecedores.html"><i class="fas fa-industry"></i> Fornecedores</a>
+                    </li>
+                    <li>
+                        <a href="estoque.html"><i class="fas fa-warehouse"></i> Estoque</a>
+                    </li>
+
+                    <!-- Relatórios removido -->
+                    <li>
+                        <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
+                    </li>
+                    <li class="logout">
+                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-search">
+                    <input type="text" placeholder="Pesquisar...">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
+                <div class="header-actions">
+                    <button class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </button>
+                    <button class="profile-btn">
+                        <i class="fas fa-user"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="page-header">
+                    <div class="page-header-title">
+                        <h1>Dashboard</h1>
+                        <p>Bem-vindo ao ERP Maneiro</p>
+                    </div>
+                    <div class="date-filter">
+                        <label for="month-year-filter">Filtrar por mês/ano:</label>
+                        <input type="month" id="month-year-filter" name="month-year-filter">
+                        <button id="apply-filter" class="btn-primary">Aplicar</button>
+                    </div>
+                </div>
+
+                <!-- Cards de Resumo -->
+                <div class="dashboard-cards">
+                    <!-- Primeira linha - Métricas principais -->
+                    <div class="card">
+                        <div class="card-icon sales">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Vendas</h3>
+                            <p class="card-value"></p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon customers">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Clientes</h3>
+                            <p class="card-value"></p>
+                        </div>
+                    </div>
+                    <div class="card" onclick="window.location.href='vendedores.html'" style="cursor: pointer;">
+                        <div class="card-icon" style="background-color: #6c5ce7;">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Vendedores</h3>
+                            <p class="card-value"></p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon orders">
+                            <i class="fas fa-file-invoice"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Pedidos</h3>
+                            <p class="card-value"></p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon profit">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Lucro</h3>
+                            <p class="card-value"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Segunda linha - Novas métricas -->
+                <div class="dashboard-cards" style="margin-top: 20px;">
+                    <div class="card">
+                        <div class="card-icon" style="background-color: #e74c3c;">
+                            <i class="fas fa-ban"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Total Cancelados</h3>
+                            <p class="card-value" id="total-cancelados"></p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon" style="background-color: #f39c12;">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Faturamento Pendente</h3>
+                            <p class="card-value" id="faturamento-pendente"></p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon" style="background-color: #3498db;">
+                            <i class="fas fa-hourglass-half"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Lucro Pendente</h3>
+                            <p class="card-value" id="lucro-pendente"></p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon" style="background-color: #2ecc71;">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Faturamento Concluído</h3>
+                            <p class="card-value" id="faturamento-concluido"></p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon" style="background-color: #27ae60;">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="card-info">
+                            <h3>Lucro Concluído</h3>
+                            <p class="card-value" id="lucro-concluido"></p>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <!-- Tabela de Atividades Recentes -->
+                <div class="recent-activities">
+                    <div class="section-header">
+                        <h3>Atividades Recentes</h3>
+                        <button class="btn-outline">Ver Todas</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Cliente</th>
+                                    <th>Produto</th>
+                                    <th>Custo</th>
+                                    <th>Valor</th>
+                                    <th>Lucro</th>
+                                    <th>Status</th>
+                                    <th>Data</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Dados dinâmicos serão carregados aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
