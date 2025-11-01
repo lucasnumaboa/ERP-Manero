@@ -43,6 +43,18 @@ body {
     text-align: center;
 }
 
+.login-logo {
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.login-logo .logo-gif {
+    max-width: 300px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
 .login-header {
     margin-bottom: 2rem;
 }

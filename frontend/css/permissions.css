@@ -1,0 +1,47 @@
+/* CSS para controle de permissões */
+
+/* Oculta botões de ação por padrão */
+.btn-primary, 
+.btn-add, 
+.btn-edit, 
+.btn-delete, 
+.btn-save, 
+[data-action="edit"], 
+[data-action="delete"], 
+#btnNovaVenda, 
+#btnNovoProduto, 
+#btnNovoCliente, 
+#btnNovoFornecedor, 
+#btnNovaCompra,
+.action-icons, 
+.table-actions,
+.actions-bar .btn-primary,
+.actions-bar .btn-add {
+    display: none !important;
+}
+
+/* Classe para mostrar elementos quando o usuário tiver permissão */
+.has-edit-permission .btn-primary,
+.has-edit-permission .btn-add,
+.has-edit-permission .btn-edit,
+.has-edit-permission .btn-delete,
+.has-edit-permission .btn-save,
+.has-edit-permission [data-action="edit"],
+.has-edit-permission [data-action="delete"],
+.has-edit-permission #btnNovaVenda,
+.has-edit-permission #btnNovoProduto,
+.has-edit-permission #btnNovoCliente,
+.has-edit-permission #btnNovoFornecedor,
+.has-edit-permission #btnNovaCompra,
+.has-edit-permission .action-icons,
+.has-edit-permission .table-actions,
+.has-edit-permission .actions-bar .btn-primary,
+.has-edit-permission .actions-bar .btn-add {
+    display: inline-block !important;
+}
+
+/* Ajuste para elementos de bloco */
+.has-edit-permission .action-icons,
+.has-edit-permission .table-actions {
+    display: block !important;
+}
