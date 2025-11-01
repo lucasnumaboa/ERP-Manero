@@ -79,7 +79,7 @@ async function loadProdutos() {
         
         // Adiciona um indicador de status na tabela
         document.getElementById('produtosTableBody').innerHTML = 
-            `<tr><td colspan="7" class="text-center">
+            `<tr><td colspan="9" class="text-center">
                 <div class="alert alert-danger">
                     <i class="fas fa-exclamation-triangle"></i> 
                     Erro ao carregar produtos: ${error.message}
@@ -107,7 +107,7 @@ function displayProdutos(produtos) {
     
     if (!produtos || produtos.length === 0) {
         console.log('Nenhum produto encontrado para exibir');
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum produto encontrado</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center">Nenhum produto encontrado</td></tr>';
         return;
     }
     
@@ -123,11 +123,23 @@ function displayProdutos(produtos) {
         const statusClass = produto.ativo ? 'status-active' : 'status-inactive';
         const statusText = produto.ativo ? 'Ativo' : 'Inativo';
         
+        // Verificar se há imagem e criar o elemento de imagem
+        let imagemHtml = '';
+        if (produto.caminho_imagem) {
+            // Pega apenas a primeira imagem se houver múltiplas (separadas por vírgula)
+            const primeiraImagem = produto.caminho_imagem.split(',')[0].trim();
+            if (primeiraImagem) {
+                imagemHtml = `<img src="http://localhost:8000/uploads/${primeiraImagem.replace('uploads/', '')}" alt="${produto.nome}" class="produto-thumbnail" style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">`;
+            }
+        }
+        
         row.innerHTML = `
             <td>${produto.codigo || produto.id}</td>
-            <td>${produto.nome}</td>
+            <td>${imagemHtml}${produto.nome}</td>
             <td>${produto.categoria_nome || 'Não categorizado'}</td>
+            <td>R$ ${formatNumber(produto.preco_custo || 0)}</td>
             <td>R$ ${formatNumber(produto.preco_venda)}</td>
+            <td>R$ ${formatNumber(produto.comissao || 0)}</td>
             <td>${produto.estoque_atual || 0}</td>
             <td><span class="status-badge ${statusClass}">${statusText}</span></td>
             <td class="actions">
@@ -562,6 +574,49 @@ function setupActionButtons() {
     }
 }
 
+// Função para carregar e exibir imagens do produto
+async function carregarImagensProduto(caminhoImagem) {
+    if (!caminhoImagem) return;
+    
+    const previewDiv = document.getElementById('preview_imagens');
+    if (!previewDiv) return;
+    
+    previewDiv.innerHTML = '';
+    
+    try {
+        const apiUrl = "http://localhost:8000";
+        
+        // Verifica se há múltiplas imagens separadas por vírgula
+        const caminhos = caminhoImagem.split(',');
+        
+        // Para cada caminho de imagem, criar um elemento de preview
+        for (const caminho of caminhos) {
+            if (!caminho.trim()) continue; // Ignora caminhos vazios
+            
+            const imagemUrl = `${apiUrl}/uploads/${caminho.trim().replace('uploads/', '')}`;
+            
+            // Criar elemento de imagem para preview
+            const imgElement = document.createElement('div');
+            imgElement.className = 'preview-image';
+            imgElement.innerHTML = `
+                <img src="${imagemUrl}" alt="Imagem do produto" style="max-width: 100px; max-height: 100px;">
+                <div class="preview-actions">
+                    <a href="${imagemUrl}" target="_blank" title="Ver imagem completa">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="${imagemUrl}" download title="Baixar imagem">
+                        <i class="fas fa-download"></i>
+                    </a>
+                </div>
+            `;
+            
+            previewDiv.appendChild(imgElement);
+        }
+    } catch (error) {
+        console.error('Erro ao carregar imagem do produto:', error);
+    }
+}
+
 // Abre o modal de produto
 function openProdutoModal(produtoId = null) {
     console.log(`Abrindo modal de produto. ID: ${produtoId || 'Novo produto'}`);
@@ -585,10 +640,21 @@ function openProdutoModal(produtoId = null) {
         modalTitle.textContent = produtoId ? 'Editar Produto' : 'Novo Produto';
         console.log(`Título do modal definido: ${modalTitle.textContent}`);
         
+        // Limpa o preview de imagens
+        const previewDiv = document.getElementById('preview_imagens');
+        if (previewDiv) {
+            previewDiv.innerHTML = '';
+        }
+        
         // Se for edição, carrega os dados do produto
         if (produtoId) {
             console.log(`Carregando dados do produto ID: ${produtoId}`);
-            loadProdutoData(produtoId);
+            loadProdutoData(produtoId).then(produto => {
+                // Carregar imagens do produto
+                if (produto && produto.caminho_imagem) {
+                    carregarImagensProduto(produto.caminho_imagem);
+                }
+            });
         } else {
             // Se for novo produto, limpa o ID do formulário e gera um novo código
             form.removeAttribute('data-id');
@@ -629,7 +695,7 @@ async function loadProdutoData(produtoId) {
     
     if (!produtoId) {
         console.error('ID do produto não fornecido!');
-        return;
+        return null;
     }
     
     try {
@@ -640,6 +706,7 @@ async function loadProdutoData(produtoId) {
         
         console.log('Dados do produto recebidos:', produto);
         preencherFormularioProduto(produto, produtoId);
+        return produto; // Retorna o produto para uso em outras funções
     } catch (error) {
         console.error('Erro ao carregar dados do produto:', error);
         
@@ -648,16 +715,17 @@ async function loadProdutoData(produtoId) {
         
         // Dados de exemplo para demonstração
         const produtosExemplo = {
-            1: {codigo: 'P001', nome: 'Notebook Dell', descricao: 'Notebook Dell Inspiron 15', preco_custo: 2800, preco_venda: 3500, estoque_minimo: 5, categoria_id: 1, ativo: true},
-            2: {codigo: 'P002', nome: 'Mouse Logitech', descricao: 'Mouse sem fio Logitech', preco_custo: 50, preco_venda: 89.90, estoque_minimo: 10, categoria_id: 1, ativo: true},
-            3: {codigo: 'P003', nome: 'Cadeira Gamer', descricao: 'Cadeira Gamer Ergonômica', preco_custo: 700, preco_venda: 950, estoque_minimo: 3, categoria_id: 2, ativo: true},
-            4: {codigo: 'P004', nome: 'Teclado Mecânico', descricao: 'Teclado Mecânico RGB', preco_custo: 200, preco_venda: 299.90, estoque_minimo: 8, categoria_id: 1, ativo: false}
+            1: {codigo: 'P001', nome: 'Notebook Dell', descricao: 'Notebook Dell Inspiron 15', preco_custo: 2800, preco_venda: 3500, estoque_minimo: 5, categoria_id: 1, ativo: true, caminho_imagem: ''},
+            2: {codigo: 'P002', nome: 'Mouse Logitech', descricao: 'Mouse sem fio Logitech', preco_custo: 50, preco_venda: 89.90, estoque_minimo: 10, categoria_id: 1, ativo: true, caminho_imagem: ''},
+            3: {codigo: 'P003', nome: 'Cadeira Gamer', descricao: 'Cadeira Gamer Ergonômica', preco_custo: 700, preco_venda: 950, estoque_minimo: 3, categoria_id: 2, ativo: true, caminho_imagem: ''},
+            4: {codigo: 'P004', nome: 'Teclado Mecânico', descricao: 'Teclado Mecânico RGB', preco_custo: 200, preco_venda: 299.90, estoque_minimo: 8, categoria_id: 1, ativo: false, caminho_imagem: ''}
         };
         
         const produto = produtosExemplo[produtoId] || produtosExemplo[1];
         console.log('Usando dados de exemplo:', produto);
         
         preencherFormularioProduto(produto, produtoId);
+        return produto; // Retorna o produto para uso em outras funções
     }
 }
 
@@ -849,21 +917,21 @@ async function saveProduto() {
         let data;
         
         if (produtoId) {
-            // Para atualização, ainda usa JSON (sem imagens por enquanto)
-            const produtoData = {
-                codigo,
-                nome,
-                descricao,
-                preco_custo,
-                preco_venda,
-                estoque_minimo,
-                categoria_id,
-                tipo_produto,
-                comissao,
-                ativo
-            };
-            console.log(`Atualizando produto ID: ${produtoId}`);
-            data = await apiPut(`/api/produtos/${produtoId}`, produtoData);
+            // Para atualização, verificar se há imagens selecionadas
+            if (imagens.length > 0) {
+                // Se tiver imagens, usar PUT com FormData para o endpoint específico de upload de imagens
+                formData.append('id', produtoId);
+                console.log(`Atualizando produto ID: ${produtoId} com imagens`);
+                data = await apiPostFormData(`/api/produtos/${produtoId}/upload`, formData);
+            } else {
+                // Se não tiver imagens, usar PUT normal com JSON
+                console.log(`Atualizando produto ID: ${produtoId} sem imagens`);
+                const jsonData = {
+                    codigo, nome, descricao, preco_custo, preco_venda,
+                    estoque_minimo, categoria_id, tipo_produto, comissao, ativo
+                };
+                data = await apiPut(`/api/produtos/${produtoId}`, jsonData);
+            }
         } else {
             // Cria novo produto com FormData (incluindo imagens)
             console.log('Criando novo produto');

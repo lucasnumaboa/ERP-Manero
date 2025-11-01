@@ -45,6 +45,14 @@ async function initDashboard(monthYear = null) {
         console.log('Atualizando atividades recentes...');
         updateRecentActivities(dashboardData.vendas_recentes);
         
+        // Busca e atualiza dados de valorização do estoque
+        console.log('Buscando valorização do estoque...');
+        await updateValorizacaoEstoque();
+        
+        // Busca e atualiza dados de custo total do estoque
+        console.log('Buscando custo total do estoque...');
+        await updateCustoTotalEstoque();
+        
         // Gráficos removidos conforme solicitado
         
         console.log('Dashboard inicializado com sucesso!');
@@ -318,7 +326,56 @@ function updateDashboardCards(data) {
     }
 }
 
-// Função para atualizar a tabela de atividades recentes
+
+
+// Função para buscar e atualizar dados de valorização do estoque
+async function updateValorizacaoEstoque() {
+    try {
+        const valorizacaoData = await apiGet('/api/estoque/valorizacao');
+        
+        if (valorizacaoData) {
+            const valorizacaoElement = document.getElementById('valorizacao-estoque');
+            if (valorizacaoElement) {
+                const valorFormatado = `R$ ${valorizacaoData.valor_total_estoque.toFixed(2).replace('.', ',')}`;
+                valorizacaoElement.textContent = valorFormatado;
+                
+                // Adiciona informações adicionais como tooltip ou subtítulo
+                valorizacaoElement.title = `${valorizacaoData.total_produtos_com_estoque} produtos com estoque (${valorizacaoData.quantidade_total_estoque} unidades)`;
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao buscar valorização do estoque:', error);
+        const valorizacaoElement = document.getElementById('valorizacao-estoque');
+        if (valorizacaoElement) {
+            valorizacaoElement.textContent = 'R$ 0,00';
+        }
+    }
+}
+
+// Função para buscar e atualizar dados de custo total do estoque
+async function updateCustoTotalEstoque() {
+    try {
+        const custoTotalData = await apiGet('/api/estoque/custo-total');
+        
+        if (custoTotalData) {
+            const custoTotalElement = document.getElementById('custo-total-estoque');
+            if (custoTotalElement) {
+                const valorFormatado = `R$ ${custoTotalData.custo_total_estoque.toFixed(2).replace('.', ',')}`;
+                custoTotalElement.textContent = valorFormatado;
+                
+                // Adiciona informações adicionais como tooltip ou subtítulo
+                custoTotalElement.title = `${custoTotalData.total_produtos_com_estoque} produtos com estoque (${custoTotalData.quantidade_total_estoque} unidades)`;
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao buscar custo total do estoque:', error);
+        const custoTotalElement = document.getElementById('custo-total-estoque');
+        if (custoTotalElement) {
+            custoTotalElement.textContent = 'R$ 0,00';
+        }
+    }
+}
+
 function updateRecentActivities(vendasRecentes) {
     const tableBody = document.querySelector('.recent-activities .data-table tbody');
     if (!tableBody) return;

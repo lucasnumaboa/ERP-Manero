@@ -53,11 +53,16 @@ async function loadClientes() {
     console.log('Carregando clientes da API centralizada');
     
     // Mostra mensagem de carregamento
-    document.getElementById('clientesTableBody').innerHTML = '<tr><td colspan="7" class="text-center">Carregando clientes...</td></tr>';
+    const tableBody = document.getElementById('clientesTableBody');
+    if (tableBody) {
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Carregando clientes...</td></tr>';
+    }
     
-    // Obtém valores dos filtros
-    const status = document.getElementById('filterStatus').value;
-    const tipo = document.getElementById('filterTipo').value;
+    // Obtém valores dos filtros com verificação de null
+    const statusElement = document.getElementById('statusCliente');
+    const tipoElement = document.getElementById('tipoCliente');
+    const status = statusElement ? statusElement.value : '';
+    const tipo = tipoElement ? tipoElement.value : '';
     
     // Constrói os parâmetros de consulta
     const params = new URLSearchParams();
@@ -139,9 +144,12 @@ function displayClientes(clientes) {
 // Configura os botões de ação
 function setupActionButtons() {
     // Botão Novo Cliente
-    document.getElementById('btnNovoCliente').addEventListener('click', function() {
-        openClienteModal();
-    });
+    const btnNovoCliente = document.getElementById('btnNovoCliente');
+    if (btnNovoCliente) {
+        btnNovoCliente.addEventListener('click', function() {
+            openClienteModal();
+        });
+    }
     
     // Botão Fechar Modal
     document.querySelectorAll('.close-modal, #btnCancelar').forEach(button => {
@@ -151,34 +159,51 @@ function setupActionButtons() {
     });
     
     // Botão Salvar
-    document.getElementById('btnSalvar').addEventListener('click', function() {
-        saveCliente();
-    });
+    const btnSalvar = document.getElementById('btnSalvar');
+    if (btnSalvar) {
+        btnSalvar.addEventListener('click', function() {
+            saveCliente();
+        });
+    }
     
     // Botões de filtro
-    document.getElementById('filterTipo').addEventListener('change', function() {
-        // Implementar filtro por tipo
-        loadClientes(); // Por enquanto apenas recarrega
-    });
+    const filterTipo = document.getElementById('tipoCliente');
+    if (filterTipo) {
+        filterTipo.addEventListener('change', function() {
+            // Implementar filtro por tipo
+            loadClientes(); // Por enquanto apenas recarrega
+        });
+    }
     
-    document.getElementById('filterStatus').addEventListener('change', function() {
-        // Implementar filtro por status
-        loadClientes(); // Por enquanto apenas recarrega
-    });
+    const filterStatus = document.getElementById('statusCliente');
+    if (filterStatus) {
+        filterStatus.addEventListener('change', function() {
+            // Implementar filtro por status
+            loadClientes(); // Por enquanto apenas recarrega
+        });
+    }
     
     // Evento para formatar CPF/CNPJ conforme o tipo selecionado
-    document.getElementById('tipo').addEventListener('change', function() {
-        const cpfCnpjInput = document.getElementById('cpf_cnpj');
-        cpfCnpjInput.placeholder = this.value === 'pessoa_fisica' ? 'CPF (apenas números)' : 'CNPJ (apenas números)';
-    });
+    const tipoElement = document.getElementById('tipo');
+    if (tipoElement) {
+        tipoElement.addEventListener('change', function() {
+            const cpfCnpjInput = document.getElementById('cpf_cnpj');
+            if (cpfCnpjInput) {
+                cpfCnpjInput.placeholder = this.value === 'pessoa_fisica' ? 'CPF (apenas números)' : 'CNPJ (apenas números)';
+            }
+        });
+    }
     
     // Evento para buscar endereço pelo CEP
-    document.getElementById('cep').addEventListener('blur', function() {
-        const cep = this.value.replace(/\D/g, '');
-        if (cep.length === 8) {
-            buscarEnderecoPorCEP(cep);
-        }
-    });
+    const cepElement = document.getElementById('cep');
+    if (cepElement) {
+        cepElement.addEventListener('blur', function() {
+            const cep = this.value.replace(/\D/g, '');
+            if (cep.length === 8) {
+                buscarEnderecoPorCEP(cep);
+            }
+        });
+    }
 }
 
 // Busca endereço pelo CEP usando a API ViaCEP

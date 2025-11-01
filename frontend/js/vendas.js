@@ -190,8 +190,8 @@ async function carregarClientes() {
 
 async function carregarProdutos() {
     try {
-        // Usa a API centralizada
-        const produtos = await apiGet('/api/produtos');
+        // Usa a API centralizada com filtros para produtos ativos e com estoque
+        const produtos = await apiGet('/api/produtos', { com_estoque: true, ativo: true });
         preencherSelectProdutos(produtos);
     } catch (error) {
         console.error('Erro ao carregar produtos:', error);

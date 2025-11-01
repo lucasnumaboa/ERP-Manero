@@ -99,7 +99,9 @@ async function loadEstoque() {
     // Obtém os filtros
     const abaixoMinimo = document.getElementById('filtroAbaixoMinimo').checked;
     const comEstoque = document.getElementById('filtroComEstoque').checked;
+    const somenteAtivo = document.getElementById('filtroSomenteAtivo').checked;
     const categoriaId = document.getElementById('filtroCategoria').value || null;
+    const termoPesquisa = document.getElementById('filtroPesquisa').value.trim();
     
     // Prepara os parâmetros de consulta
     const queryParams = {};
@@ -111,6 +113,16 @@ async function loadEstoque() {
     // Forçar o envio do parâmetro com_estoque como true quando o checkbox estiver marcado
     if (comEstoque) {
         queryParams.com_estoque = true;
+    }
+    
+    // Adiciona o filtro de produtos ativos
+    if (somenteAtivo) {
+        queryParams.ativo = true;
+    }
+    
+    // Adiciona o termo de pesquisa se existir
+    if (termoPesquisa) {
+        queryParams.nome = termoPesquisa;
     }
     
     console.log("Filtros aplicados:", queryParams);
@@ -128,6 +140,9 @@ async function loadEstoque() {
         
         // Se conseguiu dados reais, configura a paginação
         if (data && Array.isArray(data)) {
+            // Ordena os produtos por código (ID)
+            data.sort((a, b) => a.id - b.id);
+            
             // Configuração da paginação
             window.currentDisplayFunction = displayEstoque;
             initPagination(data, displayEstoque);
@@ -185,7 +200,22 @@ async function displayEstoque(produtos) {
         // A comissão já está em reais (valor fixo)
         const comissaoReais = produto.comissao || 0;
         
+        // Cria o elemento de imagem se o produto tiver imagem
+        let imagemHtml = '';
+        if (produto.caminho_imagem) {
+            // Pega apenas a primeira imagem se houver múltiplas (separadas por vírgula)
+            const primeiraImagem = produto.caminho_imagem.split(',')[0].trim();
+            if (primeiraImagem) {
+                imagemHtml = `<img src="http://localhost:8000/uploads/${primeiraImagem.replace('uploads/', '')}" alt="${produto.nome}" class="produto-thumbnail" style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">`;
+            } else {
+                imagemHtml = `<div style="width: 40px; height: 40px; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center; border-radius: 4px;"><i class="fas fa-image" style="color: #ccc;"></i></div>`;
+            }
+        } else {
+            imagemHtml = `<div style="width: 40px; height: 40px; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center; border-radius: 4px;"><i class="fas fa-image" style="color: #ccc;"></i></div>`;
+        }
+        
         row.innerHTML = `
+            <td>${imagemHtml}</td>
             <td>${produto.codigo || '-'}</td>
             <td>${produto.nome}</td>
             <td>${produto.categoria_nome || '-'}</td>
@@ -206,6 +236,7 @@ async function displayEstoque(produtos) {
 function setupFilters() {
     const filtroAbaixoMinimo = document.getElementById('filtroAbaixoMinimo');
     const filtroComEstoque = document.getElementById('filtroComEstoque');
+    const filtroSomenteAtivo = document.getElementById('filtroSomenteAtivo');
     
     // Configura o evento de mudança para o filtro de estoque mínimo
     filtroAbaixoMinimo.addEventListener('change', function() {
@@ -232,8 +263,21 @@ function setupFilters() {
         setTimeout(() => loadEstoque(), 0);
     });
     
+    // Configura o evento de mudança para o filtro de produtos ativos
+    filtroSomenteAtivo.addEventListener('change', function() {
+        loadEstoque();
+    });
+    
     document.getElementById('filtroCategoria').addEventListener('change', loadEstoque);
     document.getElementById('btnLimparFiltros').addEventListener('click', limparFiltros);
+    
+    // Configura o evento de pesquisa
+    document.getElementById('btnPesquisar').addEventListener('click', loadEstoque);
+    document.getElementById('filtroPesquisa').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            loadEstoque();
+        }
+    });
     
     // Carrega as categorias
     loadCategorias();
@@ -244,38 +288,14 @@ async function loadCategorias() {
     const select = document.getElementById('filtroCategoria');
     select.innerHTML = '<option value="">Todas as categorias</option>';
     
-    // Adiciona categorias fictícias primeiro para garantir que a interface tenha dados
-    const mockCategorias = [
-        { id: 1, nome: 'Eletrônicos' },
-        { id: 2, nome: 'Informática' },
-        { id: 3, nome: 'Móveis' },
-        { id: 4, nome: 'Alimentos' },
-        { id: 5, nome: 'Bebidas' },
-        { id: 6, nome: 'Higiene' },
-        { id: 7, nome: 'Limpeza' },
-        { id: 8, nome: 'Outros' }
-    ];
-    
-    // Adiciona as categorias fictícias ao select
-    mockCategorias.forEach(categoria => {
-        const option = document.createElement('option');
-        option.value = categoria.id;
-        option.textContent = categoria.nome;
-        select.appendChild(option);
-    });
-    
-    // Tenta buscar as categorias reais da API
     try {
         console.log('Buscando categorias da API centralizada');
         
-        // Usa a API centralizada
-        const categorias = await apiGet('/api/produtos/categorias');
+        // Usa a API centralizada para buscar categorias reais
+        const categorias = await apiGet('/api/categorias');
         
         if (categorias && Array.isArray(categorias) && categorias.length > 0) {
             console.log('Categorias recebidas da API:', categorias);
-            
-            // Limpa o select para adicionar as categorias reais
-            select.innerHTML = '<option value="">Todas as categorias</option>';
             
             // Adiciona as categorias reais ao select
             categorias.forEach(categoria => {
@@ -285,10 +305,12 @@ async function loadCategorias() {
                 select.appendChild(option);
             });
         } else {
-            console.log('API retornou dados vazios ou inválidos, mantendo categorias fictícias');
+            console.log('API retornou dados vazios ou inválidos para categorias');
+            select.innerHTML += '<option value="" disabled>Nenhuma categoria encontrada</option>';
         }
     } catch (error) {
-        // Já temos as categorias fictícias carregadas, então não precisamos fazer nada aqui
+        console.error('Erro ao carregar categorias:', error);
+        select.innerHTML += '<option value="" disabled>Erro ao carregar categorias</option>';
     }
 }
 
@@ -303,7 +325,9 @@ function limparFiltros() {
     filtroComEstoque.checked = false;
     filtroComEstoque.disabled = false;
     
+    document.getElementById('filtroSomenteAtivo').checked = false;
     document.getElementById('filtroCategoria').value = '';
+    document.getElementById('filtroPesquisa').value = '';
     loadEstoque();
 }
 
@@ -596,7 +620,7 @@ async function saveMovimentacao() {
         loadEstoque();
         
         // Exibe mensagem de sucesso
-        alert('Movimentação registrada com sucesso! (Modo demonstração)');
+        alert('Movimentação registrada com sucesso!');
         
         // Restaura o botão
         btnSalvar.textContent = originalText;

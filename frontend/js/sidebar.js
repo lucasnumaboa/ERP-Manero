@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     hideAllMenuItems();
     
     setupSidebarToggle();
-    setupCategorySubmenu();
     
     // Carrega os dados do usuário
     await loadUserData();
@@ -160,19 +159,9 @@ async function updateMenuBasedOnPermissions() {
                 if (hasAccess) {
                     console.log(`Mostrando opção ${href} - permissão ${permission} concedida`);
                     link.parentElement.style.display = 'block';
-                    
-                    // Se for produtos e tiver acesso, também mostra o submenu de categorias
-                    if (href === 'produtos.html' && link.nextElementSibling && link.nextElementSibling.classList.contains('submenu')) {
-                        link.nextElementSibling.style.display = 'block';
-                    }
                 } else {
                     console.log(`Ocultando opção ${href} - permissão ${permission} negada`);
                     link.parentElement.style.display = 'none';
-                    
-                    // Se for produtos e não tiver acesso, também oculta o submenu de categorias
-                    if (href === 'produtos.html' && link.nextElementSibling && link.nextElementSibling.classList.contains('submenu')) {
-                        link.nextElementSibling.style.display = 'none';
-                    }
                 }
             } else {
                 // Para links que não têm mapeamento de permissão, mostra por padrão
@@ -208,57 +197,7 @@ function setupSidebarToggle() {
     }
 }
 
-// Function to setup category submenu
-function setupCategorySubmenu() {
-    // Find the products menu item
-    const productMenuLink = document.querySelector('.sidebar-nav a[href="produtos.html"]');
-    
-    // Verificar se o elemento existe antes de acessar parentElement
-    if (!productMenuLink) return;
-    
-    const productMenuItem = productMenuLink.parentElement;
-    
-    // Check if the submenu already exists
-    if (!document.querySelector('.category-submenu')) {
-        // Create submenu container
-        const submenu = document.createElement('div');
-        submenu.className = 'category-submenu';
-        submenu.style.display = 'none';
-        
-        // Create submenu items
-        const submenuItems = `
-            <a href="produtos.html" class="submenu-item"><i class="fas fa-box"></i> Produtos</a>
-            <a href="categorias.html" class="submenu-item"><i class="fas fa-tags"></i> Categorias</a>
-        `;
-        
-        submenu.innerHTML = submenuItems;
-        
-        // Insert submenu after the products menu item
-        productMenuItem.appendChild(submenu);
-        
-        // Add toggle functionality
-        const productLink = productMenuItem.querySelector('a');
-        
-        // Add dropdown indicator to the product menu item
-        const dropdownIcon = document.createElement('i');
-        dropdownIcon.className = 'fas fa-chevron-down dropdown-icon';
-        productLink.appendChild(dropdownIcon);
-        
-        // Add click event to toggle submenu
-        productLink.addEventListener('click', function(e) {
-            e.preventDefault(); // Prevent navigation
-            const submenu = this.parentElement.querySelector('.category-submenu');
-            
-            if (submenu.style.display === 'none' || submenu.style.display === '') {
-                submenu.style.display = 'block';
-                dropdownIcon.className = 'fas fa-chevron-up dropdown-icon';
-            } else {
-                submenu.style.display = 'none';
-                dropdownIcon.className = 'fas fa-chevron-down dropdown-icon';
-            }
-        });
-    }
-}
+
 
 // Function to fix vendas link issue
 function fixVendasLink() {
