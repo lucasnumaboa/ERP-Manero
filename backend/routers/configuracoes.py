@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
 from fastapi.responses import JSONResponse
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from pydantic import BaseModel
 from database import get_db_cursor
 from auth import get_current_user
@@ -15,10 +15,217 @@ class ConfigUpdate(BaseModel):
 
 class ConfigBatchUpdate(BaseModel):
     configuracoes: Dict[str, str]
+    
+# Modelos para grupos de usuários
+class GrupoUsuarioBase(BaseModel):
+    nome: str
+    descricao: Optional[str] = None
+    dashboard_visualizar: bool = False
+    dashboard_editar: bool = False
+    produtos_visualizar: bool = False
+    produtos_editar: bool = False
+    clientes_visualizar: bool = False
+    clientes_editar: bool = False
+    vendas_visualizar: bool = False
+    vendas_editar: bool = False
+    vendedores_visualizar: bool = False
+    vendedores_editar: bool = False
+    compras_visualizar: bool = False
+    compras_editar: bool = False
+    fornecedores_visualizar: bool = False
+    fornecedores_editar: bool = False
+    estoque_visualizar: bool = False
+    estoque_editar: bool = False
+    configuracoes_visualizar: bool = False
+    configuracoes_editar: bool = False
+    financeiro_visualizar: bool = False
+    financeiro_editar: bool = False
+
+class GrupoUsuarioCreate(GrupoUsuarioBase):
+    pass
+
+class GrupoUsuarioUpdate(GrupoUsuarioBase):
+    pass
+
+class GrupoUsuarioResponse(GrupoUsuarioBase):
+    id: int
+    em_uso: bool
 
 router = APIRouter(
     tags=["configuracoes"]
 )
+
+# Endpoints para grupos de usuários
+@router.post("/grupo_usuario")
+async def create_grupo_usuario(
+    grupo: GrupoUsuarioCreate,
+    current_user = Depends(get_current_user)
+):
+    """
+    Cria um novo grupo de usuários.
+    Requer autenticação de administrador.
+    """
+    if current_user.nivel_acesso != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permissão negada. Apenas administradores podem criar grupos de usuários."
+        )
+    
+    with get_db_cursor(commit=True) as cursor:
+        cursor.execute(
+            """INSERT INTO grupo_usuario 
+               (nome, descricao, dashboard_visualizar, dashboard_editar, produtos_visualizar, produtos_editar, 
+                clientes_visualizar, clientes_editar, vendas_visualizar, vendas_editar, vendedores_visualizar, 
+                vendedores_editar, compras_visualizar, compras_editar, fornecedores_visualizar, fornecedores_editar, 
+                estoque_visualizar, estoque_editar, configuracoes_visualizar, configuracoes_editar, 
+                financeiro_visualizar, financeiro_editar)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            (grupo.nome, grupo.descricao, grupo.dashboard_visualizar, grupo.dashboard_editar, 
+             grupo.produtos_visualizar, grupo.produtos_editar, grupo.clientes_visualizar, grupo.clientes_editar, 
+             grupo.vendas_visualizar, grupo.vendas_editar, grupo.vendedores_visualizar, grupo.vendedores_editar, 
+             grupo.compras_visualizar, grupo.compras_editar, grupo.fornecedores_visualizar, grupo.fornecedores_editar, 
+             grupo.estoque_visualizar, grupo.estoque_editar, grupo.configuracoes_visualizar, grupo.configuracoes_editar, 
+             grupo.financeiro_visualizar, grupo.financeiro_editar)
+        )
+        
+        # Obter o ID inserido usando LAST_INSERT_ID()
+        cursor.execute("SELECT LAST_INSERT_ID() as id")
+        grupo_id = cursor.fetchone()["id"]
+        
+        return {"id": grupo_id, **grupo.dict(), "em_uso": False}
+
+@router.get("/grupo_usuario")
+async def get_grupos_usuarios(current_user = Depends(get_current_user)):
+    """
+    Obtém todos os grupos de usuários.
+    Requer autenticação.
+    """
+    with get_db_cursor() as cursor:
+        # Consulta para obter todos os grupos
+        cursor.execute("SELECT * FROM grupo_usuario ORDER BY nome")
+        grupos = cursor.fetchall()
+        
+        # Para cada grupo, verificar se está em uso
+        for grupo in grupos:
+            cursor.execute("SELECT COUNT(*) as total FROM usuarios WHERE grupo_id = %s", (grupo["id"],))
+            em_uso = cursor.fetchone()["total"] > 0
+            grupo["em_uso"] = em_uso
+            
+        return grupos
+
+@router.get("/grupo_usuario/{grupo_id}")
+async def get_grupo_usuario(grupo_id: int, current_user = Depends(get_current_user)):
+    """
+    Obtém um grupo de usuários específico.
+    Requer autenticação.
+    """
+    with get_db_cursor() as cursor:
+        cursor.execute("SELECT * FROM grupo_usuario WHERE id = %s", (grupo_id,))
+        grupo = cursor.fetchone()
+        
+        if not grupo:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Grupo de usuários com ID {grupo_id} não encontrado."
+            )
+        
+        # Verificar se o grupo está em uso
+        cursor.execute("SELECT COUNT(*) as total FROM usuarios WHERE grupo_id = %s", (grupo_id,))
+        em_uso = cursor.fetchone()["total"] > 0
+        grupo["em_uso"] = em_uso
+        
+        return grupo
+
+@router.put("/grupo_usuario/{grupo_id}")
+async def update_grupo_usuario(
+    grupo_id: int,
+    grupo: GrupoUsuarioUpdate,
+    current_user = Depends(get_current_user)
+):
+    """
+    Atualiza um grupo de usuários específico.
+    Requer autenticação de administrador.
+    """
+    if current_user.nivel_acesso != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permissão negada. Apenas administradores podem atualizar grupos de usuários."
+        )
+    
+    with get_db_cursor(commit=True) as cursor:
+        # Verificar se o grupo existe
+        cursor.execute("SELECT id FROM grupo_usuario WHERE id = %s", (grupo_id,))
+        if not cursor.fetchone():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Grupo de usuários com ID {grupo_id} não encontrado."
+            )
+        
+        # Atualizar o grupo
+        cursor.execute(
+            """UPDATE grupo_usuario SET 
+               nome = %s, descricao = %s, dashboard_visualizar = %s, dashboard_editar = %s, 
+               produtos_visualizar = %s, produtos_editar = %s, clientes_visualizar = %s, clientes_editar = %s, 
+               vendas_visualizar = %s, vendas_editar = %s, vendedores_visualizar = %s, vendedores_editar = %s, 
+               compras_visualizar = %s, compras_editar = %s, fornecedores_visualizar = %s, fornecedores_editar = %s, 
+               estoque_visualizar = %s, estoque_editar = %s, configuracoes_visualizar = %s, configuracoes_editar = %s, 
+               financeiro_visualizar = %s, financeiro_editar = %s
+               WHERE id = %s""",
+            (grupo.nome, grupo.descricao, grupo.dashboard_visualizar, grupo.dashboard_editar, 
+             grupo.produtos_visualizar, grupo.produtos_editar, grupo.clientes_visualizar, grupo.clientes_editar, 
+             grupo.vendas_visualizar, grupo.vendas_editar, grupo.vendedores_visualizar, grupo.vendedores_editar, 
+             grupo.compras_visualizar, grupo.compras_editar, grupo.fornecedores_visualizar, grupo.fornecedores_editar, 
+             grupo.estoque_visualizar, grupo.estoque_editar, grupo.configuracoes_visualizar, grupo.configuracoes_editar, 
+             grupo.financeiro_visualizar, grupo.financeiro_editar, grupo_id)
+        )
+        
+        # Verificar se o grupo está em uso
+        cursor.execute("SELECT COUNT(*) as total FROM usuarios WHERE grupo_id = %s", (grupo_id,))
+        em_uso = cursor.fetchone()["total"] > 0
+        
+        return {"id": grupo_id, **grupo.dict(), "em_uso": em_uso}
+
+@router.delete("/grupo_usuario/{grupo_id}")
+async def delete_grupo_usuario(
+    grupo_id: int,
+    current_user = Depends(get_current_user)
+):
+    """
+    Exclui um grupo de usuários específico.
+    Requer autenticação de administrador.
+    Não permite excluir grupos em uso por usuários.
+    """
+    if current_user.nivel_acesso != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permissão negada. Apenas administradores podem excluir grupos de usuários."
+        )
+    
+    with get_db_cursor(commit=True) as cursor:
+        # Verificar se o grupo existe
+        cursor.execute("SELECT * FROM grupo_usuario WHERE id = %s", (grupo_id,))
+        grupo = cursor.fetchone()
+        
+        if not grupo:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Grupo de usuários com ID {grupo_id} não encontrado."
+            )
+        
+        # Verificar se o grupo está em uso
+        cursor.execute("SELECT COUNT(*) as total FROM usuarios WHERE grupo_id = %s", (grupo_id,))
+        em_uso = cursor.fetchone()["total"] > 0
+        
+        if em_uso:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Não é possível excluir o grupo pois está sendo utilizado por usuários."
+            )
+        
+        # Excluir o grupo
+        cursor.execute("DELETE FROM grupo_usuario WHERE id = %s", (grupo_id,))
+        
+        return {"message": f"Grupo de usuários '{grupo['nome']}' excluído com sucesso"}
 
 @router.get("/link_api")
 async def get_api_url():

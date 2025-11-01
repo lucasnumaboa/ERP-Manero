@@ -146,7 +146,7 @@ async def criar_pedido_venda(
     # Verifica se o cliente existe
     with get_db_cursor() as cursor:
         cursor.execute(
-            "SELECT id FROM clientes WHERE id = %s",
+            "SELECT id, tipo FROM parceiros WHERE id = %s",
             (pedido.cliente_id,)
         )
         cliente = cursor.fetchone()
@@ -155,6 +155,12 @@ async def criar_pedido_venda(
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Cliente não encontrado"
+            )
+            
+        if cliente["tipo"] not in ["cliente", "ambos"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="O parceiro selecionado não é um cliente"
             )
         
         # Verifica se o vendedor existe (se fornecido)

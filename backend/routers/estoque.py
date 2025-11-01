@@ -52,15 +52,87 @@ async def listar_movimentacoes(
     
     return movimentacoes
 
+@router.get("/valorizacao", response_model=dict)
+async def obter_valorizacao_estoque(
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """
+    Calcula a valorização total do estoque (quantidade * preço de venda).
+    Retorna o valor total do estoque em produtos ativos.
+    """
+    with get_db_cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT 
+                SUM(estoque_atual * preco_venda) as valor_total_estoque,
+                COUNT(*) as total_produtos_com_estoque,
+                SUM(estoque_atual) as quantidade_total_estoque
+            FROM produtos 
+            WHERE ativo = TRUE AND estoque_atual > 0
+            """
+        )
+        resultado = cursor.fetchone()
+        
+        # Se não houver produtos, retorna valores zerados
+        if not resultado or resultado["valor_total_estoque"] is None:
+            return {
+                "valor_total_estoque": 0.0,
+                "total_produtos_com_estoque": 0,
+                "quantidade_total_estoque": 0
+            }
+        
+        return {
+            "valor_total_estoque": float(resultado["valor_total_estoque"]),
+            "total_produtos_com_estoque": resultado["total_produtos_com_estoque"],
+            "quantidade_total_estoque": resultado["quantidade_total_estoque"]
+        }
+
+@router.get("/custo-total", response_model=dict)
+async def obter_custo_total_estoque(
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """
+    Calcula o custo total do estoque (quantidade * preço de custo).
+    Retorna o custo total do estoque em produtos ativos.
+    """
+    with get_db_cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT 
+                SUM(estoque_atual * preco_custo) as custo_total_estoque,
+                COUNT(*) as total_produtos_com_estoque,
+                SUM(estoque_atual) as quantidade_total_estoque
+            FROM produtos 
+            WHERE ativo = TRUE AND estoque_atual > 0
+            """
+        )
+        resultado = cursor.fetchone()
+        
+        # Se não houver produtos, retorna valores zerados
+        if not resultado or resultado["custo_total_estoque"] is None:
+            return {
+                "custo_total_estoque": 0.0,
+                "total_produtos_com_estoque": 0,
+                "quantidade_total_estoque": 0
+            }
+        
+        return {
+            "custo_total_estoque": float(resultado["custo_total_estoque"]),
+            "total_produtos_com_estoque": resultado["total_produtos_com_estoque"],
+            "quantidade_total_estoque": resultado["quantidade_total_estoque"]
+        }
+
 @router.get("/produtos", response_model=List[dict])
 async def listar_produtos_estoque(
     abaixo_minimo: Optional[bool] = None,
     categoria_id: Optional[int] = None,
+    com_estoque: Optional[bool] = None,
+    ativo: Optional[bool] = None,
     current_user: UserInDB = Depends(get_current_user)
 ):
     """
     Lista todos os produtos com informações de estoque.
-    Pode filtrar por produtos abaixo do estoque mínimo e categoria.
+    Pode filtrar por produtos abaixo do estoque mínimo, categoria, produtos com estoque e produtos ativos.
     """
     query = """
         SELECT p.*, c.nome as categoria_nome
@@ -73,9 +145,16 @@ async def listar_produtos_estoque(
     if abaixo_minimo is not None and abaixo_minimo:
         query += " AND p.estoque_atual < p.estoque_minimo"
     
+    if com_estoque is not None and com_estoque:
+        query += " AND p.estoque_atual > 0"
+    
     if categoria_id is not None:
         query += " AND p.categoria_id = %s"
         params.append(categoria_id)
+    
+    if ativo is not None:
+        query += " AND p.ativo = %s"
+        params.append(ativo)
     
     query += " ORDER BY p.nome"
     

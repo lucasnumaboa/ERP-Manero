@@ -15,7 +15,7 @@ async def get_current_user_info(current_user: UserInDB = Depends(get_current_use
     """
     with get_db_cursor() as cursor:
         cursor.execute(
-            "SELECT id, nome, email, nivel_acesso, ultimo_acesso FROM usuarios WHERE id = %s",
+            "SELECT id, nome, email, nivel_acesso, ultimo_acesso, grupo_id FROM usuarios WHERE id = %s",
             (current_user.id,)
         )
         usuario = cursor.fetchone()
@@ -31,6 +31,53 @@ async def get_current_user_info(current_user: UserInDB = Depends(get_current_use
         usuario['ultimo_acesso'] = str(usuario['ultimo_acesso'])
     
     return usuario
+
+# Rota para obter as permissões do grupo de um usuário
+@router.get("/grupo/{grupo_id}", response_model=dict)
+async def get_grupo_permissions(
+    grupo_id: int,
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """
+    Retorna as permissões de um grupo específico.
+    Requer autenticação.
+    """
+    with get_db_cursor() as cursor:
+        cursor.execute(
+            "SELECT * FROM grupo_usuario WHERE id = %s",
+            (grupo_id,)
+        )
+        grupo = cursor.fetchone()
+    
+    if not grupo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Grupo não encontrado"
+        )
+    
+    # Retorna todas as permissões do grupo
+    return {
+        "dashboard_visualizar": grupo.get('dashboard_visualizar'),
+        "dashboard_editar": grupo.get('dashboard_editar'),
+        "produtos_visualizar": grupo.get('produtos_visualizar'),
+        "produtos_editar": grupo.get('produtos_editar'),
+        "clientes_visualizar": grupo.get('clientes_visualizar'),
+        "clientes_editar": grupo.get('clientes_editar'),
+        "vendas_visualizar": grupo.get('vendas_visualizar'),
+        "vendas_editar": grupo.get('vendas_editar'),
+        "vendedores_visualizar": grupo.get('vendedores_visualizar'),
+        "vendedores_editar": grupo.get('vendedores_editar'),
+        "compras_visualizar": grupo.get('compras_visualizar'),
+        "compras_editar": grupo.get('compras_editar'),
+        "fornecedores_visualizar": grupo.get('fornecedores_visualizar'),
+        "fornecedores_editar": grupo.get('fornecedores_editar'),
+        "estoque_visualizar": grupo.get('estoque_visualizar'),
+        "estoque_editar": grupo.get('estoque_editar'),
+        "configuracoes_visualizar": grupo.get('configuracoes_visualizar'),
+        "configuracoes_editar": grupo.get('configuracoes_editar'),
+        "financeiro_visualizar": grupo.get('financeiro_visualizar'),
+        "financeiro_editar": grupo.get('financeiro_editar')
+    }
 @router.get("/", response_model=List[Usuario])
 async def listar_usuarios(current_user: UserInDB = Depends(get_current_user)):
     """
@@ -45,7 +92,7 @@ async def listar_usuarios(current_user: UserInDB = Depends(get_current_user)):
     
     with get_db_cursor() as cursor:
         cursor.execute(
-            "SELECT id, nome, email, nivel_acesso, ultimo_acesso FROM usuarios"
+            "SELECT id, nome, email, nivel_acesso, ultimo_acesso, grupo_id FROM usuarios"
         )
         usuarios = cursor.fetchall()
     
@@ -73,7 +120,7 @@ async def obter_usuario(
     
     with get_db_cursor() as cursor:
         cursor.execute(
-            "SELECT id, nome, email, nivel_acesso, ultimo_acesso FROM usuarios WHERE id = %s",
+            "SELECT id, nome, email, nivel_acesso, ultimo_acesso, grupo_id FROM usuarios WHERE id = %s",
             (usuario_id,)
         )
         usuario = cursor.fetchone()
@@ -123,10 +170,10 @@ async def criar_usuario(
     with get_db_cursor(commit=True) as cursor:
         cursor.execute(
             """
-            INSERT INTO usuarios (nome, email, senha, nivel_acesso)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO usuarios (nome, email, senha, nivel_acesso, grupo_id)
+            VALUES (%s, %s, %s, %s, %s)
             """,
-            (usuario.nome, usuario.email, hashed_password, usuario.nivel_acesso)
+            (usuario.nome, usuario.email, hashed_password, usuario.nivel_acesso, usuario.grupo_id)
         )
         
         # Obtém o ID do usuário criado
@@ -135,7 +182,7 @@ async def criar_usuario(
         
         # Obtém os dados do usuário criado
         cursor.execute(
-            "SELECT id, nome, email, nivel_acesso, ultimo_acesso FROM usuarios WHERE id = %s",
+            "SELECT id, nome, email, nivel_acesso, ultimo_acesso, grupo_id FROM usuarios WHERE id = %s",
             (usuario_id,)
         )
         novo_usuario = cursor.fetchone()
@@ -184,6 +231,8 @@ async def atualizar_usuario(
         update_data["nivel_acesso"] = usuario.nivel_acesso
     if usuario.senha:
         update_data["senha"] = get_password_hash(usuario.senha)
+    if usuario.grupo_id is not None:
+        update_data["grupo_id"] = usuario.grupo_id
     
     if not update_data:
         raise HTTPException(
@@ -204,7 +253,7 @@ async def atualizar_usuario(
         
         # Obtém os dados atualizados
         cursor.execute(
-            "SELECT id, nome, email, nivel_acesso, ultimo_acesso FROM usuarios WHERE id = %s",
+            "SELECT id, nome, email, nivel_acesso, ultimo_acesso, grupo_id FROM usuarios WHERE id = %s",
             (usuario_id,)
         )
         usuario_atualizado = cursor.fetchone()
