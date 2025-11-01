@@ -167,7 +167,10 @@ app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"]
 app.include_router(configuracoes.router, prefix="/api/configuracoes", tags=["Configurações"])
 
 # Configuração para servir arquivos estáticos (uploads)
-app.mount("/uploads", StaticFiles(directory="frontend/uploads"), name="uploads")
+import os
+# Usar caminho absoluto para os uploads
+uploads_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend", "uploads")
+app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
 
 @app.get("/")
 async def root():
