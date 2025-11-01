@@ -172,6 +172,16 @@ def update_js_files(api_url):
             updated_content = updated_content.replace(f"'{last_url_without_protocol}", f"'{api_url_without_protocol}")
             updated_content = updated_content.replace(f"`{last_url_without_protocol}", f"`{api_url_without_protocol}")
             
+            # Substitui URLs hardcoded para imagens (com /uploads/)
+            updated_content = updated_content.replace(f'"{last_url}/uploads/', f'"{api_url}/uploads/')
+            updated_content = updated_content.replace(f"'{last_url}/uploads/", f"'{api_url}/uploads/")
+            updated_content = updated_content.replace(f"`{last_url}/uploads/", f"`{api_url}/uploads/")
+            
+            # Substitui URLs hardcoded para imagens sem protocolo
+            updated_content = updated_content.replace(f'"{last_url_without_protocol}/uploads/', f'"{api_url_without_protocol}/uploads/')
+            updated_content = updated_content.replace(f"'{last_url_without_protocol}/uploads/", f"'{api_url_without_protocol}/uploads/")
+            updated_content = updated_content.replace(f"`{last_url_without_protocol}/uploads/", f"`{api_url_without_protocol}/uploads/")
+            
             # Escreve o conteúdo atualizado de volta no arquivo
             with open(js_file, 'w', encoding='utf-8') as file:
                 file.write(updated_content)
