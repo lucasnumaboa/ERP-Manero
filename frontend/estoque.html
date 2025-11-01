@@ -5,10 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ERP Maneiro - Consulta de Estoque</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="css/modulos.css">
+    <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="css/submenu.css">
+    <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/permissions.css">
     <style>
         .estoque-baixo {
             background-color: rgba(255, 0, 0, 0.1);
@@ -41,6 +46,84 @@
         .mov-ajuste {
             background-color: rgba(255, 193, 7, 0.1);
         }
+        
+        /* Estilos para o modal de detalhes */
+        .detalhes-container {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .detalhes-section {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        
+        .detalhes-section h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 1.1em;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+        
+        .detalhes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .detalhes-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .detalhes-item label {
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        
+        .detalhes-item span {
+            padding: 8px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 20px;
+        }
+        
+        .imagens-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .imagem-item {
+            text-align: center;
+        }
+        
+        .imagem-item img {
+            max-width: 100%;
+            max-height: 150px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .imagem-item img:hover {
+            transform: scale(1.05);
+        }
+        
+        .imagem-item .download-btn {
+            margin-top: 5px;
+            padding: 5px 10px;
+            font-size: 0.8em;
+        }
     </style>
 </head>
 <body>
@@ -64,6 +147,9 @@
             </div>
             <nav class="sidebar-nav">
                 <ul>
+                    <li>
+                        <a href="homepage.html"><i class="fas fa-home"></i> Home</a>
+                    </li>
                     <li>
                         <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     </li>
@@ -122,6 +208,7 @@
                 <div class="page-header">
                     <h1>Consulta de Estoque</h1>
                     <p>Visualize e gerencie o estoque de produtos</p>
+
                 </div>
 
                 <!-- Filtros de Estoque -->
@@ -133,12 +220,21 @@
                         Configure os filtros para visualizar os produtos em estoque
                     </div>
                     <div class="filter-container">
-                        <div class="filter-group">
-                            <label class="checkbox-container">
-                                <input type="checkbox" id="filtroAbaixoMinimo">
-                                <span class="checkmark"></span>
-                                Produtos abaixo do estoque mínimo
-                            </label>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div class="filter-group">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="filtroAbaixoMinimo">
+                                    <span class="checkmark"></span>
+                                    Produtos abaixo do estoque mínimo
+                                </label>
+                            </div>
+                            <div class="filter-group">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="filtroComEstoque">
+                                    <span class="checkmark"></span>
+                                    Mostrar apenas o que tem estoque
+                                </label>
+                            </div>
                         </div>
                         <div class="filter-group">
                             <label for="filtroCategoria">Categoria:</label>
@@ -156,6 +252,11 @@
                 <div class="settings-card">
                     <div class="card-header">
                         <h2><i class="fas fa-warehouse"></i> Produtos em Estoque</h2>
+                        <div id="novaMovimentacaoContainer" style="display: none;">
+                            <button class="btn-primary" onclick="openNovaMovimentacao()">
+                                <i class="fas fa-plus"></i> Nova Movimentação
+                            </button>
+                        </div>
                     </div>
                     <div class="card-description">
                         Visualize e gerencie o estoque de produtos
@@ -171,12 +272,13 @@
                                         <th class="text-center">Estoque Atual</th>
                                         <th class="text-center">Estoque Mínimo</th>
                                         <th class="text-right">Preço de Venda</th>
+                                        <th class="text-right">Comissão (R$)</th>
                                         <th class="actions-column">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="estoqueTableBody">
                                     <tr>
-                                        <td colspan="7" class="text-center">Carregando produtos...</td>
+                                        <td colspan="8" class="text-center">Carregando produtos...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -231,6 +333,95 @@
         </div>
     </div>
 
+    <!-- Modal de Detalhes do Produto -->
+    <div class="modal" id="detalhesModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2 id="detalhesModalTitle">Detalhes do Produto</h2>
+                <button class="close-modal" onclick="closeModal('detalhesModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="detalhes-container">
+                    <!-- Imagens do Produto -->
+                    <div class="detalhes-section">
+                        <h3><i class="fas fa-images"></i> Imagens do Produto</h3>
+                        <div id="detalhes-imagens" class="imagens-container">
+                            <p class="text-center">Nenhuma imagem disponível</p>
+                        </div>
+                    </div>
+
+                    <!-- Informações Básicas -->
+                    <div class="detalhes-section">
+                        <h3><i class="fas fa-info-circle"></i> Informações Básicas</h3>
+                        <div class="detalhes-grid">
+                            <div class="detalhes-item">
+                                <label>Código:</label>
+                                <span id="detalhe-codigo">-</span>
+                            </div>
+                            <div class="detalhes-item">
+                                <label>Nome:</label>
+                                <span id="detalhe-nome">-</span>
+                            </div>
+                            <div class="detalhes-item">
+                                <label>Descrição:</label>
+                                <span id="detalhe-descricao">-</span>
+                            </div>
+                            <div class="detalhes-item">
+                                <label>Categoria:</label>
+                                <span id="detalhe-categoria">-</span>
+                            </div>
+                            <div class="detalhes-item">
+                                <label>Tipo do Produto:</label>
+                                <span id="detalhe-tipo">-</span>
+                            </div>
+                            <div class="detalhes-item">
+                                <label>Status:</label>
+                                <span id="detalhe-status">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Informações Financeiras -->
+                    <div class="detalhes-section">
+                        <h3><i class="fas fa-dollar-sign"></i> Informações Financeiras</h3>
+                        <div class="detalhes-grid">
+                            <div class="detalhes-item">
+                                <label>Preço de Venda:</label>
+                                <span id="detalhe-preco-venda">-</span>
+                            </div>
+                            <div class="detalhes-item">
+                                <label>Comissão:</label>
+                                <span id="detalhe-comissao">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Informações de Estoque -->
+                    <div class="detalhes-section">
+                        <h3><i class="fas fa-warehouse"></i> Informações de Estoque</h3>
+                        <div class="detalhes-grid">
+                            <div class="detalhes-item">
+                                <label>Estoque Atual:</label>
+                                <span id="detalhe-estoque-atual">-</span>
+                            </div>
+                            <div class="detalhes-item">
+                                <label>Estoque Mínimo:</label>
+                                <span id="detalhe-estoque-minimo">-</span>
+                            </div>
+                            <div class="detalhes-item">
+                                <label>Data de Cadastro:</label>
+                                <span id="detalhe-data-cadastro">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" onclick="closeModal('detalhesModal')">Fechar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de Nova Movimentação -->
     <div class="modal" id="movimentacaoModal">
         <div class="modal-content">
@@ -278,6 +469,7 @@
     <script src="js/api.js"></script>
     <script src="js/sidebar.js"></script>
     <script src="js/pagination.js"></script>
+    <script src="js/permissions.js"></script>
     <script src="js/setupModals.js"></script>
     <script src="js/estoque.js"></script>
     <script src="js/filtro-pesquisa.js"></script>

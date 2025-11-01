@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Maneiro - Home</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/permissions.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/submenu.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .shortcuts-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            padding: 30px;
+        }
+        
+        .shortcut-card {
+            width: 150px;
+            height: 150px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-decoration: none;
+            color: #333;
+        }
+        
+        .shortcut-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .shortcut-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+            color: #3498db;
+        }
+        
+        .shortcut-title {
+            font-size: 16px;
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        .welcome-message {
+            text-align: center;
+            margin: 30px 0;
+            color: #333;
+        }
+        
+        .welcome-message h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .welcome-message p {
+            font-size: 16px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Menu Lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="img/icon.png" alt="ERP Maneiro" class="logo-img">
+                <button id="toggleSidebar" class="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-info">
+                    <span id="userName">Carregando...</span>
+                    <span id="userRole" class="user-role">Carregando...</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li>
+                        <a href="homepage.html" class="active">
+                            <i class="fas fa-home"></i>
+                            <span>Home</span>
+                        </a>
+                    </li>
+                    <li class="logout">
+                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="page-header-title">
+                    <h1>Bem-vindo ao ERP Maneiro</h1>
+                    <p id="currentDateTime"></p>
+                </div>
+            </header>
+
+            <div class="content-body">
+                <div class="welcome-message">
+                    <h1>Bem-vindo, <span id="welcomeUserName">Usuário</span>!</h1>
+                    <p>Selecione um dos atalhos abaixo para começar a usar o sistema.</p>
+                </div>
+                
+                <!-- A seção do Dashboard foi removida para manter a página inicial mais limpa -->
+                
+                <div class="shortcuts-container">
+                    <!-- Atalho do dashboard removido -->
+                    
+                    <a href="produtos.html" class="shortcut-card" id="produtos-shortcut" style="display: none;">
+                        <i class="fas fa-box shortcut-icon"></i>
+                        <span class="shortcut-title">Produtos</span>
+                    </a>
+                    
+                    <a href="categorias.html" class="shortcut-card" id="categorias-shortcut" style="display: none;">
+                        <i class="fas fa-tags shortcut-icon"></i>
+                        <span class="shortcut-title">Categorias</span>
+                    </a>
+                    
+                    <a href="clientes.html" class="shortcut-card" id="clientes-shortcut" style="display: none;">
+                        <i class="fas fa-users shortcut-icon"></i>
+                        <span class="shortcut-title">Clientes</span>
+                    </a>
+                    
+                    <a href="vendas.html" class="shortcut-card" id="vendas-shortcut" style="display: none;">
+                        <i class="fas fa-shopping-cart shortcut-icon"></i>
+                        <span class="shortcut-title">Vendas</span>
+                    </a>
+                    
+                    <a href="vendedores.html" class="shortcut-card" id="vendedores-shortcut" style="display: none;">
+                        <i class="fas fa-user-tie shortcut-icon"></i>
+                        <span class="shortcut-title">Vendedores</span>
+                    </a>
+                    
+                    <a href="compras.html" class="shortcut-card" id="compras-shortcut" style="display: none;">
+                        <i class="fas fa-truck shortcut-icon"></i>
+                        <span class="shortcut-title">Compras</span>
+                    </a>
+                    
+                    <a href="fornecedores.html" class="shortcut-card" id="fornecedores-shortcut" style="display: none;">
+                        <i class="fas fa-building shortcut-icon"></i>
+                        <span class="shortcut-title">Fornecedores</span>
+                    </a>
+                    
+                    <a href="estoque.html" class="shortcut-card" id="estoque-shortcut" style="display: none;">
+                        <i class="fas fa-warehouse shortcut-icon"></i>
+                        <span class="shortcut-title">Estoque</span>
+                    </a>
+                    
+                    <a href="configuracoes.html" class="shortcut-card" id="configuracoes-shortcut" style="display: none;">
+                        <i class="fas fa-cog shortcut-icon"></i>
+                        <span class="shortcut-title">Configurações</span>
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/redirect_fix.js"></script>
+    <script src="js/api_config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/permissions.js"></script>
+    <script src="js/homepage.js"></script>
+</body>
+</html>

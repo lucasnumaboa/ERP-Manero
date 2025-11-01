@@ -5,10 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ERP Maneiro - Produtos</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="css/produtos.css">
+    <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="css/submenu.css">
+    <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/permissions.css">
 </head>
 <body>
     <div class="app-container">
@@ -31,6 +36,9 @@
             </div>
             <nav class="sidebar-nav">
                 <ul>
+                    <li>
+                        <a href="homepage.html"><i class="fas fa-home"></i> Home</a>
+                    </li>
                     <li>
                         <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     </li>
@@ -100,12 +108,7 @@
                         <button class="btn-primary" id="btnNovoProduto">
                             <i class="fas fa-plus"></i> Novo Produto
                         </button>
-                        <button class="btn-outline" id="btnImportarProdutos">
-                            <i class="fas fa-file-import"></i> Importar
-                        </button>
-                        <button class="btn-outline" id="btnExportarProdutos">
-                            <i class="fas fa-file-export"></i> Exportar
-                        </button>
+
                     </div>
                     
                     <div class="actions-right">
@@ -224,6 +227,25 @@
                             </div>
                         </div>
                     </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tipo_produto">Tipo de Produto</label>
+                            <select id="tipo_produto" name="tipo_produto" required>
+                                <option value="comprado">Comprado</option>
+                                <option value="fabricado">Fabricado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="comissao">Comissão (R$)</label>
+                            <input type="text" id="comissao" name="comissao" inputmode="numeric" pattern="[0-9]*" placeholder="Ex: 50">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="imagens_produto">Imagens do Produto (máximo 3)</label>
+                        <input type="file" id="imagens_produto" name="imagens_produto" multiple accept="image/*" style="margin-bottom: 10px;">
+                        <div id="preview_imagens" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;"></div>
+                        <small style="color: #666;">Selecione até 3 imagens para o produto</small>
+                    </div>
                     <div class="form-group">
                         <label class="checkbox-container">
                             <input type="checkbox" id="ativo" name="ativo" checked>
@@ -244,7 +266,9 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
     <script src="js/sidebar.js"></script>
+    <script src="js/permissions.js"></script>
     <script src="js/pagination.js"></script>
     <script src="js/produtos.js"></script>
     <script src="js/setupModals.js"></script>
