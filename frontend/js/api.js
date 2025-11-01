@@ -5,15 +5,33 @@
 // Importa as funções de autenticação
 // Nota: Este arquivo deve ser carregado após auth.js
 
-// URL base da API - obtida do localStorage ou usa fallback para desenvolvimento
-function getApiBaseUrl() {
-    const storedUrl = localStorage.getItem('api_base_url');
-    return storedUrl || 'http://localhost:8000';
+// URL base da API - sempre obtida do banco de dados
+async function getApiBaseUrl() {
+    const defaultUrl = 'http://localhost:8000';
+    
+    try {
+        // Sempre busca a URL da API do endpoint configuracoes
+        const response = await fetch(`${defaultUrl}/api/configuracoes/link_api`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data && data.valor) {
+                return data.valor;
+            }
+        }
+    } catch (error) {
+        console.warn('Erro ao obter URL da API do banco, usando padrão:', error);
+    }
+    
+    return defaultUrl;
 }
 
-// Função para obter a URL base atual
-function getBaseUrl() {
-    return getApiBaseUrl();
+// Função para obter a URL base atual (mantida para compatibilidade)
+async function getBaseUrl() {
+    return await getApiBaseUrl();
 }
 
 /**
@@ -30,7 +48,8 @@ async function apiRequest(endpoint, options = {}) {
         }
 
         // URL completa
-        const url = `${getApiBaseUrl()}${endpoint}`;
+        const baseUrl = await getApiBaseUrl();
+        const url = `${baseUrl}${endpoint}`;
         
         // Usa fetchWithAuth do auth.js para fazer a requisição
         return await fetchWithAuth(url, options);
@@ -93,6 +112,36 @@ async function apiPost(endpoint, data = {}) {
         }
         
         throw new Error(`Falha na requisição POST para ${endpoint}: ${errorDetail}`);
+    }
+    
+    return await response.json();
+}
+
+/**
+ * Realiza uma requisição POST para a API com FormData (para upload de arquivos)
+ * @param {string} endpoint - O endpoint da API (sem a URL base)
+ * @param {FormData} formData - FormData a ser enviado no corpo da requisição
+ * @returns {Promise<any>} - Promise com os dados da resposta
+ */
+async function apiPostFormData(endpoint, formData) {
+    const response = await apiRequest(endpoint, {
+        method: 'POST',
+        // Não definir Content-Type para FormData - o browser define automaticamente
+        body: formData
+    });
+    
+    if (!response || !response.ok) {
+        const errorText = response ? await response.text() : 'sem resposta';
+        let errorDetail;
+        
+        try {
+            const errorJson = JSON.parse(errorText);
+            errorDetail = errorJson.detail || errorText;
+        } catch {
+            errorDetail = errorText;
+        }
+        
+        throw new Error(`Falha na requisição POST FormData para ${endpoint}: ${errorDetail}`);
     }
     
     return await response.json();

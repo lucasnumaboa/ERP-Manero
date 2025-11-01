@@ -444,99 +444,7 @@ function setupActionButtons() {
         console.error('Botão Salvar não encontrado no DOM!');
     }
     
-    // Botão Importar
-    const btnImportar = document.getElementById('btnImportarProdutos');
-    if (btnImportar) {
-        console.log('Botão Importar encontrado, adicionando event listener');
-        btnImportar.addEventListener('click', function(e) {
-            console.log('Botão Importar clicado!');
-            e.preventDefault();
-            
-            // Mostra opções de importação
-            const importOptions = document.createElement('div');
-            importOptions.className = 'modal active';
-            importOptions.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>Importar Produtos</h2>
-                        <button class="close-modal">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Escolha uma das opções abaixo:</p>
-                        <div class="form-row" style="margin-top: 20px;">
-                            <button id="btnDownloadTemplate" class="btn-primary">
-                                <i class="fas fa-file-download"></i> Baixar Modelo Excel
-                            </button>
-                        </div>
-                        <div class="form-row" style="margin-top: 20px;">
-                            <button id="btnSelectFile" class="btn-primary">
-                                <i class="fas fa-file-upload"></i> Selecionar Arquivo Excel
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(importOptions);
-            document.body.classList.add('modal-open');
-            
-            // Fecha o modal
-            const closeModal = importOptions.querySelector('.close-modal');
-            closeModal.addEventListener('click', function() {
-                document.body.removeChild(importOptions);
-                document.body.classList.remove('modal-open');
-            });
-            
-            // Botão para baixar o modelo
-            const btnDownloadTemplate = document.getElementById('btnDownloadTemplate');
-            btnDownloadTemplate.addEventListener('click', function() {
-                gerarModeloExcel();
-                document.body.removeChild(importOptions);
-                document.body.classList.remove('modal-open');
-            });
-            
-            // Botão para selecionar arquivo
-            const btnSelectFile = document.getElementById('btnSelectFile');
-            btnSelectFile.addEventListener('click', function() {
-                // Cria um input de arquivo invisível
-                const fileInput = document.createElement('input');
-                fileInput.type = 'file';
-                fileInput.accept = '.xlsx';
-                fileInput.style.display = 'none';
-                document.body.appendChild(fileInput);
-                
-                // Quando um arquivo for selecionado
-                fileInput.addEventListener('change', function() {
-                    if (this.files && this.files[0]) {
-                        const file = this.files[0];
-                        console.log(`Arquivo selecionado: ${file.name}`);
-                        document.body.removeChild(importOptions);
-                        document.body.classList.remove('modal-open');
-                        importarProdutosDoExcel(file);
-                    }
-                    // Remove o input após uso
-                    document.body.removeChild(fileInput);
-                });
-                
-                // Simula o clique no input de arquivo
-                fileInput.click();
-            });
-        });
-    } else {
-        console.error('Botão Importar não encontrado no DOM!');
-    }
-    
-    // Botão Exportar
-    const btnExportar = document.getElementById('btnExportarProdutos');
-    if (btnExportar) {
-        console.log('Botão Exportar encontrado, adicionando event listener');
-        btnExportar.addEventListener('click', function(e) {
-            console.log('Botão Exportar clicado!');
-            e.preventDefault();
-            exportarProdutosParaExcel();
-        });
-    } else {
-        console.error('Botão Exportar não encontrado no DOM!');
-    }
+
     
     // Botões de filtro
     const filtroCategoria = document.getElementById('filtroCategoria');
@@ -577,7 +485,7 @@ function setupActionButtons() {
     console.log('Configuração de botões concluída!');
     
     // Bloquear pontos em preços: somente números e vírgula, um único separador e até 2 casas decimais
-    ['preco_custo', 'preco_venda'].forEach(id => {
+    ['preco_custo', 'preco_venda', 'comissao'].forEach(id => {
         const input = document.getElementById(id);
         if (input) {
             input.addEventListener('input', function() {
@@ -597,6 +505,61 @@ function setupActionButtons() {
             });
         }
     });
+
+    // Configurar preview de imagens
+    const imagensInput = document.getElementById('imagens_produto');
+    if (imagensInput) {
+        imagensInput.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            const previewContainer = document.getElementById('preview_imagens');
+            
+            // Limitar a 3 imagens
+            if (files.length > 3) {
+                alert('Você pode selecionar no máximo 3 imagens.');
+                e.target.value = '';
+                previewContainer.innerHTML = '';
+                return;
+            }
+            
+            // Limpar preview anterior
+            previewContainer.innerHTML = '';
+            
+            // Criar preview para cada imagem
+            files.forEach((file, index) => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const previewDiv = document.createElement('div');
+                        previewDiv.style.cssText = 'position: relative; display: inline-block;';
+                        
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.cssText = 'width: 80px; height: 80px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;';
+                        
+                        const removeBtn = document.createElement('button');
+                        removeBtn.innerHTML = '×';
+                        removeBtn.type = 'button';
+                        removeBtn.style.cssText = 'position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 12px;';
+                        removeBtn.onclick = function() {
+                            previewDiv.remove();
+                            // Remover arquivo da lista
+                            const dt = new DataTransfer();
+                            const currentFiles = Array.from(imagensInput.files);
+                            currentFiles.forEach((f, i) => {
+                                if (i !== index) dt.items.add(f);
+                            });
+                            imagensInput.files = dt.files;
+                        };
+                        
+                        previewDiv.appendChild(img);
+                        previewDiv.appendChild(removeBtn);
+                        previewContainer.appendChild(previewDiv);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+    }
 }
 
 // Abre o modal de produto
@@ -719,6 +682,9 @@ function preencherFormularioProduto(produto, produtoId) {
         const precoVendaInput = document.getElementById('preco_venda');
         if (precoVendaInput) precoVendaInput.value = produto.preco_venda || '';
         
+        const comissaoInput = document.getElementById('comissao');
+        if (comissaoInput) comissaoInput.value = produto.comissao || '0';
+        
         const estoqueMinInput = document.getElementById('estoque_minimo');
         if (estoqueMinInput) estoqueMinInput.value = produto.estoque_minimo || '';
         
@@ -792,8 +758,13 @@ async function saveProduto() {
         const descricao = document.getElementById('descricao')?.value || '';
         const preco_custo_value = document.getElementById('preco_custo')?.value || '';
         const preco_venda_value = document.getElementById('preco_venda')?.value || '';
+        const comissao_value = document.getElementById('comissao')?.value || '';
+        
         // Validação de formato de preços: apenas dígitos e opcionalmente uma vírgula seguida de até 2 dígitos
         const priceRegex = /^[0-9]+(,[0-9]{1,2})?$/;
+        // Validação de formato de comissão: apenas números inteiros
+        const comissaoRegex = /^[0-9]+$/;
+        
         if (!priceRegex.test(preco_custo_value)) {
             console.error('Formato de Preço de Custo inválido:', preco_custo_value);
             alert('Formato inválido para Preço de Custo. Use apenas números e até 2 casas decimais separadas por vírgula.');
@@ -804,24 +775,43 @@ async function saveProduto() {
             alert('Formato inválido para Preço de Venda. Use apenas números e até 2 casas decimais separadas por vírgula.');
             return;
         }
+        if (comissao_value && !comissaoRegex.test(comissao_value)) {
+            console.error('Formato de Comissão inválido:', comissao_value);
+            alert('Formato inválido para Comissão. Use apenas números inteiros (ex: 50 para R$ 50,00).');
+            return;
+        }
+        
         const preco_custo = parseFloat(preco_custo_value.replace(',', '.')); // converte vírgula para ponto
         const preco_venda = parseFloat(preco_venda_value.replace(',', '.')); // converte vírgula para ponto
+        const comissao = comissao_value ? parseInt(comissao_value) : 0;
         const estoque_minimo = parseInt(document.getElementById('estoque_minimo')?.value || 0);
         const categoria_id = document.getElementById('categoria_id')?.value || '';
+        const tipo_produto = document.getElementById('tipo_produto')?.value || 'comprado';
         const ativo = document.getElementById('ativo')?.checked || false;
         
-        const produtoData = {
-            codigo,
-            nome,
-            descricao,
-            preco_custo,
-            preco_venda,
-            estoque_minimo,
-            categoria_id,
-            ativo
-        };
+        // Coleta as imagens
+        const imagensInput = document.getElementById('imagens_produto');
+        const imagens = imagensInput ? imagensInput.files : [];
         
-        console.log('Dados do produto a serem salvos:', produtoData);
+        // Cria FormData para envio
+        const formData = new FormData();
+        formData.append('codigo', codigo);
+        formData.append('nome', nome);
+        formData.append('descricao', descricao);
+        formData.append('preco_custo', preco_custo);
+        formData.append('preco_venda', preco_venda);
+        formData.append('estoque_minimo', estoque_minimo);
+        formData.append('categoria_id', categoria_id);
+        formData.append('tipo_produto', tipo_produto);
+        formData.append('comissao', comissao);
+        formData.append('ativo', ativo);
+        
+        // Adiciona as imagens ao FormData
+        for (let i = 0; i < imagens.length; i++) {
+            formData.append('imagens', imagens[i]);
+        }
+        
+        console.log('Dados do produto a serem salvos');
         
         // Validação básica
         if (!codigo || !nome) {
@@ -859,13 +849,25 @@ async function saveProduto() {
         let data;
         
         if (produtoId) {
-            // Atualiza produto existente
+            // Para atualização, ainda usa JSON (sem imagens por enquanto)
+            const produtoData = {
+                codigo,
+                nome,
+                descricao,
+                preco_custo,
+                preco_venda,
+                estoque_minimo,
+                categoria_id,
+                tipo_produto,
+                comissao,
+                ativo
+            };
             console.log(`Atualizando produto ID: ${produtoId}`);
             data = await apiPut(`/api/produtos/${produtoId}`, produtoData);
         } else {
-            // Cria novo produto
+            // Cria novo produto com FormData (incluindo imagens)
             console.log('Criando novo produto');
-            data = await apiPost('/api/produtos', produtoData);
+            data = await apiPostFormData('/api/produtos', formData);
         }
         
         console.log('Produto salvo com sucesso:', data);
@@ -960,799 +962,18 @@ function gerarProximoCodigoProduto() {
     }
 }
 
-// Importa produtos de um arquivo Excel
-function importarProdutosDoExcel(file) {
-    console.log('Iniciando importação de produtos do Excel...');
-    
-    try {
-        // Mostra mensagem de carregamento
-        const loadingMessage = document.createElement('div');
-        loadingMessage.className = 'loading-overlay';
-        loadingMessage.innerHTML = `
-            <div class="loading-content">
-                <i class="fas fa-spinner fa-spin"></i>
-                <p>Processando arquivo...</p>
-            </div>
-        `;
-        document.body.appendChild(loadingMessage);
-        
-        // Lê o arquivo Excel
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            try {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {type: 'array'});
-                
-                // Pega a primeira planilha
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                
-                // Converte para JSON
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-                
-                // Verifica se há dados
-                if (!jsonData || jsonData.length <= 1) {
-                    document.body.removeChild(loadingMessage);
-                    alert('O arquivo não contém dados válidos. Verifique o modelo de importação.');
-                    return;
-                }
-                
-                // Obtém os cabeçalhos (primeira linha)
-                const headers = jsonData[0];
-                
-                // Verifica se os cabeçalhos estão corretos
-                const requiredHeaders = ['Código', 'Nome', 'Categoria', 'Preço de Custo', 'Preço de Venda', 'Estoque Mínimo'];
-                const missingHeaders = requiredHeaders.filter(header => !headers.includes(header));
-                
-                if (missingHeaders.length > 0) {
-                    document.body.removeChild(loadingMessage);
-                    alert(`O arquivo não contém todos os cabeçalhos obrigatórios. Faltam: ${missingHeaders.join(', ')}`);
-                    return;
-                }
-                
-                // Prepara os dados para validação
-                const produtos = [];
-                const erros = [];
-                
-                // Processa cada linha (exceto o cabeçalho)
-                for (let i = 1; i < jsonData.length; i++) {
-                    const row = jsonData[i];
-                    if (row.length === 0 || (row.length === 1 && !row[0])) continue; // Pula linhas vazias
-                    
-                    const produto = {};
-                    const errosLinha = [];
-                    
-                    // Mapeia os valores baseados nos cabeçalhos
-                    headers.forEach((header, index) => {
-                        const value = row[index];
-                        
-                        switch(header) {
-                            case 'Código':
-                                produto.codigo = value ? String(value).trim() : '';
-                                if (!produto.codigo) errosLinha.push('Código é obrigatório');
-                                break;
-                                
-                            case 'Nome':
-                                produto.nome = value ? String(value).trim() : '';
-                                if (!produto.nome) errosLinha.push('Nome é obrigatório');
-                                break;
-                                
-                            case 'Descrição':
-                                produto.descricao = value ? String(value).trim() : '';
-                                break;
-                                
-                            case 'Categoria':
-                                produto.categoria_nome = value ? String(value).trim() : '';
-                                if (!produto.categoria_nome) errosLinha.push('Categoria é obrigatória');
-                                break;
-                                
-                            case 'Preço de Custo':
-                                produto.preco_custo = value ? parseFloat(String(value).replace('R$', '').replace('.', '').replace(',', '.').trim()) : 0;
-                                if (isNaN(produto.preco_custo)) {
-                                    produto.preco_custo = 0;
-                                    errosLinha.push('Preço de Custo inválido');
-                                }
-                                break;
-                                
-                            case 'Preço de Venda':
-                                produto.preco_venda = value ? parseFloat(String(value).replace('R$', '').replace('.', '').replace(',', '.').trim()) : 0;
-                                if (isNaN(produto.preco_venda)) {
-                                    produto.preco_venda = 0;
-                                    errosLinha.push('Preço de Venda inválido');
-                                }
-                                break;
-                                
-                            case 'Estoque Atual':
-                                produto.estoque_atual = value ? parseInt(value) : 0;
-                                if (isNaN(produto.estoque_atual)) {
-                                    produto.estoque_atual = 0;
-                                    errosLinha.push('Estoque Atual inválido');
-                                }
-                                break;
-                                
-                            case 'Estoque Mínimo':
-                                produto.estoque_minimo = value ? parseInt(value) : 0;
-                                if (isNaN(produto.estoque_minimo)) {
-                                    produto.estoque_minimo = 0;
-                                    errosLinha.push('Estoque Mínimo inválido');
-                                }
-                                break;
-                                
-                            case 'Status':
-                                produto.ativo = value ? (String(value).trim().toLowerCase() === 'ativo') : true;
-                                break;
-                        }
-                    });
-                    
-                    // Adiciona a linha e os erros (se houver)
-                    if (errosLinha.length > 0) {
-                        erros.push({
-                            linha: i + 1,
-                            codigo: produto.codigo || `Linha ${i + 1}`,
-                            nome: produto.nome || 'N/A',
-                            erros: errosLinha
-                        });
-                    } else {
-                        produtos.push(produto);
-                    }
-                }
-                
-                // Se houver erros, gera um relatório de erros
-                if (erros.length > 0) {
-                    console.log(`Encontrados ${erros.length} erros na importação`);
-                    gerarRelatorioErros(erros, file.name);
-                    document.body.removeChild(loadingMessage);
-                    return;
-                }
-                
-                // Se não houver produtos válidos
-                if (produtos.length === 0) {
-                    document.body.removeChild(loadingMessage);
-                    alert('Nenhum produto válido encontrado no arquivo.');
-                    return;
-                }
-                
-                console.log(`Processados ${produtos.length} produtos válidos para importação`);
-                
-                // Envia os produtos para a API
-                // Carrega categorias para mapear nome -> ID
-                console.log('[API LOG] Carregando categorias para mapear nome->ID');
-                fetch('http://localhost:8000/api/categorias/', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': 'Bearer ' + getToken(),
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Erro ao carregar categorias: ' + response.status);
-                    }
-                    return response.json();
-                })
-                .then(categories => {
-                    console.log('[API LOG] Categorias carregadas:', categories);
-                    const categoriaMap = {};
-                    categories.forEach(cat => {
-                        categoriaMap[cat.nome] = cat.id;
-                    });
-                    // Mapeia categoria para cada produto
-                    produtos.forEach((produto, idx) => {
-                        const nomeCat = produto.categoria_nome;
-                        if (!nomeCat || !categoriaMap[nomeCat]) {
-                            const mensagem = 'Categoria ' + nomeCat + ' não encontrada para produto ' + produto.codigo;
-                            console.error('[API LOG] ' + mensagem);
-                            throw new Error(mensagem);
-                        }
-                        produto.categoria_id = categoriaMap[nomeCat];
-                        delete produto.categoria_nome;
-                    });
-                    // Envia os produtos para a API
-                    enviarProdutosParaAPI(produtos, loadingMessage);
-                })
-                .catch(error => {
-                    console.error('[API LOG] Erro ao mapear categorias:', error);
-                    document.body.removeChild(loadingMessage);
-                    alert('Erro ao mapear categorias: ' + error.message);
-                });
-                
-            } catch (error) {
-                console.error('Erro ao processar arquivo Excel:', error);
-                document.body.removeChild(loadingMessage);
-                alert('Erro ao processar o arquivo Excel. Verifique se o formato está correto.');
-            }
-        };
-        
-        reader.onerror = function() {
-            console.error('Erro ao ler o arquivo');
-            document.body.removeChild(loadingMessage);
-            alert('Erro ao ler o arquivo. Tente novamente.');
-        };
-        
-        reader.readAsArrayBuffer(file);
-        
-    } catch (error) {
-        console.error('Erro inesperado na importação:', error);
-        alert('Erro ao importar produtos. Tente novamente.');
-    }
-}
+
 
 // Gera um relatório de erros em Excel
-function gerarRelatorioErros(erros, nomeArquivoOriginal) {
-    console.log('Gerando relatório de erros de validação...');
-    
-    try {
-        // Prepara os dados para o Excel
-        const dadosErros = erros.map(erro => {
-            return {
-                'Linha': erro.linha,
-                'Código': erro.codigo,
-                'Nome': erro.nome,
-                'Erros': erro.erros.join('; ')
-            };
-        });
-        
-        // Cria uma planilha
-        const ws = XLSX.utils.json_to_sheet(dadosErros);
-        
-        // Configura a largura das colunas
-        const wscols = [
-            {wch: 8},  // Linha
-            {wch: 15}, // Código
-            {wch: 30}, // Nome
-            {wch: 60}  // Erros
-        ];
-        ws['!cols'] = wscols;
-        
-        // Cria um workbook
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Erros de Validação');
-        
-        // Gera o nome do arquivo com data e hora
-        const dataHora = new Date().toISOString().replace(/[\-:]/g, '').replace('T', '_').substring(0, 15);
-        const nomeBase = nomeArquivoOriginal.replace('.xlsx', '');
-        const nomeArquivo = `${nomeBase}_erros_${dataHora}.xlsx`;
-        
-        // Exporta o arquivo
-        XLSX.writeFile(wb, nomeArquivo);
-        
-        console.log(`Relatório de erros exportado com sucesso: ${nomeArquivo}`);
-        alert(`Foram encontrados ${erros.length} erros na validação dos dados. Um relatório foi gerado com os detalhes.`);
-        
-    } catch (error) {
-        console.error('Erro ao gerar relatório de erros:', error);
-        alert('Erro ao gerar relatório de erros. Verifique o console para mais detalhes.');
-    }
-}
 
-// Gera um relatório de erros de importação em Excel
-function gerarRelatorioErrosImportacao(erros, nomeArquivo) {
-    console.log('Gerando relatório de erros de importação...', erros);
-    
-    try {
-        // Prepara os dados para o Excel
-        const dadosErros = erros.map(erro => {
-            // Identifica o tipo de erro (criar ou atualizar)
-            let tipoOperacao = 'Desconhecida';
-            
-            // Extrai a primeira mensagem de erro principal
-            const mensagemPrincipal = erro.erros[0] || '';
-            
-            // Determina o tipo de operação
-            if (mensagemPrincipal.includes('criar novo')) {
-                tipoOperacao = 'Criar';
-            } else if (mensagemPrincipal.includes('atualizar existente')) {
-                tipoOperacao = 'Atualizar';
-            } else if (mensagemPrincipal.includes('verificar se o produto existe')) {
-                tipoOperacao = 'Verificar';
-            }
-            
-            // Extrai mensagens de erro detalhadas
-            let mensagemErro = erro.erros[0] || 'Erro desconhecido';
-            
-            // Prepara os detalhes do erro
-            let detalhesErro = '';
-            
-            // Adiciona todas as mensagens de erro exceto a primeira
-            if (erro.erros.length > 1) {
-                // Filtra mensagens que contém informações úteis
-                const mensagensDetalhadas = erro.erros.slice(1).filter(msg => {
-                    // Filtra mensagens vazias ou duplicadas da mensagem principal
-                    return msg && msg.trim() !== '' && !mensagemErro.includes(msg);
-                });
-                
-                if (mensagensDetalhadas.length > 0) {
-                    detalhesErro = mensagensDetalhadas.join('\n');
-                }
-            }
-            
-            // Se for erro 422 (Unprocessable Entity), adiciona informações específicas
-            if (mensagemPrincipal.includes('422')) {
-                // Procura por mensagens que contém 'Erro de validação' ou 'Campo'
-                const errosValidacao = erro.erros.filter(e => 
-                    e.includes('Erro de validação') || 
-                    e.includes('Campo') || 
-                    e.includes('JSON')
-                );
-                
-                if (errosValidacao.length > 0) {
-                    // Se houver mensagens de validação específicas, usa-as
-                    detalhesErro = errosValidacao.join('\n');
-                } else if (detalhesErro === '') {
-                    // Se não houver detalhes, adiciona uma mensagem genérica mais útil
-                    detalhesErro = 'Erro de validação de dados. Verifique se todos os campos estão preenchidos corretamente.';
-                    
-                    // Adiciona dicas comuns para erros 422
-                    detalhesErro += '\n\nPossíveis problemas:\n';
-                    detalhesErro += '- Campos numéricos com formato inválido (ex: preços com vírgula em vez de ponto)\n';
-                    detalhesErro += '- Campos obrigatórios não preenchidos\n';
-                    detalhesErro += '- Categoria inexistente\n';
-                    detalhesErro += '- Valores negativos em campos que não aceitam\n';
-                    detalhesErro += '- Formato de dados incorreto';
-                }
-            }
-            
-            return {
-                'Produto': erro.linha,
-                'Código': erro.codigo,
-                'Nome': erro.nome,
-                'Operação': tipoOperacao,
-                'Erro': mensagemErro,
-                'Detalhes': detalhesErro
-            };
-        });
-        
-        // Cria uma planilha
-        const ws = XLSX.utils.json_to_sheet(dadosErros);
-        
-        // Configura a largura das colunas
-        const wscols = [
-            {wch: 8},  // Produto
-            {wch: 15}, // Código
-            {wch: 30}, // Nome
-            {wch: 12}, // Operação
-            {wch: 40}, // Erro
-            {wch: 80}  // Detalhes - Aumentado para mostrar mais informações
-        ];
-        ws['!cols'] = wscols;
-        
-        // Cria um workbook
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Erros de Importação');
-        
-        // Exporta o arquivo
-        XLSX.writeFile(wb, nomeArquivo);
-        
-        console.log(`Relatório de erros de importação exportado com sucesso: ${nomeArquivo}`);
-        
-    } catch (error) {
-        console.error('Erro ao gerar relatório de erros de importação:', error);
-        alert('Erro ao gerar relatório de erros de importação. Verifique o console para mais detalhes.');
-    }
-}
 
-// Gera um modelo de Excel para importação
-function gerarModeloExcel() {
-    console.log('Gerando modelo de Excel para importação...');
-    
-    try {
-        // Cria uma planilha com os cabeçalhos
-        const headers = [
-            'Código', 'Nome', 'Descrição', 'Categoria', 
-            'Preço de Custo', 'Preço de Venda', 'Estoque Atual', 
-            'Estoque Mínimo', 'Status'
-        ];
-        
-        // Cria exemplos de dados
-        const exampleData = [
-            [
-                'PROD001', 'Produto Exemplo 1', 'Descrição do produto exemplo 1', 'Eletrônicos',
-                'R$ 100,00', 'R$ 150,00', '10', '5', 'Ativo'
-            ],
-            [
-                'PROD002', 'Produto Exemplo 2', 'Descrição do produto exemplo 2', 'Informática',
-                'R$ 200,00', 'R$ 300,00', '20', '10', 'Ativo'
-            ],
-            [
-                'PROD003', 'Produto Exemplo 3', 'Descrição do produto exemplo 3', 'Papelaria',
-                'R$ 50,00', 'R$ 75,00', '30', '15', 'Inativo'
-            ]
-        ];
-        
-        // Combina cabeçalhos e dados
-        const data = [headers, ...exampleData];
-        
-        // Cria uma planilha
-        const ws = XLSX.utils.aoa_to_sheet(data);
-        
-        // Configura a largura das colunas
-        const wscols = [
-            {wch: 10}, // Código
-            {wch: 30}, // Nome
-            {wch: 40}, // Descrição
-            {wch: 15}, // Categoria
-            {wch: 15}, // Preço de Custo
-            {wch: 15}, // Preço de Venda
-            {wch: 15}, // Estoque Atual
-            {wch: 15}, // Estoque Mínimo
-            {wch: 10}  // Status
-        ];
-        ws['!cols'] = wscols;
-        
-        // Cria um workbook
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Modelo de Importação');
-        
-        // Gera o nome do arquivo com data e hora
-        const dataHora = new Date().toISOString().replace(/[\-:]/g, '').replace('T', '_').substring(0, 15);
-        const nomeArquivo = `modelo_importacao_produtos_${dataHora}.xlsx`;
-        
-        // Exporta o arquivo
-        XLSX.writeFile(wb, nomeArquivo);
-        
-        console.log(`Modelo de Excel gerado com sucesso: ${nomeArquivo}`);
-        
-    } catch (error) {
-        console.error('Erro ao gerar modelo de Excel:', error);
-        alert('Erro ao gerar modelo de Excel. Tente novamente.');
-    }
-}
 
-// Envia os produtos para a API
-function enviarProdutosParaAPI(produtos, loadingMessage) {
-    console.log('Enviando produtos para a API...');
-    
-    try {
-        const token = getToken();
-        
-        // Atualiza a mensagem de carregamento
-        const loadingContent = loadingMessage.querySelector('.loading-content');
-        if (loadingContent) {
-            loadingContent.innerHTML = `
-                <i class="fas fa-spinner fa-spin"></i>
-                <p>Importando ${produtos.length} produtos...</p>
-            `;
-        }
-        
-        // Envia os produtos para a API um por um
-        let processados = 0;
-        let sucessos = 0;
-        let falhas = 0;
-        const errosImportacao = []; // Array para armazenar erros de importação
-        
-        // Função para processar cada produto
-        const processarProduto = (index) => {
-            if (index >= produtos.length) {
-                // Todos os produtos foram processados
-                document.body.removeChild(loadingMessage);
-                
-                // Se houver erros, gera um relatório
-                if (falhas > 0 && errosImportacao.length > 0) {
-                    console.log(`Gerando relatório para ${errosImportacao.length} erros de importação`);
-                    const dataHora = new Date().toISOString().replace(/[\-:]/g, '').replace('T', '_').substring(0, 15);
-                    const nomeArquivo = `erros_importacao_${dataHora}.xlsx`;
-                    gerarRelatorioErrosImportacao(errosImportacao, nomeArquivo);
-                    alert(`Importação concluída com erros: ${sucessos} produtos importados com sucesso, ${falhas} falhas. Um relatório de erros foi gerado.`);
-                } else {
-                    alert(`Importação concluída: ${sucessos} produtos importados com sucesso, ${falhas} falhas.`);
-                }
-                
-                // Recarrega a lista de produtos
-                loadProdutos();
-                return;
-            }
-            
-            const produto = produtos[index];
-            
-            // Atualiza a mensagem de progresso
-            if (loadingContent) {
-                loadingContent.innerHTML = `
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <p>Importando produto ${index + 1} de ${produtos.length}...</p>
-                    <p>${produto.codigo} - ${produto.nome}</p>
-                `;
-            }
-            
-            // Log da chamada de verificação
-            console.log(`[API LOG] Verificando se produto existe - GET http://localhost:8000/api/produtos/codigo/${produto.codigo}`);
-            
-            // Primeiro verifica se o produto já existe pelo código
-            fetch(`http://localhost:8000/api/produtos/codigo/${produto.codigo}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => {
-                // Verifica se a resposta foi bem-sucedida
-                if (response.status === 404) {
-                    console.log(`Produto ${produto.codigo} não encontrado, será criado como novo`);
-                    // Produto não existe, vamos criá-lo
-                    console.log(`[API LOG] Produto ${produto.codigo} não encontrado, criando novo produto - POST http://localhost:8000/api/produtos`);
-                    console.log(`[API LOG] Dados enviados:`, JSON.stringify(produto, null, 2));
-                    
-                    return { operacao: 'criar', promise: fetch('http://localhost:8000/api/produtos', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(produto)
-                    })};
-                } else if (response.ok) {
-                    // Produto existe, vamos atualizá-lo
-                    return response.json().then(produtoExistente => {
-                        console.log(`Produto ${produto.codigo} encontrado com ID ${produtoExistente.id}, será atualizado`);
-                        
-                        // Log da chamada de atualização
-                        console.log(`[API LOG] Atualizando produto existente - PUT http://localhost:8000/api/produtos/${produtoExistente.id}`);
-                        console.log(`[API LOG] Dados enviados:`, JSON.stringify(produto, null, 2));
-                        
-                        // Atualiza o produto existente
-                        return { operacao: 'atualizar', promise: fetch(`http://localhost:8000/api/produtos/${produtoExistente.id}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Authorization': `Bearer ${token}`,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(produto)
-                        })};
-                    });
-                } else {
-                    // Erro ao verificar a existência do produto
-                    throw new Error(`Erro ao verificar existência do produto ${produto.codigo}: ${response.status} ${response.statusText}`);
-                }
-            })
-            .then(resultado => {
-                const { operacao, promise } = resultado;
-                return promise.then(response => {
-                    return { operacao, response };
-                });
-            })
-            .then(resultado => {
-                processados++;
-                const { operacao, response } = resultado;
-                
-                if (response.ok) {
-                    sucessos++;
-                    const operacaoTexto = operacao === 'criar' ? 'criado' : 'atualizado';
-                    
-                    // Log de sucesso com a resposta
-                    response.clone().json().then(data => {
-                        console.log(`[API LOG] Resposta de sucesso (${operacao}):`, JSON.stringify(data, null, 2));
-                    }).catch(err => {
-                        console.log(`[API LOG] Não foi possível converter a resposta para JSON:`, err);
-                    });
-                    
-                    console.log(`Produto ${produto.codigo} ${operacaoTexto} com sucesso`);
-                } else {
-                    falhas++;
-                    const operacaoTexto = operacao === 'criar' ? 'criar novo' : 'atualizar existente';
-                    const mensagemErro = `Erro ao ${operacaoTexto} (${response.status}: ${response.statusText})`;
-                    
-                    // Log de erro detalhado
-                    console.error(`[API LOG] Erro ao importar produto ${produto.codigo}:`, mensagemErro);
-                    console.error(`[API LOG] Status: ${response.status}, StatusText: ${response.statusText}`);
-                    console.error(`Erro ao importar produto ${produto.codigo}:`, mensagemErro);
-                    
-                    // Captura o erro para o relatório
-                    const erroItem = {
-                        linha: index + 1,
-                        codigo: produto.codigo,
-                        nome: produto.nome,
-                        erros: [mensagemErro],
-                        detalhes: {}
-                    };
-                    errosImportacao.push(erroItem);
-                    
-                    // Tenta obter mais detalhes do erro
-                    response.clone().text().then(rawText => {
-                        console.log('Resposta de erro bruta:', rawText);
-                        
-                        try {
-                            // Tenta analisar como JSON
-                            const data = JSON.parse(rawText);
-                            console.log('Resposta de erro como JSON:', data);
-                            
-                            // Adiciona detalhes do erro
-                            if (data.detail) {
-                                if (typeof data.detail === 'string') {
-                                    // Erro simples com mensagem de texto
-                                    erroItem.erros.push(`Detalhe: ${data.detail}`);
-                                    console.error('Detalhes do erro:', data.detail);
-                                } else if (Array.isArray(data.detail)) {
-                                    // FastAPI validation errors format
-                                    data.detail.forEach(err => {
-                                        let campo = 'desconhecido';
-                                        if (err.loc && Array.isArray(err.loc)) {
-                                            // Remove o primeiro elemento 'body' e junta o resto
-                                            campo = err.loc.slice(1).join('.');
-                                        }
-                                        const msg = `Campo '${campo}': ${err.msg}`;
-                                        erroItem.erros.push(msg);
-                                        console.error('Erro de validação:', msg);
-                                    });
-                                }
-                            }
-                            
-                            // Verifica outros campos comuns de erro
-                            if (data.message) erroItem.erros.push(`Mensagem: ${data.message}`);
-                            if (data.error) erroItem.erros.push(`Erro: ${data.error}`);
-                            
-                            // Para erro 422, verifica todos os campos da resposta
-                            if (response.status === 422) {
-                                // Converte o objeto de erro em string para debug
-                                const errorStr = JSON.stringify(data, null, 2);
-                                console.log(`Detalhes completos do erro 422: ${errorStr}`);
-                                erroItem.erros.push(`Erro de validação: ${errorStr}`);
-                                
-                                // Verifica campos específicos
-                                Object.keys(data).forEach(key => {
-                                    if (key !== 'detail' && key !== 'message' && key !== 'error') {
-                                        const msg = `Campo '${key}': ${JSON.stringify(data[key])}`;
-                                        erroItem.erros.push(msg);
-                                    }
-                                });
-                            }
-                        } catch (jsonError) {
-                            // Se não for JSON válido, adiciona o texto bruto
-                            console.error('Erro ao analisar resposta JSON:', jsonError);
-                            erroItem.erros.push(`Resposta não-JSON: ${rawText}`);
-                        }
-                    }).catch(err => {
-                        console.error('Erro ao processar texto da resposta:', err);
-                    });
-                }
-                
-                // Processa o próximo produto
-                processarProduto(index + 1);
-            })
-            .catch(error => {
-                processados++;
-                falhas++;
-                
-                // Verifica se o erro está relacionado à verificação de existência
-                let mensagemErro = error.message || 'Erro desconhecido';
-                if (mensagemErro.includes('verificar existência')) {
-                    mensagemErro = `Erro ao verificar se o produto existe: ${mensagemErro}`;
-                } else {
-                    mensagemErro = `Erro ao processar produto: ${mensagemErro}`;
-                }
-                
-                // Log de erro detalhado
-                console.error(`[API LOG] Erro na requisição para o produto ${produto.codigo}:`, error);
-                console.error(`[API LOG] Mensagem de erro: ${mensagemErro}`);
-                console.error(`Erro ao importar produto ${produto.codigo}:`, mensagemErro);
-                
-                // Captura o erro para o relatório com detalhes mais claros
-                errosImportacao.push({
-                    linha: index + 1,
-                    codigo: produto.codigo,
-                    nome: produto.nome,
-                    erros: [mensagemErro]
-                });
-                
-                // Continua mesmo com erro
-                processarProduto(index + 1);
-            });
-        };
-        
-        // Inicia o processamento do primeiro produto
-        processarProduto(0);
-        
-    } catch (error) {
-        console.error('Erro inesperado ao enviar produtos para a API:', error);
-        if (loadingMessage && document.body.contains(loadingMessage)) {
-            document.body.removeChild(loadingMessage);
-        }
-        alert('Erro ao importar produtos. Tente novamente.');
-    }
-}
 
-// Exporta os produtos filtrados para Excel
-function exportarProdutosParaExcel() {
-    console.log('Iniciando exportação de produtos para Excel...');
-    
-    try {
-        // Obtém valores dos filtros atuais
-        const categoria = document.getElementById('filtroCategoria').value;
-        const status = document.getElementById('filtroStatus').value;
-        
-        // Constrói a URL com os filtros
-        let url = 'http://localhost:8000/api/produtos?';
-        if (categoria) url += `categoria=${categoria}&`;
-        if (status !== '') url += `ativo=${status}&`;
-        
-        console.log(`Buscando produtos filtrados para exportação: ${url}`);
-        
-        const token = getToken();
-        
-        // Faz a requisição para a API com os mesmos filtros da tabela
-        fetch(url, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Falha ao carregar produtos para exportação');
-            }
-            return response.json();
-        })
-        .then(produtos => {
-            if (!produtos || produtos.length === 0) {
-                alert('Não há produtos para exportar com os filtros atuais.');
-                return;
-            }
-            
-            console.log(`Exportando ${produtos.length} produtos para Excel`);
-            
-            // Prepara os dados para o Excel
-            const dadosExcel = produtos.map(produto => {
-                // Formata os valores para o Excel
-                return {
-                    'Código': produto.codigo || '',
-                    'Nome': produto.nome || '',
-                    'Descrição': produto.descricao || '',
-                    'Categoria': produto.categoria_nome || 'Não categorizado',
-                    'Preço de Custo': produto.preco_custo ? Number(produto.preco_custo) : 0,
-                    'Preço de Venda': produto.preco_venda ? Number(produto.preco_venda) : 0,
-                    'Estoque Atual': produto.estoque_atual || 0,
-                    'Estoque Mínimo': produto.estoque_minimo || 0,
-                    'Status': produto.ativo ? 'Ativo' : 'Inativo'
-                };
-            });
-            
-            // Cria uma planilha
-            const ws = XLSX.utils.json_to_sheet(dadosExcel);
-            
-            // Formata as colunas numéricas para exibir como moeda
-            const range = XLSX.utils.decode_range(ws['!ref']);
-            const precoCustoCol = XLSX.utils.encode_col(4); // Coluna E (Preço de Custo)
-            const precoVendaCol = XLSX.utils.encode_col(5); // Coluna F (Preço de Venda)
-            
-            for (let row = range.s.r + 1; row <= range.e.r; ++row) {
-                const cellCusto = precoCustoCol + (row + 1);
-                const cellVenda = precoVendaCol + (row + 1);
-                
-                if (ws[cellCusto]) ws[cellCusto].z = 'R$#,##0.00';
-                if (ws[cellVenda]) ws[cellVenda].z = 'R$#,##0.00';
-            }
-            
-            // Cria um workbook
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Produtos');
-            
-            // Gera o nome do arquivo com data e hora
-            const dataHora = new Date().toISOString().replace(/[\-:]/g, '').replace('T', '_').substring(0, 15);
-            const nomeArquivo = `produtos_${dataHora}.xlsx`;
-            
-            // Exporta o arquivo
-            XLSX.writeFile(wb, nomeArquivo);
-            
-            console.log(`Arquivo Excel exportado com sucesso: ${nomeArquivo}`);
-        })
-        .catch(error => {
-            console.error('Erro ao exportar produtos:', error);
-            
-            // Verifica se é um problema de URL da API
-            if (error.message.includes('404') || error.message.includes('conexão')) {
-                // Tenta sincronizar a URL da API
-                tryAlternativeEndpoint();
-            }
-            
-            // Mostra mensagem de erro ao usuário
-            alert(`Erro ao exportar produtos: ${error.message}\nPor favor, verifique a conexão com a API e tente novamente.`);
-        });
-    } catch (error) {
-        console.error('Erro inesperado ao exportar produtos:', error);
-        alert('Erro ao exportar produtos. Tente novamente.');
-    }
-}
+
+
+
+
+
 
 // Exclui um produto
 async function deleteProduto(produtoId) {

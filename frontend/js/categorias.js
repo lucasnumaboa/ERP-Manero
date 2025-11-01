@@ -161,10 +161,7 @@ function setupActionButtons() {
         openCategoriaModal();
     });
     
-    // Botão Exportar
-    document.getElementById('btnExportarCategorias').addEventListener('click', function() {
-        alert('Funcionalidade de exportação será implementada em breve!');
-    });
+
     
     // Filtro de Status
     document.getElementById('filtroStatus').addEventListener('change', function() {

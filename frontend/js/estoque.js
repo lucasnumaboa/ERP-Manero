@@ -22,12 +22,57 @@ document.addEventListener('DOMContentLoaded', function() {
     // Carrega os dados do usuário
     loadUserData();
 
+    // Verifica permissão para o botão "Nova Movimentação - teste"
+    checkMovimentacaoPermission();
+
     // Carrega a lista de produtos em estoque
     loadEstoque();
 
     // Configura os filtros
     setupFilters();
 });
+
+// Verifica se o usuário tem permissão para editar estoque e mostra/oculta o botão "Nova Movimentação - teste"
+async function checkMovimentacaoPermission() {
+    try {
+        // Verifica se o usuário tem permissão para editar estoque
+        const canEditEstoque = await hasPermission('estoque_editar');
+        
+        // Obtém o container do botão
+        const btnContainer = document.getElementById('novaMovimentacaoContainer');
+        
+        // Verifica se o container existe
+        if (!btnContainer) {
+            console.log('Container de nova movimentação não encontrado');
+            return;
+        }
+        
+        // Mostra ou oculta o botão com base na permissão
+        if (canEditEstoque) {
+            btnContainer.style.display = 'block';
+            
+            // Configura o evento de clique do botão
+            const btnAdicionarEstoque = document.getElementById('btnAdicionarEstoque');
+            
+            // Verifica se o botão existe antes de adicionar o evento
+            if (btnAdicionarEstoque) {
+                btnAdicionarEstoque.addEventListener('click', function() {
+                    // Abre o modal de nova movimentação sem produto específico
+                    document.getElementById('movimentacaoForm').reset();
+                    document.getElementById('produto_id').value = '';
+                    document.getElementById('movimentacaoModalTitle').textContent = 'Nova Movimentação - teste';
+                    document.getElementById('movimentacaoModal').style.display = 'flex';
+                });
+            } else {
+                console.log('Botão de adicionar estoque não encontrado');
+            }
+        } else {
+            btnContainer.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Erro ao verificar permissão de movimentação:', error);
+    }
+}
 
 // Carrega os dados do usuário do localStorage
 function loadUserData() {
@@ -53,6 +98,7 @@ function formatRole(role) {
 async function loadEstoque() {
     // Obtém os filtros
     const abaixoMinimo = document.getElementById('filtroAbaixoMinimo').checked;
+    const comEstoque = document.getElementById('filtroComEstoque').checked;
     const categoriaId = document.getElementById('filtroCategoria').value || null;
     
     // Prepara os parâmetros de consulta
@@ -62,12 +108,19 @@ async function loadEstoque() {
         queryParams.abaixo_minimo = true;
     }
     
+    // Forçar o envio do parâmetro com_estoque como true quando o checkbox estiver marcado
+    if (comEstoque) {
+        queryParams.com_estoque = true;
+    }
+    
+    console.log("Filtros aplicados:", queryParams);
+    
     if (categoriaId) {
         queryParams.categoria_id = categoriaId;
     }
     
     // Mostra mensagem de carregamento
-    document.getElementById('estoqueTableBody').innerHTML = '<tr><td colspan="7" class="text-center">Carregando produtos em estoque...</td></tr>';
+    document.getElementById('estoqueTableBody').innerHTML = '<tr><td colspan="8" class="text-center">Carregando produtos em estoque...</td></tr>';
     
     try {
         // Usa a API centralizada para fazer a requisição
@@ -89,15 +142,18 @@ async function loadEstoque() {
 }
 
 // Exibe os produtos em estoque na tabela
-function displayEstoque(produtos) {
+async function displayEstoque(produtos) {
     const tableBody = document.getElementById('estoqueTableBody');
     
     if (!produtos || produtos.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum produto encontrado</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Nenhum produto encontrado</td></tr>';
         return;
     }
     
     tableBody.innerHTML = '';
+    
+    // Verifica se o usuário tem permissão para editar estoque
+    const canEditEstoque = await hasPermission('estoque_editar');
     
     produtos.forEach(produto => {
         const row = document.createElement('tr');
@@ -107,6 +163,28 @@ function displayEstoque(produtos) {
             row.classList.add('estoque-baixo');
         }
         
+        // Botões de ação com base na permissão
+        let actionButtons = `
+            <button class="btn-icon" onclick="viewDetalhes(${produto.id})" title="Ver Detalhes">
+                <i class="fas fa-info-circle"></i>
+            </button>
+            <button class="btn-icon" onclick="viewHistorico(${produto.id})" title="Ver Histórico">
+                <i class="fas fa-history"></i>
+            </button>
+        `;
+        
+        // Adiciona o botão de movimentação apenas se tiver permissão
+        if (canEditEstoque) {
+            actionButtons += `
+                <button class="btn-icon" onclick="addMovimentacao(${produto.id})" title="Adicionar Movimentação">
+                    <i class="fas fa-plus-circle"></i>
+                </button>
+            `;
+        }
+        
+        // A comissão já está em reais (valor fixo)
+        const comissaoReais = produto.comissao || 0;
+        
         row.innerHTML = `
             <td>${produto.codigo || '-'}</td>
             <td>${produto.nome}</td>
@@ -114,13 +192,9 @@ function displayEstoque(produtos) {
             <td class="text-center">${produto.estoque_atual}</td>
             <td class="text-center">${produto.estoque_minimo}</td>
             <td class="text-right">${formatNumber(produto.preco_venda)}</td>
+            <td class="text-right">${formatNumber(comissaoReais)}</td>
             <td class="actions">
-                <button class="btn-icon" onclick="viewHistorico(${produto.id})" title="Ver Histórico">
-                    <i class="fas fa-history"></i>
-                </button>
-                <button class="btn-icon" onclick="addMovimentacao(${produto.id})" title="Adicionar Movimentação">
-                    <i class="fas fa-plus-circle"></i>
-                </button>
+                ${actionButtons}
             </td>
         `;
         
@@ -130,13 +204,39 @@ function displayEstoque(produtos) {
 
 // Configura os filtros de estoque
 function setupFilters() {
-    // Carrega as categorias
-    loadCategorias();
+    const filtroAbaixoMinimo = document.getElementById('filtroAbaixoMinimo');
+    const filtroComEstoque = document.getElementById('filtroComEstoque');
     
-    // Configura os eventos de filtro
-    document.getElementById('filtroAbaixoMinimo').addEventListener('change', loadEstoque);
+    // Configura o evento de mudança para o filtro de estoque mínimo
+    filtroAbaixoMinimo.addEventListener('change', function() {
+        // Se este filtro for marcado, desabilita o outro
+        if (this.checked) {
+            filtroComEstoque.checked = false;
+            filtroComEstoque.disabled = true;
+        } else {
+            filtroComEstoque.disabled = false;
+        }
+        loadEstoque();
+    });
+    
+    // Configura o evento de mudança para o filtro de produtos com estoque
+    filtroComEstoque.addEventListener('change', function() {
+        // Se este filtro for marcado, desabilita o outro
+        if (this.checked) {
+            filtroAbaixoMinimo.checked = false;
+            filtroAbaixoMinimo.disabled = true;
+        } else {
+            filtroAbaixoMinimo.disabled = false;
+        }
+        // Forçar o valor do parâmetro com_estoque para garantir que seja enviado corretamente
+        setTimeout(() => loadEstoque(), 0);
+    });
+    
     document.getElementById('filtroCategoria').addEventListener('change', loadEstoque);
     document.getElementById('btnLimparFiltros').addEventListener('click', limparFiltros);
+    
+    // Carrega as categorias
+    loadCategorias();
 }
 
 // Carrega as categorias para o filtro
@@ -192,9 +292,17 @@ async function loadCategorias() {
     }
 }
 
-// Limpa os filtros aplicados
+// Limpa todos os filtros
 function limparFiltros() {
-    document.getElementById('filtroAbaixoMinimo').checked = false;
+    const filtroAbaixoMinimo = document.getElementById('filtroAbaixoMinimo');
+    const filtroComEstoque = document.getElementById('filtroComEstoque');
+    
+    filtroAbaixoMinimo.checked = false;
+    filtroAbaixoMinimo.disabled = false;
+    
+    filtroComEstoque.checked = false;
+    filtroComEstoque.disabled = false;
+    
     document.getElementById('filtroCategoria').value = '';
     loadEstoque();
 }
@@ -202,6 +310,120 @@ function limparFiltros() {
 // Formata números para exibição
 function formatNumber(value) {
     return value ? `R$ ${parseFloat(value).toFixed(2).replace('.', ',')}` : 'R$ 0,00';
+}
+
+// Função para visualizar detalhes do produto
+async function viewDetalhes(produtoId) {
+    try {
+        // Busca os detalhes completos do produto
+        const produto = await apiGet(`/api/produtos/${produtoId}`);
+        
+        if (!produto) {
+            alert('Produto não encontrado');
+            return;
+        }
+        
+        // Preenche as informações básicas
+        document.getElementById('detalhe-codigo').textContent = produto.codigo || '-';
+        document.getElementById('detalhe-nome').textContent = produto.nome || '-';
+        document.getElementById('detalhe-descricao').textContent = produto.descricao || 'Sem descrição';
+        document.getElementById('detalhe-categoria').textContent = produto.categoria_nome || '-';
+        document.getElementById('detalhe-tipo').textContent = formatTipoProduto(produto.tipo_produto);
+        document.getElementById('detalhe-status').textContent = produto.ativo ? 'Ativo' : 'Inativo';
+        
+        // Preenche as informações financeiras
+        document.getElementById('detalhe-preco-venda').textContent = formatNumber(produto.preco_venda || 0);
+        document.getElementById('detalhe-comissao').textContent = produto.comissao ? formatNumber(produto.comissao) : 'R$ 0,00';
+        
+        // Preenche as informações de estoque
+        document.getElementById('detalhe-estoque-atual').textContent = produto.estoque_atual || '0';
+        document.getElementById('detalhe-estoque-minimo').textContent = produto.estoque_minimo || '0';
+        document.getElementById('detalhe-data-cadastro').textContent = formatDate(produto.data_cadastro);
+        
+        // Carrega e exibe as imagens
+        await carregarImagensProduto(produto.caminho_imagem);
+        
+        // Abre o modal
+        document.getElementById('detalhesModal').style.display = 'flex';
+        
+    } catch (error) {
+        console.error('Erro ao carregar detalhes do produto:', error);
+        alert('Erro ao carregar detalhes do produto. Tente novamente.');
+    }
+}
+
+// Função para formatar o tipo do produto
+function formatTipoProduto(tipo) {
+    const tipos = {
+        'comprado': 'Comprado',
+        'fabricado': 'Fabricado'
+    };
+    return tipos[tipo] || tipo || '-';
+}
+
+// Função para calcular margem de lucro
+// Função para carregar e exibir imagens do produto
+async function carregarImagensProduto(caminhoImagem) {
+    const imagensContainer = document.getElementById('detalhes-imagens');
+    
+    if (!caminhoImagem) {
+        imagensContainer.innerHTML = '<p class="text-center">Nenhuma imagem disponível</p>';
+        return;
+    }
+    
+    try {
+        // Se há caminho de imagem, divide por vírgula para múltiplas imagens
+        const imagens = caminhoImagem.split(',').map(img => img.trim()).filter(img => img);
+        
+        if (imagens.length === 0) {
+            imagensContainer.innerHTML = '<p class="text-center">Nenhuma imagem disponível</p>';
+            return;
+        }
+        
+        let imagensHtml = '';
+        
+        for (const imagem of imagens) {
+            // Extrai apenas o nome do arquivo
+            const nomeArquivo = imagem.split('/').pop();
+            
+            imagensHtml += `
+                <div class="imagem-item">
+                    <img src="/uploads/produtos/${nomeArquivo}" 
+                         alt="Imagem do produto" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                         onclick="abrirImagemCompleta('/uploads/produtos/${nomeArquivo}')">
+                    <div style="display:none; padding: 20px; border: 1px dashed #ccc; border-radius: 8px;">
+                        <i class="fas fa-image" style="font-size: 2em; color: #ccc;"></i>
+                        <p>Imagem não disponível</p>
+                    </div>
+                    <button class="btn-outline download-btn" onclick="downloadImagem('${nomeArquivo}')">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+            `;
+        }
+        
+        imagensContainer.innerHTML = imagensHtml;
+        
+    } catch (error) {
+        console.error('Erro ao carregar imagens:', error);
+        imagensContainer.innerHTML = '<p class="text-center text-danger">Erro ao carregar imagens</p>';
+    }
+}
+
+// Função para abrir imagem em tamanho completo
+function abrirImagemCompleta(urlImagem) {
+    window.open(urlImagem, '_blank');
+}
+
+// Função para download de imagem
+function downloadImagem(nomeArquivo) {
+    const link = document.createElement('a');
+    link.href = `/uploads/produtos/${nomeArquivo}`;
+    link.download = nomeArquivo;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 // Abre o modal para visualizar o histórico de movimentações
@@ -304,6 +526,18 @@ async function getProdutoNome(produtoId) {
         console.error('Erro ao buscar produto:', error);
         return 'Produto';
     }
+}
+
+// Abre o modal para nova movimentação sem produto específico
+function openNovaMovimentacao() {
+    // Limpa o formulário
+    document.getElementById('movimentacaoForm').reset();
+    
+    // Atualiza o título do modal
+    document.getElementById('movimentacaoModalTitle').textContent = 'Nova Movimentação';
+    
+    // Mostra o modal
+    document.getElementById('movimentacaoModal').style.display = 'flex';
 }
 
 // Abre o modal para adicionar uma nova movimentação

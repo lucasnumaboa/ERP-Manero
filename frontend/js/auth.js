@@ -1,9 +1,17 @@
 // Funções de autenticação e gerenciamento de token
 
-// URL da API de backend - obtida do localStorage ou usa fallback para desenvolvimento
-function getApiUrl() {
-    const storedUrl = localStorage.getItem('api_base_url');
-    return storedUrl || 'http://localhost:8000';
+// URL da API de backend - sempre busca do banco de dados
+async function getApiUrl() {
+    try {
+        const response = await fetch('/api/configuracoes/link_api');
+        if (response.ok) {
+            const data = await response.json();
+            return data.config?.api_url || 'http://localhost:8000';
+        }
+    } catch (error) {
+        console.warn('Erro ao buscar URL da API:', error);
+    }
+    return 'http://localhost:8000';
 }
 
 // Variável para controlar se o modal de sessão expirada já está sendo exibido
@@ -166,7 +174,8 @@ async function getCurrentUser() {
         }
 
         // Se não tiver em cache, busca da API
-        const response = await fetchWithAuth(`${getApiUrl()}/api/usuarios/me`, {
+        const apiUrl = await getApiUrl();
+        const response = await fetchWithAuth(`${apiUrl}/api/usuarios/me`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -193,6 +202,122 @@ async function getCurrentUser() {
     }
 }
 
+// Obtém as permissões do usuário atual
+async function getUserPermissions() {
+    try {
+        console.log('Iniciando obtenção de permissões do usuário');
+        const user = await getCurrentUser();
+        console.log('Dados do usuário obtidos:', user);
+        
+        if (!user) {
+            console.error('Usuário não encontrado');
+            return {};
+        }
+        
+        // Se for admin, concede todas as permissões
+        if (user.nivel_acesso === 'admin') {
+            console.log('Usuário é admin, concedendo todas as permissões');
+            return {
+                dashboard_visualizar: true,
+                dashboard_editar: true,
+                produtos_visualizar: true,
+                produtos_editar: true,
+                clientes_visualizar: true,
+                clientes_editar: true,
+                vendas_visualizar: true,
+                vendas_editar: true,
+                vendedores_visualizar: true,
+                vendedores_editar: true,
+                compras_visualizar: true,
+                compras_editar: true,
+                fornecedores_visualizar: true,
+                fornecedores_editar: true,
+                estoque_visualizar: true,
+                estoque_editar: true,
+                configuracoes_visualizar: true,
+                configuracoes_editar: true,
+                financeiro_visualizar: true,
+                financeiro_editar: true
+            };
+        }
+        
+        // Usar o grupo_id original do usuário
+        console.log('Usando grupo_id original do usuário:', user.grupo_id);
+        
+        if (!user.grupo_id) {
+            console.error('Usuário não possui grupo_id');
+            return {};
+        }
+        
+        console.log(`Buscando permissões para o grupo ${user.grupo_id}`);
+        
+        // Busca as permissões do grupo do usuário
+        const apiUrl = await getApiUrl();
+        const url = `${apiUrl}/api/usuarios/grupo/${user.grupo_id}`;
+        console.log('URL da requisição:', url);
+        
+        const headers = {
+            ...getAuthHeader(),
+            'Content-Type': 'application/json'
+        };
+        console.log('Headers da requisição:', headers);
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: headers
+        });
+        
+        console.log('Status da resposta:', response.status);
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Permissões obtidas com sucesso:', data);
+            
+            // Salva as permissões no localStorage para acesso rápido
+            localStorage.setItem('erp_user_permissions', JSON.stringify(data));
+            return data;
+        } else {
+            const errorText = await response.text();
+            console.error('Erro ao obter permissões do usuário:', response.status, response.statusText);
+            console.error('Detalhes do erro:', errorText);
+            
+            // Limpa as permissões em cache para forçar nova tentativa
+            localStorage.removeItem('erp_user_permissions');
+            return {};
+        }
+    } catch (error) {
+        console.error('Exceção ao obter permissões do usuário:', error);
+        return {};
+    }
+}
+
+// Verifica se o usuário tem uma permissão específica
+async function hasPermission(permission) {
+    try {
+        const user = await getCurrentUser();
+        
+        // Administradores têm todas as permissões
+        if (user && user.nivel_acesso === 'admin') {
+            return true;
+        }
+        
+        // Verifica se já temos as permissões no localStorage
+        const cachedPermissions = localStorage.getItem('erp_user_permissions');
+        let permissions;
+        
+        if (cachedPermissions) {
+            permissions = JSON.parse(cachedPermissions);
+        } else {
+            permissions = await getUserPermissions();
+        }
+        
+        return permissions && (permissions[permission] === true || permissions[permission] === 1);
+    } catch (error) {
+        console.error('Erro ao verificar permissão:', error);
+        return false;
+    }
+}
+
 /**
  * Obtém dados de usuário armazenados no localStorage de forma síncrona.
  * @returns {Object|null} Dados do usuário ou null se não houver.
@@ -215,8 +340,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Não verifica autenticação na página de login
     if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
         if (isAuthenticated()) {
-            // Se já estiver autenticado e estiver na página de login, redireciona para o dashboard
-            window.location.href = 'dashboard.html';
+            // Se já estiver autenticado e estiver na página de login, redireciona para a homepage
+            window.location.href = 'homepage.html';
         }
         return;
     }

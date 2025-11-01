@@ -4,48 +4,38 @@
  * sincronizando com o banco de dados quando possível.
  */
 
-// Função para sincronizar a URL da API com o banco de dados
-async function syncApiUrl() {
+// Função para obter a URL da API sempre do banco de dados
+async function getApiUrl() {
+    const defaultUrl = 'http://localhost:8000';
+    
     try {
-        // Obtém a URL base atual do localStorage ou usa o padrão
-        const currentApiUrl = localStorage.getItem('api_base_url') || 'http://localhost:8000';
-        
-        // Tenta obter a configuração da API do banco de dados com timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 segundos de timeout
-        
-        const response = await fetch(`${currentApiUrl}/api/configuracoes/status`, {
+        // Sempre busca a URL da API do endpoint configuracoes
+        const response = await fetch(`${defaultUrl}/api/configuracoes/link_api`, {
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                // Não incluímos o token de autenticação aqui para permitir acesso público a esta configuração
-            },
-            signal: controller.signal
-        }).catch(error => {
-            // Silencia o erro para não interromper o fluxo de login
-            console.log('API não disponível para sincronização, usando URL local:', currentApiUrl);
-            return null;
+            headers: { 'Content-Type': 'application/json' }
         });
         
-        clearTimeout(timeoutId);
-        
-        if (response && response.ok) {
+        if (response.ok) {
             const data = await response.json();
-            
-            // Se a URL da API no config for diferente da armazenada localmente
-            if (data.config && data.config.api_url && data.config.api_url !== currentApiUrl) {
-                console.log(`Atualizando URL da API: ${currentApiUrl} -> ${data.config.api_url}`);
-                localStorage.setItem('api_base_url', data.config.api_url);
-                
-                // Se o usuário estiver logado, exibe um aviso sobre a mudança
-                if (localStorage.getItem('erp_token')) {
-                    showApiUrlChangedAlert(data.config.api_url);
-                }
+            if (data && data.valor) {
+                return data.valor;
             }
         }
     } catch (error) {
-        // Silencia o erro para não interromper o fluxo de login
-        console.log('Não foi possível sincronizar a URL da API, usando URL local');
+        console.log('API não disponível para sincronização, usando URL padrão:', defaultUrl);
+    }
+    
+    // Se falhar, retorna a URL padrão
+    return defaultUrl;
+}
+
+// Função para sincronizar a URL da API com o banco de dados (mantida para compatibilidade)
+async function syncApiUrl() {
+    try {
+        const apiUrl = await getApiUrl();
+        console.log('URL da API obtida do banco:', apiUrl);
+    } catch (error) {
+        console.log('Não foi possível obter a URL da API do banco');
     }
 }
 

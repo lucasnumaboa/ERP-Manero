@@ -74,8 +74,38 @@ async function loadVendedores() {
     }
     
     try {
+        // Obtém dados do usuário atual
+        const userData = await getCurrentUser();
+        
+        // Verifica se o usuário é administrador
+        const isAdmin = userData && userData.nivel_acesso === 'admin';
+        
         // Usa a nova API centralizada
-        const data = await apiGet('/api/vendedores', queryParams);
+        let data;
+        
+        if (isAdmin) {
+            // Administrador vê todos os vendedores
+            data = await apiGet('/api/vendedores', queryParams);
+        } else {
+            // Usuário comum (vendedor) - busca apenas o vendedor associado ao usuário
+            // Primeiro, busca todos os vendedores
+            const allVendedores = await apiGet('/api/vendedores', queryParams);
+            
+            // Filtra apenas o vendedor associado ao usuário atual
+            if (userData && userData.id) {
+                // Filtra vendedores que têm o mesmo ID de usuário
+                const filteredVendedores = allVendedores.filter(vendedor => 
+                    vendedor.usuario_id === userData.id
+                );
+                
+                console.log('Filtrando vendedores para o usuário:', userData.id);
+                console.log('Vendedores encontrados:', filteredVendedores.length);
+                
+                data = filteredVendedores;
+            } else {
+                data = [];
+            }
+        }
         
         // Configuração da paginação
         window.currentDisplayFunction = displayVendedores;
@@ -88,13 +118,16 @@ async function loadVendedores() {
 }
 
 // Exibe os vendedores na tabela
-function displayVendedores(vendedores) {
+async function displayVendedores(vendedores) {
     const tbody = document.getElementById('vendedoresTableBody');
     
     if (!vendedores || vendedores.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum vendedor encontrado</td></tr>';
         return;
     }
+    
+    // Verifica se o usuário tem permissão de edição
+    const canEdit = await hasPermission('vendedores_editar');
     
     tbody.innerHTML = '';
     
@@ -105,6 +138,25 @@ function displayVendedores(vendedores) {
         const statusClass = vendedor.ativo ? 'status-active' : 'status-inactive';
         const statusText = vendedor.ativo ? 'Ativo' : 'Inativo';
         
+        // Monta os botões de ação baseado nas permissões
+        let actionButtons = `
+            <button class="btn-icon view-btn" data-id="${vendedor.id}" title="Visualizar">
+                <i class="fas fa-eye"></i>
+            </button>
+        `;
+        
+        // Só adiciona botões de edição e exclusão se o usuário tiver permissão
+        if (canEdit) {
+            actionButtons += `
+                <button class="btn-icon edit-btn" data-id="${vendedor.id}" title="Editar">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-icon delete-btn" data-id="${vendedor.id}" title="Excluir">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+        }
+        
         row.innerHTML = `
             <td>${vendedor.id}</td>
             <td>${vendedor.nome}</td>
@@ -113,15 +165,7 @@ function displayVendedores(vendedores) {
             <td>${vendedor.comissao_percentual}%</td>
             <td><span class="status-badge ${statusClass}">${statusText}</span></td>
             <td class="actions">
-                <button class="btn-icon view-btn" data-id="${vendedor.id}" title="Visualizar">
-                    <i class="fas fa-eye"></i>
-                </button>
-                <button class="btn-icon edit-btn" data-id="${vendedor.id}" title="Editar">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn-icon delete-btn" data-id="${vendedor.id}" title="Excluir">
-                    <i class="fas fa-trash"></i>
-                </button>
+                ${actionButtons}
             </td>
         `;
         
@@ -133,21 +177,33 @@ function displayVendedores(vendedores) {
         btn.addEventListener('click', () => viewVendedor(btn.getAttribute('data-id')));
     });
     
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', () => editVendedor(btn.getAttribute('data-id')));
-    });
-    
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', () => deleteVendedor(btn.getAttribute('data-id')));
-    });
+    // Só adiciona listeners para edição e exclusão se o usuário tiver permissão
+    if (canEdit) {
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', () => editVendedor(btn.getAttribute('data-id')));
+        });
+        
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', () => deleteVendedor(btn.getAttribute('data-id')));
+        });
+    }
 }
 
 // Configura os botões de ação
-function setupActionButtons() {
-    // Botão Novo Vendedor
-    document.getElementById('btnNovoVendedor').addEventListener('click', function() {
-        openVendedorModal();
-    });
+async function setupActionButtons() {
+    // Verifica se o usuário tem permissão de edição
+    const canEdit = await hasPermission('vendedores_editar');
+    
+    // Botão Novo Vendedor - só exibe se tiver permissão de edição
+    const btnNovoVendedor = document.getElementById('btnNovoVendedor');
+    if (canEdit) {
+        btnNovoVendedor.addEventListener('click', function() {
+            openVendedorModal();
+        });
+    } else {
+        // Oculta o botão se não tiver permissão
+        btnNovoVendedor.style.display = 'none';
+    }
     
     // Botão Cancelar do modal
     document.getElementById('btnCancelar').addEventListener('click', function() {
@@ -171,7 +227,16 @@ function closeModal(modalId) {
 }
 
 // Abre o modal de vendedor
-function openVendedorModal(vendedorId = null) {
+async function openVendedorModal(vendedorId = null) {
+    // Se for para criar novo vendedor, verifica permissão de edição
+    if (!vendedorId) {
+        const canEdit = await hasPermission('vendedores_editar');
+        if (!canEdit) {
+            alert('Você não tem permissão para criar vendedores.');
+            return;
+        }
+    }
+    
     const modal = document.getElementById('vendedorModal');
     const form = document.getElementById('vendedorForm');
     const modalTitle = document.getElementById('modalTitle');
@@ -244,6 +309,13 @@ async function loadUsuarios() {
 
 // Salva o vendedor (novo ou edição)
 async function saveVendedor() {
+    // Verifica se o usuário tem permissão de edição
+    const canEdit = await hasPermission('vendedores_editar');
+    if (!canEdit) {
+        alert('Você não tem permissão para salvar vendedores.');
+        return;
+    }
+    
     // Obtém os dados do formulário
     const vendedorId = document.getElementById('vendedor_id').value;
     const nome = document.getElementById('nome').value;
@@ -321,7 +393,14 @@ function viewVendedor(vendedorId) {
 }
 
 // Edita um vendedor
-function editVendedor(vendedorId) {
+async function editVendedor(vendedorId) {
+    // Verifica se o usuário tem permissão de edição
+    const canEdit = await hasPermission('vendedores_editar');
+    if (!canEdit) {
+        alert('Você não tem permissão para editar vendedores.');
+        return;
+    }
+    
     // Abre o modal em modo de edição
     openVendedorModal(vendedorId);
     
@@ -340,6 +419,13 @@ function editVendedor(vendedorId) {
 
 // Exclui um vendedor
 async function deleteVendedor(vendedorId) {
+    // Verifica se o usuário tem permissão de edição
+    const canEdit = await hasPermission('vendedores_editar');
+    if (!canEdit) {
+        alert('Você não tem permissão para excluir vendedores.');
+        return;
+    }
+    
     if (!confirm('Tem certeza que deseja excluir este vendedor?')) {
         return;
     }

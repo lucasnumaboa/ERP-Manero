@@ -1,24 +1,4 @@
 // Configuração de modals para o módulo financeiro
-function setupModals() {
-    // Fechar modals quando clicar no X ou no botão Cancelar
-    const closeButtons = document.querySelectorAll('.close-modal');
-    closeButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const modal = button.closest('.modal');
-            modal.style.display = 'none';
-        });
-    });
-    
-    // Fechar modal ao clicar fora dele
-    window.addEventListener('click', (event) => {
-        const modals = document.querySelectorAll('.modal');
-        modals.forEach(modal => {
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-    }
-}
 
 /**
  * Adiciona uma barra de pesquisa a um select específico
@@ -99,6 +79,29 @@ function setupSelectSearches() {
         });
     });
 }
+
+// Função principal que configura os modais
+function setupModals() {
+    // Fechar modals quando clicar no X ou no botão Cancelar
+    const closeButtons = document.querySelectorAll('.close-modal');
+    closeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const modal = button.closest('.modal');
+            modal.style.display = 'none';
+        });
+    });
+    
+    // Fechar modal ao clicar fora dele
+    window.addEventListener('click', (event) => {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    });
+    
+    // Configurar barras de pesquisa nos selects
     setupSelectSearches();
     
     // Configurar botões de cancelar

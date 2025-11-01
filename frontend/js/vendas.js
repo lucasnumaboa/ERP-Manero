@@ -45,10 +45,44 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Configurar eventos de fechamento de modal
     document.querySelectorAll('.close-modal').forEach(button => {
-        button.addEventListener('click', function() {
-            document.querySelectorAll('.modal').forEach(modal => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Encontrar o modal pai do botão clicado
+            const modal = button.closest('.modal');
+            if (modal) {
                 modal.style.display = 'none';
-            });
+                modal.classList.remove('active');
+                
+                // Remover a classe modal-open do body
+                document.body.classList.remove('modal-open');
+                
+                // Limpar formulários se necessário
+                if (modal.id === 'vendaModal') {
+                    limparFormularioVenda();
+                } else if (modal.id === 'itemModal') {
+                    limparFormularioItem();
+                }
+            }
+        });
+    });
+    
+    // Configurar fechamento ao clicar fora do modal
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+                modal.classList.remove('active');
+                document.body.classList.remove('modal-open');
+                
+                // Limpar formulários se necessário
+                if (modal.id === 'vendaModal') {
+                    limparFormularioVenda();
+                } else if (modal.id === 'itemModal') {
+                    limparFormularioItem();
+                }
+            }
         });
     });
     
@@ -109,8 +143,30 @@ function setupSidebarToggle() {
 // Funções para carregar dados
 async function carregarVendas() {
     try {
-        // Usa a API centralizada
-        vendas = await apiGet('/api/vendas');
+        // Obtém dados do usuário atual
+        const userData = await getCurrentUser();
+        
+        // Verifica se o usuário é administrador
+        const isAdmin = userData && userData.nivel_acesso === 'admin';
+        
+        // Prepara os parâmetros de consulta
+        const queryParams = {};
+        
+        // Se não for admin, filtra apenas as vendas do próprio vendedor
+        if (!isAdmin && userData) {
+            // Busca o vendedor associado ao usuário atual
+            const vendedores = await apiGet('/api/vendedores');
+            const vendedorAtual = vendedores.find(v => v.usuario_id === userData.id);
+            
+            if (vendedorAtual) {
+                console.log('Filtrando vendas para o vendedor ID:', vendedorAtual.id);
+                queryParams.vendedor_id = vendedorAtual.id;
+            }
+        }
+        
+        // Usa a API centralizada com os filtros aplicados
+        vendas = await apiGet('/api/vendas', queryParams);
+        
         // Configuração da paginação
         window.currentDisplayFunction = renderizarVendas;
         initPagination(vendas, renderizarVendas);
@@ -153,13 +209,29 @@ async function carregarVendedores() {
 }
 
 // Funções para renderizar dados
-function renderizarVendas(vendas) {
+async function renderizarVendas(vendas) {
     const tbody = document.getElementById('vendasTableBody');
     tbody.innerHTML = '';
     
     if (vendas.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhuma venda encontrada</td></tr>';
         return;
+    }
+    
+    // Obtém dados do usuário atual
+    const userData = await getCurrentUser();
+    
+    // Verifica se o usuário é administrador
+    const isAdmin = userData && userData.nivel_acesso === 'admin';
+    
+    // Se não for admin, busca o vendedor associado ao usuário
+    let vendedorId = null;
+    if (!isAdmin && userData) {
+        const vendedores = await apiGet('/api/vendedores');
+        const vendedorAtual = vendedores.find(v => v.usuario_id === userData.id);
+        if (vendedorAtual) {
+            vendedorId = vendedorAtual.id;
+        }
     }
     
     vendas.forEach(venda => {
@@ -171,6 +243,14 @@ function renderizarVendas(vendas) {
         // Aplicar classe baseada no status
         tr.classList.add(`status-${statusKey}`);
         
+        // Verifica se o usuário pode editar esta venda
+        // Administradores podem editar qualquer venda
+        // Vendedores só podem editar suas próprias vendas
+        const podeEditar = isAdmin || (vendedorId && venda.vendedor_id === vendedorId);
+        
+        // Calcular comissão (5% do valor total)
+        const comissao = venda.valor_total * 0.05;
+        
         tr.innerHTML = `
             <td>${venda.id}</td>
             <td>${venda.cliente_nome}</td>
@@ -178,17 +258,20 @@ function renderizarVendas(vendas) {
             <td>${formatarMoeda(venda.valor_total)}</td>
             <td><span class="status-badge ${statusKey}">${label}</span></td>
             <td>${venda.vendedor_nome ? venda.vendedor_nome : '-'}</td>
+            <td>${formatarMoeda(comissao)}</td>
             <td>
                 <div class="table-actions">
                     <button class="btn-icon btn-view" data-id="${venda.id}" title="Visualizar">
                         <i class="fas fa-eye"></i>
                     </button>
+                    ${podeEditar ? `
                     <button class="btn-icon btn-edit" data-id="${venda.id}" title="Editar">
                         <i class="fas fa-edit"></i>
                     </button>
                     <button class="btn-icon btn-delete" data-id="${venda.id}" title="Excluir">
                         <i class="fas fa-trash"></i>
                     </button>
+                    ` : ''}
                 </div>
             </td>
         `;
@@ -848,6 +931,39 @@ function formatarStatus(status) {
         'finalizada': 'Finalizada',
         'cancelada': 'Cancelada'
     };
-    
     return statusMap[status] || status;
+}
+
+// Funções para limpar formulários
+function limparFormularioVenda() {
+    const form = document.getElementById('vendaForm');
+    if (form) {
+        form.reset();
+    }
+    
+    // Limpar variáveis globais
+    itensVenda = [];
+    vendaAtual = null;
+    editandoVenda = false;
+    
+    // Limpar tabela de itens
+    renderizarItensVenda();
+    
+    // Atualizar valor total
+    atualizarValorTotal();
+    
+    // Resetar título do modal
+    document.getElementById('modalTitle').textContent = 'Nova Venda';
+}
+
+function limparFormularioItem() {
+    const form = document.getElementById('itemForm');
+    if (form) {
+        form.reset();
+    }
+    
+    // Limpar campos específicos
+    document.getElementById('subtotal').value = 'R$ 0,00';
+    document.getElementById('quantidade').value = '1';
+    document.getElementById('preco_unitario').value = '';
 }

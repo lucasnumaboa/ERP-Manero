@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Inicializa o dashboard
-    initDashboard();
+    // Verifica permissões antes de inicializar o dashboard
+    checkDashboardPermissions();
     
     // Carrega os dados do usuário
     loadUserData();
@@ -86,6 +86,101 @@ function setupSidebarToggle() {
             sidebar.classList.toggle('collapsed');
             mainContent.classList.toggle('expanded');
         });
+    }
+}
+
+// Verifica permissões do dashboard e mostra/oculta conteúdo
+async function checkDashboardPermissions() {
+    try {
+        // Obtém o usuário atual e suas permissões
+        const user = await getCurrentUser();
+        if (!user) {
+            console.error('Não foi possível obter dados do usuário');
+            return;
+        }
+        
+        console.log('Verificando permissões do dashboard para o usuário:', user);
+        console.log('Valor de dashboard_visualizar:', user.dashboard_visualizar, 'Tipo:', typeof user.dashboard_visualizar);
+        console.log('Valor de dashboard_editar:', user.dashboard_editar, 'Tipo:', typeof user.dashboard_editar);
+        
+        // SOLUÇÃO TEMPORÁRIA: Se o usuário for admin, conceder acesso independentemente das permissões específicas
+        const isAdmin = user.nivel_acesso === 'admin' || user.nivel_acesso === 'Admin' || user.nivel_acesso === 'ADMIN';
+        
+        // Verifica se o usuário tem permissão para visualizar ou editar o dashboard
+        // Aceita qualquer valor que não seja null, undefined, 0, false ou string vazia
+        const canView = Boolean(user.dashboard_visualizar) || isAdmin;
+        const canEdit = Boolean(user.dashboard_editar) || isAdmin;
+        
+        console.log('É admin:', isAdmin);
+        console.log('Permissão para visualizar dashboard:', canView);
+        console.log('Permissão para editar dashboard:', canEdit);
+        
+        // Remove a tela de carregamento
+        const loadingScreen = document.getElementById('permission-loading');
+        if (loadingScreen) {
+            loadingScreen.style.display = 'none';
+        }
+        
+        if (canView || canEdit) {
+            // Se tem permissão, inicializa o dashboard normalmente
+            document.querySelector('.app-container').style.display = 'flex';
+            initDashboard();
+            document.querySelector('.content').style.display = 'block';
+        } else {
+            // Se não tem permissão, exibe a app-container mas com mensagem de acesso negado
+            document.querySelector('.app-container').style.display = 'flex';
+            
+            // Se não tem permissão, oculta todo o conteúdo do dashboard
+            document.querySelector('.content').style.display = 'none';
+            
+            // Exibe mensagem informando que não tem permissão
+            const content = document.querySelector('.content');
+            content.innerHTML = `
+                <div class="permission-denied">
+                    <i class="fas fa-lock" style="font-size: 48px; color: #e74c3c; margin-bottom: 20px;"></i>
+                    <h2>Acesso Restrito</h2>
+                    <p>Você não possui permissão para visualizar o Dashboard.</p>
+                    <p>Entre em contato com o administrador do sistema para solicitar acesso.</p>
+                </div>
+            `;
+            
+            // Estilo para a mensagem de permissão negada
+            const style = document.createElement('style');
+            style.textContent = `
+                .permission-denied {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    text-align: center;
+                    height: 70vh;
+                    padding: 20px;
+                }
+                .permission-denied h2 {
+                    color: #e74c3c;
+                    margin-bottom: 10px;
+                }
+                .permission-denied p {
+                    color: #7f8c8d;
+                    margin: 5px 0;
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Exibe o conteúdo (agora com a mensagem de permissão negada)
+            content.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Erro ao verificar permissões do dashboard:', error);
+        
+        // Em caso de erro, remove a tela de carregamento e mostra mensagem de erro
+        const loadingScreen = document.getElementById('permission-loading');
+        if (loadingScreen) {
+            loadingScreen.style.display = 'none';
+        }
+        
+        // Exibe a app-container com mensagem de erro
+        document.querySelector('.app-container').style.display = 'flex';
     }
 }
 

@@ -20,11 +20,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Carregar lista de usuários
     carregarUsuarios();
     
+    // Carregar lista de grupos de usuários
+    carregarGrupos();
+    
     // Configurar formulários
     setupForms();
     
     // Configurar modal de usuário
     setupUsuarioModal();
+    
+    // Configurar modal de grupo
+    setupGrupoModal();
 });
 
 // Funções de autenticação
@@ -46,7 +52,7 @@ async function verificarAcessoAdmin() {
         }
         
         // Faz a requisição diretamente usando fetch com o token
-        const response = await fetch(`${getApiBaseUrl()}/api/usuarios/me`, {
+        const response = await fetch(`${getApiBaseUrl()}/api/usuarios/perfil`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -71,7 +77,7 @@ async function verificarAcessoAdmin() {
         
         if (usuario.nivel_acesso !== 'admin') {
             alert('Acesso restrito. Apenas administradores podem acessar esta página.');
-            window.location.href = 'dashboard.html';
+            window.location.href = 'homepage.html';
         }
     } catch (error) {
         console.error('Erro ao verificar nível de acesso:', error);
@@ -142,26 +148,12 @@ async function carregarDadosUsuario() {
             return;
         }
         
-        // Faz a requisição diretamente usando fetch com o token
-        const response = await fetch(`${getApiBaseUrl()}/api/usuarios/me`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        
-        if (!response.ok) {
-            console.error('Erro na requisição:', response.status);
-            alert('Erro ao carregar dados do usuário. Por favor, tente novamente.');
-            return;
-        }
-        
-        const usuario = await response.json();
+        // Faz a requisição usando a API centralizada
+        const usuario = await apiGet('/api/usuarios/me');
         preencherDadosUsuario(usuario);
     } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
-        alert('Erro ao carregar dados do usuário. Por favor, tente novamente.');
+        console.error('Erro na requisição:', error);
+        // Não exibir alerta para não interromper a experiência do usuário
     }
 }
 
@@ -227,7 +219,13 @@ function controlarVisibilidadePorNivel(nivelAcesso) {
         usuariosTab.style.display = isAdmin ? 'block' : 'none';
     }
     
-    // 3. Ocultar aba "Configurações" para não-admins
+    // 3. Ocultar aba "Grupos de Usuários" para não-admins
+    const gruposTab = document.querySelector('[data-tab="grupos"]');
+    if (gruposTab) {
+        gruposTab.style.display = isAdmin ? 'block' : 'none';
+    }
+    
+    // 4. Ocultar aba "Configurações" para não-admins
     const configuracoesTab = document.querySelector('[data-tab="configuracoes"]');
     if (configuracoesTab) {
         configuracoesTab.style.display = isAdmin ? 'block' : 'none';
@@ -273,32 +271,14 @@ function preencherDadosEmpresa(empresa) {
 // Função para carregar dados da tabela Configuracoes
 async function carregarDadosConfiguracoes() {
     try {
-        const token = localStorage.getItem('erp_token');
-        if (!token) {
-            console.error('Token não encontrado');
-            return;
-        }
-        
-        const response = await fetch(`${getApiBaseUrl()}/api/configuracoes/configuracoes/`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        
-        if (!response.ok) {
-            // Suprimir erro 403 (acesso negado) para usuários não-admin
-            if (response.status !== 403) {
-                console.error('Erro ao carregar configurações:', response.status);
-            }
-            return;
-        }
-        
-        const configuracoes = await response.json();
+        // Usar a API centralizada com o endpoint correto
+        const configuracoes = await apiGet('/api/configuracoes/configuracoes/');
         preencherDadosConfiguracoes(configuracoes);
     } catch (error) {
-        console.error('Erro ao carregar dados de configurações:', error);
+        // Suprimir erro 403 (acesso negado) para usuários não-admin
+        if (error.status !== 403) {
+            console.error('Erro ao carregar configurações:', error);
+        }
     }
 }
 
@@ -356,7 +336,7 @@ function preencherDadosConfiguracoes(configuracoes) {
             <td>${config.descricao || ''}</td>
             <td>
                 <button class="btn btn-sm btn-primary editar-config" data-id="${config.chave}">Editar</button>
-                <button class="btn btn-sm btn-danger excluir-config" data-id="${config.chave}">Excluir</button>
+
             </td>
         `;
         tbody.appendChild(tr);
@@ -940,6 +920,240 @@ async function carregarUsuarios() {
     }
 }
 
+// Carregar lista de grupos
+async function carregarGrupos() {
+    try {
+        const apiBaseUrl = localStorage.getItem('api_base_url') || 'http://localhost:8000';
+        const response = await fetch(`${apiBaseUrl}/api/configuracoes/grupo_usuario`, {
+            method: 'GET',
+            headers: getAuthHeader()
+        });
+        
+        if (!response.ok) {
+            // Suprimir erro 403 (acesso negado) para usuários não-admin
+            if (response.status !== 403) {
+                throw new Error(`Erro HTTP: ${response.status}`);
+            }
+            return;
+        }
+        
+        const grupos = await response.json();
+        preencherTabelaGrupos(grupos);
+    } catch (error) {
+        console.error('Erro ao carregar grupos:', error);
+        // Em caso de erro, mostrar tabela vazia
+        preencherTabelaGrupos([]);
+    }
+}
+
+// Preencher tabela de grupos
+function preencherTabelaGrupos(grupos) {
+    const tbody = document.getElementById('gruposTableBody');
+    tbody.innerHTML = '';
+    
+    if (grupos.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center">Nenhum grupo encontrado</td>
+            </tr>
+        `;
+        return;
+    }
+    
+    grupos.forEach(grupo => {
+        const tr = document.createElement('tr');
+        
+        // Verificar se é o grupo Administrador (não pode ser editado ou excluído)
+        const isAdmin = grupo.nome === 'Administrador';
+        
+        tr.innerHTML = `
+            <td>${grupo.id}</td>
+            <td>${grupo.nome}</td>
+            <td>${grupo.descricao || '-'}</td>
+            <td>${grupo.em_uso ? 'Sim' : 'Não'}</td>
+            <td class="actions">
+                <button class="btn-icon btn-edit" ${isAdmin ? 'disabled' : ''} data-id="${grupo.id}" title="Editar">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-icon btn-delete" ${isAdmin || grupo.em_uso ? 'disabled' : ''} data-id="${grupo.id}" title="${grupo.em_uso ? 'Grupo em uso não pode ser excluído' : 'Excluir'}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        
+        // Adicionar eventos aos botões
+        const btnEdit = tr.querySelector('.btn-edit');
+        if (!isAdmin) {
+            btnEdit.addEventListener('click', () => editarGrupo(grupo.id));
+        }
+        
+        const btnDelete = tr.querySelector('.btn-delete');
+        if (!isAdmin && !grupo.em_uso) {
+            btnDelete.addEventListener('click', () => excluirGrupo(grupo.id));
+        }
+        
+        tbody.appendChild(tr);
+    });
+}
+
+// Abrir modal para editar grupo
+async function editarGrupo(id) {
+    try {
+        const apiBaseUrl = localStorage.getItem('api_base_url') || 'http://localhost:8000';
+        const response = await fetch(`${apiBaseUrl}/api/configuracoes/grupo_usuario/${id}`, {
+            method: 'GET',
+            headers: getAuthHeader()
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Erro HTTP: ${response.status}`);
+        }
+        
+        const grupo = await response.json();
+        
+        // Preencher formulário
+        const form = document.getElementById('grupoForm');
+        form.dataset.mode = 'edit';
+        form.dataset.grupoId = id;
+        
+        document.getElementById('grupoModalTitle').textContent = 'Editar Grupo de Usuários';
+        document.getElementById('grupo_nome').value = grupo.nome;
+        document.getElementById('grupo_descricao').value = grupo.descricao || '';
+        
+        // Preencher checkboxes de permissões
+        document.querySelector('input[name="dashboard_visualizar"]').checked = grupo.dashboard_visualizar;
+        document.querySelector('input[name="dashboard_editar"]').checked = grupo.dashboard_editar;
+        document.querySelector('input[name="produtos_visualizar"]').checked = grupo.produtos_visualizar;
+        document.querySelector('input[name="produtos_editar"]').checked = grupo.produtos_editar;
+        document.querySelector('input[name="clientes_visualizar"]').checked = grupo.clientes_visualizar;
+        document.querySelector('input[name="clientes_editar"]').checked = grupo.clientes_editar;
+        document.querySelector('input[name="vendas_visualizar"]').checked = grupo.vendas_visualizar;
+        document.querySelector('input[name="vendas_editar"]').checked = grupo.vendas_editar;
+        document.querySelector('input[name="vendedores_visualizar"]').checked = grupo.vendedores_visualizar;
+        document.querySelector('input[name="vendedores_editar"]').checked = grupo.vendedores_editar;
+        document.querySelector('input[name="compras_visualizar"]').checked = grupo.compras_visualizar;
+        document.querySelector('input[name="compras_editar"]').checked = grupo.compras_editar;
+        document.querySelector('input[name="fornecedores_visualizar"]').checked = grupo.fornecedores_visualizar;
+        document.querySelector('input[name="fornecedores_editar"]').checked = grupo.fornecedores_editar;
+        document.querySelector('input[name="estoque_visualizar"]').checked = grupo.estoque_visualizar;
+        document.querySelector('input[name="estoque_editar"]').checked = grupo.estoque_editar;
+        document.querySelector('input[name="configuracoes_visualizar"]').checked = grupo.configuracoes_visualizar;
+        document.querySelector('input[name="configuracoes_editar"]').checked = grupo.configuracoes_editar;
+        document.querySelector('input[name="financeiro_visualizar"]').checked = grupo.financeiro_visualizar;
+        document.querySelector('input[name="financeiro_editar"]').checked = grupo.financeiro_editar;
+        
+        // Abrir modal
+        const modal = document.getElementById('grupoModal');
+        modal.classList.add('active');
+        document.body.classList.add('modal-open');
+    } catch (error) {
+        console.error('Erro ao carregar grupo:', error);
+        alert('Erro ao carregar dados do grupo');
+    }
+}
+
+// Excluir grupo
+async function excluirGrupo(id) {
+    if (!confirm('Tem certeza que deseja excluir este grupo?')) {
+        return;
+    }
+    
+    try {
+        const apiBaseUrl = localStorage.getItem('api_base_url') || 'http://localhost:8000';
+        const response = await fetch(`${apiBaseUrl}/api/configuracoes/grupo_usuario/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeader()
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
+        }
+        
+        alert('Grupo excluído com sucesso!');
+        carregarGrupos();
+    } catch (error) {
+        console.error('Erro ao excluir grupo:', error);
+        alert(`Erro ao excluir grupo: ${error.message}`);
+    }
+}
+
+// Abrir modal para novo grupo
+function abrirModalNovoGrupo() {
+    const form = document.getElementById('grupoForm');
+    form.reset();
+    form.dataset.mode = 'create';
+    delete form.dataset.grupoId;
+    
+    document.getElementById('grupoModalTitle').textContent = 'Novo Grupo de Usuários';
+    
+    // Abrir modal
+    document.getElementById('grupoModal').classList.add('active');
+    document.body.classList.add('modal-open');
+}
+
+// Salvar grupo (criar ou atualizar)
+async function salvarGrupo() {
+    const form = document.getElementById('grupoForm');
+    const formData = new FormData(form);
+    
+    const grupoData = {
+        nome: formData.get('nome'),
+        descricao: formData.get('descricao'),
+        dashboard_visualizar: formData.get('dashboard_visualizar') === 'on',
+        dashboard_editar: formData.get('dashboard_editar') === 'on',
+        produtos_visualizar: formData.get('produtos_visualizar') === 'on',
+        produtos_editar: formData.get('produtos_editar') === 'on',
+        clientes_visualizar: formData.get('clientes_visualizar') === 'on',
+        clientes_editar: formData.get('clientes_editar') === 'on',
+        vendas_visualizar: formData.get('vendas_visualizar') === 'on',
+        vendas_editar: formData.get('vendas_editar') === 'on',
+        vendedores_visualizar: formData.get('vendedores_visualizar') === 'on',
+        vendedores_editar: formData.get('vendedores_editar') === 'on',
+        compras_visualizar: formData.get('compras_visualizar') === 'on',
+        compras_editar: formData.get('compras_editar') === 'on',
+        fornecedores_visualizar: formData.get('fornecedores_visualizar') === 'on',
+        fornecedores_editar: formData.get('fornecedores_editar') === 'on',
+        estoque_visualizar: formData.get('estoque_visualizar') === 'on',
+        estoque_editar: formData.get('estoque_editar') === 'on',
+        configuracoes_visualizar: formData.get('configuracoes_visualizar') === 'on',
+        configuracoes_editar: formData.get('configuracoes_editar') === 'on',
+        financeiro_visualizar: formData.get('financeiro_visualizar') === 'on',
+        financeiro_editar: formData.get('financeiro_editar') === 'on'
+    };
+    
+    try {
+        const apiBaseUrl = localStorage.getItem('api_base_url') || 'http://localhost:8000';
+        const isEdit = form.dataset.mode === 'edit';
+        const url = isEdit 
+            ? `${apiBaseUrl}/api/configuracoes/grupo_usuario/${form.dataset.grupoId}`
+        : `${apiBaseUrl}/api/configuracoes/grupo_usuario`;
+        
+        const response = await fetch(url, {
+            method: isEdit ? 'PUT' : 'POST',
+            headers: {
+                ...getAuthHeader(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(grupoData)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
+        }
+        
+        // Fechar modal e recarregar lista
+        closeModal('grupoModal');
+        carregarGrupos();
+        
+        alert(isEdit ? 'Grupo atualizado com sucesso!' : 'Grupo criado com sucesso!');
+    } catch (error) {
+        console.error('Erro ao salvar grupo:', error);
+        alert(`Erro ao salvar grupo: ${error.message}`);
+    }
+}
+
 function preencherTabelaUsuarios(usuarios) {
     const tbody = document.getElementById('usuariosTableBody');
     if (!tbody) {
@@ -978,6 +1192,9 @@ async function abrirModalEditarUsuario(userId) {
     document.getElementById('usuarioModalTitle').textContent = `Editar Usuário #${userId}`;
     
     try {
+        // Carregar a lista de grupos primeiro
+        await carregarGruposSelect();
+        
         // Buscar dados do usuário atual e do usuário a ser editado
         const [currentUser, usuario] = await Promise.all([
             apiGet('/api/usuarios/me'),
@@ -988,6 +1205,7 @@ async function abrirModalEditarUsuario(userId) {
         document.getElementById('usuario_email').value = usuario.email || '';
         document.getElementById('usuario_senha').value = '';
         document.getElementById('usuario_nivel_acesso').value = usuario.nivel_acesso || 'usuario';
+        document.getElementById('usuario_grupo_id').value = usuario.grupo_id || '';
         
         // Armazenar o ID do usuário para atualização
         document.getElementById('usuarioForm').dataset.userId = userId;
@@ -1087,6 +1305,7 @@ function setupUsuarioModal() {
     // Abrir modal ao clicar no botão Novo Usuário
     document.getElementById('btnNovoUsuario').addEventListener('click', function() {
         abrirModalNovoUsuario();
+        carregarGruposSelect(); // Carregar grupos no select
     });
     
     // Fechar modal
@@ -1099,6 +1318,81 @@ function setupUsuarioModal() {
         e.preventDefault();
         salvarUsuario();
     });
+}
+
+// Carregar grupos no select de usuários
+async function carregarGruposSelect() {
+    try {
+        // Obter a URL base da API de forma síncrona para evitar problemas com await
+        const apiUrl = await getApiUrl(); // Usando getApiUrl de api_config.js em vez de getApiBaseUrl
+        
+        const response = await fetch(`${apiUrl}/api/configuracoes/grupo_usuario`, {
+            method: 'GET',
+            headers: getAuthHeader()
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erro ao carregar grupos');
+        }
+        
+        const grupos = await response.json();
+        const selectGrupo = document.getElementById('usuario_grupo_id');
+        
+        // Limpar opções existentes
+        selectGrupo.innerHTML = '<option value="">Selecione...</option>';
+        
+        // Adicionar opções de grupos
+        grupos.forEach(grupo => {
+            const option = document.createElement('option');
+            option.value = grupo.id;
+            option.textContent = grupo.nome;
+            selectGrupo.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Erro ao carregar grupos:', error);
+        alert('Não foi possível carregar a lista de grupos');
+    }
+}
+
+// Configurar modal de grupo
+function setupGrupoModal() {
+    const modal = document.getElementById('grupoModal');
+    const closeBtn = modal.querySelector('.close-modal');
+    const form = document.getElementById('grupoForm');
+    
+    // Abrir modal ao clicar no botão Novo Grupo
+    document.getElementById('btnNovoGrupo').addEventListener('click', function() {
+        abrirModalNovoGrupo();
+    });
+    
+    // Fechar modal
+    closeBtn.addEventListener('click', function() {
+        fecharModalGrupo();
+    });
+    
+    // Submeter formulário
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        salvarGrupo();
+    });
+}
+
+// Função para fechar o modal de grupo
+function fecharModalGrupo() {
+    document.getElementById('grupoModal').classList.remove('active');
+    document.body.classList.remove('modal-open');
+}
+
+// Função genérica para fechar qualquer modal
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.classList.remove('modal-open');
+        console.log(`Modal ${modalId} fechado com sucesso`);
+    } else {
+        console.error(`Modal ${modalId} não encontrado ao tentar fechar`);
+    }
 }
 
 function abrirModalNovoUsuario() {
@@ -1127,7 +1421,8 @@ async function salvarUsuario() {
     const usuarioData = {
         nome: document.getElementById('usuario_nome').value,
         email: document.getElementById('usuario_email').value,
-        nivel_acesso: document.getElementById('usuario_nivel_acesso').value
+        nivel_acesso: document.getElementById('usuario_nivel_acesso').value,
+        grupo_id: document.getElementById('usuario_grupo_id').value
     };
     
     // Adicionar senha apenas se foi preenchida

@@ -304,15 +304,7 @@ function setupActionButtons() {
         openCompraModal();
     });
     
-    // Configura o botão de importar compras
-    document.getElementById('btnImportarCompras').addEventListener('click', function() {
-        alert('Funcionalidade de importação em desenvolvimento');
-    });
-    
-    // Configura o botão de exportar compras
-    document.getElementById('btnExportarCompras').addEventListener('click', function() {
-        alert('Funcionalidade de exportação em desenvolvimento');
-    });
+
     
     // Configura o botão de consultar estoque
     document.getElementById('btnConsultarEstoque').addEventListener('click', function() {

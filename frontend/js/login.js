@@ -2,10 +2,32 @@ document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('loginForm');
     const loginMessage = document.getElementById('loginMessage');
     
-    // Obtém a URL da API do localStorage ou usa o valor padrão
-    function getApiUrl() {
-        return localStorage.getItem('api_base_url') || 'http://localhost:8000';
+    // Obtém a URL da API sempre do banco, sem cache local
+    async function getApiUrl() {
+        const defaultUrl = 'http://localhost:8000';
+        
+        try {
+            // Sempre tenta buscar a URL da API do endpoint configuracoes
+            const response = await fetch(`${defaultUrl}/api/configuracoes/link_api`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data && data.valor) {
+                    return data.valor;
+                }
+            }
+        } catch (error) {
+            console.warn('Erro ao obter URL da API do servidor, usando fallback:', error);
+        }
+        
+        // Se falhar, retorna a URL padrão
+        return defaultUrl;
     }
+    
+
     
     // Verificar e sincronizar a URL da API ao carregar a página
     checkApiConnection();
@@ -22,6 +44,9 @@ document.addEventListener('DOMContentLoaded', function() {
         loginMessage.textContent = '';
         
         try {
+            // Obter a URL da API
+            const apiUrl = await getApiUrl();
+            
             // Formatar os dados conforme esperado pela API (username = email)
             const formData = new FormData();
             formData.append('username', email);
@@ -32,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 segundos de timeout
             
             // Fazer a requisição de login
-            const response = await fetch(`${getApiUrl()}/token`, {
+            const response = await fetch(`${apiUrl}/token`, {
                 method: 'POST',
                 body: formData,
                 signal: controller.signal
@@ -70,9 +95,9 @@ document.addEventListener('DOMContentLoaded', function() {
             loginMessage.classList.add('success-message');
             loginMessage.style.display = 'block';
             
-            // Redirecionar para a página principal após um breve delay
+            // Redirecionar para a homepage após um breve delay
             setTimeout(() => {
-                window.location.href = 'dashboard.html';
+                window.location.href = 'homepage.html';
             }, 1500);
             
         } catch (error) {
@@ -116,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Função para verificar a conexão com a API
     async function checkApiConnection() {
-        const apiUrl = getApiUrl();
+        const apiUrl = await getApiUrl();
         const statusElement = document.createElement('div');
         statusElement.id = 'api-status';
         statusElement.style.fontSize = '12px';
@@ -165,8 +190,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     return response.json().then(data => {
                         if (data && data.config && data.config.api_url && data.config.api_url !== apiUrl) {
                             console.log(`A URL da API no servidor (${data.config.api_url}) é diferente da URL local (${apiUrl}).`);
-                            // Atualizar a URL local com a do servidor
-                            localStorage.setItem('api_base_url', data.config.api_url);
+                            // Não salva mais no localStorage - sempre busca do banco
                         }
                     }).catch(() => {
                         // Erro ao processar JSON, mas a API está online
@@ -209,8 +233,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     return response.json().then(data => {
                         if (data && data.valor && data.valor !== apiUrl) {
                             console.log(`A URL da API no servidor (${data.valor}) é diferente da URL local (${apiUrl}).`);
-                            // Atualizar a URL local com a do servidor
-                            localStorage.setItem('api_base_url', data.valor);
+                            // Não salva mais no localStorage - sempre busca do banco
                         }
                     }).catch(() => {
                         // Erro ao processar JSON, mas a API está online
