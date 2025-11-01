@@ -4,6 +4,8 @@
   <img src="erp-manero.gif" alt="ERP Maneiro" width="500" height="250">
 </div>
 
+![ERP Maneiro](erp-manero.gif)
+
 ## 📋 Sobre o Projeto
 
 O **ERP manero** é um sistema de gestão empresarial completo e moderno, desenvolvido para atender às necessidades de pequenas e médias empresas. O projeto está em **fase inicial de desenvolvimento** e será expandido com diversos módulos no futuro.
