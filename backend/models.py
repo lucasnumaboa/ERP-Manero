@@ -18,12 +18,14 @@ class UsuarioBase(BaseModel):
 
 class UsuarioCreate(UsuarioBase):
     senha: str
+    grupo_id: Optional[int] = None
 
 class UsuarioUpdate(BaseModel):
     nome: Optional[str] = None
     email: Optional[str] = None
     nivel_acesso: Optional[str] = None
     senha: Optional[str] = None
+    grupo_id: Optional[int] = None
 
 class PasswordChange(BaseModel):
     senha_atual: str
@@ -34,6 +36,7 @@ class Usuario(UsuarioBase):
     ultimo_acesso: Optional[str] = None
     last_access: Optional[str] = None
     connected: Optional[bool] = False
+    grupo_id: Optional[int] = None
 
 class UserInDB(BaseModel):
     id: int
@@ -42,3 +45,4 @@ class UserInDB(BaseModel):
     nivel_acesso: str
     last_access: Optional[str] = None
     connected: Optional[bool] = False
+    grupo_id: Optional[int] = None

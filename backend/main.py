@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.staticfiles import StaticFiles
 from datetime import timedelta
 
 # Importa as configurações centralizadas
@@ -164,6 +165,9 @@ app.include_router(relatorios.router, prefix="/api/relatorios", tags=["Relatóri
 app.include_router(clientes.router, prefix="/api/clientes", tags=["Clientes"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
 app.include_router(configuracoes.router, prefix="/api/configuracoes", tags=["Configurações"])
+
+# Configuração para servir arquivos estáticos (uploads)
+app.mount("/uploads", StaticFiles(directory="frontend/uploads"), name="uploads")
 
 @app.get("/")
 async def root():
