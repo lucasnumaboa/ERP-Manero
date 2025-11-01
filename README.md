@@ -4,8 +4,6 @@
   <img src="erp-manero.gif" alt="ERP Maneiro" width="500" height="250">
 </div>
 
-![Uploading erp-manero.gif…]()
-
 
 ## 📋 Sobre o Projeto
 
