@@ -1,7 +1,7 @@
 # ERP manero
 
 <div align="center">
-  <img src="icon.png" alt="ERP Maneiro" width="250" height="250">
+  <img src="erp-manero.gif" alt="ERP Maneiro" width="250" height="250">
 </div>
 
 ## 📋 Sobre o Projeto
