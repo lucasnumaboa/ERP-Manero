@@ -14,6 +14,198 @@
     <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="css/permissions.css">
+    <style>
+        /* Estilos dos Filtros Reformulados */
+        .filter-container {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 100%;
+        }
+
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .filter-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .checkboxes-row {
+            flex-wrap: wrap;
+        }
+
+        .controls-row {
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 20px;
+            margin-bottom: 5px;
+        }
+
+        .filter-checkbox {
+            display: none;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: #495057;
+            user-select: none;
+        }
+
+        .checkbox-custom {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #6c757d;
+            border-radius: 3px;
+            margin-right: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .filter-checkbox:checked + .checkbox-label .checkbox-custom {
+            background: #007bff;
+            border-color: #007bff;
+        }
+
+        .filter-checkbox:checked + .checkbox-label .checkbox-custom::after {
+            content: '✓';
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .checkbox-label:hover .checkbox-custom {
+            border-color: #007bff;
+            transform: scale(1.05);
+        }
+
+        .filter-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 20px;
+            margin-bottom: 5px;
+        }
+
+        .control-label {
+            font-size: 14px;
+            color: #495057;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .search-input-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .filter-input {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            min-width: 200px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+
+        .search-btn {
+            padding: 8px 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .search-btn:hover {
+            background: #0056b3;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            min-width: 150px;
+            background: white;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+
+        .btn-clear-filters {
+            padding: 8px 16px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+            margin-left: auto;
+        }
+
+        .btn-clear-filters:hover {
+            background: #545b62;
+        }
+
+        @media (max-width: 768px) {
+            .filter-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .controls-row {
+                width: 100%;
+            }
+
+            .filter-control {
+                width: 100%;
+                margin-right: 0;
+            }
+
+            .filter-input, .filter-select {
+                width: 100%;
+                min-width: unset;
+            }
+
+            .btn-clear-filters {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
@@ -42,11 +234,18 @@
                     <li>
                         <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     </li>
+                </ul>
+                
+                <!-- Menu Principal -->
+                <ul>
                     <li>
                         <a href="produtos.html"><i class="fas fa-box"></i> Produtos</a>
                     </li>
                     <li class="active">
                         <a href="categorias.html"><i class="fas fa-tags"></i> Categorias</a>
+                    </li>
+                    <li>
+                        <a href="estoque.html"><i class="fas fa-warehouse"></i> Estoque</a>
                     </li>
                     <li>
                         <a href="clientes.html"><i class="fas fa-users"></i> Clientes</a>
@@ -63,9 +262,6 @@
                     <li>
                         <a href="fornecedores.html"><i class="fas fa-industry"></i> Fornecedores</a>
                     </li>
-                    <li>
-                        <a href="estoque.html"><i class="fas fa-warehouse"></i> Estoque</a>
-                    </li>
 
                     <!-- Relatórios removido -->
                     <li>
@@ -80,22 +276,6 @@
 
         <!-- Conteúdo Principal -->
         <main class="main-content">
-            <header class="main-header">
-                <div class="header-search">
-                    <input type="text" placeholder="Pesquisar categorias...">
-                    <button><i class="fas fa-search"></i></button>
-                </div>
-                <div class="header-actions">
-                    <button class="notification-btn">
-                        <i class="fas fa-bell"></i>
-                        <span class="badge">3</span>
-                    </button>
-                    <button class="profile-btn">
-                        <i class="fas fa-user"></i>
-                    </button>
-                </div>
-            </header>
-
             <div class="content">
                 <div class="page-header">
                     <h1>Gerenciamento de Categorias</h1>
@@ -105,25 +285,40 @@
                 <!-- Ações de Categorias -->
                 <div class="actions-bar">
                     <div class="actions-left">
-                        <div class="filter-group">
-                            <label for="filtroPesquisa">Pesquisar:</label>
-                            <input type="text" id="filtroPesquisa" placeholder="Digite para pesquisar..." class="search-input">
-                        </div>
                         <button class="btn-primary" id="btnNovaCategoria">
                             <i class="fas fa-plus"></i> Nova Categoria
                         </button>
-
                     </div>
+                </div>
+                
+                <!-- Filtros -->
+                <div class="filter-container">
+                    <h4 style="margin: 0 0 10px 0; color: #495057; font-size: 16px;">Filtros de Categorias</h4>
+                    <p style="margin: 0 0 15px 0; color: #6c757d; font-size: 14px;">Configure os filtros para visualizar as categorias desejadas</p>
                     
-                    <div class="actions-right">
-                        <div class="filter-group">
-                            <label for="filtroStatus">Status:</label>
-                            <select id="filtroStatus">
+                    <div class="filter-row controls-row">
+                        <div class="filter-control">
+                            <span class="control-label">Pesquisar:</span>
+                            <div class="search-input-group">
+                                <input type="text" id="filtroPesquisa" placeholder="Digite para pesquisar..." class="filter-input">
+                                <button onclick="filtrarCategorias()" class="search-btn">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="filter-control">
+                            <span class="control-label">Status:</span>
+                            <select id="filtroStatus" onchange="filtrarCategorias()" class="filter-select">
                                 <option value="">Todos</option>
                                 <option value="true">Ativo</option>
                                 <option value="false">Inativo</option>
                             </select>
                         </div>
+                        
+                        <button onclick="limparFiltros()" class="btn-clear-filters">
+                            Limpar Filtros
+                        </button>
                     </div>
                 </div>
 

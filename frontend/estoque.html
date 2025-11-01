@@ -47,6 +47,227 @@
             background-color: rgba(255, 193, 7, 0.1);
         }
         
+        /* Estilos dos Filtros Reformulados */
+        .filter-container {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .filter-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .checkboxes-row {
+            flex-wrap: wrap;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .controls-row {
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin-right: 25px;
+        }
+        
+        .filter-checkbox {
+            display: none;
+        }
+        
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: #495057;
+            user-select: none;
+        }
+        
+        .checkbox-custom {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #6c757d;
+            border-radius: 3px;
+            margin-right: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .filter-checkbox:checked + .checkbox-label .checkbox-custom {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        
+        .filter-checkbox:checked + .checkbox-label .checkbox-custom::after {
+            content: '✓';
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .checkbox-label:hover .checkbox-custom {
+            border-color: #007bff;
+        }
+        
+        .filter-control {
+            display: flex;
+            flex-direction: column;
+            margin-right: 20px;
+            min-width: 150px;
+        }
+        
+        .filter-control:last-child {
+            margin-right: 0;
+            align-self: flex-end;
+        }
+        
+        .control-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        
+        .filter-input, .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+        
+        .filter-input:focus, .filter-select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+        
+        .search-input-group {
+            display: flex;
+            position: relative;
+        }
+        
+        .search-input-group .filter-input {
+            flex: 1;
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            border-right: none;
+        }
+        
+        .search-btn {
+            background: #007bff;
+            color: white;
+            border: 1px solid #007bff;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .search-btn:hover {
+            background: #0056b3;
+        }
+        
+        .btn-clear-filters {
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .btn-clear-filters:hover {
+            background: #5a6268;
+        }
+        
+        @media (max-width: 768px) {
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+            }
+            
+            .checkboxes-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .checkbox-item {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            
+            .filter-control {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+        }
+
+        .produto-thumbnail {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        
+        .produto-thumbnail:hover {
+            transform: scale(1.1);
+        }
+        
+        .search-container {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        
+        #filtroPesquisa {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px 0 0 4px;
+            font-size: 14px;
+        }
+        
+        .btn-search {
+            background-color: #4a6cf7;
+            color: white;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-search:hover {
+            background-color: #3a5bd9;
+        }
+        
         /* Estilos para o modal de detalhes */
         .detalhes-container {
             max-height: 70vh;
@@ -124,6 +345,66 @@
             padding: 5px 10px;
             font-size: 0.8em;
         }
+        
+        /* Estilos melhorados para os filtros */
+        .filter-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            max-width: 100%;
+        }
+        
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 8px;
+            background-color: #fff;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+            align-items: center;
+        }
+        
+        .filter-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            align-items: start;
+        }
+        
+        .checkbox-group {
+            min-width: 200px;
+        }
+        
+        .select-styled {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: white;
+            transition: border-color 0.2s;
+        }
+        
+        .select-styled:focus {
+            border-color: #4a6cf7;
+            outline: none;
+        }
+        
+        .filter-group {
+            margin-bottom: 10px;
+        }
+        
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #495057;
+        }
     </style>
 </head>
 <body>
@@ -153,8 +434,18 @@
                     <li>
                         <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     </li>
+                </ul>
+                
+                <!-- Menu Principal -->
+                <ul>
                     <li>
                         <a href="produtos.html"><i class="fas fa-box"></i> Produtos</a>
+                    </li>
+                    <li>
+                        <a href="categorias.html"><i class="fas fa-tags"></i> Categorias</a>
+                    </li>
+                    <li class="active">
+                        <a href="estoque.html"><i class="fas fa-warehouse"></i> Estoque</a>
                     </li>
                     <li>
                         <a href="clientes.html"><i class="fas fa-users"></i> Clientes</a>
@@ -171,9 +462,6 @@
                     <li>
                         <a href="fornecedores.html"><i class="fas fa-industry"></i> Fornecedores</a>
                     </li>
-                    <li class="active">
-                        <a href="estoque.html"><i class="fas fa-warehouse"></i> Estoque</a>
-                    </li>
 
                     <!-- Relatórios removido -->
                     <li>
@@ -188,22 +476,6 @@
 
         <!-- Conteúdo Principal -->
         <main class="main-content">
-            <header class="main-header">
-                <div class="header-search">
-                    <input type="text" placeholder="Pesquisar produtos...">
-                    <button><i class="fas fa-search"></i></button>
-                </div>
-                <div class="header-actions">
-                    <button class="notification-btn">
-                        <i class="fas fa-bell"></i>
-                        <span class="badge">3</span>
-                    </button>
-                    <button class="profile-btn">
-                        <i class="fas fa-user"></i>
-                    </button>
-                </div>
-            </header>
-
             <div class="content">
                 <div class="page-header">
                     <h1>Consulta de Estoque</h1>
@@ -220,30 +492,54 @@
                         Configure os filtros para visualizar os produtos em estoque
                     </div>
                     <div class="filter-container">
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <div class="filter-group">
-                                <label class="checkbox-container">
-                                    <input type="checkbox" id="filtroAbaixoMinimo">
-                                    <span class="checkmark"></span>
+                        <!-- Linha 1: Checkboxes -->
+                        <div class="filter-row checkboxes-row">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="filtroAbaixoMinimo" class="filter-checkbox">
+                                <label for="filtroAbaixoMinimo" class="checkbox-label">
+                                    <span class="checkbox-custom"></span>
                                     Produtos abaixo do estoque mínimo
                                 </label>
                             </div>
-                            <div class="filter-group">
-                                <label class="checkbox-container">
-                                    <input type="checkbox" id="filtroComEstoque">
-                                    <span class="checkmark"></span>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="filtroComEstoque" class="filter-checkbox">
+                                <label for="filtroComEstoque" class="checkbox-label">
+                                    <span class="checkbox-custom"></span>
                                     Mostrar apenas o que tem estoque
                                 </label>
                             </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="filtroSomenteAtivo" class="filter-checkbox">
+                                <label for="filtroSomenteAtivo" class="checkbox-label">
+                                    <span class="checkbox-custom"></span>
+                                    Somente produtos ativos
+                                </label>
+                            </div>
                         </div>
-                        <div class="filter-group">
-                            <label for="filtroCategoria">Categoria:</label>
-                            <select id="filtroCategoria">
-                                <option value="">Todas as categorias</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <button class="btn-outline" id="btnLimparFiltros">Limpar Filtros</button>
+                        
+                        <!-- Linha 2: Controles -->
+                        <div class="filter-row controls-row">
+                            <div class="filter-control">
+                                <label for="filtroPesquisa" class="control-label">Pesquisar:</label>
+                                <div class="search-input-group">
+                                    <input type="text" id="filtroPesquisa" class="filter-input" placeholder="Pesquisar por nome do produto...">
+                                    <button id="btnPesquisar" class="search-btn">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="filter-control">
+                                <label for="filtroCategoria" class="control-label">Categoria:</label>
+                                <select id="filtroCategoria" class="filter-select">
+                                    <option value="">Todas as categorias</option>
+                                </select>
+                            </div>
+                            <div class="filter-control">
+                                <button class="btn-clear-filters" id="btnLimparFiltros">
+                                    <i class="fas fa-times"></i>
+                                    Limpar Filtros
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -252,11 +548,6 @@
                 <div class="settings-card">
                     <div class="card-header">
                         <h2><i class="fas fa-warehouse"></i> Produtos em Estoque</h2>
-                        <div id="novaMovimentacaoContainer" style="display: none;">
-                            <button class="btn-primary" onclick="openNovaMovimentacao()">
-                                <i class="fas fa-plus"></i> Nova Movimentação
-                            </button>
-                        </div>
                     </div>
                     <div class="card-description">
                         Visualize e gerencie o estoque de produtos
@@ -266,6 +557,7 @@
                             <table class="data-table">
                                 <thead>
                                     <tr>
+                                        <th>Imagem</th>
                                         <th>Código</th>
                                         <th>Nome</th>
                                         <th>Categoria</th>
