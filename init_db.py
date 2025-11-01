@@ -50,6 +50,38 @@ tables = {
         )
     """,
     
+    # Tabela de grupos de usuários
+    "grupo_usuario": """
+        CREATE TABLE IF NOT EXISTS grupo_usuario (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nome VARCHAR(100) NOT NULL UNIQUE,
+            descricao TEXT,
+            dashboard_visualizar BOOLEAN DEFAULT FALSE,
+            dashboard_editar BOOLEAN DEFAULT FALSE,
+            produtos_visualizar BOOLEAN DEFAULT FALSE,
+            produtos_editar BOOLEAN DEFAULT FALSE,
+            clientes_visualizar BOOLEAN DEFAULT FALSE,
+            clientes_editar BOOLEAN DEFAULT FALSE,
+            vendas_visualizar BOOLEAN DEFAULT FALSE,
+            vendas_editar BOOLEAN DEFAULT FALSE,
+            vendedores_visualizar BOOLEAN DEFAULT FALSE,
+            vendedores_editar BOOLEAN DEFAULT FALSE,
+            compras_visualizar BOOLEAN DEFAULT FALSE,
+            compras_editar BOOLEAN DEFAULT FALSE,
+            fornecedores_visualizar BOOLEAN DEFAULT FALSE,
+            fornecedores_editar BOOLEAN DEFAULT FALSE,
+            estoque_visualizar BOOLEAN DEFAULT FALSE,
+            estoque_editar BOOLEAN DEFAULT FALSE,
+            configuracoes_visualizar BOOLEAN DEFAULT FALSE,
+            configuracoes_editar BOOLEAN DEFAULT FALSE,
+            financeiro_visualizar BOOLEAN DEFAULT FALSE,
+            financeiro_editar BOOLEAN DEFAULT FALSE,
+            em_uso BOOLEAN DEFAULT FALSE,
+            data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )
+    """,
+    
     # Tabela de usuários
     "usuarios": """
         CREATE TABLE IF NOT EXISTS usuarios (
@@ -57,11 +89,13 @@ tables = {
             nome VARCHAR(100) NOT NULL,
             email VARCHAR(100) NOT NULL UNIQUE,
             senha VARCHAR(255) NOT NULL,
-            nivel_acesso ENUM('admin', 'vendedor', 'comprador', 'financeiro') NOT NULL,
+            nivel_acesso ENUM('admin', 'usuario') NOT NULL,
+            grupo_id INT,
             data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             ultimo_acesso TIMESTAMP NULL,
             last_access TIMESTAMP NULL,
-            connected BOOLEAN DEFAULT FALSE
+            connected BOOLEAN DEFAULT FALSE,
+            FOREIGN KEY (grupo_id) REFERENCES grupo_usuario(id)
         )
     """,
     
@@ -87,6 +121,9 @@ tables = {
             estoque_atual INT DEFAULT 0,
             estoque_minimo INT DEFAULT 5,
             categoria_id INT,
+            tipo_produto ENUM('comprado', 'fabricado') DEFAULT 'comprado',
+            comissao DECIMAL(4, 0) DEFAULT 0,
+            caminho_imagem TEXT,
             ativo BOOLEAN DEFAULT TRUE,
             data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (categoria_id) REFERENCES categorias_produtos(id)
@@ -430,6 +467,100 @@ try:
     print("Configurações de API de produção criadas/atualizadas com sucesso!")
 except mysql.connector.Error as err:
     print(f"Erro ao criar configurações de produção: {err}")
+
+# Cria grupos de usuários padrão
+try:
+    # Grupo Admin (acesso total)
+    cursor.execute("""
+        INSERT INTO grupo_usuario (
+            nome, descricao, 
+            dashboard_visualizar, dashboard_editar,
+            produtos_visualizar, produtos_editar,
+            clientes_visualizar, clientes_editar,
+            vendas_visualizar, vendas_editar,
+            vendedores_visualizar, vendedores_editar,
+            compras_visualizar, compras_editar,
+            fornecedores_visualizar, fornecedores_editar,
+            estoque_visualizar, estoque_editar,
+            configuracoes_visualizar, configuracoes_editar,
+            financeiro_visualizar, financeiro_editar,
+            em_uso
+        )
+        VALUES (
+            'Administrador', 'Grupo com acesso total ao sistema',
+            TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
+            TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
+            TRUE
+        )
+        ON DUPLICATE KEY UPDATE nome = VALUES(nome)
+    """)
+    admin_grupo_id = cursor.lastrowid
+    
+    # Grupo Vendedores
+    cursor.execute("""
+        INSERT INTO grupo_usuario (
+            nome, descricao, 
+            dashboard_visualizar, dashboard_editar,
+            produtos_visualizar, produtos_editar,
+            clientes_visualizar, clientes_editar,
+            vendas_visualizar, vendas_editar,
+            vendedores_visualizar, vendedores_editar,
+            estoque_visualizar, estoque_editar
+        )
+        VALUES (
+            'Vendedores', 'Grupo com acesso às funcionalidades de vendas',
+            TRUE, FALSE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, 
+            TRUE, FALSE, TRUE, FALSE
+        )
+        ON DUPLICATE KEY UPDATE nome = VALUES(nome)
+    """)
+    
+    # Grupo Comprador
+    cursor.execute("""
+        INSERT INTO grupo_usuario (
+            nome, descricao, 
+            dashboard_visualizar, dashboard_editar,
+            produtos_visualizar, produtos_editar,
+            compras_visualizar, compras_editar,
+            fornecedores_visualizar, fornecedores_editar,
+            estoque_visualizar, estoque_editar
+        )
+        VALUES (
+            'Comprador', 'Grupo com acesso às funcionalidades de compras',
+            TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, 
+            TRUE, TRUE, TRUE, TRUE
+        )
+        ON DUPLICATE KEY UPDATE nome = VALUES(nome)
+    """)
+    
+    # Grupo Financeiro
+    cursor.execute("""
+        INSERT INTO grupo_usuario (
+            nome, descricao, 
+            dashboard_visualizar, dashboard_editar,
+            financeiro_visualizar, financeiro_editar,
+            vendas_visualizar, vendas_editar
+        )
+        VALUES (
+            'Financeiro', 'Grupo com acesso às funcionalidades financeiras',
+            TRUE, FALSE, TRUE, TRUE, TRUE, FALSE
+        )
+        ON DUPLICATE KEY UPDATE nome = VALUES(nome)
+    """)
+    
+    conn.commit()
+    print("Grupos de usuários padrão criados com sucesso!")
+    
+    # Atualiza o usuário administrador para usar o grupo admin
+    if admin_grupo_id:
+        cursor.execute("""
+            UPDATE usuarios SET grupo_id = %s WHERE nivel_acesso = 'admin'
+        """, (admin_grupo_id,))
+        conn.commit()
+        print("Usuário administrador vinculado ao grupo Administrador!")
+    
+except mysql.connector.Error as err:
+    print(f"Erro ao criar grupos de usuários: {err}")
 
 print("Inicialização do banco de dados concluída com sucesso! ✅")
 

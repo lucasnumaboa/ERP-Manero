@@ -9,6 +9,9 @@ echo * Backend: http://localhost:8000
 echo * Frontend: http://localhost:3000
 echo * API Docs: http://localhost:8000/docs
 echo.
+echo Atualizando configuração da API...
+python change_api_link.py
+echo.
 echo Pressione qualquer tecla para continuar...
 echo pause > nul
 
