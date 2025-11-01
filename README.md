@@ -3,7 +3,9 @@
 <div align="center">
   <img src="erp-manero.gif" alt="ERP Maneiro" width="500" height="250">
 </div>
-
+<div align="center">
+  <img src="erp-manero-real.gif" alt="ERP Maneiro" width="500" height="250">
+</div>
 
 ## 📋 Sobre o Projeto
 
