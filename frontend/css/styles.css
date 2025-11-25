@@ -139,3 +139,96 @@ body {
     color: var(--success-color);
     border: 1px solid var(--success-color);
 }
+
+/* Estilos para Atividades Recentes no Homepage */
+.recent-activities-section {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.recent-activities-section .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.recent-activities-section .section-header h3 {
+    margin: 0;
+    color: var(--dark-color);
+    font-size: 1.2rem;
+}
+
+.recent-activities-section .btn-outline {
+    background-color: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.recent-activities-section .btn-outline:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.recent-activities-section .table-container {
+    overflow-x: auto;
+}
+
+.recent-activities-section .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.recent-activities-section .data-table th,
+.recent-activities-section .data-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.recent-activities-section .data-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.recent-activities-section .data-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.recent-activities-section .text-center {
+    text-align: center;
+}
+
+.recent-activities-section .status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.recent-activities-section .status-completed {
+    background-color: rgba(46, 204, 113, 0.1);
+    color: #27ae60;
+}
+
+.recent-activities-section .status-pending {
+    background-color: rgba(243, 156, 18, 0.1);
+    color: #f39c12;
+}
+
+.recent-activities-section .status-cancelled {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+}
