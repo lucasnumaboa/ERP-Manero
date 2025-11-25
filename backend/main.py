@@ -31,6 +31,7 @@ import routers.relatorios as relatorios
 import routers.clientes as clientes
 import routers.dashboard as dashboard
 import routers.configuracoes as configuracoes
+import routers.condicoes_pagamento as condicoes_pagamento
 
 # Importa o gerenciador de timeout
 from timeout_manager import start_timeout_manager
@@ -165,6 +166,7 @@ app.include_router(relatorios.router, prefix="/api/relatorios", tags=["Relatóri
 app.include_router(clientes.router, prefix="/api/clientes", tags=["Clientes"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
 app.include_router(configuracoes.router, prefix="/api/configuracoes", tags=["Configurações"])
+app.include_router(condicoes_pagamento.router, prefix="/api/condicoes-pagamento", tags=["Condições de Pagamento"])
 
 # Configuração para servir arquivos estáticos (uploads)
 import os
@@ -181,7 +183,7 @@ if __name__ == "__main__":
     from database import get_db_cursor
     
     # Obter porta do banco de dados, se disponível
-    port = 8000
+    port = 8001
     try:
         with get_db_cursor() as cursor:
             cursor.execute("SELECT valor FROM configuracoes WHERE chave = 'api_port'")
