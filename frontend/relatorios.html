@@ -5,17 +5,288 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ERP Maneiro - Relatórios</title>
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="css/dashboard.css">
-    <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="css/modulos.css">
-    <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="css/submenu.css">
     <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/permissions.css">
+    <style>
+        .relatorio-container {
+            padding: 20px;
+        }
+
+        .filtro-container {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .filtro-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .filtro-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .filtro-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filtro-group label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+
+        .filtro-group input[type="date"],
+        .filtro-group select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            min-width: 150px;
+        }
+
+        .btn-gerar {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .btn-gerar:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-exportar {
+            background-color: #27ae60;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-left: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-exportar:hover {
+            background-color: #229954;
+        }
+
+        .btn-exportar:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .resumo-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .card-resumo {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .card-resumo h3 {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .card-resumo .valor {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .card-resumo.vendas {
+            border-left: 4px solid #3498db;
+        }
+
+        .card-resumo.lucro {
+            border-left: 4px solid #27ae60;
+        }
+
+        .card-resumo.compras {
+            border-left: 4px solid #e74c3c;
+        }
+
+        .card-resumo.margem {
+            border-left: 4px solid #f39c12;
+        }
+
+        .tabela-container {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        .tabela-container h2 {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table thead {
+            background-color: #f8f9fa;
+        }
+
+        table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #e9ecef;
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+        }
+
+        table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .valor-moeda {
+            text-align: right;
+            font-weight: 600;
+            color: #27ae60;
+        }
+
+        .valor-negativo {
+            color: #e74c3c;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .loading i {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #3498db;
+        }
+
+        .mensagem-vazia {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+            font-size: 16px;
+        }
+
+        .mensagem-vazia i {
+            font-size: 48px;
+            margin-bottom: 10px;
+            color: #bdc3c7;
+        }
+
+        @media (max-width: 768px) {
+            .filtro-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filtro-group input[type="date"],
+            .filtro-group select {
+                min-width: 100%;
+            }
+
+            .resumo-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .tabela-container {
+                overflow-x: auto;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            table th, table td {
+                padding: 8px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- Estilo inicial para ocultar o conteúdo até verificar permissões -->
+    <style>
+        .app-container {
+            display: none;
+        }
+        #permission-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: #f8f9fa;
+            z-index: 9999;
+        }
+        #permission-loading i {
+            font-size: 48px;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+        #permission-loading p {
+            color: #7f8c8d;
+            font-size: 18px;
+        }
+    </style>
+    
+    <!-- Tela de carregamento enquanto verifica permissões -->
+    <div id="permission-loading">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Verificando permissões...</p>
+    </div>
+
     <div class="app-container">
         <!-- Sidebar / Menu Lateral -->
         <aside class="sidebar">
@@ -70,8 +341,18 @@
                     <li>
                         <a href="fornecedores.html"><i class="fas fa-industry"></i> Fornecedores</a>
                     </li>
-
-                    <!-- Relatórios removido -->
+                    <li>
+                        <a href="contas_pagar.html"><i class="fas fa-money-bill-wave"></i> Contas a Pagar</a>
+                    </li>
+                    <li>
+                        <a href="contas_receber.html"><i class="fas fa-hand-holding-usd"></i> Contas a Receber</a>
+                    </li>
+                    <li>
+                        <a href="condicoes_pagamento.html"><i class="fas fa-percent"></i> Condições de Pagamento</a>
+                    </li>
+                    <li class="active">
+                        <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
+                    </li>
                     <li>
                         <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
                     </li>
@@ -84,190 +365,160 @@
 
         <!-- Conteúdo Principal -->
         <main class="main-content">
-            <div class="content">
-                <div class="page-header">
-                    <h1>Relatórios</h1>
-                    <p>Análise de dados e relatórios gerenciais</p>
-                </div>
+            <div class="relatorio-container">
+                <h1><i class="fas fa-chart-bar"></i> Relatórios</h1>
 
-                <!-- Filtros de Relatórios -->
-                <div class="actions-bar">
-                    <div class="filter-group">
-                        <label for="filterDataInicio">Data Início:</label>
-                        <input type="date" id="filterDataInicio">
-                    </div>
-                    <div class="filter-group">
-                        <label for="filterDataFim">Data Fim:</label>
-                        <input type="date" id="filterDataFim">
-                    </div>
-                    <button class="btn-primary" id="btnGerarRelatorio">
-                        <i class="fas fa-file-export"></i> Gerar Relatório
-                    </button>
-                    <button class="btn-outline" id="btnExportarPDF">
-                        <i class="fas fa-file-pdf"></i> Exportar PDF
-                    </button>
-                    <button class="btn-outline" id="btnExportarExcel">
-                        <i class="fas fa-file-excel"></i> Exportar Excel
-                    </button>
-                </div>
-
-                <!-- Categorias de Relatórios -->
-                <div class="report-categories">
-                    <div class="category-card active" data-category="vendas">
-                        <i class="fas fa-shopping-cart"></i>
-                        <h3>Vendas</h3>
-                    </div>
-                    <div class="category-card" data-category="compras">
-                        <i class="fas fa-truck"></i>
-                        <h3>Compras</h3>
-                    </div>
-
-                    <div class="category-card" data-category="estoque">
-                        <i class="fas fa-warehouse"></i>
-                        <h3>Estoque</h3>
-                    </div>
-                    <div class="category-card" data-category="clientes">
-                        <i class="fas fa-users"></i>
-                        <h3>Clientes</h3>
-                    </div>
-                    <div class="category-card" data-category="geral">
-                        <i class="fas fa-chart-line"></i>
-                        <h3>Geral</h3>
+                <!-- Filtros -->
+                <div class="filtro-container">
+                    <div class="filtro-row">
+                        <div class="filtro-group">
+                            <label for="dataInicio">Data Inicial:</label>
+                            <input type="date" id="dataInicio">
+                        </div>
+                        <div class="filtro-group">
+                            <label for="dataFim">Data Final:</label>
+                            <input type="date" id="dataFim">
+                        </div>
+                        <div class="filtro-group" style="justify-content: flex-end; margin-top: 20px;">
+                            <button class="btn-gerar" onclick="gerarRelatorio()">
+                                <i class="fas fa-sync"></i> Gerar Relatório
+                            </button>
+                            <button class="btn-exportar" id="btnExportar" onclick="exportarPDF()" disabled>
+                                <i class="fas fa-file-pdf"></i> Exportar PDF
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Conteúdo dos Relatórios -->
-                <div class="report-content active" id="report-vendas">
-                    <div class="report-header">
-                        <h2>Relatório de Vendas</h2>
-                        <p>Período: <span id="periodoVendas">01/07/2025 a 31/07/2025</span></p>
-                    </div>
+                <!-- Loading -->
+                <div class="loading" id="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Gerando relatório...</p>
+                </div>
 
-                    <!-- Gráficos e Indicadores -->
-                    <div class="report-summary">
-                        <div class="summary-card">
+                <!-- Conteúdo do Relatório -->
+                <div id="relatorioConteudo" style="display: none;">
+                    <!-- Resumo -->
+                    <div class="resumo-cards">
+                        <div class="card-resumo vendas">
                             <h3>Total de Vendas</h3>
-                            <p class="summary-value">R$ 45.750,00</p>
-                            <p class="summary-change positive">+12% vs mês anterior</p>
+                            <div class="valor" id="totalVendas">R$ 0,00</div>
                         </div>
-                        <div class="summary-card">
-                            <h3>Quantidade</h3>
-                            <p class="summary-value">87</p>
-                            <p class="summary-change positive">+5% vs mês anterior</p>
+                        <div class="card-resumo vendas">
+                            <h3>Faturamento</h3>
+                            <div class="valor" id="faturamento">R$ 0,00</div>
                         </div>
-                        <div class="summary-card">
-                            <h3>Ticket Médio</h3>
-                            <p class="summary-value">R$ 525,86</p>
-                            <p class="summary-change positive">+7% vs mês anterior</p>
+                        <div class="card-resumo lucro">
+                            <h3>Lucro Total</h3>
+                            <div class="valor" id="lucroTotal">R$ 0,00</div>
                         </div>
-                        <div class="summary-card">
-                            <h3>Produtos Vendidos</h3>
-                            <p class="summary-value">243</p>
-                            <p class="summary-change positive">+15% vs mês anterior</p>
+                        <div class="card-resumo margem">
+                            <h3>Margem de Lucro</h3>
+                            <div class="valor" id="margemLucro">0%</div>
                         </div>
-                    </div>
-
-                    <!-- Gráficos -->
-                    <div class="report-charts">
-                        <div class="chart-container">
-                            <h3>Vendas por Dia</h3>
-                            <div class="chart-placeholder">
-                                <!-- Aqui entraria um gráfico real -->
-                                <div class="mock-line-chart"></div>
-                            </div>
+                        <div class="card-resumo compras">
+                            <h3>Total de Compras</h3>
+                            <div class="valor" id="totalCompras">0</div>
                         </div>
-                        <div class="chart-container">
-                            <h3>Top 5 Produtos</h3>
-                            <div class="chart-placeholder">
-                                <!-- Aqui entraria um gráfico real -->
-                                <div class="mock-bar-chart"></div>
-                            </div>
+                        <div class="card-resumo compras">
+                            <h3>Valor Compras</h3>
+                            <div class="valor" id="valorCompras">R$ 0,00</div>
                         </div>
                     </div>
 
-                    <!-- Tabela de Dados -->
-                    <div class="table-container">
-                        <h3>Detalhamento de Vendas</h3>
-                        <table class="data-table">
+                    <!-- Tabela de Produtos Vendidos -->
+                    <div class="tabela-container">
+                        <h2><i class="fas fa-shopping-cart"></i> Produtos Vendidos (Ordenados por Quantidade)</h2>
+                        <table id="tabelaProdutosVendidos">
                             <thead>
                                 <tr>
-                                    <th>Data</th>
-                                    <th>Cliente</th>
-                                    <th>Produtos</th>
-                                    <th>Valor</th>
-                                    <th>Forma Pagamento</th>
-                                    <th>Status</th>
+                                    <th>Código</th>
+                                    <th>Produto</th>
+                                    <th style="text-align: right;">Qtd</th>
+                                    <th style="text-align: right;">Preço Custo</th>
+                                    <th style="text-align: right;">Preço Venda</th>
+                                    <th style="text-align: right;">Valor Total</th>
+                                    <th style="text-align: right;">Custo</th>
+                                    <th style="text-align: right;">Lucro</th>
+                                    <th style="text-align: right;">Margem %</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="bodyProdutosVendidos">
                                 <tr>
-                                    <td>05/07/2025</td>
-                                    <td>Cliente A</td>
-                                    <td>3 itens</td>
-                                    <td>R$ 1.250,00</td>
-                                    <td>Cartão de Crédito</td>
-                                    <td><span class="status-badge finalizada">Finalizada</span></td>
+                                    <td colspan="9" class="mensagem-vazia">
+                                        <i class="fas fa-inbox"></i>
+                                        <p>Nenhum produto vendido no período</p>
+                                    </td>
                                 </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Tabela de Comissões -->
+                    <div class="tabela-container">
+                        <h2><i class="fas fa-handshake"></i> Comissões dos Vendedores</h2>
+                        <table id="tabelaComissoes">
+                            <thead>
                                 <tr>
-                                    <td>07/07/2025</td>
-                                    <td>Cliente B</td>
-                                    <td>2 itens</td>
-                                    <td>R$ 3.450,00</td>
-                                    <td>PIX</td>
-                                    <td><span class="status-badge finalizada">Finalizada</span></td>
+                                    <th>Vendedor</th>
+                                    <th style="text-align: right;">Total de Vendas</th>
+                                    <th style="text-align: right;">Valor Total Vendas</th>
+                                    <th style="text-align: right;">Comissão Total</th>
                                 </tr>
+                            </thead>
+                            <tbody id="bodyComissoes">
                                 <tr>
-                                    <td>10/07/2025</td>
-                                    <td>Cliente C</td>
-                                    <td>5 itens</td>
-                                    <td>R$ 750,00</td>
-                                    <td>Dinheiro</td>
-                                    <td><span class="status-badge finalizada">Finalizada</span></td>
+                                    <td colspan="4" class="mensagem-vazia">
+                                        <i class="fas fa-inbox"></i>
+                                        <p>Nenhuma comissão no período</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Tabela de Produtos Comprados -->
+                    <div class="tabela-container">
+                        <h2><i class="fas fa-dolly"></i> Produtos Comprados</h2>
+                        <table id="tabelaProdutosComprados">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Produto</th>
+                                    <th>Fornecedor</th>
+                                    <th style="text-align: right;">Qtd</th>
+                                    <th style="text-align: right;">Preço Compra</th>
+                                    <th style="text-align: right;">Valor Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bodyProdutosComprados">
+                                <tr>
+                                    <td colspan="6" class="mensagem-vazia">
+                                        <i class="fas fa-inbox"></i>
+                                        <p>Nenhum produto comprado no período</p>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Outros relatórios seriam exibidos aqui -->
-                <div class="report-content" id="report-compras">
-                    <div class="report-header">
-                        <h2>Relatório de Compras</h2>
-                        <p>Selecione um período e clique em "Gerar Relatório"</p>
-                    </div>
-                </div>
-
-
-                <div class="report-content" id="report-estoque">
-                    <div class="report-header">
-                        <h2>Relatório de Estoque</h2>
-                        <p>Selecione um período e clique em "Gerar Relatório"</p>
-                    </div>
-                </div>
-
-                <div class="report-content" id="report-clientes">
-                    <div class="report-header">
-                        <h2>Relatório de Clientes</h2>
-                        <p>Selecione um período e clique em "Gerar Relatório"</p>
-                    </div>
-                </div>
-                <div class="report-content" id="report-geral">
-                    <div class="report-header">
-                        <h2>Relatório Geral</h2>
-                        <p>Período: <span id="periodoGeral">01/07/2025 a 31/07/2025</span></p>
-                    </div>
-                    <div class="report-summary" id="geral-summary">
-                        <!-- Cards serão inseridos aqui pela JS -->
-                    </div>
+                <!-- Mensagem Inicial -->
+                <div id="mensagemInicial" style="text-align: center; padding: 60px 20px;">
+                    <i class="fas fa-chart-bar" style="font-size: 64px; color: #bdc3c7; margin-bottom: 20px;"></i>
+                    <p style="font-size: 18px; color: #7f8c8d;">Selecione um período e clique em "Gerar Relatório" para visualizar os dados</p>
                 </div>
             </div>
         </main>
     </div>
 
+    <!-- Scripts -->
+    <script src="js/api_config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/api.js"></script>
     <script src="js/sidebar.js"></script>
+    <script src="js/permissions.js"></script>
     <script src="js/relatorios.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </body>
 </html>
-

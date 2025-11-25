@@ -3,19 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ERP Maneiro - Produtos</title>
+    <title>ERP Maneiro - Contas a Receber</title>
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="css/dashboard.css">
-    <link rel="stylesheet" href="css/permissions.css">
-    <link rel="stylesheet" href="css/produtos.css">
-    <link rel="stylesheet" href="css/permissions.css">
+    <link rel="stylesheet" href="css/modulos.css">
     <link rel="stylesheet" href="css/submenu.css">
     <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/permissions.css">
     <style>
-        /* Estilos dos Filtros Reformulados */
         .filter-container {
             background: #f8f9fa;
             border: 1px solid #e9ecef;
@@ -37,64 +32,9 @@
             margin-bottom: 0;
         }
 
-        .checkboxes-row {
-            flex-wrap: wrap;
-        }
-
         .controls-row {
             flex-wrap: wrap;
             align-items: center;
-        }
-
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-right: 20px;
-            margin-bottom: 5px;
-        }
-
-        .filter-checkbox {
-            display: none;
-        }
-
-        .checkbox-label {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            font-size: 14px;
-            color: #495057;
-            user-select: none;
-        }
-
-        .checkbox-custom {
-            width: 18px;
-            height: 18px;
-            border: 2px solid #6c757d;
-            border-radius: 3px;
-            margin-right: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            background: white;
-        }
-
-        .filter-checkbox:checked + .checkbox-label .checkbox-custom {
-            background: #007bff;
-            border-color: #007bff;
-        }
-
-        .filter-checkbox:checked + .checkbox-label .checkbox-custom::after {
-            content: '✓';
-            color: white;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .checkbox-label:hover .checkbox-custom {
-            border-color: #007bff;
-            transform: scale(1.05);
         }
 
         .filter-control {
@@ -179,6 +119,29 @@
             background: #545b62;
         }
 
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-pendente {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-recebido {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-cancelado {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
         @media (max-width: 768px) {
             .filter-row {
                 flex-direction: column;
@@ -238,7 +201,7 @@
                 
                 <!-- Menu Principal -->
                 <ul>
-                    <li class="active">
+                    <li>
                         <a href="produtos.html"><i class="fas fa-box"></i> Produtos</a>
                     </li>
                     <li>
@@ -265,7 +228,7 @@
                     <li>
                         <a href="contas_pagar.html"><i class="fas fa-money-bill-wave"></i> Contas a Pagar</a>
                     </li>
-                    <li>
+                    <li class="active">
                         <a href="contas_receber.html"><i class="fas fa-hand-holding-usd"></i> Contas a Receber</a>
                     </li>
                     <li>
@@ -288,82 +251,94 @@
         <main class="main-content">
             <div class="content">
                 <div class="page-header">
-                    <h1>Gerenciamento de Produtos</h1>
-                    <p>Cadastre, edite e gerencie seus produtos</p>
+                    <h1>Contas a Receber</h1>
+                    <p>Acompanhe seus recebimentos e créditos</p>
                 </div>
 
-                <!-- Ações de Produtos -->
+                <!-- Ações -->
                 <div class="actions-bar">
                     <div class="actions-left">
-                        <button class="btn-primary" id="btnNovoProduto">
-                            <i class="fas fa-plus"></i> Novo Produto
+                        <button class="btn-primary" id="btnNovaConta">
+                            <i class="fas fa-plus"></i> Nova Conta
                         </button>
-
                     </div>
-                    
-                </div>
-                
-                <!-- Filtros -->
-                <div class="filter-container">
-                    <h4 style="margin: 0 0 10px 0; color: #495057; font-size: 16px;">Filtros de Produtos</h4>
-                    <p style="margin: 0 0 15px 0; color: #6c757d; font-size: 14px;">Configure os filtros para visualizar os produtos desejados</p>
-                    
-                    <div class="filter-row controls-row">
-                        <div class="filter-control">
-                            <span class="control-label">Pesquisar:</span>
-                            <div class="search-input-group">
-                                <input type="text" id="filtroPesquisa" placeholder="Digite para pesquisar..." class="filter-input">
-                                <button onclick="filtrarProdutos()" class="search-btn">
+                    <div class="actions-right">
+                        <!-- Filtros -->
+                        <div class="filter-container">
+                            <h2><i class="fas fa-filter"></i> Filtros de Contas a Receber</h2>
+                            <p style="margin-bottom: 15px; color: #6c757d; font-size: 14px;">
+                                Configure os filtros para visualizar as contas
+                            </p>
+                            
+                            <!-- Linha 1: Código, Cliente -->
+                            <div class="filter-row">
+                                <div class="filter-control">
+                                    <label for="filtroCodigo" class="control-label">Código:</label>
+                                    <input type="text" id="filtroCodigo" class="filter-input" placeholder="Ex: CR202401">
+                                </div>
+                                
+                                <div class="filter-control">
+                                    <label for="filtroCliente" class="control-label">Cliente:</label>
+                                    <input type="text" id="filtroCliente" class="filter-input" placeholder="Digite o nome...">
+                                </div>
+                            </div>
+                            
+                            <!-- Linha 2: Data Inicial, Data Final -->
+                            <div class="filter-row">
+                                <div class="filter-control">
+                                    <label for="filtroDataInicial" class="control-label">Data Vencimento Inicial:</label>
+                                    <input type="date" id="filtroDataInicial" class="filter-input">
+                                </div>
+                                
+                                <div class="filter-control">
+                                    <label for="filtroDataFinal" class="control-label">Data Vencimento Final:</label>
+                                    <input type="date" id="filtroDataFinal" class="filter-input">
+                                </div>
+                            </div>
+                            
+                            <!-- Linha 3: Status, Botões -->
+                            <div class="filter-row controls-row">
+                                <div class="filter-control">
+                                    <label for="filterStatus" class="control-label">Status:</label>
+                                    <select id="filterStatus" class="filter-select">
+                                        <option value="">Todos os status</option>
+                                        <option value="pendente">Pendente</option>
+                                        <option value="recebido">Recebido</option>
+                                        <option value="cancelado">Cancelado</option>
+                                    </select>
+                                </div>
+                                
+                                <button class="btn-clear-filters" id="btnLimparFiltros">
+                                    <i class="fas fa-eraser"></i>
+                                    Limpar Filtros
+                                </button>
+                                
+                                <button class="search-btn" id="btnAplicarFiltros">
                                     <i class="fas fa-search"></i>
+                                    Aplicar Filtros
                                 </button>
                             </div>
                         </div>
-                        
-                        <div class="filter-control">
-                            <span class="control-label">Categoria:</span>
-                            <select id="filtroCategoria" onchange="filtrarProdutos()" class="filter-select">
-                                <option value="">Todas</option>
-                                <option value="1">Eletrônicos</option>
-                                <option value="2">Móveis</option>
-                                <option value="3">Vestuário</option>
-                                <option value="4">Alimentos</option>
-                            </select>
-                        </div>
-                        
-                        <div class="filter-control">
-                            <span class="control-label">Status:</span>
-                            <select id="filtroStatus" onchange="filtrarProdutos()" class="filter-select">
-                                <option value="">Todos</option>
-                                <option value="true">Ativo</option>
-                                <option value="false">Inativo</option>
-                            </select>
-                        </div>
-                        
-                        <button onclick="limparFiltros()" class="btn-clear-filters">
-                            Limpar Filtros
-                        </button>
                     </div>
                 </div>
 
-                <!-- Tabela de Produtos -->
+                <!-- Tabela de Contas -->
                 <div class="table-container">
                     <table class="data-table">
                         <thead>
                             <tr>
                                 <th>Código</th>
-                                <th>Nome</th>
-                                <th>Categoria</th>
-                                <th>Preço de Custo</th>
-                                <th>Preço de Venda</th>
-                                <th>Comissão</th>
-                                <th>Estoque</th>
+                                <th>Descrição</th>
+                                <th>Cliente</th>
+                                <th>Valor</th>
+                                <th>Vencimento</th>
                                 <th>Status</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
-                        <tbody id="produtosTableBody">
+                        <tbody id="contasTableBody">
                             <tr>
-                                <td colspan="9" class="text-center">Carregando produtos...</td>
+                                <td colspan="7" class="text-center">Carregando contas...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -381,85 +356,66 @@
         </main>
     </div>
 
-    <!-- Modal de Novo/Editar Produto -->
-    <div class="modal" id="produtoModal">
+    <!-- Modal de Nova/Editar Conta -->
+    <div class="modal" id="contaModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="modalTitle">Novo Produto</h2>
+                <h2 id="modalTitle">Nova Conta a Receber</h2>
                 <button class="close-modal">&times;</button>
             </div>
             <div class="modal-body">
-                <form id="produtoForm">
+                <form id="contaForm">
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="codigo">Código</label>
-                            <input type="text" id="codigo" name="codigo" required readonly>
-                        </div>
-                        <div class="form-group">
-                            <label for="nome">Nome</label>
-                            <input type="text" id="nome" name="nome" required>
+                            <label for="descricao">Descrição*</label>
+                            <input type="text" id="descricao" name="descricao" required>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="descricao">Descrição</label>
-                        <textarea id="descricao" name="descricao" rows="3"></textarea>
-                    </div>
+                    
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="preco_custo">Preço de Custo</label>
-                            <input type="text" id="preco_custo" name="preco_custo" inputmode="decimal" pattern="[0-9,]*" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="preco_venda">Preço de Venda</label>
-                            <input type="text" id="preco_venda" name="preco_venda" inputmode="decimal" pattern="[0-9,]*" required>
+                            <label for="cliente_id">Cliente</label>
+                            <select id="cliente_id" name="cliente_id">
+                                <option value="">Selecione...</option>
+                            </select>
                         </div>
                     </div>
+                    
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="estoque_minimo">Estoque Mínimo</label>
-                            <input type="number" id="estoque_minimo" name="estoque_minimo" value="5">
+                            <label for="valor">Valor*</label>
+                            <input type="number" id="valor" name="valor" step="0.01" required>
                         </div>
                         <div class="form-group">
-                            <label for="categoria_id">Categoria</label>
-                            <div class="input-with-action">
-                                <select id="categoria_id" name="categoria_id" required>
-                                    <option value="">Selecione...</option>
-                                    <option value="1">Eletrônicos</option>
-                                    <option value="2">Móveis</option>
-                                    <option value="3">Vestuário</option>
-                                    <option value="4">Alimentos</option>
-                                </select>
-                                <button type="button" class="btn-link" id="btnNovaCategoriaModal" title="Criar Categoria">
-                                    <i class="fas fa-plus-circle"></i>
-                                </button>
-                            </div>
+                            <label for="data_vencimento">Data de Vencimento*</label>
+                            <input type="date" id="data_vencimento" name="data_vencimento" required>
                         </div>
                     </div>
+                    
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="tipo_produto">Tipo de Produto</label>
-                            <select id="tipo_produto" name="tipo_produto" required>
-                                <option value="comprado">Comprado</option>
-                                <option value="fabricado">Fabricado</option>
+                            <label for="forma_pagamento">Forma de Recebimento</label>
+                            <select id="forma_pagamento" name="forma_pagamento">
+                                <option value="dinheiro">Dinheiro</option>
+                                <option value="cartao">Cartão</option>
+                                <option value="boleto">Boleto</option>
+                                <option value="pix">PIX</option>
+                                <option value="transferencia">Transferência</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="comissao">Comissão (R$)</label>
-                            <input type="text" id="comissao" name="comissao" inputmode="numeric" pattern="[0-9]*" placeholder="Ex: 50">
+                            <label for="status">Status</label>
+                            <select id="status" name="status">
+                                <option value="pendente">Pendente</option>
+                                <option value="recebido">Recebido</option>
+                                <option value="cancelado">Cancelado</option>
+                            </select>
                         </div>
                     </div>
+                    
                     <div class="form-group">
-                        <label for="imagens_produto">Imagens do Produto (máximo 3)</label>
-                        <input type="file" id="imagens_produto" name="imagens_produto" multiple accept="image/*" style="margin-bottom: 10px;">
-                        <div id="preview_imagens" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;"></div>
-                        <small style="color: #666;">Selecione até 3 imagens para o produto</small>
-                    </div>
-                    <div class="form-group">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="ativo" name="ativo" checked>
-                            <span class="checkmark"></span>
-                            Produto Ativo
-                        </label>
+                        <label for="observacoes">Observações</label>
+                        <textarea id="observacoes" name="observacoes" rows="3"></textarea>
                     </div>
                 </form>
             </div>
@@ -470,42 +426,13 @@
         </div>
     </div>
 
-    <!-- Modal para Nova Categoria -->
-    <div class="modal" id="categoriaModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Nova Categoria</h2>
-                <span class="close-modal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="categoriaForm">
-                    <div class="form-group">
-                        <label for="categoria_nome">Nome *</label>
-                        <input type="text" id="categoria_nome" name="nome" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="categoria_descricao">Descrição</label>
-                        <textarea id="categoria_descricao" name="descricao" rows="3"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-outline" id="btnCancelarCategoria">Cancelar</button>
-                <button class="btn-primary" id="btnSalvarCategoria">Salvar</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
-    <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/api.js"></script>
     <script src="js/sidebar.js"></script>
-    <script src="js/permissions.js"></script>
     <script src="js/pagination.js"></script>
-    <script src="js/produtos.js"></script>
+    <script src="js/permissions.js"></script>
     <script src="js/setupModals.js"></script>
+    <script src="js/contas_receber.js"></script>
     <script src="js/filtro-pesquisa.js"></script>
 </body>
 </html>

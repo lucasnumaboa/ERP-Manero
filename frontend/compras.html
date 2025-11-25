@@ -262,8 +262,18 @@
                     <li>
                         <a href="fornecedores.html"><i class="fas fa-industry"></i> Fornecedores</a>
                     </li>
-
-                    <!-- Relatórios removido -->
+                    <li>
+                        <a href="contas_pagar.html"><i class="fas fa-money-bill-wave"></i> Contas a Pagar</a>
+                    </li>
+                    <li>
+                        <a href="contas_receber.html"><i class="fas fa-hand-holding-usd"></i> Contas a Receber</a>
+                    </li>
+                    <li>
+                        <a href="condicoes_pagamento.html"><i class="fas fa-percent"></i> Condições de Pagamento</a>
+                    </li>
+                    <li>
+                        <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
+                    </li>
                     <li>
                         <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
                     </li>
@@ -499,6 +509,44 @@
             <div class="modal-footer">
                 <button class="btn-outline" id="btnCancelarItem">Cancelar</button>
                 <button class="btn-primary" id="btnAdicionarItemConfirm">Adicionar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Novo Fornecedor -->
+    <div class="modal" id="fornecedorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="fornecedorModalTitle">Novo Fornecedor</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="fornecedorForm">
+                    <div class="form-group">
+                        <label for="fornecedor_nome">Nome *</label>
+                        <input type="text" id="fornecedor_nome" name="nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fornecedor_cnpj">CNPJ</label>
+                        <input type="text" id="fornecedor_cnpj" name="cnpj">
+                    </div>
+                    <div class="form-group">
+                        <label for="fornecedor_email">Email</label>
+                        <input type="email" id="fornecedor_email" name="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="fornecedor_telefone">Telefone</label>
+                        <input type="tel" id="fornecedor_telefone" name="telefone">
+                    </div>
+                    <div class="form-group">
+                        <label for="fornecedor_endereco">Endereço</label>
+                        <input type="text" id="fornecedor_endereco" name="endereco">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnCancelarFornecedor">Cancelar</button>
+                <button class="btn-primary" id="btnSalvarFornecedor">Salvar</button>
             </div>
         </div>
     </div>

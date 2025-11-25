@@ -202,6 +202,231 @@
                 width: 100%;
             }
         }
+
+        /* Estilos para coluna de produtos */
+        .produtos-cell {
+            max-width: 200px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .produtos-preview {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #007bff;
+            font-weight: 500;
+        }
+
+        .produtos-preview:hover {
+            text-decoration: underline;
+        }
+
+        .produtos-badge {
+            background-color: #e7f3ff;
+            color: #0056b3;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .produtos-list {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 100;
+            min-width: 300px;
+            padding: 10px;
+            margin-top: 5px;
+        }
+
+        .produtos-list.show {
+            display: block;
+        }
+
+        .produto-item {
+            padding: 8px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+        }
+
+        .produto-item:last-child {
+            border-bottom: none;
+        }
+
+        .produto-nome {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .produto-detalhes {
+            color: #666;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        /* Estilos para coluna de Contas a Receber */
+        .cr-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cr-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .cr-criado {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .cr-nao-criado {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .btn-criar-cr {
+            padding: 4px 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .btn-criar-cr:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-criar-cr:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Estilos para coluna de Contas a Pagar */
+        .cp-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .cp-criado {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .cp-nao-criado {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .cp-sem-vendedor {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .btn-criar-cp {
+            padding: 4px 12px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .btn-criar-cp:hover {
+            background-color: #218838;
+        }
+
+        .btn-criar-cp:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Estilos para checkboxes no modal */
+        .modal-body .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 20px;
+            margin-bottom: 10px;
+        }
+
+        .modal-body .checkbox-item input[type="checkbox"] {
+            display: none;
+        }
+
+        .modal-body .checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: #495057;
+            user-select: none;
+        }
+
+        .modal-body .checkbox-custom {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #6c757d;
+            border-radius: 3px;
+            margin-right: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .modal-body input[type="checkbox"]:checked + .checkbox-label .checkbox-custom {
+            background: #007bff;
+            border-color: #007bff;
+        }
+
+        .modal-body input[type="checkbox"]:checked + .checkbox-label .checkbox-custom::after {
+            content: '✓';
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .modal-body .checkbox-label:hover .checkbox-custom {
+            border-color: #007bff;
+            transform: scale(1.05);
+        }
+
+        .modal-body .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -259,8 +484,18 @@
                     <li>
                         <a href="fornecedores.html"><i class="fas fa-industry"></i> Fornecedores</a>
                     </li>
-
-                    <!-- Relatórios removido -->
+                    <li>
+                        <a href="contas_pagar.html"><i class="fas fa-money-bill-wave"></i> Contas a Pagar</a>
+                    </li>
+                    <li>
+                        <a href="contas_receber.html"><i class="fas fa-hand-holding-usd"></i> Contas a Receber</a>
+                    </li>
+                    <li>
+                        <a href="condicoes_pagamento.html"><i class="fas fa-percent"></i> Condições de Pagamento</a>
+                    </li>
+                    <li>
+                        <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
+                    </li>
                     <li>
                         <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
                     </li>
@@ -295,42 +530,77 @@
                                 Configure os filtros para visualizar as vendas
                             </p>
                             
-                            <!-- Linha de controles -->
-                            <div class="filter-row controls-row">
+                            <!-- Linha 1: ID Pedido, Cliente, Vendedor -->
+                            <div class="filter-row">
                                 <div class="filter-control">
-                                    <label for="filtroPesquisa" class="control-label">Pesquisar:</label>
-                                    <div class="search-input-group">
-                                        <input type="text" id="filtroPesquisa" class="filter-input" placeholder="Digite para pesquisar...">
-                                        <button class="search-btn">
-                                            <i class="fas fa-search"></i>
-                                        </button>
-                                    </div>
+                                    <label for="filtroIdPedido" class="control-label">ID Pedido:</label>
+                                    <input type="text" id="filtroIdPedido" class="filter-input" placeholder="Ex: PV202401">
                                 </div>
                                 
                                 <div class="filter-control">
-                                    <label for="filterCliente" class="control-label">Cliente:</label>
-                                    <select id="filterCliente" class="filter-select">
-                                        <option value="">Todos os clientes</option>
-                                        <option value="1">Cliente A</option>
-                                        <option value="2">Cliente B</option>
-                                        <option value="3">Cliente C</option>
+                                    <label for="filtroCliente" class="control-label">Cliente:</label>
+                                    <input type="text" id="filtroCliente" class="filter-input" placeholder="Digite o nome do cliente">
+                                </div>
+                                
+                                <div class="filter-control">
+                                    <label for="filtroVendedor" class="control-label">Vendedor:</label>
+                                    <select id="filtroVendedor" class="filter-select">
+                                        <option value="">Todos os vendedores</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Linha 2: Condição Pagamento, Data Inicial, Data Final -->
+                            <div class="filter-row">
+                                <div class="filter-control">
+                                    <label for="filtroCondicaoPagamento" class="control-label">Condição Pagamento:</label>
+                                    <select id="filtroCondicaoPagamento" class="filter-select">
+                                        <option value="">Todas as condições</option>
                                     </select>
                                 </div>
                                 
                                 <div class="filter-control">
-                                    <label for="filterStatus" class="control-label">Status:</label>
-                                    <select id="filterStatus" class="filter-select">
-                                        <option value="">Todos os status</option>
-                                        <option value="pendente">Pendente</option>
-                                        <option value="finalizada">Finalizada</option>
-                                        <option value="cancelada">Cancelada</option>
-                                    </select>
+                                    <label for="filtroDataInicial" class="control-label">Data Inicial:</label>
+                                    <input type="date" id="filtroDataInicial" class="filter-input">
                                 </div>
                                 
-                                <label></label>
-                                <button class="btn-clear-filters" id="btnLimparFiltros">
+                                <div class="filter-control">
+                                    <label for="filtroDataFinal" class="control-label">Data Final:</label>
+                                    <input type="date" id="filtroDataFinal" class="filter-input">
+                                </div>
+                            </div>
+                            
+                            <!-- Linha 3: Checkboxes - Pendente CR, Pendente AP -->
+                            <div class="filter-row checkboxes-row">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="filtroPendenteCR" class="filter-checkbox">
+                                    <label for="filtroPendenteCR" class="checkbox-label">
+                                        <span class="checkbox-custom"></span>
+                                        Pendente CR
+                                    </label>
+                                </div>
+                                
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="filtroPendenteAP" class="filter-checkbox">
+                                    <label for="filtroPendenteAP" class="checkbox-label">
+                                        <span class="checkbox-custom"></span>
+                                        Pendente AP
+                                    </label>
+                                </div>
+                                
+                                <button class="btn-clear-filters" id="btnLimparFiltros" style="margin-left: auto;">
                                     <i class="fas fa-eraser"></i>
                                     Limpar Filtros
+                                </button>
+                                
+                                <button class="search-btn" id="btnAplicarFiltros" style="margin-left: 10px;">
+                                    <i class="fas fa-search"></i>
+                                    Aplicar Filtros
+                                </button>
+                                
+                                <button class="search-btn" id="btnExportarDados" style="margin-left: 10px; background-color: #28a745;">
+                                    <i class="fas fa-download"></i>
+                                    Exportar CSV
                                 </button>
                             </div>
                         </div>
@@ -346,15 +616,19 @@
                                 <th>Cliente</th>
                                 <th>Data</th>
                                 <th>Valor Total</th>
+                                <th>Produtos</th>
                                 <th>Status</th>
                                 <th>Vendedor</th>
+                                <th>Condição Pagamento</th>
                                 <th>Comissão (R$)</th>
+                                <th>Contas a Receber</th>
+                                <th>Contas a Pagar</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody id="vendasTableBody">
                             <tr>
-                                <td colspan="8" class="text-center">Carregando vendas...</td>
+                                <td colspan="12" class="text-center">Carregando vendas...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -384,12 +658,17 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="cliente_id">Cliente</label>
-                            <select id="cliente_id" name="cliente_id" required>
-                                <option value="">Selecione...</option>
-                                <option value="1">Cliente A</option>
-                                <option value="2">Cliente B</option>
-                                <option value="3">Cliente C</option>
-                            </select>
+                            <div class="select-with-button">
+                                <select id="cliente_id" name="cliente_id" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="1">Cliente A</option>
+                                    <option value="2">Cliente B</option>
+                                    <option value="3">Cliente C</option>
+                                </select>
+                                <button type="button" class="btn-outline btn-sm" id="btnNovoClienteModal">
+                                    <i class="fas fa-plus"></i> Novo
+                                </button>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="data_entrega">Data de Entrega</label>
@@ -401,6 +680,12 @@
                             <label for="vendedor_id">Vendedor</label>
                             <select id="vendedor_id" name="vendedor_id">
                                 <option value="0">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="condicao_pagamento_id">Condição de Pagamento</label>
+                            <select id="condicao_pagamento_id" name="condicao_pagamento_id">
+                                <option value="">Selecione...</option>
                             </select>
                         </div>
                     </div>
@@ -418,18 +703,19 @@
                                     <th>Produto</th>
                                     <th>Quantidade</th>
                                     <th>Preço Unit.</th>
+                                    <th>Comissão</th>
                                     <th>Subtotal</th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="itensVendaTableBody">
                                 <tr>
-                                    <td colspan="5" class="text-center">Nenhum item adicionado</td>
+                                    <td colspan="6" class="text-center">Nenhum item adicionado</td>
                                 </tr>
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <td colspan="5" class="text-right">
+                                    <td colspan="6" class="text-right">
                                         <!-- Removed duplicate button -->
                                     </td>
                                 </tr>
@@ -443,6 +729,15 @@
                         </div>
                         <div class="form-group total-value">
                             <span id="valorTotal">R$ 0,00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row total-row">
+                        <div class="form-group total-label">
+                            <label>Comissão Total:</label>
+                        </div>
+                        <div class="form-group total-value">
+                            <span id="comissaoTotal">R$ 0,00</span>
                         </div>
                     </div>
                     
@@ -472,6 +767,25 @@
                     <div class="form-group">
                         <label for="observacoes">Observações</label>
                         <textarea id="observacoes" name="observacoes" rows="3"></textarea>
+                    </div>
+                    
+                    <h3 class="section-title">Atualizar Contas Automaticamente</h3>
+                    <div class="form-row">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="atualizarContasAPagar" name="atualizarContasAPagar" checked>
+                            <label for="atualizarContasAPagar" class="checkbox-label">
+                                <span class="checkbox-custom"></span>
+                                Atualizar Contas a Pagar para Pago
+                            </label>
+                        </div>
+                        
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="atualizarContasAReceber" name="atualizarContasAReceber" checked>
+                            <label for="atualizarContasAReceber" class="checkbox-label">
+                                <span class="checkbox-custom"></span>
+                                Atualizar Contas a Receber para Pago
+                            </label>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -514,6 +828,10 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
+                            <label for="comissao_item">Comissão (R$)</label>
+                            <input type="number" id="comissao_item" name="comissao_item" step="0.01" value="0" required>
+                        </div>
+                        <div class="form-group">
                             <label>Subtotal</label>
                             <input type="text" id="subtotal" readonly>
                         </div>
@@ -523,6 +841,44 @@
             <div class="modal-footer">
                 <button class="btn-outline" id="btnCancelarItem">Cancelar</button>
                 <button class="btn-primary" id="btnAdicionarItemConfirm">Adicionar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Novo Cliente -->
+    <div class="modal" id="clienteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Novo Cliente</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="clienteForm">
+                    <div class="form-group">
+                        <label for="cliente_nome">Nome *</label>
+                        <input type="text" id="cliente_nome" name="nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cliente_cpf">CPF/CNPJ</label>
+                        <input type="text" id="cliente_cpf" name="cpf_cnpj">
+                    </div>
+                    <div class="form-group">
+                        <label for="cliente_email">Email</label>
+                        <input type="email" id="cliente_email" name="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="cliente_telefone">Telefone</label>
+                        <input type="tel" id="cliente_telefone" name="telefone">
+                    </div>
+                    <div class="form-group">
+                        <label for="cliente_endereco">Endereço</label>
+                        <input type="text" id="cliente_endereco" name="endereco">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnCancelarCliente">Cancelar</button>
+                <button class="btn-primary" id="btnSalvarCliente">Salvar</button>
             </div>
         </div>
     </div>

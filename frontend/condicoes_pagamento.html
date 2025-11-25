@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Maneiro - Condições de Pagamento</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/modulos.css">
+    <link rel="stylesheet" href="css/submenu.css">
+    <link rel="stylesheet" href="css/permissions.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .filter-container {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 100%;
+        }
+
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .filter-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .controls-row {
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 20px;
+            margin-bottom: 5px;
+        }
+
+        .control-label {
+            font-size: 14px;
+            color: #495057;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .search-input-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .filter-input {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            min-width: 200px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+
+        .search-btn {
+            padding: 8px 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .search-btn:hover {
+            background: #0056b3;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            min-width: 150px;
+            background: white;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+
+        .btn-clear-filters {
+            padding: 8px 16px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+            margin-left: auto;
+        }
+
+        .btn-clear-filters:hover {
+            background: #545b62;
+        }
+
+        @media (max-width: 768px) {
+            .filter-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .controls-row {
+                width: 100%;
+            }
+
+            .filter-control {
+                width: 100%;
+                margin-right: 0;
+            }
+
+            .filter-input, .filter-select {
+                width: 100%;
+                min-width: unset;
+            }
+
+            .btn-clear-filters {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Menu Lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="img/icon.png" alt="ERP Maneiro" class="logo-img">
+                <button id="toggleSidebar" class="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="userName">Carregando...</h3>
+                    <p id="userRole">Carregando...</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li>
+                        <a href="homepage.html"><i class="fas fa-home"></i> Home</a>
+                    </li>
+                    <li>
+                        <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    </li>
+                </ul>
+                
+                <!-- Menu Principal -->
+                <ul>
+                    <li>
+                        <a href="produtos.html"><i class="fas fa-box"></i> Produtos</a>
+                    </li>
+                    <li>
+                        <a href="categorias.html"><i class="fas fa-tags"></i> Categorias</a>
+                    </li>
+                    <li>
+                        <a href="estoque.html"><i class="fas fa-warehouse"></i> Estoque</a>
+                    </li>
+                    <li>
+                        <a href="clientes.html"><i class="fas fa-users"></i> Clientes</a>
+                    </li>
+                    <li>
+                        <a href="vendas.html"><i class="fas fa-shopping-cart"></i> Vendas</a>
+                    </li>
+                    <li>
+                        <a href="vendedores.html"><i class="fas fa-user-tie"></i> Vendedores</a>
+                    </li>
+                    <li>
+                        <a href="compras.html"><i class="fas fa-truck"></i> Compras</a>
+                    </li>
+                    <li>
+                        <a href="fornecedores.html"><i class="fas fa-industry"></i> Fornecedores</a>
+                    </li>
+                    <li>
+                        <a href="contas_pagar.html"><i class="fas fa-money-bill-wave"></i> Contas a Pagar</a>
+                    </li>
+                    <li>
+                        <a href="contas_receber.html"><i class="fas fa-hand-holding-usd"></i> Contas a Receber</a>
+                    </li>
+                    <li class="active">
+                        <a href="condicoes_pagamento.html"><i class="fas fa-percent"></i> Condições de Pagamento</a>
+                    </li>
+                    <li>
+                        <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
+                    </li>
+                    <li>
+                        <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
+                    </li>
+                    <li class="logout">
+                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <div class="content">
+                <div class="page-header">
+                    <h1>Gerenciamento de Condições de Pagamento</h1>
+                    <p>Cadastre e gerencie as condições de pagamento disponíveis</p>
+                </div>
+
+                <!-- Ações de Condições de Pagamento -->
+                <div class="actions-bar">
+                    <div class="actions-left">
+                        <button class="btn-primary" id="btnNovaCondicao">
+                            <i class="fas fa-plus"></i> Nova Condição
+                        </button>
+                    </div>
+                    <div class="actions-right">
+                        <!-- Filtros de Condições de Pagamento -->
+                        <div class="filter-container">
+                            <h2><i class="fas fa-filter"></i> Filtros</h2>
+                            <p style="margin-bottom: 15px; color: #6c757d; font-size: 14px;">
+                                Configure os filtros para visualizar as condições
+                            </p>
+                            
+                            <!-- Linha de controles -->
+                            <div class="filter-row controls-row">
+                                <div class="filter-control">
+                                    <label for="filtroPesquisa" class="control-label">Pesquisar:</label>
+                                    <div class="search-input-group">
+                                        <input type="text" id="filtroPesquisa" class="filter-input" placeholder="Digite para pesquisar...">
+                                        <button class="search-btn">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <label></label>
+                                <button class="btn-clear-filters" id="btnLimparFiltros">
+                                    <i class="fas fa-eraser"></i>
+                                    Limpar Filtros
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela de Condições de Pagamento -->
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Nome</th>
+                                <th>Prazo (dias)</th>
+                                <th>Parcelas</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="condicoesTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center">Carregando condições de pagamento...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginação -->
+                <div class="pagination">
+                    <button class="btn-page" disabled><i class="fas fa-chevron-left"></i></button>
+                    <button class="btn-page active">1</button>
+                    <button class="btn-page">2</button>
+                    <button class="btn-page">3</button>
+                    <button class="btn-page"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de Nova/Editar Condição -->
+    <div class="modal" id="condicaoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Nova Condição de Pagamento</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="condicaoForm">
+                    <div class="form-group">
+                        <label for="codigo">Código *</label>
+                        <input type="text" id="codigo" name="codigo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="nome">Nome *</label>
+                        <input type="text" id="nome" name="nome" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="prazo_dias">Prazo em Dias *</label>
+                            <input type="number" id="prazo_dias" name="prazo_dias" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="numero_parcelas">Número de Parcelas *</label>
+                            <input type="number" id="numero_parcelas" name="numero_parcelas" min="1" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="ativo">
+                            <input type="checkbox" id="ativo" name="ativo" checked>
+                            Ativo
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnCancelar">Cancelar</button>
+                <button class="btn-primary" id="btnSalvar">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/pagination.js"></script>
+    <script src="js/permissions.js"></script>
+    <script src="js/setupModals.js"></script>
+    <script src="js/condicoes_pagamento.js"></script>
+</body>
+</html>

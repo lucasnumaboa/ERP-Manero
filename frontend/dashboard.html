@@ -104,8 +104,18 @@
                     <li>
                         <a href="fornecedores.html"><i class="fas fa-industry"></i> Fornecedores</a>
                     </li>
-
-                    <!-- Relatórios removido -->
+                    <li>
+                        <a href="contas_pagar.html"><i class="fas fa-money-bill-wave"></i> Contas a Pagar</a>
+                    </li>
+                    <li>
+                        <a href="contas_receber.html"><i class="fas fa-hand-holding-usd"></i> Contas a Receber</a>
+                    </li>
+                    <li>
+                        <a href="condicoes_pagamento.html"><i class="fas fa-percent"></i> Condições de Pagamento</a>
+                    </li>
+                    <li>
+                        <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
+                    </li>
                     <li>
                         <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
                     </li>
@@ -131,124 +141,203 @@
                     </div>
                 </div>
 
-                <!-- Cards de Resumo -->
-                <div class="dashboard-cards">
-                    <!-- Primeira linha - Métricas principais -->
-                    <div class="card">
-                        <div class="card-icon sales">
-                            <i class="fas fa-shopping-cart"></i>
-                        </div>
-                        <div class="card-info">
-                            <h3>Vendas</h3>
-                            <p class="card-value"></p>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-icon customers">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <div class="card-info">
-                            <h3>Clientes</h3>
-                            <p class="card-value"></p>
-                        </div>
-                    </div>
-                    <div class="card" onclick="window.location.href='vendedores.html'" style="cursor: pointer;">
-                        <div class="card-icon" style="background-color: #6c5ce7;">
-                            <i class="fas fa-user-tie"></i>
-                        </div>
-                        <div class="card-info">
-                            <h3>Vendedores</h3>
-                            <p class="card-value"></p>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-icon orders">
-                            <i class="fas fa-file-invoice"></i>
-                        </div>
-                        <div class="card-info">
-                            <h3>Pedidos</h3>
-                            <p class="card-value"></p>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-icon profit">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <div class="card-info">
-                            <h3>Lucro</h3>
-                            <p class="card-value"></p>
+                <!-- Cards de Resumo - Layout Compacto -->
+                <div class="dashboard-summary">
+                    <!-- Seção Principal -->
+                    <div class="summary-section">
+                        <h4 class="section-title">Resumo Geral</h4>
+                        <div class="summary-grid">
+                            <div class="summary-card">
+                                <div class="card-icon sales">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div class="card-info">
+                                    <h3>Vendas</h3>
+                                    <p class="card-value"></p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="card-icon customers">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="card-info">
+                                    <h3>Clientes</h3>
+                                    <p class="card-value"></p>
+                                </div>
+                            </div>
+                            <div class="summary-card" onclick="window.location.href='vendedores.html'" style="cursor: pointer;">
+                                <div class="card-icon" style="background-color: #6c5ce7;">
+                                    <i class="fas fa-user-tie"></i>
+                                </div>
+                                <div class="card-info">
+                                    <h3>Vendedores</h3>
+                                    <p class="card-value"></p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="card-icon orders">
+                                    <i class="fas fa-file-invoice"></i>
+                                </div>
+                                <div class="card-info">
+                                    <h3>Pedidos</h3>
+                                    <p class="card-value"></p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Segunda linha - Novas métricas -->
-                <div class="dashboard-cards" style="margin-top: 20px;">
-                    <div class="card">
-                        <div class="card-icon" style="background-color: #9b59b6;">
-                            <i class="fas fa-warehouse"></i>
-                        </div>
-                        <div class="card-info">
-                            <h3>Valorização do Estoque</h3>
-                            <p class="card-value" id="valorizacao-estoque"></p>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-icon" style="background-color: #e67e22;">
-                            <i class="fas fa-dollar-sign"></i>
-                        </div>
-                        <div class="card-info">
-                            <h3>Custo Total</h3>
-                            <p class="card-value" id="custo-total-estoque"></p>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-icon" style="background-color: #e74c3c;">
-                            <i class="fas fa-ban"></i>
-                        </div>
-                        <div class="card-info">
-                            <h3>Total Cancelados</h3>
-                            <p class="card-value" id="total-cancelados"></p>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-icon" style="background-color: #f39c12;">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="card-info">
-                            <h3>Faturamento Pendente</h3>
-                            <p class="card-value" id="faturamento-pendente"></p>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-icon" style="background-color: #3498db;">
-                            <i class="fas fa-hourglass-half"></i>
-                        </div>
-                        <div class="card-info">
-                            <h3>Lucro Pendente</h3>
-                            <p class="card-value" id="lucro-pendente"></p>
+
+                    <!-- Seção Financeira -->
+                    <div class="summary-section">
+                        <h4 class="section-title">Financeiro</h4>
+                        <div class="summary-grid">
+                            <div class="summary-card">
+                                <div class="card-icon profit">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="card-info">
+                                    <h3>Lucro Total</h3>
+                                    <p class="card-value"></p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="card-icon" style="background-color: #2ecc71;">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="card-info">
+                                    <h3>Faturamento Concluído</h3>
+                                    <p class="card-value" id="faturamento-concluido"></p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="card-icon" style="background-color: #27ae60;">
+                                    <i class="fas fa-trophy"></i>
+                                </div>
+                                <div class="card-info">
+                                    <h3>Lucro Concluído</h3>
+                                    <p class="card-value" id="lucro-concluido"></p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="card-icon" style="background-color: #f39c12;">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="card-info">
+                                    <h3>Faturamento Pendente</h3>
+                                    <p class="card-value" id="faturamento-pendente"></p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="card">
-                        <div class="card-icon" style="background-color: #2ecc71;">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="card-info">
-                            <h3>Faturamento Concluído</h3>
-                            <p class="card-value" id="faturamento-concluido"></p>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-icon" style="background-color: #27ae60;">
-                            <i class="fas fa-trophy"></i>
-                        </div>
-                        <div class="card-info">
-                            <h3>Lucro Concluído</h3>
-                            <p class="card-value" id="lucro-concluido"></p>
+
+                    <!-- Seção Estoque e Custos -->
+                    <div class="summary-section">
+                        <h4 class="section-title">Estoque & Custos</h4>
+                        <div class="summary-grid">
+                            <div class="summary-card">
+                                <div class="card-icon" style="background-color: #9b59b6;">
+                                    <i class="fas fa-warehouse"></i>
+                                </div>
+                                <div class="card-info">
+                                    <h3>Valorização do Estoque</h3>
+                                    <p class="card-value" id="valorizacao-estoque"></p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="card-icon" style="background-color: #e67e22;">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <div class="card-info">
+                                    <h3>Custo Total</h3>
+                                    <p class="card-value" id="custo-total-estoque"></p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="card-icon" style="background-color: #3498db;">
+                                    <i class="fas fa-hourglass-half"></i>
+                                </div>
+                                <div class="card-info">
+                                    <h3>Lucro Pendente</h3>
+                                    <p class="card-value" id="lucro-pendente"></p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="card-icon" style="background-color: #e74c3c;">
+                                    <i class="fas fa-ban"></i>
+                                </div>
+                                <div class="card-info">
+                                    <h3>Total Cancelados</h3>
+                                    <p class="card-value" id="total-cancelados"></p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- Card de Comissão Paga -->
+                <div class="summary-section">
+                    <h4 class="section-title">Comissões</h4>
+                    <div class="summary-grid">
+                        <div class="summary-card">
+                            <div class="card-icon" style="background-color: #2ecc71;">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <div class="card-info">
+                                <h3>Comissão Paga</h3>
+                                <p class="card-value" id="comissaoPagaTotal">R$ 0,00</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Seção Contas a Pagar -->
+                <div class="summary-section">
+                    <h4 class="section-title">Contas a Pagar</h4>
+                    <div class="summary-grid">
+                        <div class="summary-card" onclick="window.location.href='contas_pagar.html?filtro=hoje'" style="cursor: pointer;">
+                            <div class="card-icon" style="background-color: #e74c3c;">
+                                <i class="fas fa-calendar-day"></i>
+                            </div>
+                            <div class="card-info">
+                                <h3>Vencimento Hoje</h3>
+                                <p class="card-value" id="contas-pagar-hoje">R$ 0,00</p>
+                            </div>
+                        </div>
+                        <div class="summary-card" onclick="window.location.href='contas_pagar.html?filtro=mes'" style="cursor: pointer;">
+                            <div class="card-icon" style="background-color: #f39c12;">
+                                <i class="fas fa-calendar"></i>
+                            </div>
+                            <div class="card-info">
+                                <h3>Vencimento Mês</h3>
+                                <p class="card-value" id="contas-pagar-mes">R$ 0,00</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção Contas a Receber -->
+                <div class="summary-section">
+                    <h4 class="section-title">Contas a Receber</h4>
+                    <div class="summary-grid">
+                        <div class="summary-card" onclick="window.location.href='contas_receber.html?filtro=hoje'" style="cursor: pointer;">
+                            <div class="card-icon" style="background-color: #27ae60;">
+                                <i class="fas fa-calendar-day"></i>
+                            </div>
+                            <div class="card-info">
+                                <h3>Vencimento Hoje</h3>
+                                <p class="card-value" id="contas-receber-hoje">R$ 0,00</p>
+                            </div>
+                        </div>
+                        <div class="summary-card" onclick="window.location.href='contas_receber.html?filtro=mes'" style="cursor: pointer;">
+                            <div class="card-icon" style="background-color: #2ecc71;">
+                                <i class="fas fa-calendar"></i>
+                            </div>
+                            <div class="card-info">
+                                <h3>Vencimento Mês</h3>
+                                <p class="card-value" id="contas-receber-mes">R$ 0,00</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Tabela de Atividades Recentes -->
                 <div class="recent-activities">
@@ -262,10 +351,13 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Cliente</th>
-                                    <th>Produto</th>
+                                    <th>Produtos</th>
+                                    <th>Qtd Total</th>
                                     <th>Custo</th>
                                     <th>Valor</th>
-                                    <th>Lucro</th>
+                                    <th>Vendedor</th>
+                                    <th>Comissão</th>
+                                    <th>Lucro Líquido</th>
                                     <th>Status</th>
                                     <th>Data</th>
                                 </tr>

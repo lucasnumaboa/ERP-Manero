@@ -111,10 +111,39 @@
                     <p>Selecione um dos atalhos abaixo para começar a usar o sistema.</p>
                 </div>
                 
-                <!-- A seção do Dashboard foi removida para manter a página inicial mais limpa -->
+                <!-- Seção de Atividades Recentes -->
+                <div class="recent-activities-section" id="recent-activities-section" style="display: none;">
+                    <div class="section-header">
+                        <h3>Atividades Recentes</h3>
+                        <a href="dashboard.html" class="btn-outline">Ver Dashboard Completo</a>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Cliente</th>
+                                    <th>Produtos</th>
+                                    <th>Qtd</th>
+                                    <th>Valor</th>
+                                    <th>Status</th>
+                                    <th>Data</th>
+                                </tr>
+                            </thead>
+                            <tbody id="homepage-recent-activities">
+                                <tr>
+                                    <td colspan="7" class="text-center">Carregando atividades recentes...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
                 
                 <div class="shortcuts-container">
-                    <!-- Atalho do dashboard removido -->
+                    <a href="dashboard.html" class="shortcut-card" id="dashboard-shortcut" style="display: none;">
+                        <i class="fas fa-chart-bar shortcut-icon"></i>
+                        <span class="shortcut-title">Dashboard</span>
+                    </a>
                     
                     <a href="produtos.html" class="shortcut-card" id="produtos-shortcut" style="display: none;">
                         <i class="fas fa-box shortcut-icon"></i>
@@ -154,6 +183,26 @@
                     <a href="estoque.html" class="shortcut-card" id="estoque-shortcut" style="display: none;">
                         <i class="fas fa-warehouse shortcut-icon"></i>
                         <span class="shortcut-title">Estoque</span>
+                    </a>
+                    
+                    <a href="contas_pagar.html" class="shortcut-card" id="contas_pagar-shortcut" style="display: none;">
+                        <i class="fas fa-money-bill-wave shortcut-icon"></i>
+                        <span class="shortcut-title">Contas a Pagar</span>
+                    </a>
+                    
+                    <a href="contas_receber.html" class="shortcut-card" id="contas_receber-shortcut" style="display: none;">
+                        <i class="fas fa-hand-holding-usd shortcut-icon"></i>
+                        <span class="shortcut-title">Contas a Receber</span>
+                    </a>
+                    
+                    <a href="condicoes_pagamento.html" class="shortcut-card" id="condicoes_pagamento-shortcut" style="display: none;">
+                        <i class="fas fa-percent shortcut-icon"></i>
+                        <span class="shortcut-title">Condições de Pagamento</span>
+                    </a>
+                    
+                    <a href="relatorios.html" class="shortcut-card" id="relatorios-shortcut" style="display: none;">
+                        <i class="fas fa-chart-bar shortcut-icon"></i>
+                        <span class="shortcut-title">Relatórios</span>
                     </a>
                     
                     <a href="configuracoes.html" class="shortcut-card" id="configuracoes-shortcut" style="display: none;">
