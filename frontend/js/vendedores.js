@@ -277,6 +277,13 @@ async function loadVendedorData(vendedorId) {
         document.getElementById('comissao_percentual').value = vendedor.comissao_percentual || 0;
         document.getElementById('usuario_id').value = vendedor.usuario_id || '';
         document.getElementById('ativo').value = vendedor.ativo.toString();
+        
+        // Preenche os dados bancários
+        document.getElementById('banco').value = vendedor.banco || '';
+        document.getElementById('agencia').value = vendedor.agencia || '';
+        document.getElementById('conta').value = vendedor.conta || '';
+        document.getElementById('pix').value = vendedor.pix || '';
+        document.getElementById('nome_destinatario').value = vendedor.nome_destinatario || '';
     } catch (error) {
         console.error('Erro:', error);
         alert('Erro ao carregar dados do vendedor. Tente novamente.');
@@ -325,6 +332,13 @@ async function saveVendedor() {
     const usuario_id = document.getElementById('usuario_id').value;
     const ativo = document.getElementById('ativo').value === 'true';
     
+    // Obtém os dados bancários
+    const banco = document.getElementById('banco').value;
+    const agencia = document.getElementById('agencia').value;
+    const conta = document.getElementById('conta').value;
+    const pix = document.getElementById('pix').value;
+    const nome_destinatario = document.getElementById('nome_destinatario').value;
+    
     // Validação básica
     if (!nome) {
         alert('Por favor, preencha o nome do vendedor.');
@@ -336,6 +350,12 @@ async function saveVendedor() {
         return;
     }
     
+    // Validação: Pelo menos uma forma de pagamento deve ser informada
+    if (!conta && !pix) {
+        alert('Por favor, informe pelo menos uma forma de pagamento (conta bancária ou PIX).');
+        return;
+    }
+    
     // Prepara os dados para envio
     const vendedorData = {
         nome,
@@ -343,7 +363,12 @@ async function saveVendedor() {
         telefone: telefone || null,
         comissao_percentual,
         usuario_id: usuario_id || null,
-        ativo
+        ativo,
+        banco: banco || null,
+        agencia: agencia || null,
+        conta: conta || null,
+        pix: pix || null,
+        nome_destinatario: nome_destinatario || null
     };
     
     try {

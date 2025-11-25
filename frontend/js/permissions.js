@@ -49,6 +49,22 @@ async function checkPagePermissions() {
                 view: 'financeiro_visualizar',
                 edit: 'financeiro_editar'
             },
+            'contas_pagar.html': {
+                view: 'financeiro_visualizar',
+                edit: 'financeiro_editar'
+            },
+            'contas_receber.html': {
+                view: 'financeiro_visualizar',
+                edit: 'financeiro_editar'
+            },
+            'condicoes_pagamento.html': {
+                view: 'financeiro_visualizar',
+                edit: 'financeiro_editar'
+            },
+            'relatorios.html': {
+                view: 'dashboard_visualizar',
+                edit: 'dashboard_editar'
+            },
             'configuracoes.html': {
                 view: 'configuracoes_visualizar',
                 edit: 'configuracoes_editar'

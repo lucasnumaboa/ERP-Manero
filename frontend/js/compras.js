@@ -518,6 +518,10 @@ async function loadCompraDataAndThenFornecedores(compraId) {
         document.getElementById('observacoes').value = data.observacoes || '';
         document.getElementById('status').value = data.status || 'pendente';
         
+        // Armazena o status atual para comparação posterior
+        document.getElementById('compraForm').setAttribute('data-status-anterior', data.status || 'pendente');
+        console.log('Carregou compra com status:', data.status, 'e criado_tit_ap:', data.criado_tit_ap);
+        
         // Carrega os itens da compra
         if (data.itens && data.itens.length > 0) {
             await displayItensCompra(data.itens, window.isViewMode);
@@ -812,6 +816,7 @@ async function saveCompra() {
     const statusAnterior = form.getAttribute('data-status-anterior') || '';
     const novoStatus = compraData.status;
     const alterandoParaRecebido = statusAnterior !== 'recebido' && novoStatus === 'recebido';
+    
     // Se estiver recebendo, remova o status para que a API de recebimento o atualize com controle de estoque
     if (alterandoParaRecebido) {
         delete compraData.status;
@@ -859,8 +864,60 @@ async function saveCompra() {
         
         console.log('Compra salva com sucesso:', data);
         
-        // Se o status foi alterado para 'recebido', chama a API para atualizar o estoque
+        // Verifica se deve criar conta a pagar
+        // Se status for 'aprovado' OU 'recebido' E criado_tit_ap for 0 ou false, cria a conta
+        // Usa novoStatus ao invés de data.status porque quando vai para 'recebido', o status é deletado antes de enviar
+        const statusAprovadoOuRecebido = novoStatus === 'aprovado' || novoStatus === 'recebido';
+        const naoFoiCriado = data.criado_tit_ap === false || data.criado_tit_ap === 0;
+        const deveGravarConta = statusAprovadoOuRecebido && naoFoiCriado;
+        
+        console.log('Status:', data.status);
+        console.log('criado_tit_ap:', data.criado_tit_ap);
+        console.log('Status aprovado ou recebido?', statusAprovadoOuRecebido);
+        console.log('Não foi criado?', naoFoiCriado);
+        console.log('Deve gravar conta?', deveGravarConta);
+        
+        if (deveGravarConta) {
+            console.log('Iniciando criação de conta a pagar');
+            try {
+                // Usa o valor total retornado pela API
+                const valorTotal = data.valor_total || 0;
+                
+                console.log('Valor total da compra:', valorTotal);
+                
+                // Cria o movimento em contas a pagar
+                const contaPagarData = {
+                    descricao: `Compra do fornecedor - Ref. Compra #${data.id}`,
+                    fornecedor_id: parseInt(data.fornecedor_id),
+                    valor: valorTotal,
+                    data_vencimento: data.data_previsao,
+                    forma_pagamento: 'dinheiro',
+                    observacoes: data.observacoes || ''
+                };
+                
+                console.log('Criando conta a pagar:', contaPagarData);
+                const resultadoConta = await apiPost('/api/contas-pagar', contaPagarData);
+                console.log('Conta a pagar criada com sucesso!', resultadoConta);
+                
+                // Marca como criado no backend
+                console.log('Marcando criado_tit_ap = 1 para compra #' + data.id);
+                try {
+                    await apiPut(`/api/compras/${data.id}`, { criado_tit_ap: true });
+                    console.log('Marcado criado_tit_ap = 1 com sucesso!');
+                } catch (error) {
+                    console.error('Erro ao marcar criado_tit_ap:', error);
+                }
+            } catch (error) {
+                console.error('Erro ao criar conta a pagar:', error);
+                // Não interrompe o fluxo se falhar ao criar a conta a pagar
+            }
+        }
+        
+        // Se o status foi alterado para 'recebido' (e não era 'recebido' antes), chama a API para atualizar o estoque
+        console.log('statusAnterior:', statusAnterior, 'novoStatus:', novoStatus, 'alterandoParaRecebido:', alterandoParaRecebido);
+        
         if (compraId && alterandoParaRecebido) {
+            console.log('Chamando receberCompra...');
             receberCompra(compraId);
         } else {
             // Fecha o modal
@@ -974,3 +1031,85 @@ async function receberCompra(compraId) {
         loadCompras();
     }
 }
+
+// Abre o modal para criar novo fornecedor
+function openFornecedorModal() {
+    document.getElementById('fornecedorForm').reset();
+    document.getElementById('fornecedorModal').classList.add('active');
+}
+
+// Fecha o modal de fornecedor
+function closeFornecedorModal() {
+    document.getElementById('fornecedorModal').classList.remove('active');
+}
+
+// Salva um novo fornecedor
+async function saveFornecedor() {
+    const nome = document.getElementById('fornecedor_nome').value;
+    const cnpj = document.getElementById('fornecedor_cnpj').value;
+    const email = document.getElementById('fornecedor_email').value;
+    const telefone = document.getElementById('fornecedor_telefone').value;
+    const endereco = document.getElementById('fornecedor_endereco').value;
+    
+    if (!nome) {
+        alert('Por favor, preencha o nome do fornecedor.');
+        return;
+    }
+    
+    try {
+        const fornecedorData = {
+            nome: nome,
+            tipo: 'fornecedor',
+            cnpj: cnpj || null,
+            email: email || null,
+            telefone: telefone || null,
+            endereco: endereco || null
+        };
+        
+        console.log('Criando fornecedor:', fornecedorData);
+        const data = await apiPost('/api/parceiros', fornecedorData);
+        console.log('Fornecedor criado com sucesso:', data);
+        
+        // Fecha o modal de fornecedor
+        closeFornecedorModal();
+        
+        // Recarrega a lista de fornecedores
+        await loadFornecedores();
+        
+        // Seleciona o novo fornecedor
+        document.getElementById('fornecedor_id').value = data.id;
+        
+        // Exibe mensagem de sucesso
+        alert('Fornecedor criado com sucesso!');
+    } catch (error) {
+        console.error('Erro ao criar fornecedor:', error);
+        alert(`Erro ao criar fornecedor: ${error.message}`);
+    }
+}
+
+// Configura os botões do modal de fornecedor
+document.addEventListener('DOMContentLoaded', function() {
+    // Botão para abrir modal de novo fornecedor
+    const btnNovoFornecedor = document.getElementById('btnNovoFornecedorModal');
+    if (btnNovoFornecedor) {
+        btnNovoFornecedor.addEventListener('click', openFornecedorModal);
+    }
+    
+    // Botão para cancelar
+    const btnCancelarFornecedor = document.getElementById('btnCancelarFornecedor');
+    if (btnCancelarFornecedor) {
+        btnCancelarFornecedor.addEventListener('click', closeFornecedorModal);
+    }
+    
+    // Botão para salvar
+    const btnSalvarFornecedor = document.getElementById('btnSalvarFornecedor');
+    if (btnSalvarFornecedor) {
+        btnSalvarFornecedor.addEventListener('click', saveFornecedor);
+    }
+    
+    // Fechar modal ao clicar no X
+    const closeButtons = document.querySelectorAll('#fornecedorModal .close-modal');
+    closeButtons.forEach(btn => {
+        btn.addEventListener('click', closeFornecedorModal);
+    });
+});

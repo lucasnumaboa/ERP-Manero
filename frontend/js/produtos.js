@@ -1083,3 +1083,78 @@ async function deleteProduto(produtoId) {
         alert(`Erro ao excluir produto: ${error.message}\nPor favor, verifique a conexão com a API e tente novamente.`);
     }
 }
+
+// Abre o modal para criar nova categoria
+function openCategoriaModal() {
+    document.getElementById('categoriaForm').reset();
+    document.getElementById('categoriaModal').classList.add('active');
+}
+
+// Fecha o modal de categoria
+function closeCategoriaModal() {
+    document.getElementById('categoriaModal').classList.remove('active');
+}
+
+// Salva uma nova categoria
+async function saveCategoria() {
+    const nome = document.getElementById('categoria_nome').value;
+    const descricao = document.getElementById('categoria_descricao').value;
+    
+    if (!nome) {
+        alert('Por favor, preencha o nome da categoria.');
+        return;
+    }
+    
+    try {
+        const categoriaData = {
+            nome: nome,
+            descricao: descricao || null
+        };
+        
+        console.log('Criando categoria:', categoriaData);
+        const data = await apiPost('/api/categorias', categoriaData);
+        console.log('Categoria criada com sucesso:', data);
+        
+        // Fecha o modal de categoria
+        closeCategoriaModal();
+        
+        // Recarrega a lista de categorias
+        await loadCategorias();
+        
+        // Seleciona a nova categoria
+        document.getElementById('categoria_id').value = data.id;
+        
+        // Exibe mensagem de sucesso
+        alert('Categoria criada com sucesso!');
+    } catch (error) {
+        console.error('Erro ao criar categoria:', error);
+        alert(`Erro ao criar categoria: ${error.message}`);
+    }
+}
+
+// Configura os botões do modal de categoria
+document.addEventListener('DOMContentLoaded', function() {
+    // Botão para abrir modal de nova categoria
+    const btnNovaCategoria = document.getElementById('btnNovaCategoriaModal');
+    if (btnNovaCategoria) {
+        btnNovaCategoria.addEventListener('click', openCategoriaModal);
+    }
+    
+    // Botão para cancelar
+    const btnCancelarCategoria = document.getElementById('btnCancelarCategoria');
+    if (btnCancelarCategoria) {
+        btnCancelarCategoria.addEventListener('click', closeCategoriaModal);
+    }
+    
+    // Botão para salvar
+    const btnSalvarCategoria = document.getElementById('btnSalvarCategoria');
+    if (btnSalvarCategoria) {
+        btnSalvarCategoria.addEventListener('click', saveCategoria);
+    }
+    
+    // Fechar modal ao clicar no X
+    const closeButtons = document.querySelectorAll('#categoriaModal .close-modal');
+    closeButtons.forEach(btn => {
+        btn.addEventListener('click', closeCategoriaModal);
+    });
+});

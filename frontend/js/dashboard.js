@@ -1,3 +1,17 @@
+// Função para formatar valores monetários
+function formatarMoeda(valor) {
+    if (valor === null || valor === undefined || isNaN(valor)) {
+        return 'R$ 0,00';
+    }
+    
+    return valor.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Verifica permissões antes de inicializar o dashboard
     checkDashboardPermissions();
@@ -52,6 +66,10 @@ async function initDashboard(monthYear = null) {
         // Busca e atualiza dados de custo total do estoque
         console.log('Buscando custo total do estoque...');
         await updateCustoTotalEstoque();
+        
+        // Carrega dados de contas a pagar e receber
+        console.log('Carregando contas financeiras...');
+        await carregarContasFinanceiras();
         
         // Gráficos removidos conforme solicitado
         
@@ -229,100 +247,99 @@ async function fetchDashboardData(monthYear = null) {
 function updateDashboardCards(data) {
     if (!data) return;
     
-    // Atualiza o card de vendas
-    const salesValue = document.querySelector('.card:nth-child(1) .card-value');
-    const salesChange = document.querySelector('.card:nth-child(1) .card-change');
-    if (salesValue) {
-        salesValue.textContent = `R$ ${data.vendas.total.toFixed(2).replace('.', ',')}`;
-    }
-    if (salesChange) {
-        const isPositive = data.vendas.variacao > 0;
-        salesChange.textContent = `${isPositive ? '+' : ''}${data.vendas.variacao}% `;
-        salesChange.innerHTML += '<span>este período</span>';
-        salesChange.className = `card-change ${isPositive ? 'positive' : 'negative'}`;
+    // Atualiza os cards da seção "Resumo Geral"
+    const summaryCards = document.querySelectorAll('.summary-section:nth-child(1) .summary-card');
+    
+    // Card de vendas (primeiro card)
+    if (summaryCards[0]) {
+        const salesValue = summaryCards[0].querySelector('.card-value');
+        if (salesValue) {
+            salesValue.textContent = formatarMoeda(data.vendas.total);
+        }
     }
     
-    // Atualiza o card de clientes
-    const clientsValue = document.querySelector('.card:nth-child(2) .card-value');
-    const clientsChange = document.querySelector('.card:nth-child(2) .card-change');
-    if (clientsValue) {
-        clientsValue.textContent = data.clientes.total;
-    }
-    if (clientsChange) {
-        const isPositive = data.clientes.variacao > 0;
-        clientsChange.textContent = `${isPositive ? '+' : ''}${data.clientes.variacao}% `;
-        clientsChange.innerHTML += '<span>este período</span>';
-        clientsChange.className = `card-change ${isPositive ? 'positive' : 'negative'}`;
+    // Card de clientes (segundo card)
+    if (summaryCards[1]) {
+        const clientsValue = summaryCards[1].querySelector('.card-value');
+        if (clientsValue) {
+            clientsValue.textContent = data.clientes.total;
+        }
     }
     
-    // Atualiza o card de vendedores
-    const vendedoresValue = document.querySelector('.card:nth-child(3) .card-value');
-    const vendedoresChange = document.querySelector('.card:nth-child(3) .card-change');
-    if (vendedoresValue) {
-        vendedoresValue.textContent = data.vendedores.total;
-    }
-    if (vendedoresChange) {
-        const isPositive = data.vendedores.variacao > 0;
-        vendedoresChange.textContent = `${isPositive ? '+' : ''}${data.vendedores.variacao}% `;
-        vendedoresChange.innerHTML += '<span>este período</span>';
-        vendedoresChange.className = `card-change ${isPositive ? 'positive' : 'negative'}`;
+    // Card de vendedores (terceiro card)
+    if (summaryCards[2]) {
+        const vendedoresValue = summaryCards[2].querySelector('.card-value');
+        if (vendedoresValue) {
+            vendedoresValue.textContent = data.vendedores.total;
+        }
     }
     
-    // Atualiza o card de pedidos
-    const ordersValue = document.querySelector('.card:nth-child(4) .card-value');
-    const ordersChange = document.querySelector('.card:nth-child(4) .card-change');
-    if (ordersValue) {
-        ordersValue.textContent = data.pedidos.total;
-    }
-    if (ordersChange) {
-        const isPositive = data.pedidos.variacao > 0;
-        ordersChange.textContent = `${isPositive ? '+' : ''}${data.pedidos.variacao}% `;
-        ordersChange.innerHTML += '<span>este período</span>';
-        ordersChange.className = `card-change ${isPositive ? 'positive' : 'negative'}`;
+    // Card de pedidos (quarto card)
+    if (summaryCards[3]) {
+        const ordersValue = summaryCards[3].querySelector('.card-value');
+        if (ordersValue) {
+            ordersValue.textContent = data.pedidos.total;
+        }
     }
     
-    // Atualiza o card de lucro
-    const profitValue = document.querySelector('.card:nth-child(5) .card-value');
-    const profitChange = document.querySelector('.card:nth-child(5) .card-change');
-    if (profitValue) {
-        profitValue.textContent = `R$ ${data.lucro.total.toFixed(2).replace('.', ',')}`;
-    }
-    if (profitChange) {
-        const isPositive = data.lucro.variacao > 0;
-        profitChange.textContent = `${isPositive ? '+' : ''}${data.lucro.variacao}% `;
-        profitChange.innerHTML += '<span>este período</span>';
-        profitChange.className = `card-change ${isPositive ? 'positive' : 'negative'}`;
+    // Atualiza os cards da seção "Financeiro"
+    const financialCards = document.querySelectorAll('.summary-section:nth-child(2) .summary-card');
+    
+    // Card de lucro total (primeiro card da seção financeira)
+    if (financialCards[0]) {
+        const profitValue = financialCards[0].querySelector('.card-value');
+        if (profitValue) {
+            profitValue.textContent = formatarMoeda(data.lucro.total);
+        }
     }
     
-    // Atualiza as novas métricas
+    // Atualiza as métricas específicas por ID (mantém compatibilidade)
     // Total Cancelados
     const totalCanceladosValue = document.getElementById('total-cancelados');
     if (totalCanceladosValue) {
-        totalCanceladosValue.textContent = data.total_cancelados;
+        totalCanceladosValue.textContent = data.total_cancelados || '0';
     }
     
     // Faturamento Pendente
     const faturamentoPendenteValue = document.getElementById('faturamento-pendente');
     if (faturamentoPendenteValue) {
-        faturamentoPendenteValue.textContent = `R$ ${data.faturamento_pendente.toFixed(2).replace('.', ',')}`;
+        faturamentoPendenteValue.textContent = formatarMoeda(data.faturamento_pendente || 0);
     }
     
     // Lucro Pendente
     const lucroPendenteValue = document.getElementById('lucro-pendente');
     if (lucroPendenteValue) {
-        lucroPendenteValue.textContent = `R$ ${data.lucro_pendente.toFixed(2).replace('.', ',')}`;
+        lucroPendenteValue.textContent = formatarMoeda(data.lucro_pendente || 0);
     }
     
     // Faturamento Concluído
     const faturamentoConcluidoValue = document.getElementById('faturamento-concluido');
     if (faturamentoConcluidoValue) {
-        faturamentoConcluidoValue.textContent = `R$ ${data.faturamento_concluido.toFixed(2).replace('.', ',')}`;
+        faturamentoConcluidoValue.textContent = formatarMoeda(data.faturamento_concluido || 0);
     }
     
     // Lucro Concluído
     const lucroConcluidoValue = document.getElementById('lucro-concluido');
     if (lucroConcluidoValue) {
-        lucroConcluidoValue.textContent = `R$ ${data.lucro_concluido.toFixed(2).replace('.', ',')}`;
+        lucroConcluidoValue.textContent = formatarMoeda(data.lucro_concluido || 0);
+    }
+    
+    // Valorização do Estoque
+    const valorizacaoEstoqueValue = document.getElementById('valorizacao-estoque');
+    if (valorizacaoEstoqueValue) {
+        valorizacaoEstoqueValue.textContent = formatarMoeda(data.valorizacao_estoque || 0);
+    }
+    
+    // Custo Total do Estoque
+    const custoTotalValue = document.getElementById('custo-total-estoque');
+    if (custoTotalValue) {
+        custoTotalValue.textContent = formatarMoeda(data.custo_total_estoque || 0);
+    }
+
+    // Comissão Paga Total
+    const comissaoPagaTotalValue = document.getElementById('comissaoPagaTotal');
+    if (comissaoPagaTotalValue) {
+        comissaoPagaTotalValue.textContent = formatarMoeda(data.comissao_paga_total || 0);
     }
 }
 
@@ -336,7 +353,7 @@ async function updateValorizacaoEstoque() {
         if (valorizacaoData) {
             const valorizacaoElement = document.getElementById('valorizacao-estoque');
             if (valorizacaoElement) {
-                const valorFormatado = `R$ ${valorizacaoData.valor_total_estoque.toFixed(2).replace('.', ',')}`;
+                const valorFormatado = formatarMoeda(valorizacaoData.valor_total_estoque);
                 valorizacaoElement.textContent = valorFormatado;
                 
                 // Adiciona informações adicionais como tooltip ou subtítulo
@@ -360,7 +377,7 @@ async function updateCustoTotalEstoque() {
         if (custoTotalData) {
             const custoTotalElement = document.getElementById('custo-total-estoque');
             if (custoTotalElement) {
-                const valorFormatado = `R$ ${custoTotalData.custo_total_estoque.toFixed(2).replace('.', ',')}`;
+                const valorFormatado = formatarMoeda(custoTotalData.custo_total_estoque);
                 custoTotalElement.textContent = valorFormatado;
                 
                 // Adiciona informações adicionais como tooltip ou subtítulo
@@ -387,7 +404,7 @@ function updateRecentActivities(vendasRecentes) {
     if (!vendasRecentes || !vendasRecentes.length) {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td colspan="8" style="text-align: center; padding: 20px;">
+            <td colspan="11" style="text-align: center; padding: 20px;">
                 Não há atividades registradas para este período
             </td>
         `;
@@ -406,18 +423,26 @@ function updateRecentActivities(vendasRecentes) {
         // Cria o status com a classe apropriada
         const statusClass = getStatusClass(venda.status);
         
-        // Usa o custo do produto da tabela pedidos_venda
-        const custo = venda.custo_produto !== null ? venda.custo_produto : venda.valor_total * 0.6;
-        // Calcula o lucro com base no custo obtido
-        const lucro = venda.valor_total - custo;
+        // Usa os valores calculados no backend
+        const custo = venda.custo_produto || 0;
+        const comissao = venda.comissao_paga || 0;
+        const lucroLiquido = venda.lucro_liquido || 0;
+        const vendedor = venda.vendedor_nome || '-';
+        
+        // Formatação dos produtos vendidos
+        const produtosVendidos = venda.produtos_vendidos || 'N/A';
+        const quantidadeTotal = venda.quantidade_total || 0;
         
         row.innerHTML = `
             <td>#${venda.codigo}</td>
             <td>${venda.cliente_nome}</td>
-            <td>Pedido #${venda.codigo}</td>
-            <td>R$ ${custo.toFixed(2).replace('.', ',')}</td>
-            <td>R$ ${venda.valor_total.toFixed(2).replace('.', ',')}</td>
-            <td>R$ ${lucro.toFixed(2).replace('.', ',')}</td>
+            <td title="${produtosVendidos}">${produtosVendidos.length > 50 ? produtosVendidos.substring(0, 50) + '...' : produtosVendidos}</td>
+            <td>${quantidadeTotal}</td>
+            <td>${formatarMoeda(custo)}</td>
+            <td>${formatarMoeda(venda.valor_total)}</td>
+            <td>${vendedor}</td>
+            <td>${formatarMoeda(comissao)}</td>
+            <td>${formatarMoeda(lucroLiquido)}</td>
             <td><span class="status ${statusClass}">${formatarStatus(venda.status)}</span></td>
             <td>${dataFormatada}</td>
         `;
@@ -481,6 +506,78 @@ function setupDateFilter() {
                 initDashboard(monthYear);
             }
         });
+    }
+}
+
+// Carrega dados de contas a pagar e receber
+async function carregarContasFinanceiras() {
+    try {
+        const hoje = new Date();
+        const ultimoDiaDoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+        
+        // Formata datas para YYYY-MM-DD
+        const dataHoje = hoje.toISOString().split('T')[0];
+        const dataProximoDia = new Date(hoje);
+        dataProximoDia.setDate(dataProximoDia.getDate() + 1);
+        const dataProximoDiaStr = dataProximoDia.toISOString().split('T')[0];
+        const dataFimMes = ultimoDiaDoMes.toISOString().split('T')[0];
+        
+        // Carrega contas a pagar
+        const contasPagarHoje = await apiGet('/api/contas-pagar', {
+            vencimento_inicio: dataHoje,
+            vencimento_fim: dataHoje,
+            status: 'pendente'
+        });
+        
+        const contasPagarMes = await apiGet('/api/contas-pagar', {
+            vencimento_inicio: dataProximoDiaStr,
+            vencimento_fim: dataFimMes,
+            status: 'pendente'
+        });
+        
+        // Carrega contas a receber
+        const contasReceberHoje = await apiGet('/api/contas-receber', {
+            vencimento_inicio: dataHoje,
+            vencimento_fim: dataHoje,
+            status: 'pendente'
+        });
+        
+        const contasReceberMes = await apiGet('/api/contas-receber', {
+            vencimento_inicio: dataProximoDiaStr,
+            vencimento_fim: dataFimMes,
+            status: 'pendente'
+        });
+        
+        // Calcula totais
+        const totalPagarHoje = Array.isArray(contasPagarHoje) 
+            ? contasPagarHoje.reduce((sum, conta) => sum + (conta.valor || 0), 0)
+            : 0;
+        
+        const totalPagarMes = Array.isArray(contasPagarMes)
+            ? contasPagarMes.reduce((sum, conta) => sum + (conta.valor || 0), 0)
+            : 0;
+        
+        const totalReceberHoje = Array.isArray(contasReceberHoje)
+            ? contasReceberHoje.reduce((sum, conta) => sum + (conta.valor || 0), 0)
+            : 0;
+        
+        const totalReceberMes = Array.isArray(contasReceberMes)
+            ? contasReceberMes.reduce((sum, conta) => sum + (conta.valor || 0), 0)
+            : 0;
+        
+        // Atualiza os elementos HTML
+        const elemPagarHoje = document.getElementById('contas-pagar-hoje');
+        const elemPagarMes = document.getElementById('contas-pagar-mes');
+        const elemReceberHoje = document.getElementById('contas-receber-hoje');
+        const elemReceberMes = document.getElementById('contas-receber-mes');
+        
+        if (elemPagarHoje) elemPagarHoje.textContent = formatarMoeda(totalPagarHoje);
+        if (elemPagarMes) elemPagarMes.textContent = formatarMoeda(totalPagarMes);
+        if (elemReceberHoje) elemReceberHoje.textContent = formatarMoeda(totalReceberHoje);
+        if (elemReceberMes) elemReceberMes.textContent = formatarMoeda(totalReceberMes);
+        
+    } catch (error) {
+        console.error('Erro ao carregar contas financeiras:', error);
     }
 }
 

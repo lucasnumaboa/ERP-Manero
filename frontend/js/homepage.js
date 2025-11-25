@@ -15,7 +15,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Configurar atalhos com base nas permissões
     setupShortcuts();
     
-    // Não carregamos mais dados do dashboard na homepage
+    // Carregar atividades recentes se o usuário tiver permissão
+    loadRecentActivities();
     
     // Configurar botão de logout
     setupLogout();
@@ -55,6 +56,88 @@ function updateDateTime() {
     }
 }
 
+// Função para carregar atividades recentes
+async function loadRecentActivities() {
+    try {
+        // Verificar se o usuário tem permissão para visualizar vendas
+        const hasVendasPermission = await hasPermission('vendas_visualizar');
+        
+        if (!hasVendasPermission) {
+            return; // Não exibe a seção se não tiver permissão
+        }
+        
+        // Mostrar a seção de atividades recentes
+        const recentActivitiesSection = document.getElementById('recent-activities-section');
+        if (recentActivitiesSection) {
+            recentActivitiesSection.style.display = 'block';
+        }
+        
+        // Fazer requisição para obter dados do dashboard
+        const response = await fetch(`${API_BASE_URL}/dashboard/`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `${localStorage.getItem('erp_token_type')} ${localStorage.getItem('erp_token')}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erro ao carregar atividades recentes');
+        }
+        
+        const data = await response.json();
+        updateHomepageRecentActivities(data.vendas_recentes || []);
+        
+    } catch (error) {
+        console.error('Erro ao carregar atividades recentes:', error);
+        // Em caso de erro, ocultar a seção
+        const recentActivitiesSection = document.getElementById('recent-activities-section');
+        if (recentActivitiesSection) {
+            recentActivitiesSection.style.display = 'none';
+        }
+    }
+}
+
+// Função para atualizar a tabela de atividades recentes no homepage
+function updateHomepageRecentActivities(vendasRecentes) {
+    const tbody = document.getElementById('homepage-recent-activities');
+    
+    if (!vendasRecentes || vendasRecentes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhuma atividade recente encontrada</td></tr>';
+        return;
+    }
+    
+    // Pegar apenas as 3 atividades mais recentes
+    const recentActivities = vendasRecentes.slice(0, 3);
+    
+    tbody.innerHTML = recentActivities.map(venda => {
+        const dataFormatada = new Date(venda.data_pedido).toLocaleDateString('pt-BR');
+        const statusClass = venda.status === 'concluido' ? 'status-completed' : 
+                           venda.status === 'pendente' ? 'status-pending' : 'status-cancelled';
+        
+        // Formatação dos produtos vendidos
+        const produtosVendidos = venda.produtos_vendidos || 'N/A';
+        const quantidadeTotal = venda.quantidade_total || 0;
+        
+        // Truncar produtos se muito longo
+        const produtosDisplay = produtosVendidos.length > 30 ? 
+                               produtosVendidos.substring(0, 30) + '...' : 
+                               produtosVendidos;
+        
+        return `
+            <tr>
+                <td>#${venda.codigo}</td>
+                <td>${venda.cliente_nome}</td>
+                <td title="${produtosVendidos}">${produtosDisplay}</td>
+                <td>${quantidadeTotal}</td>
+                <td>R$ ${parseFloat(venda.valor_total).toFixed(2)}</td>
+                <td><span class="status ${statusClass}">${venda.status}</span></td>
+                <td>${dataFormatada}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
 // Função para configurar os atalhos com base nas permissões
 async function setupShortcuts() {
     // Mapeamento de atalhos para permissões
@@ -69,6 +152,10 @@ async function setupShortcuts() {
         'financeiro-shortcut': 'financeiro_visualizar',
         'compras-shortcut': 'compras_visualizar',
         'fornecedores-shortcut': 'fornecedores_visualizar',
+        'contas_pagar-shortcut': 'financeiro_visualizar',
+        'contas_receber-shortcut': 'financeiro_visualizar',
+        'condicoes_pagamento-shortcut': 'financeiro_visualizar',
+        'relatorios-shortcut': 'dashboard_visualizar',
         'configuracoes-shortcut': 'configuracoes_visualizar'
     };
 
