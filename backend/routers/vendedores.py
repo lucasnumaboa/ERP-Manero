@@ -14,6 +14,11 @@ class VendedorBase(BaseModel):
     comissao_percentual: float = 0
     usuario_id: Optional[int] = None
     ativo: bool = True
+    banco: Optional[str] = None
+    agencia: Optional[str] = None
+    conta: Optional[str] = None
+    pix: Optional[str] = None
+    nome_destinatario: Optional[str] = None
 
 class VendedorCreate(VendedorBase):
     pass
@@ -25,6 +30,11 @@ class VendedorUpdate(BaseModel):
     comissao_percentual: Optional[float] = None
     usuario_id: Optional[int] = None
     ativo: Optional[bool] = None
+    banco: Optional[str] = None
+    agencia: Optional[str] = None
+    conta: Optional[str] = None
+    pix: Optional[str] = None
+    nome_destinatario: Optional[str] = None
 
 class Vendedor(VendedorBase):
     id: int
@@ -122,13 +132,16 @@ async def criar_vendedor(
         cursor.execute(
             """
             INSERT INTO vendedores (
-                nome, email, telefone, comissao_percentual, usuario_id, ativo
+                nome, email, telefone, comissao_percentual, usuario_id, ativo,
+                banco, agencia, conta, pix, nome_destinatario
             )
-            VALUES (%s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 vendedor.nome, vendedor.email, vendedor.telefone,
-                vendedor.comissao_percentual, vendedor.usuario_id, vendedor.ativo
+                vendedor.comissao_percentual, vendedor.usuario_id, vendedor.ativo,
+                vendedor.banco, vendedor.agencia, vendedor.conta, vendedor.pix,
+                vendedor.nome_destinatario
             )
         )
         
@@ -207,6 +220,16 @@ async def atualizar_vendedor(
         update_data["usuario_id"] = vendedor.usuario_id
     if vendedor.ativo is not None:
         update_data["ativo"] = vendedor.ativo
+    if vendedor.banco is not None:
+        update_data["banco"] = vendedor.banco
+    if vendedor.agencia is not None:
+        update_data["agencia"] = vendedor.agencia
+    if vendedor.conta is not None:
+        update_data["conta"] = vendedor.conta
+    if vendedor.pix is not None:
+        update_data["pix"] = vendedor.pix
+    if vendedor.nome_destinatario is not None:
+        update_data["nome_destinatario"] = vendedor.nome_destinatario
     
     if not update_data:
         raise HTTPException(

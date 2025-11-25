@@ -34,6 +34,7 @@ class PedidoCompraUpdate(BaseModel):
     data_previsao: Optional[date] = None
     status: Optional[str] = None
     observacoes: Optional[str] = None
+    criado_tit_ap: Optional[bool] = None
 
 class PedidoCompra(PedidoCompraBase):
     id: int
@@ -42,6 +43,7 @@ class PedidoCompra(PedidoCompraBase):
     status: str
     valor_total: float
     usuario_id: int
+    criado_tit_ap: Optional[bool] = False
 
 class PedidoCompraDetalhado(PedidoCompra):
     itens: List[ItemPedidoCompra]
@@ -324,6 +326,8 @@ async def atualizar_pedido_compra(
         update_data["status"] = pedido.status
     if pedido.observacoes is not None:
         update_data["observacoes"] = pedido.observacoes
+    if pedido.criado_tit_ap is not None:
+        update_data["criado_tit_ap"] = pedido.criado_tit_ap
     
     if not update_data:
         raise HTTPException(

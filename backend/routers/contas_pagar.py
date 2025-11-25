@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from typing import List, Optional
-from datetime import date
+from datetime import date, datetime
 from database import get_db_cursor
 from auth import get_current_user, UserInDB
 
@@ -9,11 +9,13 @@ router = APIRouter()
 
 # Modelos Pydantic
 class ContaPagarBase(BaseModel):
-    fornecedor_id: int
+    fornecedor_id: Optional[int] = None
+    vendedor_id: Optional[int] = None
     descricao: str
     valor: float
     data_vencimento: date
-    pedido_compra_id: Optional[int] = None
+    pedido_venda_id: Optional[int] = None
+    documento_referencia: Optional[str] = None
     forma_pagamento: str = "dinheiro"
     observacoes: Optional[str] = None
 
@@ -22,10 +24,13 @@ class ContaPagarCreate(ContaPagarBase):
 
 class ContaPagarUpdate(BaseModel):
     fornecedor_id: Optional[int] = None
+    vendedor_id: Optional[int] = None
     descricao: Optional[str] = None
     valor: Optional[float] = None
     data_vencimento: Optional[date] = None
     data_pagamento: Optional[date] = None
+    pedido_venda_id: Optional[int] = None
+    documento_referencia: Optional[str] = None
     status: Optional[str] = None
     forma_pagamento: Optional[str] = None
     observacoes: Optional[str] = None
@@ -33,10 +38,12 @@ class ContaPagarUpdate(BaseModel):
 class ContaPagar(ContaPagarBase):
     id: int
     codigo: str
-    data_emissao: str
+    data_emissao: datetime
     data_pagamento: Optional[date] = None
     status: str
     usuario_id: int
+    fornecedor_nome: Optional[str] = None
+    vendedor_nome: Optional[str] = None
 
 # Rotas
 @router.get("/", response_model=List[ContaPagar])
@@ -45,32 +52,50 @@ async def listar_contas_pagar(
     fornecedor_id: Optional[int] = None,
     vencimento_inicio: Optional[date] = None,
     vencimento_fim: Optional[date] = None,
+    descricao_contem: Optional[str] = None,
+    documento_referencia: Optional[str] = None,
     current_user: UserInDB = Depends(get_current_user)
 ):
     """
     Lista todas as contas a pagar cadastradas no sistema.
-    Pode filtrar por status, fornecedor e período de vencimento.
+    Pode filtrar por status, fornecedor, período de vencimento, descrição e documento_referencia (código do pedido).
     """
-    query = "SELECT * FROM contas_pagar WHERE 1=1"
+    query = (
+        "SELECT cp.*, "
+        "f.nome AS fornecedor_nome, "
+        "v.nome AS vendedor_nome "
+        "FROM contas_pagar cp "
+        "LEFT JOIN parceiros f ON cp.fornecedor_id = f.id "
+        "LEFT JOIN vendedores v ON cp.vendedor_id = v.id "
+        "WHERE 1=1"
+    )
     params = []
     
     if status is not None:
-        query += " AND status = %s"
+        query += " AND cp.status = %s"
         params.append(status)
     
     if fornecedor_id is not None:
-        query += " AND fornecedor_id = %s"
+        query += " AND cp.fornecedor_id = %s"
         params.append(fornecedor_id)
     
     if vencimento_inicio is not None:
-        query += " AND data_vencimento >= %s"
+        query += " AND cp.data_vencimento >= %s"
         params.append(vencimento_inicio)
     
     if vencimento_fim is not None:
-        query += " AND data_vencimento <= %s"
+        query += " AND cp.data_vencimento <= %s"
         params.append(vencimento_fim)
     
-    query += " ORDER BY data_vencimento"
+    if descricao_contem is not None:
+        query += " AND cp.descricao LIKE %s"
+        params.append(f"%{descricao_contem}%")
+    
+    if documento_referencia is not None:
+        query += " AND cp.documento_referencia = %s"
+        params.append(documento_referencia)
+    
+    query += " ORDER BY cp.data_vencimento ASC"
     
     with get_db_cursor() as cursor:
         cursor.execute(query, params)
@@ -109,45 +134,47 @@ async def criar_conta_pagar(
     """
     Cria uma nova conta a pagar no sistema.
     """
-    # Verifica se o fornecedor existe
-    with get_db_cursor() as cursor:
-        cursor.execute(
-            "SELECT id, tipo FROM parceiros WHERE id = %s",
-            (conta.fornecedor_id,)
-        )
-        fornecedor = cursor.fetchone()
-        
-        if not fornecedor:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Fornecedor não encontrado"
-            )
-        
-        if fornecedor["tipo"] not in ["fornecedor", "ambos"]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="O parceiro selecionado não é um fornecedor"
-            )
-        
-        # Verifica se o pedido de compra existe (se fornecido)
-        if conta.pedido_compra_id:
+    # Verifica se o fornecedor existe (se fornecido)
+    if conta.fornecedor_id:
+        with get_db_cursor() as cursor:
             cursor.execute(
-                "SELECT id FROM pedidos_compra WHERE id = %s",
-                (conta.pedido_compra_id,)
+                "SELECT id, tipo FROM parceiros WHERE id = %s",
+                (conta.fornecedor_id,)
+            )
+            fornecedor = cursor.fetchone()
+            
+            if not fornecedor:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Fornecedor não encontrado"
+                )
+            
+            if fornecedor["tipo"] not in ["fornecedor", "ambos"]:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="O parceiro selecionado não é um fornecedor"
+                )
+    
+    # Verifica se o vendedor existe (se fornecido)
+    if conta.vendedor_id:
+        with get_db_cursor() as cursor:
+            cursor.execute(
+                "SELECT id FROM vendedores WHERE id = %s",
+                (conta.vendedor_id,)
             )
             if not cursor.fetchone():
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Pedido de compra não encontrado"
+                    detail="Vendedor não encontrado"
                 )
-        
-        # Verifica se a forma de pagamento é válida
-        formas_pagamento = ["dinheiro", "cartao", "boleto", "pix", "transferencia", "cheque"]
-        if conta.forma_pagamento not in formas_pagamento:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Forma de pagamento inválida. Deve ser uma das seguintes: {', '.join(formas_pagamento)}"
-            )
+    
+    # Verifica se a forma de pagamento é válida
+    formas_pagamento = ["dinheiro", "cartao", "boleto", "pix", "transferencia", "cheque"]
+    if conta.forma_pagamento not in formas_pagamento:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Forma de pagamento inválida. Deve ser uma das seguintes: {', '.join(formas_pagamento)}"
+        )
     
     # Cria a conta a pagar
     with get_db_cursor(commit=True) as cursor:
@@ -167,15 +194,14 @@ async def criar_conta_pagar(
         cursor.execute(
             """
             INSERT INTO contas_pagar (
-                codigo, fornecedor_id, descricao, valor, data_vencimento,
-                pedido_compra_id, status, forma_pagamento, observacoes, usuario_id
+                codigo, fornecedor_id, vendedor_id, descricao, valor, data_vencimento,
+                pedido_venda_id, documento_referencia, status, forma_pagamento, observacoes, usuario_id
             )
-            VALUES (%s, %s, %s, %s, %s, %s, 'pendente', %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'pendente', %s, %s, %s)
             """,
             (
-                codigo, conta.fornecedor_id, conta.descricao, conta.valor,
-                conta.data_vencimento, conta.pedido_compra_id,
-                conta.forma_pagamento, conta.observacoes, current_user.id
+                codigo, conta.fornecedor_id, conta.vendedor_id, conta.descricao, conta.valor,
+                conta.data_vencimento, conta.pedido_venda_id, conta.documento_referencia, conta.forma_pagamento, conta.observacoes, current_user.id
             )
         )
         
@@ -216,7 +242,7 @@ async def atualizar_conta_pagar(
             )
         
         # Verifica se a conta pode ser alterada
-        if conta_atual["status"] == "pago" and not current_user.admin:
+        if conta_atual["status"] == "pago" and current_user.nivel_acesso != "admin":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Não é possível alterar uma conta já paga (apenas administradores podem)"
@@ -260,20 +286,22 @@ async def atualizar_conta_pagar(
     
     # Prepara os dados para atualização
     update_data = {}
-    if conta.fornecedor_id is not None:
-        update_data["fornecedor_id"] = conta.fornecedor_id
     if conta.descricao is not None:
         update_data["descricao"] = conta.descricao
+    if conta.fornecedor_id is not None:
+        update_data["fornecedor_id"] = conta.fornecedor_id
+    if conta.vendedor_id is not None:
+        update_data["vendedor_id"] = conta.vendedor_id
     if conta.valor is not None:
         update_data["valor"] = conta.valor
     if conta.data_vencimento is not None:
         update_data["data_vencimento"] = conta.data_vencimento
     if conta.data_pagamento is not None:
         update_data["data_pagamento"] = conta.data_pagamento
+    if conta.documento_referencia is not None:
+        update_data["documento_referencia"] = conta.documento_referencia
     if conta.status is not None:
         update_data["status"] = conta.status
-    if conta.forma_pagamento is not None:
-        update_data["forma_pagamento"] = conta.forma_pagamento
     if conta.observacoes is not None:
         update_data["observacoes"] = conta.observacoes
     
@@ -297,31 +325,6 @@ async def atualizar_conta_pagar(
             f"UPDATE contas_pagar SET {set_clause} WHERE id = %s",
             values
         )
-        
-        # Se o status foi alterado para "pago", registra o movimento de caixa
-        if update_data.get("status") == "pago" and conta_atual["status"] != "pago":
-            # Obtém os dados atualizados da conta
-            cursor.execute(
-                "SELECT * FROM contas_pagar WHERE id = %s",
-                (conta_id,)
-            )
-            conta_atualizada = cursor.fetchone()
-            
-            # Registra o movimento de caixa
-            cursor.execute(
-                """
-                INSERT INTO movimentos_caixa (
-                    tipo, valor, data_movimento, descricao,
-                    documento_referencia, usuario_id
-                )
-                VALUES ('saida', %s, %s, %s, %s, %s)
-                """,
-                (
-                    conta_atualizada["valor"], conta_atualizada["data_pagamento"],
-                    f"Pagamento de conta: {conta_atualizada['descricao']}",
-                    conta_atualizada["codigo"], current_user.id
-                )
-            )
         
         # Obtém os dados atualizados
         cursor.execute(

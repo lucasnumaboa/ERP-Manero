@@ -57,7 +57,7 @@ async def get_dashboard_data(month_year: str = None, current_user: UserInDB = De
         cursor.execute(query_pedidos)
         total_pedidos = cursor.fetchone()["total_pedidos"]
         
-        # Total de lucro (calculado da mesma forma que nas atividades recentes, excluindo vendas canceladas)
+        # Total de lucro (descontando comissão paga ao vendedor quando houver)
         query_lucro = f"""
             SELECT COALESCE(SUM(
                 pv.valor_total - COALESCE(pv.custo_produto, 
@@ -65,7 +65,18 @@ async def get_dashboard_data(month_year: str = None, current_user: UserInDB = De
                     FROM itens_pedido_venda i
                     JOIN produtos p ON i.produto_id = p.id
                     WHERE i.pedido_id = pv.id)
-                )
+                ) - CASE 
+                    WHEN pv.vendedor_id IS NOT NULL THEN
+                        CASE 
+                            WHEN pv.custo_produto IS NOT NULL AND pv.custo_produto > 0 THEN
+                                (SELECT COALESCE(SUM(prod.comissao * ipv.quantidade), pv.valor_total * 0.05)
+                                FROM itens_pedido_venda ipv
+                                JOIN produtos prod ON ipv.produto_id = prod.id
+                                WHERE ipv.pedido_id = pv.id)
+                            ELSE pv.valor_total * 0.05
+                        END
+                    ELSE 0
+                END
             ), 0) as total_lucro
             FROM pedidos_venda pv
             WHERE pv.status != 'Cancelada' {' AND ' + date_filter.replace('WHERE', '') if date_filter else ''}
@@ -91,7 +102,7 @@ async def get_dashboard_data(month_year: str = None, current_user: UserInDB = De
         cursor.execute(query_faturamento_pendente)
         faturamento_pendente = cursor.fetchone()["faturamento_pendente"]
         
-        # Lucro pendente (pedidos em aberto ou em andamento)
+        # Lucro pendente (pedidos em aberto ou em andamento, descontando comissão)
         query_lucro_pendente = f"""
             SELECT COALESCE(SUM(
                 pv.valor_total - COALESCE(pv.custo_produto, 
@@ -99,7 +110,18 @@ async def get_dashboard_data(month_year: str = None, current_user: UserInDB = De
                     FROM itens_pedido_venda i
                     JOIN produtos p ON i.produto_id = p.id
                     WHERE i.pedido_id = pv.id)
-                )
+                ) - CASE 
+                    WHEN pv.vendedor_id IS NOT NULL THEN
+                        CASE 
+                            WHEN pv.custo_produto IS NOT NULL AND pv.custo_produto > 0 THEN
+                                (SELECT COALESCE(SUM(prod.comissao * ipv.quantidade), pv.valor_total * 0.05)
+                                FROM itens_pedido_venda ipv
+                                JOIN produtos prod ON ipv.produto_id = prod.id
+                                WHERE ipv.pedido_id = pv.id)
+                            ELSE pv.valor_total * 0.05
+                        END
+                    ELSE 0
+                END
             ), 0) as lucro_pendente
             FROM pedidos_venda pv
             WHERE pv.status = 'Pendente' {' AND ' + date_filter.replace('WHERE', '') if date_filter else ''}
@@ -116,7 +138,7 @@ async def get_dashboard_data(month_year: str = None, current_user: UserInDB = De
         cursor.execute(query_faturamento_concluido)
         faturamento_concluido = cursor.fetchone()["faturamento_concluido"]
         
-        # Lucro concluído (pedidos concluídos)
+        # Lucro concluído (pedidos concluídos, descontando comissão)
         query_lucro_concluido = f"""
             SELECT COALESCE(SUM(
                 pv.valor_total - COALESCE(pv.custo_produto, 
@@ -124,7 +146,18 @@ async def get_dashboard_data(month_year: str = None, current_user: UserInDB = De
                     FROM itens_pedido_venda i
                     JOIN produtos p ON i.produto_id = p.id
                     WHERE i.pedido_id = pv.id)
-                )
+                ) - CASE 
+                    WHEN pv.vendedor_id IS NOT NULL THEN
+                        CASE 
+                            WHEN pv.custo_produto IS NOT NULL AND pv.custo_produto > 0 THEN
+                                (SELECT COALESCE(SUM(prod.comissao * ipv.quantidade), pv.valor_total * 0.05)
+                                FROM itens_pedido_venda ipv
+                                JOIN produtos prod ON ipv.produto_id = prod.id
+                                WHERE ipv.pedido_id = pv.id)
+                            ELSE pv.valor_total * 0.05
+                        END
+                    ELSE 0
+                END
             ), 0) as lucro_concluido
             FROM pedidos_venda pv
             WHERE pv.status IN ('Concluída', 'Finalizada') {' AND ' + date_filter.replace('WHERE', '') if date_filter else ''}
@@ -132,7 +165,7 @@ async def get_dashboard_data(month_year: str = None, current_user: UserInDB = De
         cursor.execute(query_lucro_concluido)
         lucro_concluido = cursor.fetchone()["lucro_concluido"]
         
-        # Vendas recentes com custo e lucro
+        # Vendas recentes com custo, lucro, vendedor, comissão e dados dos produtos
         query_vendas_recentes = f"""
             SELECT 
                 pv.id, 
@@ -141,22 +174,33 @@ async def get_dashboard_data(month_year: str = None, current_user: UserInDB = De
                 pv.valor_total, 
                 pv.status, 
                 pv.data_pedido,
+                pv.vendedor_id,
+                v.nome as vendedor_nome,
                 COALESCE(pv.custo_produto, 
                     (SELECT COALESCE(SUM(prod.preco_custo * i.quantidade), pv.valor_total * 0.6)
                     FROM itens_pedido_venda i
                     JOIN produtos prod ON i.produto_id = prod.id
                     WHERE i.pedido_id = pv.id)
                 ) as custo_produto,
+                pv.comissao_total as comissao_paga,
                 (
                     pv.valor_total - COALESCE(pv.custo_produto, 
                         (SELECT COALESCE(SUM(prod.preco_custo * i.quantidade), pv.valor_total * 0.6)
                         FROM itens_pedido_venda i
                         JOIN produtos prod ON i.produto_id = prod.id
                         WHERE i.pedido_id = pv.id)
-                    )
-                ) as lucro_produto
+                    ) - pv.comissao_total
+                ) as lucro_liquido,
+                (SELECT GROUP_CONCAT(CONCAT(prod.nome, ' (', i.quantidade, ')') SEPARATOR ', ')
+                 FROM itens_pedido_venda i
+                 JOIN produtos prod ON i.produto_id = prod.id
+                 WHERE i.pedido_id = pv.id) as produtos_vendidos,
+                (SELECT SUM(i.quantidade)
+                 FROM itens_pedido_venda i
+                 WHERE i.pedido_id = pv.id) as quantidade_total
             FROM pedidos_venda pv
             JOIN parceiros p ON pv.cliente_id = p.id
+            LEFT JOIN vendedores v ON pv.vendedor_id = v.id
             {date_filter}
             ORDER BY pv.data_pedido DESC
             LIMIT 5
@@ -221,6 +265,15 @@ async def get_dashboard_data(month_year: str = None, current_user: UserInDB = De
         cursor.execute(query_vendas_periodo)
         vendas_por_periodo = cursor.fetchall()
 
+        # Total de comissão paga no mês
+        query_comissao_paga = f"""
+            SELECT COALESCE(SUM(pv.comissao_total), 0) as comissao_paga_total
+            FROM pedidos_venda pv
+            WHERE pv.status IN ('Concluída', 'Finalizada') {' AND ' + date_filter.replace('WHERE', '') if date_filter else ''}
+        """
+        cursor.execute(query_comissao_paga)
+        comissao_paga_total = cursor.fetchone()["comissao_paga_total"]
+
         # Calcular variação percentual (simulada para este exemplo)
         # Em uma implementação real, você compararia com o mês anterior
         
@@ -250,6 +303,7 @@ async def get_dashboard_data(month_year: str = None, current_user: UserInDB = De
             "lucro_pendente": float(lucro_pendente),
             "faturamento_concluido": float(faturamento_concluido),
             "lucro_concluido": float(lucro_concluido),
+            "comissao_paga_total": float(comissao_paga_total),
             "vendas_recentes": vendas_recentes,
             "produtos_mais_vendidos": produtos_mais_vendidos,
             "vendas_por_periodo": vendas_por_periodo

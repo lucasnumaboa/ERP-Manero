@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from typing import List, Optional
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from database import get_db_cursor
 from auth import get_current_user, UserInDB
 
@@ -13,6 +13,7 @@ class ItemPedidoVendaBase(BaseModel):
     quantidade: int
     preco_unitario: float
     desconto: float = 0
+    comissao_item: float = 0
 
 class ItemPedidoVendaCreate(ItemPedidoVendaBase):
     pass
@@ -26,11 +27,14 @@ class ItemPedidoVenda(ItemPedidoVendaBase):
 class PedidoVendaBase(BaseModel):
     cliente_id: int
     vendedor_id: Optional[int] = None
+    condicao_pagamento_id: Optional[int] = None
     data_entrega: Optional[date] = None
     valor_frete: float = 0
     valor_desconto: float = 0
+    custo_produto: float = 0
     forma_pagamento: str = "dinheiro"
     observacoes: Optional[str] = None
+    comissao_total: float = 0
 
 class PedidoVendaCreate(PedidoVendaBase):
     itens: List[ItemPedidoVendaCreate]
@@ -38,12 +42,15 @@ class PedidoVendaCreate(PedidoVendaBase):
 class PedidoVendaUpdate(BaseModel):
     cliente_id: Optional[int] = None
     vendedor_id: Optional[int] = None
+    condicao_pagamento_id: Optional[int] = None
     data_entrega: Optional[date] = None
     status: Optional[str] = None
     valor_frete: Optional[float] = None
     valor_desconto: Optional[float] = None
+    custo_produto: Optional[float] = None
     forma_pagamento: Optional[str] = None
     observacoes: Optional[str] = None
+    comissao_total: Optional[float] = None
 
 class PedidoVenda(PedidoVendaBase):
     id: int
@@ -52,9 +59,11 @@ class PedidoVenda(PedidoVendaBase):
     status: str
     valor_produtos: float
     valor_total: float
+    custo_produto: float
     usuario_id: int
     cliente_nome: Optional[str] = None
     vendedor_nome: Optional[str] = None
+    condicao_pagamento_nome: Optional[str] = None
 
 class PedidoVendaDetalhado(PedidoVenda):
     itens: List[ItemPedidoVenda]
@@ -72,10 +81,11 @@ async def listar_pedidos_venda(
     Pode filtrar por status, cliente e vendedor.
     """
     query = (
-        "SELECT pv.*, p.nome AS cliente_nome, v.nome AS vendedor_nome "
+        "SELECT pv.*, p.nome AS cliente_nome, v.nome AS vendedor_nome, cp.nome AS condicao_pagamento_nome "
         "FROM pedidos_venda pv "
         "LEFT JOIN parceiros p ON pv.cliente_id = p.id "
         "LEFT JOIN vendedores v ON pv.vendedor_id = v.id "
+        "LEFT JOIN condicoes_pagamento cp ON pv.condicao_pagamento_id = cp.id "
         "WHERE 1=1"
     )
     params = []
@@ -246,16 +256,17 @@ async def criar_pedido_venda(
         cursor.execute(
             """
             INSERT INTO pedidos_venda (
-                codigo, cliente_id, vendedor_id, data_entrega, status,
+                codigo, cliente_id, vendedor_id, condicao_pagamento_id, data_entrega, status,
                 valor_produtos, valor_frete, valor_desconto, valor_total,
-                forma_pagamento, observacoes, usuario_id
+                custo_produto, forma_pagamento, observacoes, comissao_total, usuario_id
             )
-            VALUES (%s, %s, %s, %s, 'pendente', %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, 'pendente', %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
-                codigo, cliente["id"], pedido.vendedor_id, pedido.data_entrega,
+                codigo, cliente["id"], pedido.vendedor_id, pedido.condicao_pagamento_id, pedido.data_entrega,
                 valor_produtos, pedido.valor_frete, pedido.valor_desconto, valor_total,
-                pedido.forma_pagamento, pedido.observacoes, current_user.id
+                pedido.custo_produto, pedido.forma_pagamento, pedido.observacoes, 
+                pedido.comissao_total, current_user.id
             )
         )
         
@@ -271,13 +282,13 @@ async def criar_pedido_venda(
                 """
                 INSERT INTO itens_pedido_venda (
                     pedido_id, produto_id, quantidade, preco_unitario,
-                    desconto, subtotal
+                    desconto, subtotal, comissao_item
                 )
-                VALUES (%s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     pedido_id, item.produto_id, item.quantidade,
-                    item.preco_unitario, item.desconto, subtotal
+                    item.preco_unitario, item.desconto, subtotal, item.comissao_item
                 )
             )
             
@@ -314,6 +325,97 @@ async def criar_pedido_venda(
             (pedido_id,)
         )
         itens = cursor.fetchall()
+        
+        # Cria automaticamente conta(s) a receber para o cliente
+        # Busca a condição de pagamento se fornecida
+        numero_parcelas = 1
+        prazo_dias = 30
+        
+        if pedido.condicao_pagamento_id:
+            cursor.execute(
+                "SELECT numero_parcelas, prazo_dias FROM condicoes_pagamento WHERE id = %s",
+                (pedido.condicao_pagamento_id,)
+            )
+            condicao = cursor.fetchone()
+            if condicao:
+                numero_parcelas = condicao["numero_parcelas"]
+                prazo_dias = condicao["prazo_dias"]
+        
+        # Calcula dias por parcela
+        dias_por_parcela = prazo_dias // numero_parcelas if numero_parcelas > 0 else prazo_dias
+        
+        # Calcula a data da última parcela (será usada para contas a pagar)
+        data_ultima_parcela = date.today() + timedelta(days=dias_por_parcela * numero_parcelas)
+        
+        # Cria uma conta a receber para cada parcela
+        for parcela_num in range(1, numero_parcelas + 1):
+            # Gera o código da conta (formato: CR + ano + sequencial)
+            cursor.execute("SELECT YEAR(NOW()) as ano")
+            ano_cr = cursor.fetchone()["ano"]
+            
+            cursor.execute(
+                "SELECT COUNT(*) + 1 as seq FROM contas_receber WHERE YEAR(data_emissao) = %s",
+                (ano_cr,)
+            )
+            seq_cr = cursor.fetchone()["seq"]
+            
+            codigo_cr = f"CR{ano_cr}{seq_cr:04d}"
+            
+            # Calcula data de vencimento para esta parcela
+            data_vencimento_cr = date.today() + timedelta(days=dias_por_parcela * parcela_num)
+            
+            # Calcula o valor da parcela (divide o total pelo número de parcelas)
+            valor_parcela = valor_total / numero_parcelas
+            
+            # Monta a descrição com o número da parcela
+            descricao = f"Venda - Pedido {codigo} - Parcela {parcela_num}/{numero_parcelas}"
+            
+            cursor.execute(
+                """
+                INSERT INTO contas_receber (
+                    codigo, cliente_id, descricao, valor, data_vencimento,
+                    pedido_venda_id, documento_referencia, status, usuario_id
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, 'pendente', %s)
+                """,
+                (
+                    codigo_cr, cliente["id"], descricao,
+                    valor_parcela, data_vencimento_cr, pedido_id, codigo,
+                    current_user.id
+                )
+            )
+        
+        # Se houver vendedor, cria automaticamente uma conta a pagar para o vendedor
+        if pedido.vendedor_id:
+            # Gera o código da conta (formato: CP + ano + sequencial)
+            cursor.execute("SELECT YEAR(NOW()) as ano")
+            ano_cp = cursor.fetchone()["ano"]
+            
+            cursor.execute(
+                "SELECT COUNT(*) + 1 as seq FROM contas_pagar WHERE YEAR(data_emissao) = %s",
+                (ano_cp,)
+            )
+            seq_cp = cursor.fetchone()["seq"]
+            
+            codigo_cp = f"CP{ano_cp}{seq_cp:04d}"
+            
+            # Usa a data da última parcela como data de vencimento do contas a pagar
+            data_vencimento_cp = data_ultima_parcela
+            
+            cursor.execute(
+                """
+                INSERT INTO contas_pagar (
+                    codigo, vendedor_id, descricao, valor, data_vencimento,
+                    pedido_venda_id, documento_referencia, status, forma_pagamento, usuario_id
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, 'pendente', %s, %s)
+                """,
+                (
+                    codigo_cp, pedido.vendedor_id, f"Comissão - Pedido {codigo}",
+                    pedido.comissao_total, data_vencimento_cp, pedido_id, codigo,
+                    "transferencia", current_user.id
+                )
+            )
         
         # Monta o objeto de resposta
         pedido_detalhado = dict(novo_pedido)
@@ -448,6 +550,8 @@ async def atualizar_pedido_venda(
             update_data["vendedor_id"] = None
         else:
             update_data["vendedor_id"] = pedido.vendedor_id
+    if pedido.condicao_pagamento_id is not None:
+        update_data["condicao_pagamento_id"] = pedido.condicao_pagamento_id
     if pedido.data_entrega is not None:
         update_data["data_entrega"] = pedido.data_entrega
     if pedido.status is not None:
@@ -456,10 +560,14 @@ async def atualizar_pedido_venda(
         update_data["valor_frete"] = pedido.valor_frete
     if pedido.valor_desconto is not None:
         update_data["valor_desconto"] = pedido.valor_desconto
+    if pedido.custo_produto is not None:
+        update_data["custo_produto"] = pedido.custo_produto
     if pedido.forma_pagamento is not None:
         update_data["forma_pagamento"] = pedido.forma_pagamento
     if pedido.observacoes is not None:
         update_data["observacoes"] = pedido.observacoes
+    if pedido.comissao_total is not None:
+        update_data["comissao_total"] = pedido.comissao_total
     
     if not update_data:
         raise HTTPException(

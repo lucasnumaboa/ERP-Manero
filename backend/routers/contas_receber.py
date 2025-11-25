@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from typing import List, Optional
-from datetime import date
+from datetime import date, datetime
 from database import get_db_cursor
 from auth import get_current_user, UserInDB
 
@@ -9,12 +9,12 @@ router = APIRouter()
 
 # Modelos Pydantic
 class ContaReceberBase(BaseModel):
-    cliente_id: int
+    cliente_id: Optional[int] = None
     descricao: str
     valor: float
     data_vencimento: date
     pedido_venda_id: Optional[int] = None
-    forma_pagamento: str = "dinheiro"
+    documento_referencia: Optional[str] = None
     observacoes: Optional[str] = None
 
 class ContaReceberCreate(ContaReceberBase):
@@ -26,17 +26,18 @@ class ContaReceberUpdate(BaseModel):
     valor: Optional[float] = None
     data_vencimento: Optional[date] = None
     data_recebimento: Optional[date] = None
+    documento_referencia: Optional[str] = None
     status: Optional[str] = None
-    forma_pagamento: Optional[str] = None
     observacoes: Optional[str] = None
 
 class ContaReceber(ContaReceberBase):
     id: int
     codigo: str
-    data_emissao: str
+    data_emissao: datetime
     data_recebimento: Optional[date] = None
     status: str
     usuario_id: int
+    cliente_nome: Optional[str] = None
 
 # Rotas
 @router.get("/", response_model=List[ContaReceber])
@@ -45,32 +46,48 @@ async def listar_contas_receber(
     cliente_id: Optional[int] = None,
     vencimento_inicio: Optional[date] = None,
     vencimento_fim: Optional[date] = None,
+    descricao_contem: Optional[str] = None,
+    documento_referencia: Optional[str] = None,
     current_user: UserInDB = Depends(get_current_user)
 ):
     """
     Lista todas as contas a receber cadastradas no sistema.
-    Pode filtrar por status, cliente e período de vencimento.
+    Pode filtrar por status, cliente, período de vencimento, descrição e documento_referencia (código do pedido).
     """
-    query = "SELECT * FROM contas_receber WHERE 1=1"
+    query = (
+        "SELECT cr.*, "
+        "p.nome AS cliente_nome "
+        "FROM contas_receber cr "
+        "LEFT JOIN parceiros p ON cr.cliente_id = p.id "
+        "WHERE 1=1"
+    )
     params = []
     
     if status is not None:
-        query += " AND status = %s"
+        query += " AND cr.status = %s"
         params.append(status)
     
     if cliente_id is not None:
-        query += " AND cliente_id = %s"
+        query += " AND cr.cliente_id = %s"
         params.append(cliente_id)
     
     if vencimento_inicio is not None:
-        query += " AND data_vencimento >= %s"
+        query += " AND cr.data_vencimento >= %s"
         params.append(vencimento_inicio)
     
     if vencimento_fim is not None:
-        query += " AND data_vencimento <= %s"
+        query += " AND cr.data_vencimento <= %s"
         params.append(vencimento_fim)
     
-    query += " ORDER BY data_vencimento"
+    if descricao_contem is not None:
+        query += " AND cr.descricao LIKE %s"
+        params.append(f"%{descricao_contem}%")
+    
+    if documento_referencia is not None:
+        query += " AND cr.documento_referencia = %s"
+        params.append(documento_referencia)
+    
+    query += " ORDER BY cr.data_vencimento ASC"
     
     with get_db_cursor() as cursor:
         cursor.execute(query, params)
@@ -108,89 +125,119 @@ async def criar_conta_receber(
 ):
     """
     Cria uma nova conta a receber no sistema.
+    Se o pedido de venda tiver uma condição de pagamento, cria múltiplas parcelas.
     """
-    # Verifica se o cliente existe
-    with get_db_cursor() as cursor:
-        cursor.execute(
-            "SELECT id, tipo FROM parceiros WHERE id = %s",
-            (conta.cliente_id,)
-        )
-        cliente = cursor.fetchone()
-        
-        if not cliente:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cliente não encontrado"
-            )
-        
-        if cliente["tipo"] not in ["cliente", "ambos"]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="O parceiro selecionado não é um cliente"
-            )
-        
-        # Verifica se o pedido de venda existe (se fornecido)
-        if conta.pedido_venda_id:
+    from datetime import timedelta
+    
+    # Verifica se o cliente existe (se fornecido)
+    if conta.cliente_id:
+        with get_db_cursor() as cursor:
             cursor.execute(
-                "SELECT id FROM pedidos_venda WHERE id = %s",
+                "SELECT id, tipo FROM parceiros WHERE id = %s",
+                (conta.cliente_id,)
+            )
+            cliente = cursor.fetchone()
+            
+            if not cliente:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Cliente não encontrado"
+                )
+            
+            if cliente["tipo"] not in ["cliente", "ambos"]:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="O parceiro selecionado não é um cliente"
+                )
+    
+    # Verifica se o pedido de venda existe (se fornecido) e busca a condição de pagamento
+    numero_parcelas = 1
+    prazo_dias = 30
+    
+    if conta.pedido_venda_id:
+        with get_db_cursor() as cursor:
+            cursor.execute(
+                "SELECT id, condicao_pagamento_id FROM pedidos_venda WHERE id = %s",
                 (conta.pedido_venda_id,)
             )
-            if not cursor.fetchone():
+            pedido = cursor.fetchone()
+            
+            if not pedido:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Pedido de venda não encontrado"
                 )
-        
-        # Verifica se a forma de pagamento é válida
-        formas_pagamento = ["dinheiro", "cartao", "boleto", "pix", "transferencia", "cheque"]
-        if conta.forma_pagamento not in formas_pagamento:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Forma de pagamento inválida. Deve ser uma das seguintes: {', '.join(formas_pagamento)}"
-            )
+            
+            # Se o pedido tem condição de pagamento, busca os dados
+            if pedido["condicao_pagamento_id"]:
+                cursor.execute(
+                    "SELECT numero_parcelas, prazo_dias FROM condicoes_pagamento WHERE id = %s",
+                    (pedido["condicao_pagamento_id"],)
+                )
+                condicao = cursor.fetchone()
+                if condicao:
+                    numero_parcelas = condicao["numero_parcelas"]
+                    prazo_dias = condicao["prazo_dias"]
     
-    # Cria a conta a receber
+    # Calcula dias por parcela
+    dias_por_parcela = prazo_dias // numero_parcelas if numero_parcelas > 0 else prazo_dias
+    
+    # Cria uma conta a receber para cada parcela
+    primeira_conta = None
     with get_db_cursor(commit=True) as cursor:
-        # Gera o código da conta (formato: CR + ano + sequencial)
-        cursor.execute("SELECT YEAR(NOW()) as ano")
-        ano = cursor.fetchone()["ano"]
-        
-        cursor.execute(
-            "SELECT COUNT(*) + 1 as seq FROM contas_receber WHERE YEAR(data_emissao) = %s",
-            (ano,)
-        )
-        seq = cursor.fetchone()["seq"]
-        
-        codigo = f"CR{ano}{seq:04d}"
-        
-        # Insere a conta a receber
-        cursor.execute(
-            """
-            INSERT INTO contas_receber (
-                codigo, cliente_id, descricao, valor, data_vencimento,
-                pedido_venda_id, status, forma_pagamento, observacoes, usuario_id
+        for parcela_num in range(1, numero_parcelas + 1):
+            # Gera o código da conta (formato: CR + ano + sequencial)
+            cursor.execute("SELECT YEAR(NOW()) as ano")
+            ano = cursor.fetchone()["ano"]
+            
+            cursor.execute(
+                "SELECT COUNT(*) + 1 as seq FROM contas_receber WHERE YEAR(data_emissao) = %s",
+                (ano,)
             )
-            VALUES (%s, %s, %s, %s, %s, %s, 'pendente', %s, %s, %s)
-            """,
-            (
-                codigo, conta.cliente_id, conta.descricao, conta.valor,
-                conta.data_vencimento, conta.pedido_venda_id,
-                conta.forma_pagamento, conta.observacoes, current_user.id
+            seq = cursor.fetchone()["seq"]
+            
+            codigo = f"CR{ano}{seq:04d}"
+            
+            # Calcula data de vencimento para esta parcela
+            data_vencimento = conta.data_vencimento + timedelta(days=dias_por_parcela * (parcela_num - 1))
+            
+            # Calcula o valor da parcela (divide o total pelo número de parcelas)
+            valor_parcela = conta.valor / numero_parcelas
+            
+            # Monta a descrição com o número da parcela (se houver múltiplas)
+            if numero_parcelas > 1:
+                descricao = f"{conta.descricao} - Parcela {parcela_num}/{numero_parcelas}"
+            else:
+                descricao = conta.descricao
+            
+            # Insere a conta a receber
+            cursor.execute(
+                """
+                INSERT INTO contas_receber (
+                    codigo, cliente_id, descricao, valor, data_vencimento,
+                    pedido_venda_id, documento_referencia, status, observacoes, usuario_id
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, 'pendente', %s, %s)
+                """,
+                (
+                    codigo, conta.cliente_id, descricao, valor_parcela,
+                    data_vencimento, conta.pedido_venda_id, conta.documento_referencia,
+                    conta.observacoes, current_user.id
+                )
             )
-        )
-        
-        # Obtém o ID da conta criada
-        cursor.execute("SELECT LAST_INSERT_ID()")
-        conta_id = cursor.fetchone()["LAST_INSERT_ID()"]
-        
-        # Obtém os dados da conta criada
-        cursor.execute(
-            "SELECT * FROM contas_receber WHERE id = %s",
-            (conta_id,)
-        )
-        nova_conta = cursor.fetchone()
+            
+            # Armazena a primeira conta criada para retornar
+            if parcela_num == 1:
+                cursor.execute("SELECT LAST_INSERT_ID()")
+                conta_id = cursor.fetchone()["LAST_INSERT_ID()"]
+                
+                cursor.execute(
+                    "SELECT * FROM contas_receber WHERE id = %s",
+                    (conta_id,)
+                )
+                primeira_conta = cursor.fetchone()
     
-    return nova_conta
+    return primeira_conta
 
 @router.put("/{conta_id}", response_model=ContaReceber)
 async def atualizar_conta_receber(
@@ -216,7 +263,7 @@ async def atualizar_conta_receber(
             )
         
         # Verifica se a conta pode ser alterada
-        if conta_atual["status"] == "recebido" and not current_user.admin:
+        if conta_atual["status"] == "recebido" and current_user.nivel_acesso != "admin":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Não é possível alterar uma conta já recebida (apenas administradores podem)"
@@ -249,14 +296,6 @@ async def atualizar_conta_receber(
                 detail="Status inválido. Deve ser 'pendente', 'recebido' ou 'cancelado'"
             )
         
-        # Verifica se a forma de pagamento é válida (se fornecida)
-        if conta.forma_pagamento:
-            formas_pagamento = ["dinheiro", "cartao", "boleto", "pix", "transferencia", "cheque"]
-            if conta.forma_pagamento not in formas_pagamento:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Forma de pagamento inválida. Deve ser uma das seguintes: {', '.join(formas_pagamento)}"
-                )
     
     # Prepara os dados para atualização
     update_data = {}
@@ -270,10 +309,10 @@ async def atualizar_conta_receber(
         update_data["data_vencimento"] = conta.data_vencimento
     if conta.data_recebimento is not None:
         update_data["data_recebimento"] = conta.data_recebimento
+    if conta.documento_referencia is not None:
+        update_data["documento_referencia"] = conta.documento_referencia
     if conta.status is not None:
         update_data["status"] = conta.status
-    if conta.forma_pagamento is not None:
-        update_data["forma_pagamento"] = conta.forma_pagamento
     if conta.observacoes is not None:
         update_data["observacoes"] = conta.observacoes
     
@@ -297,31 +336,6 @@ async def atualizar_conta_receber(
             f"UPDATE contas_receber SET {set_clause} WHERE id = %s",
             values
         )
-        
-        # Se o status foi alterado para "recebido", registra o movimento de caixa
-        if update_data.get("status") == "recebido" and conta_atual["status"] != "recebido":
-            # Obtém os dados atualizados da conta
-            cursor.execute(
-                "SELECT * FROM contas_receber WHERE id = %s",
-                (conta_id,)
-            )
-            conta_atualizada = cursor.fetchone()
-            
-            # Registra o movimento de caixa
-            cursor.execute(
-                """
-                INSERT INTO movimentos_caixa (
-                    tipo, valor, data_movimento, descricao,
-                    documento_referencia, usuario_id
-                )
-                VALUES ('entrada', %s, %s, %s, %s, %s)
-                """,
-                (
-                    conta_atualizada["valor"], conta_atualizada["data_recebimento"],
-                    f"Recebimento de conta: {conta_atualizada['descricao']}",
-                    conta_atualizada["codigo"], current_user.id
-                )
-            )
         
         # Obtém os dados atualizados
         cursor.execute(
