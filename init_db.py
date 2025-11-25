@@ -158,6 +158,11 @@ tables = {
             comissao_percentual DECIMAL(5, 2) DEFAULT 0,
             usuario_id INT,
             ativo BOOLEAN DEFAULT TRUE,
+            banco VARCHAR(100),
+            agencia VARCHAR(20),
+            conta VARCHAR(20),
+            pix VARCHAR(255),
+            nome_destinatario VARCHAR(100),
             data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
         )
@@ -210,6 +215,19 @@ tables = {
         )
     """,
     
+    # Tabela de condição de pagamento
+    "condicoes_pagamento": """
+        CREATE TABLE IF NOT EXISTS condicoes_pagamento (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            codigo VARCHAR(20) NOT NULL UNIQUE,
+            nome VARCHAR(100) NOT NULL,
+            prazo_dias INT NOT NULL,
+            numero_parcelas INT NOT NULL,
+            ativo BOOLEAN DEFAULT TRUE,
+            data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """,
+    
     # Tabela de pedidos de venda
     "pedidos_venda": """
         CREATE TABLE IF NOT EXISTS pedidos_venda (
@@ -217,6 +235,7 @@ tables = {
             codigo VARCHAR(20) NOT NULL,
             cliente_id INT NOT NULL,
             vendedor_id INT,
+            condicao_pagamento_id INT,
             data_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             data_entrega DATE,
             status ENUM('Pendente', 'Finalizada', 'Cancelada') DEFAULT 'Pendente',
@@ -225,11 +244,13 @@ tables = {
             valor_desconto DECIMAL(10, 2) DEFAULT 0,
             valor_total DECIMAL(10, 2) DEFAULT 0,
             custo_produto DECIMAL(10, 2) DEFAULT 0,
+            comissao_total DECIMAL(10, 2) DEFAULT 0,
             forma_pagamento ENUM('dinheiro', 'cartao_credito', 'cartao_debito', 'boleto', 'pix', 'transferencia') DEFAULT 'dinheiro',
             observacoes TEXT,
             usuario_id INT,
             FOREIGN KEY (cliente_id) REFERENCES parceiros(id),
             FOREIGN KEY (vendedor_id) REFERENCES vendedores(id),
+            FOREIGN KEY (condicao_pagamento_id) REFERENCES condicoes_pagamento(id),
             FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
         )
     """,
@@ -244,6 +265,7 @@ tables = {
             preco_unitario DECIMAL(10, 2) NOT NULL,
             desconto DECIMAL(10, 2) DEFAULT 0,
             subtotal DECIMAL(10, 2) NOT NULL,
+            comissao_item DECIMAL(10, 2) DEFAULT 0,
             FOREIGN KEY (pedido_id) REFERENCES pedidos_venda(id),
             FOREIGN KEY (produto_id) REFERENCES produtos(id)
         )
@@ -306,6 +328,8 @@ tables = {
             banco VARCHAR(100),
             agencia VARCHAR(20),
             conta VARCHAR(20),
+            pix VARCHAR(255),
+            nome_destinatario VARCHAR(100),
             saldo_inicial DECIMAL(10, 2) DEFAULT 0,
             saldo_atual DECIMAL(10, 2) DEFAULT 0,
             ativo BOOLEAN DEFAULT TRUE,
@@ -317,20 +341,25 @@ tables = {
     "contas_pagar": """
         CREATE TABLE IF NOT EXISTS contas_pagar (
             id INT AUTO_INCREMENT PRIMARY KEY,
+            codigo VARCHAR(20),
             descricao VARCHAR(255) NOT NULL,
             fornecedor_id INT,
+            vendedor_id INT,
             valor DECIMAL(10, 2) NOT NULL,
-            data_emissao DATE NOT NULL,
+            data_emissao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             data_vencimento DATE NOT NULL,
             data_pagamento DATE,
-            status ENUM('aberto', 'pago', 'cancelado') DEFAULT 'aberto',
+            status ENUM('pendente', 'pago', 'cancelado') DEFAULT 'pendente',
             forma_pagamento ENUM('dinheiro', 'cartao', 'boleto', 'pix', 'transferencia'),
             conta_bancaria_id INT,
+            pedido_venda_id INT,
             documento_referencia VARCHAR(50),
             observacoes TEXT,
             usuario_id INT,
             FOREIGN KEY (fornecedor_id) REFERENCES parceiros(id),
+            FOREIGN KEY (vendedor_id) REFERENCES vendedores(id),
             FOREIGN KEY (conta_bancaria_id) REFERENCES contas_bancarias(id),
+            FOREIGN KEY (pedido_venda_id) REFERENCES pedidos_venda(id),
             FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
         )
     """,
@@ -339,20 +368,23 @@ tables = {
     "contas_receber": """
         CREATE TABLE IF NOT EXISTS contas_receber (
             id INT AUTO_INCREMENT PRIMARY KEY,
+            codigo VARCHAR(20),
             descricao VARCHAR(255) NOT NULL,
             cliente_id INT,
             valor DECIMAL(10, 2) NOT NULL,
-            data_emissao DATE NOT NULL,
+            data_emissao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             data_vencimento DATE NOT NULL,
             data_recebimento DATE,
-            status ENUM('aberto', 'recebido', 'cancelado') DEFAULT 'aberto',
+            status ENUM('pendente', 'recebido', 'cancelado') DEFAULT 'pendente',
             forma_recebimento ENUM('dinheiro', 'cartao', 'boleto', 'pix', 'transferencia'),
             conta_bancaria_id INT,
+            pedido_venda_id INT,
             documento_referencia VARCHAR(50),
             observacoes TEXT,
             usuario_id INT,
             FOREIGN KEY (cliente_id) REFERENCES parceiros(id),
             FOREIGN KEY (conta_bancaria_id) REFERENCES contas_bancarias(id),
+            FOREIGN KEY (pedido_venda_id) REFERENCES pedidos_venda(id),
             FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
         )
     """,
@@ -561,6 +593,31 @@ try:
     
 except mysql.connector.Error as err:
     print(f"Erro ao criar grupos de usuários: {err}")
+
+# Insere condições de pagamento padrão
+try:
+    condicoes_pagamento = [
+        ('CP001', 'À Vista', 0, 1),
+        ('CP002', '30 dias', 30, 1),
+        ('CP003', '2x 30 dias', 30, 2),
+        ('CP004', '3x 30 dias', 30, 3),
+        ('CP005', '45 dias', 45, 1),
+        ('CP006', '2x 45 dias', 45, 2),
+        ('CP007', '60 dias', 60, 1),
+        ('CP008', '90 dias', 90, 1),
+    ]
+    
+    for codigo, nome, prazo_dias, numero_parcelas in condicoes_pagamento:
+        cursor.execute("""
+            INSERT INTO condicoes_pagamento (codigo, nome, prazo_dias, numero_parcelas)
+            VALUES (%s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE nome = VALUES(nome), prazo_dias = VALUES(prazo_dias), numero_parcelas = VALUES(numero_parcelas)
+        """, (codigo, nome, prazo_dias, numero_parcelas))
+    
+    conn.commit()
+    print("Condições de pagamento padrão criadas com sucesso!")
+except mysql.connector.Error as err:
+    print(f"Erro ao criar condições de pagamento: {err}")
 
 print("Inicialização do banco de dados concluída com sucesso! ✅")
 
