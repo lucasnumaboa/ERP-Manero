@@ -45,6 +45,10 @@ async function checkPagePermissions() {
                 view: 'estoque_visualizar',
                 edit: 'estoque_editar'
             },
+            'exportar_estoque.html': {
+                view: 'estoque_visualizar',
+                edit: 'estoque_editar'
+            },
             'financeiro.html': {
                 view: 'financeiro_visualizar',
                 edit: 'financeiro_editar'
@@ -64,6 +68,10 @@ async function checkPagePermissions() {
             'relatorios.html': {
                 view: 'dashboard_visualizar',
                 edit: 'dashboard_editar'
+            },
+            'metas.html': {
+                view: 'metas_visualizar',
+                edit: 'metas_editar'
             },
             'configuracoes.html': {
                 view: 'configuracoes_visualizar',

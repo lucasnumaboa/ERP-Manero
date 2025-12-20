@@ -237,7 +237,9 @@ async function getUserPermissions() {
                 configuracoes_visualizar: true,
                 configuracoes_editar: true,
                 financeiro_visualizar: true,
-                financeiro_editar: true
+                financeiro_editar: true,
+                metas_visualizar: true,
+                metas_editar: true
             };
         }
         

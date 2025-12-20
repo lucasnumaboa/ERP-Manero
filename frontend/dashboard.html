@@ -11,7 +11,8 @@
     <link rel="stylesheet" href="css/submenu.css">
     <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/permissions.css">
+    <link rel="stylesheet" href="css/theme-dark.css">
+    <link rel="stylesheet" href="css/theme-light.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -59,6 +60,15 @@
                     <i class="fas fa-bars"></i>
                 </button>
             </div>
+            <!-- Theme Switch -->
+            <div class="theme-switch-wrapper">
+                <span class="switch-label"><i class="fas fa-moon"></i></span>
+                <label class="theme-switch">
+                    <input type="checkbox" id="themeSwitch">
+                    <span class="slider"></span>
+                </label>
+                <span class="switch-label"><i class="fas fa-sun"></i></span>
+            </div>
             <div class="sidebar-user">
                 <div class="user-avatar">
                     <i class="fas fa-user-circle"></i>
@@ -70,57 +80,98 @@
             </div>
             <nav class="sidebar-nav">
                 <ul>
+                    <!-- Links Diretos -->
                     <li>
-                        <a href="homepage.html"><i class="fas fa-home"></i> Home</a>
-                    </li>
-                    <li class="active">
-                        <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-                    </li>
-                </ul>
-                
-                <!-- Menu Principal -->
-                <ul>
-                    <li>
-                        <a href="produtos.html"><i class="fas fa-box"></i> Produtos</a>
+                        <a href="homepage.html"><i class="fas fa-home"></i> <span>Home</span></a>
                     </li>
                     <li>
-                        <a href="categorias.html"><i class="fas fa-tags"></i> Categorias</a>
+                        <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
                     </li>
-                    <li>
-                        <a href="estoque.html"><i class="fas fa-warehouse"></i> Estoque</a>
+                    
+                    <li class="nav-separator"></li>
+                    
+                    <!-- Grupo: Vendas -->
+                    <li class="nav-group">
+                        <div class="nav-group-header" data-group="vendas">
+                            <span><i class="fas fa-shopping-cart group-icon"></i> Vendas</span>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </div>
+                        <div class="nav-group-items">
+                            <a href="vendas.html"><i class="fas fa-shopping-cart"></i> <span>Vendas</span></a>
+                            <a href="clientes.html"><i class="fas fa-users"></i> <span>Clientes</span></a>
+                            <a href="vendedores.html"><i class="fas fa-user-tie"></i> <span>Vendedores</span></a>
+                            <a href="plataformas_venda.html"><i class="fas fa-store"></i> <span>Plataformas</span></a>
+                            <a href="metas.html"><i class="fas fa-bullseye"></i> <span>Metas</span></a>
+                        </div>
                     </li>
-                    <li>
-                        <a href="clientes.html"><i class="fas fa-users"></i> Clientes</a>
+                    
+                    <!-- Grupo: Compras e Estoque -->
+                    <li class="nav-group">
+                        <div class="nav-group-header" data-group="compras">
+                            <span><i class="fas fa-truck group-icon"></i> Compras</span>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </div>
+                        <div class="nav-group-items">
+                            <a href="compras.html"><i class="fas fa-truck"></i> <span>Compras</span></a>
+                            <a href="fornecedores.html"><i class="fas fa-industry"></i> <span>Fornecedores</span></a>
+                        </div>
                     </li>
-                    <li>
-                        <a href="vendas.html"><i class="fas fa-shopping-cart"></i> Vendas</a>
+                    
+                    <!-- Grupo: Produtos -->
+                    <li class="nav-group">
+                        <div class="nav-group-header" data-group="produtos">
+                            <span><i class="fas fa-box group-icon"></i> Produtos</span>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </div>
+                        <div class="nav-group-items">
+                            <a href="produtos.html"><i class="fas fa-box"></i> <span>Produtos</span></a>
+                            <a href="categorias.html"><i class="fas fa-tags"></i> <span>Categorias</span></a>
+                            <a href="estoque.html"><i class="fas fa-warehouse"></i> <span>Estoque</span></a>
+                            <a href="exportar_estoque.html"><i class="fas fa-file-export"></i> <span>Exportar</span></a>
+                        </div>
                     </li>
-                    <li>
-                        <a href="vendedores.html"><i class="fas fa-user-tie"></i> Vendedores</a>
+                    
+                    <!-- Grupo: Financeiro -->
+                    <li class="nav-group">
+                        <div class="nav-group-header" data-group="financeiro">
+                            <span><i class="fas fa-dollar-sign group-icon"></i> Financeiro</span>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </div>
+                        <div class="nav-group-items">
+                            <a href="contas_pagar.html"><i class="fas fa-money-bill-wave"></i> <span>Contas a Pagar</span></a>
+                            <a href="contas_receber.html"><i class="fas fa-hand-holding-usd"></i> <span>Contas a Receber</span></a>
+                            <a href="condicoes_pagamento.html"><i class="fas fa-percent"></i> <span>Condições Pgto</span></a>
+                        </div>
                     </li>
-                    <li>
-                        <a href="compras.html"><i class="fas fa-truck"></i> Compras</a>
+                    
+                    <!-- Grupo: Relatórios -->
+                    <li class="nav-group">
+                        <div class="nav-group-header" data-group="relatorios">
+                            <span><i class="fas fa-chart-bar group-icon"></i> Relatórios</span>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </div>
+                        <div class="nav-group-items">
+                            <a href="relatorios.html"><i class="fas fa-chart-line"></i> <span>Relatórios</span></a>
+                        </div>
                     </li>
-                    <li>
-                        <a href="fornecedores.html"><i class="fas fa-industry"></i> Fornecedores</a>
+                    
+                    <li class="nav-separator"></li>
+                    
+                    <!-- Grupo: Sistema -->
+                    <li class="nav-group">
+                        <div class="nav-group-header" data-group="sistema">
+                            <span><i class="fas fa-cog group-icon"></i> Sistema</span>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </div>
+                        <div class="nav-group-items">
+                            <a href="configuracoes.html"><i class="fas fa-cog"></i> <span>Configurações</span></a>
+                        </div>
                     </li>
-                    <li>
-                        <a href="contas_pagar.html"><i class="fas fa-money-bill-wave"></i> Contas a Pagar</a>
-                    </li>
-                    <li>
-                        <a href="contas_receber.html"><i class="fas fa-hand-holding-usd"></i> Contas a Receber</a>
-                    </li>
-                    <li>
-                        <a href="condicoes_pagamento.html"><i class="fas fa-percent"></i> Condições de Pagamento</a>
-                    </li>
-                    <li>
-                        <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
-                    </li>
-                    <li>
-                        <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
-                    </li>
+                    
+                    <li class="nav-separator"></li>
+                    
                     <li class="logout">
-                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</a>
+                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Sair</span></a>
                     </li>
                 </ul>
             </nav>
@@ -376,6 +427,9 @@
     <script src="js/auth.js"></script>
     <script src="js/permissions.js"></script>
     <script src="js/sidebar.js"></script>
+    <script src="js/sidebar-groups.js"></script>
     <script src="js/dashboard.js"></script>
+    <script src="js/internal-animation.js"></script>
+    <script src="js/theme-switcher.js"></script>
 </body>
 </html>

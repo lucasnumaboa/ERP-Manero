@@ -1,0 +1,430 @@
+/**
+ * Tema Next.js/Vercel para ERP Maneiro
+ * Visual moderno com cores escuras e animações suaves
+ */
+
+:root {
+    --nextjs-bg-primary: #0a0a0a;
+    --nextjs-bg-secondary: #111111;
+    --nextjs-bg-tertiary: #171717;
+    --nextjs-bg-card: #1a1a1a;
+    --nextjs-border: #2a2a2a;
+    --nextjs-border-hover: #3a3a3a;
+    --nextjs-text-primary: #ededed;
+    --nextjs-text-secondary: #a1a1a1;
+    --nextjs-text-muted: #666666;
+    --nextjs-accent: #0070f3;
+    --nextjs-accent-hover: #0060df;
+    --nextjs-accent-light: rgba(0, 112, 243, 0.1);
+    --nextjs-success: #50e3c2;
+    --nextjs-warning: #f5a623;
+    --nextjs-danger: #e00;
+    --nextjs-gradient-start: #7928ca;
+    --nextjs-gradient-end: #ff0080;
+}
+
+/* Aplicar tema escuro ao body */
+body.theme-nextjs {
+    background: var(--nextjs-bg-primary);
+    color: var(--nextjs-text-primary);
+}
+
+/* Sidebar com tema escuro */
+body.theme-nextjs .sidebar {
+    background: linear-gradient(180deg, var(--nextjs-bg-secondary) 0%, var(--nextjs-bg-primary) 100%);
+    border-right: 1px solid var(--nextjs-border);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+}
+
+body.theme-nextjs .sidebar-header {
+    border-bottom: 1px solid var(--nextjs-border);
+    background: rgba(0, 112, 243, 0.05);
+}
+
+body.theme-nextjs .sidebar-user {
+    border-bottom: 1px solid var(--nextjs-border);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+body.theme-nextjs .sidebar-nav a {
+    color: var(--nextjs-text-secondary);
+    border-radius: 8px;
+    margin: 4px 8px;
+    transition: all 0.2s ease;
+}
+
+body.theme-nextjs .sidebar-nav a:hover {
+    background: var(--nextjs-accent-light);
+    color: var(--nextjs-text-primary);
+    transform: translateX(4px);
+}
+
+body.theme-nextjs .sidebar-nav li.active a {
+    background: linear-gradient(90deg, var(--nextjs-accent) 0%, var(--nextjs-accent-hover) 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 112, 243, 0.3);
+}
+
+/* Main Content */
+body.theme-nextjs .main-content {
+    background: var(--nextjs-bg-primary);
+}
+
+body.theme-nextjs .content {
+    background: transparent;
+}
+
+/* Page Header */
+body.theme-nextjs .page-header h1 {
+    color: var(--nextjs-text-primary);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+body.theme-nextjs .page-header p {
+    color: var(--nextjs-text-secondary);
+}
+
+/* Cards e Containers */
+body.theme-nextjs .card,
+body.theme-nextjs .stat-card,
+body.theme-nextjs .table-container,
+body.theme-nextjs .filter-container {
+    background: var(--nextjs-bg-card);
+    border: 1px solid var(--nextjs-border);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+body.theme-nextjs .card:hover,
+body.theme-nextjs .stat-card:hover {
+    border-color: var(--nextjs-border-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Tabelas */
+body.theme-nextjs .data-table {
+    background: transparent;
+}
+
+body.theme-nextjs .data-table thead {
+    background: var(--nextjs-bg-tertiary);
+}
+
+body.theme-nextjs .data-table th {
+    color: var(--nextjs-text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--nextjs-border);
+}
+
+body.theme-nextjs .data-table td {
+    color: var(--nextjs-text-primary);
+    border-bottom: 1px solid var(--nextjs-border);
+}
+
+body.theme-nextjs .data-table tbody tr {
+    transition: background 0.2s ease;
+}
+
+body.theme-nextjs .data-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* Botões */
+body.theme-nextjs .btn-primary {
+    background: linear-gradient(90deg, var(--nextjs-accent) 0%, var(--nextjs-accent-hover) 100%);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    padding: 10px 20px;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(0, 112, 243, 0.3);
+}
+
+body.theme-nextjs .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 112, 243, 0.4);
+}
+
+body.theme-nextjs .btn-outline {
+    background: transparent;
+    border: 1px solid var(--nextjs-border);
+    border-radius: 8px;
+    color: var(--nextjs-text-primary);
+    transition: all 0.2s ease;
+}
+
+body.theme-nextjs .btn-outline:hover {
+    border-color: var(--nextjs-accent);
+    color: var(--nextjs-accent);
+    background: var(--nextjs-accent-light);
+}
+
+/* Inputs e Selects */
+body.theme-nextjs input,
+body.theme-nextjs select,
+body.theme-nextjs textarea {
+    background: var(--nextjs-bg-tertiary);
+    border: 1px solid var(--nextjs-border);
+    border-radius: 8px;
+    color: var(--nextjs-text-primary);
+    transition: all 0.2s ease;
+}
+
+body.theme-nextjs input:focus,
+body.theme-nextjs select:focus,
+body.theme-nextjs textarea:focus {
+    outline: none;
+    border-color: var(--nextjs-accent);
+    box-shadow: 0 0 0 3px var(--nextjs-accent-light);
+}
+
+body.theme-nextjs input::placeholder {
+    color: var(--nextjs-text-muted);
+}
+
+/* Modais */
+body.theme-nextjs .modal-content {
+    background: var(--nextjs-bg-secondary);
+    border: 1px solid var(--nextjs-border);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+body.theme-nextjs .modal-header {
+    border-bottom: 1px solid var(--nextjs-border);
+    background: rgba(0, 112, 243, 0.05);
+}
+
+body.theme-nextjs .modal-header h2 {
+    color: var(--nextjs-text-primary);
+}
+
+body.theme-nextjs .modal-footer {
+    border-top: 1px solid var(--nextjs-border);
+    background: var(--nextjs-bg-tertiary);
+}
+
+/* Labels */
+body.theme-nextjs label {
+    color: var(--nextjs-text-secondary);
+    font-weight: 500;
+}
+
+/* Status Badges */
+body.theme-nextjs .status-badge {
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+body.theme-nextjs .status-pendente {
+    background: rgba(245, 166, 35, 0.2);
+    color: var(--nextjs-warning);
+}
+
+body.theme-nextjs .status-finalizada,
+body.theme-nextjs .status-aprovada,
+body.theme-nextjs .status-recebida {
+    background: rgba(80, 227, 194, 0.2);
+    color: var(--nextjs-success);
+}
+
+body.theme-nextjs .status-cancelada {
+    background: rgba(238, 0, 0, 0.2);
+    color: var(--nextjs-danger);
+}
+
+/* Actions Bar */
+body.theme-nextjs .actions-bar {
+    background: var(--nextjs-bg-card);
+    border: 1px solid var(--nextjs-border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+/* Filtros */
+body.theme-nextjs .filter-container {
+    background: var(--nextjs-bg-card);
+}
+
+body.theme-nextjs .filter-container h2 {
+    color: var(--nextjs-text-primary);
+}
+
+body.theme-nextjs .filter-input,
+body.theme-nextjs .filter-select {
+    background: var(--nextjs-bg-tertiary);
+    border-color: var(--nextjs-border);
+    color: var(--nextjs-text-primary);
+}
+
+/* Paginação */
+body.theme-nextjs .pagination .btn-page {
+    background: var(--nextjs-bg-card);
+    border: 1px solid var(--nextjs-border);
+    color: var(--nextjs-text-secondary);
+}
+
+body.theme-nextjs .pagination .btn-page:hover {
+    border-color: var(--nextjs-accent);
+    color: var(--nextjs-accent);
+}
+
+body.theme-nextjs .pagination .btn-page.active {
+    background: var(--nextjs-accent);
+    border-color: var(--nextjs-accent);
+    color: white;
+}
+
+/* Scrollbar personalizada */
+body.theme-nextjs ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+body.theme-nextjs ::-webkit-scrollbar-track {
+    background: var(--nextjs-bg-primary);
+}
+
+body.theme-nextjs ::-webkit-scrollbar-thumb {
+    background: var(--nextjs-border);
+    border-radius: 4px;
+}
+
+body.theme-nextjs ::-webkit-scrollbar-thumb:hover {
+    background: var(--nextjs-border-hover);
+}
+
+/* Animações */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+body.theme-nextjs .card,
+body.theme-nextjs .stat-card {
+    animation: fadeIn 0.5s ease;
+}
+
+body.theme-nextjs .data-table tbody tr {
+    animation: slideIn 0.3s ease;
+}
+
+/* Efeito de brilho nos cards */
+body.theme-nextjs .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--nextjs-accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+body.theme-nextjs .stat-card:hover::before {
+    opacity: 1;
+}
+
+/* Welcome Message na Homepage */
+body.theme-nextjs .welcome-message h1 {
+    color: var(--nextjs-text-primary);
+    background: linear-gradient(90deg, var(--nextjs-gradient-start), var(--nextjs-gradient-end));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+body.theme-nextjs .welcome-message p {
+    color: var(--nextjs-text-secondary);
+}
+
+/* Shortcut Cards na Homepage */
+body.theme-nextjs .shortcut-card {
+    background: var(--nextjs-bg-card);
+    border: 1px solid var(--nextjs-border);
+    border-radius: 16px;
+    color: var(--nextjs-text-primary);
+    transition: all 0.3s ease;
+}
+
+body.theme-nextjs .shortcut-card:hover {
+    border-color: var(--nextjs-accent);
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 112, 243, 0.2);
+}
+
+body.theme-nextjs .shortcut-icon {
+    color: var(--nextjs-accent);
+    transition: transform 0.3s ease;
+}
+
+body.theme-nextjs .shortcut-card:hover .shortcut-icon {
+    transform: scale(1.1);
+}
+
+body.theme-nextjs .shortcut-title {
+    color: var(--nextjs-text-primary);
+}
+
+/* Section Headers */
+body.theme-nextjs .section-title {
+    color: var(--nextjs-text-primary);
+    border-bottom-color: var(--nextjs-accent);
+}
+
+/* Ícones de ação */
+body.theme-nextjs .btn-icon {
+    background: var(--nextjs-bg-tertiary);
+    border: 1px solid var(--nextjs-border);
+    color: var(--nextjs-text-secondary);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+body.theme-nextjs .btn-icon:hover {
+    border-color: var(--nextjs-accent);
+    color: var(--nextjs-accent);
+    background: var(--nextjs-accent-light);
+}
+
+body.theme-nextjs .btn-icon.btn-delete:hover {
+    border-color: var(--nextjs-danger);
+    color: var(--nextjs-danger);
+    background: rgba(238, 0, 0, 0.1);
+}
+
+/* Texto muted */
+body.theme-nextjs .text-muted {
+    color: var(--nextjs-text-muted) !important;
+}
+
+/* Close modal button */
+body.theme-nextjs .close-modal {
+    color: var(--nextjs-text-secondary);
+    transition: color 0.2s ease;
+}
+
+body.theme-nextjs .close-modal:hover {
+    color: var(--nextjs-text-primary);
+}

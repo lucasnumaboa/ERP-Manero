@@ -76,6 +76,8 @@ tables = {
             configuracoes_editar BOOLEAN DEFAULT FALSE,
             financeiro_visualizar BOOLEAN DEFAULT FALSE,
             financeiro_editar BOOLEAN DEFAULT FALSE,
+            metas_visualizar BOOLEAN DEFAULT FALSE,
+            metas_editar BOOLEAN DEFAULT FALSE,
             em_uso BOOLEAN DEFAULT FALSE,
             data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -109,26 +111,30 @@ tables = {
         )
     """,
     
-    # Tabela de produtos
-    "produtos": """
-        CREATE TABLE IF NOT EXISTS produtos (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            codigo VARCHAR(50) NOT NULL UNIQUE,
-            nome VARCHAR(100) NOT NULL,
-            descricao TEXT,
-            preco_custo DECIMAL(10, 2) NOT NULL,
-            preco_venda DECIMAL(10, 2) NOT NULL,
-            estoque_atual INT DEFAULT 0,
-            estoque_minimo INT DEFAULT 5,
-            categoria_id INT,
-            tipo_produto ENUM('comprado', 'fabricado') DEFAULT 'comprado',
-            comissao DECIMAL(4, 0) DEFAULT 0,
-            caminho_imagem TEXT,
-            ativo BOOLEAN DEFAULT TRUE,
-            data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (categoria_id) REFERENCES categorias_produtos(id)
-        )
-    """,
+# Tabela de produtos
+"produtos": """
+    CREATE TABLE IF NOT EXISTS produtos (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        codigo VARCHAR(50) NOT NULL UNIQUE,
+        nome VARCHAR(100) NOT NULL,
+        descricao TEXT,
+        preco_custo DECIMAL(10, 2) NOT NULL,
+        preco_venda DECIMAL(10, 2) NOT NULL,
+        estoque_atual INT DEFAULT 0,
+        estoque_minimo INT DEFAULT 5,
+        categoria_id INT,
+        tipo_produto ENUM('comprado', 'fabricado') DEFAULT 'comprado',
+        comissao DECIMAL(4, 0) DEFAULT 0,
+        caminho_imagem TEXT,
+        faturavel BOOLEAN DEFAULT TRUE,
+        ativo BOOLEAN DEFAULT TRUE,
+        usuario_id INT,
+        data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (categoria_id) REFERENCES categorias_produtos(id),
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+    )
+""",
+
     
     # Tabela de clientes e fornecedores
     "parceiros": """
@@ -228,6 +234,19 @@ tables = {
         )
     """,
     
+    # Tabela de plataformas de venda (Método de Venda)
+    "plataformas_venda": """
+        CREATE TABLE IF NOT EXISTS plataformas_venda (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nome VARCHAR(100) NOT NULL,
+            descricao TEXT,
+            url VARCHAR(255),
+            taxa_percentual DECIMAL(5, 2) DEFAULT 0,
+            ativo BOOLEAN DEFAULT TRUE,
+            data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """,
+    
     # Tabela de pedidos de venda
     "pedidos_venda": """
         CREATE TABLE IF NOT EXISTS pedidos_venda (
@@ -236,6 +255,7 @@ tables = {
             cliente_id INT NOT NULL,
             vendedor_id INT,
             condicao_pagamento_id INT,
+            plataforma_id INT,
             data_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             data_entrega DATE,
             status ENUM('Pendente', 'Finalizada', 'Cancelada') DEFAULT 'Pendente',
@@ -251,6 +271,7 @@ tables = {
             FOREIGN KEY (cliente_id) REFERENCES parceiros(id),
             FOREIGN KEY (vendedor_id) REFERENCES vendedores(id),
             FOREIGN KEY (condicao_pagamento_id) REFERENCES condicoes_pagamento(id),
+            FOREIGN KEY (plataforma_id) REFERENCES plataformas_venda(id),
             FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
         )
     """,
@@ -417,6 +438,78 @@ tables = {
             data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         )
+    """,
+    
+    # Tabela de metas de vendedores
+    "metas_vendedores": """
+        CREATE TABLE IF NOT EXISTS metas_vendedores (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            vendedor_id INT NOT NULL,
+            mes INT NOT NULL,
+            ano INT NOT NULL,
+            meta_valor DECIMAL(12, 2) DEFAULT 0,
+            meta_quantidade INT DEFAULT 0,
+            ativo BOOLEAN DEFAULT TRUE,
+            data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (vendedor_id) REFERENCES vendedores(id),
+            UNIQUE KEY unique_vendedor_mes_ano (vendedor_id, mes, ano)
+        )
+    """,
+    
+    # Tabela de faixas de premiação
+    "faixas_premiacao": """
+        CREATE TABLE IF NOT EXISTS faixas_premiacao (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nome VARCHAR(100) NOT NULL,
+            tipo_meta ENUM('valor', 'quantidade', 'percentual') NOT NULL DEFAULT 'valor',
+            valor_minimo DECIMAL(12, 2) NOT NULL,
+            valor_maximo DECIMAL(12, 2),
+            bonus_percentual DECIMAL(5, 2) NOT NULL DEFAULT 0,
+            bonus_fixo DECIMAL(10, 2) DEFAULT 0,
+            descricao TEXT,
+            ativo BOOLEAN DEFAULT TRUE,
+            ordem INT DEFAULT 0,
+            data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """,
+    
+    # Tabela de premiações realizadas
+    "premiacoes_realizadas": """
+        CREATE TABLE IF NOT EXISTS premiacoes_realizadas (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            vendedor_id INT NOT NULL,
+            faixa_premiacao_id INT NOT NULL,
+            mes INT NOT NULL,
+            ano INT NOT NULL,
+            valor_vendido DECIMAL(12, 2) NOT NULL,
+            quantidade_vendida INT NOT NULL,
+            valor_bonus DECIMAL(10, 2) NOT NULL,
+            status ENUM('pendente', 'pago', 'cancelado') DEFAULT 'pendente',
+            data_pagamento DATE,
+            observacoes TEXT,
+            data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (vendedor_id) REFERENCES vendedores(id),
+            FOREIGN KEY (faixa_premiacao_id) REFERENCES faixas_premiacao(id)
+        )
+    """,
+    
+    # Tabela de análise de preços
+    "analise_precos": """
+        CREATE TABLE IF NOT EXISTS analise_precos (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            produto_id INT NOT NULL,
+            titulo_produto VARCHAR(255) NOT NULL,
+            valor_venda_erp DECIMAL(10, 2) NOT NULL,
+            preco_competitivo ENUM('sim', 'nao') NOT NULL,
+            preco_adequado DECIMAL(10, 2),
+            justificativa TEXT,
+            fontes_pesquisa TEXT,
+            usuario_id INT,
+            data_analise TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (produto_id) REFERENCES produtos(id),
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        )
     """
 }
 
@@ -485,7 +578,9 @@ try:
         ('link_api', 'http://localhost:8000', 'URL da API'),
         ('api_port', '8000', 'Porta da API'),
         ('environment', 'production', 'Ambiente de execução da aplicação'),
-        ('allowed_origins', 'https://erpmaneiro.com,https://www.erpmaneiro.com', 'Origens permitidas para CORS em produção')
+        ('allowed_origins', 'https://erpmaneiro.com,https://www.erpmaneiro.com', 'Origens permitidas para CORS em produção'),
+        ('apikey_openrouter', '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', 'Chave de API do OpenRouter'),
+        ('model_openrouter', 'openai/gpt-oss-20b:free', 'Modelo de IA do OpenRouter para gerar relatórios')
     ]
     
     for chave, valor, descricao in configuracoes_producao:
@@ -516,13 +611,14 @@ try:
             estoque_visualizar, estoque_editar,
             configuracoes_visualizar, configuracoes_editar,
             financeiro_visualizar, financeiro_editar,
+            metas_visualizar, metas_editar,
             em_uso
         )
         VALUES (
             'Administrador', 'Grupo com acesso total ao sistema',
             TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
             TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
-            TRUE
+            TRUE, TRUE, TRUE
         )
         ON DUPLICATE KEY UPDATE nome = VALUES(nome)
     """)
@@ -537,12 +633,13 @@ try:
             clientes_visualizar, clientes_editar,
             vendas_visualizar, vendas_editar,
             vendedores_visualizar, vendedores_editar,
-            estoque_visualizar, estoque_editar
+            estoque_visualizar, estoque_editar,
+            metas_visualizar, metas_editar
         )
         VALUES (
             'Vendedores', 'Grupo com acesso às funcionalidades de vendas',
             TRUE, FALSE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, 
-            TRUE, FALSE, TRUE, FALSE
+            TRUE, FALSE, TRUE, FALSE, TRUE, FALSE
         )
         ON DUPLICATE KEY UPDATE nome = VALUES(nome)
     """)
@@ -618,6 +715,57 @@ try:
     print("Condições de pagamento padrão criadas com sucesso!")
 except mysql.connector.Error as err:
     print(f"Erro ao criar condições de pagamento: {err}")
+
+# Inserir configurações de webhook
+try:
+    webhook_configs = [
+        ('webhook_url', '', 'URL do webhook para notificação de movimentação de estoque'),
+        ('webhook_ativo', 'false', 'Ativa/desativa o envio de notificações via webhook (true/false)'),
+    ]
+    
+    for chave, valor, descricao in webhook_configs:
+        cursor.execute("""
+            INSERT INTO configuracoes (chave, valor, descricao)
+            VALUES (%s, %s, %s)
+            ON DUPLICATE KEY UPDATE descricao = VALUES(descricao)
+        """, (chave, valor, descricao))
+    
+    conn.commit()
+    print("Configurações de webhook criadas com sucesso!")
+except mysql.connector.Error as err:
+    print(f"Erro ao criar configurações de webhook: {err}")
+
+# Inserir faixas de premiação padrão
+try:
+    faixas_premiacao = [
+        ('Bronze', 'valor', 5000.00, 9999.99, 1.0, 0, 'Vendas entre R$ 5.000 e R$ 9.999,99 - Bônus de 1%', 1),
+        ('Prata', 'valor', 10000.00, 19999.99, 2.0, 0, 'Vendas entre R$ 10.000 e R$ 19.999,99 - Bônus de 2%', 2),
+        ('Ouro', 'valor', 20000.00, 49999.99, 3.0, 100, 'Vendas entre R$ 20.000 e R$ 49.999,99 - Bônus de 3% + R$ 100', 3),
+        ('Platina', 'valor', 50000.00, 99999.99, 4.0, 250, 'Vendas entre R$ 50.000 e R$ 99.999,99 - Bônus de 4% + R$ 250', 4),
+        ('Diamante', 'valor', 100000.00, None, 5.0, 500, 'Vendas acima de R$ 100.000 - Bônus de 5% + R$ 500', 5),
+        ('Meta 100%', 'percentual', 100.00, 119.99, 2.0, 0, 'Atingiu 100% da meta - Bônus de 2%', 6),
+        ('Meta 120%', 'percentual', 120.00, 149.99, 3.5, 150, 'Atingiu 120% da meta - Bônus de 3.5% + R$ 150', 7),
+        ('Meta 150%', 'percentual', 150.00, None, 5.0, 300, 'Atingiu 150% ou mais da meta - Bônus de 5% + R$ 300', 8),
+    ]
+    
+    for nome, tipo_meta, valor_min, valor_max, bonus_pct, bonus_fixo, descricao, ordem in faixas_premiacao:
+        cursor.execute("""
+            INSERT INTO faixas_premiacao (nome, tipo_meta, valor_minimo, valor_maximo, bonus_percentual, bonus_fixo, descricao, ordem)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE 
+                tipo_meta = VALUES(tipo_meta),
+                valor_minimo = VALUES(valor_minimo),
+                valor_maximo = VALUES(valor_maximo),
+                bonus_percentual = VALUES(bonus_percentual),
+                bonus_fixo = VALUES(bonus_fixo),
+                descricao = VALUES(descricao),
+                ordem = VALUES(ordem)
+        """, (nome, tipo_meta, valor_min, valor_max, bonus_pct, bonus_fixo, descricao, ordem))
+    
+    conn.commit()
+    print("Faixas de premiação padrão criadas com sucesso!")
+except mysql.connector.Error as err:
+    print(f"Erro ao criar faixas de premiação: {err}")
 
 print("Inicialização do banco de dados concluída com sucesso! ✅")
 

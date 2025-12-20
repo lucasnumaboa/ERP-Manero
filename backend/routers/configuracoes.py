@@ -40,6 +40,8 @@ class GrupoUsuarioBase(BaseModel):
     configuracoes_editar: bool = False
     financeiro_visualizar: bool = False
     financeiro_editar: bool = False
+    metas_visualizar: bool = False
+    metas_editar: bool = False
 
 class GrupoUsuarioCreate(GrupoUsuarioBase):
     pass
@@ -78,14 +80,14 @@ async def create_grupo_usuario(
                 clientes_visualizar, clientes_editar, vendas_visualizar, vendas_editar, vendedores_visualizar, 
                 vendedores_editar, compras_visualizar, compras_editar, fornecedores_visualizar, fornecedores_editar, 
                 estoque_visualizar, estoque_editar, configuracoes_visualizar, configuracoes_editar, 
-                financeiro_visualizar, financeiro_editar)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                financeiro_visualizar, financeiro_editar, metas_visualizar, metas_editar)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
             (grupo.nome, grupo.descricao, grupo.dashboard_visualizar, grupo.dashboard_editar, 
              grupo.produtos_visualizar, grupo.produtos_editar, grupo.clientes_visualizar, grupo.clientes_editar, 
              grupo.vendas_visualizar, grupo.vendas_editar, grupo.vendedores_visualizar, grupo.vendedores_editar, 
              grupo.compras_visualizar, grupo.compras_editar, grupo.fornecedores_visualizar, grupo.fornecedores_editar, 
              grupo.estoque_visualizar, grupo.estoque_editar, grupo.configuracoes_visualizar, grupo.configuracoes_editar, 
-             grupo.financeiro_visualizar, grupo.financeiro_editar)
+             grupo.financeiro_visualizar, grupo.financeiro_editar, grupo.metas_visualizar, grupo.metas_editar)
         )
         
         # Obter o ID inserido usando LAST_INSERT_ID()
@@ -169,14 +171,14 @@ async def update_grupo_usuario(
                vendas_visualizar = %s, vendas_editar = %s, vendedores_visualizar = %s, vendedores_editar = %s, 
                compras_visualizar = %s, compras_editar = %s, fornecedores_visualizar = %s, fornecedores_editar = %s, 
                estoque_visualizar = %s, estoque_editar = %s, configuracoes_visualizar = %s, configuracoes_editar = %s, 
-               financeiro_visualizar = %s, financeiro_editar = %s
+               financeiro_visualizar = %s, financeiro_editar = %s, metas_visualizar = %s, metas_editar = %s
                WHERE id = %s""",
             (grupo.nome, grupo.descricao, grupo.dashboard_visualizar, grupo.dashboard_editar, 
              grupo.produtos_visualizar, grupo.produtos_editar, grupo.clientes_visualizar, grupo.clientes_editar, 
              grupo.vendas_visualizar, grupo.vendas_editar, grupo.vendedores_visualizar, grupo.vendedores_editar, 
              grupo.compras_visualizar, grupo.compras_editar, grupo.fornecedores_visualizar, grupo.fornecedores_editar, 
              grupo.estoque_visualizar, grupo.estoque_editar, grupo.configuracoes_visualizar, grupo.configuracoes_editar, 
-             grupo.financeiro_visualizar, grupo.financeiro_editar, grupo_id)
+             grupo.financeiro_visualizar, grupo.financeiro_editar, grupo.metas_visualizar, grupo.metas_editar, grupo_id)
         )
         
         # Verificar se o grupo está em uso
@@ -305,7 +307,8 @@ async def get_all_configs(current_user = Depends(get_current_user)):
         
         return configs
 
-@router.put("/{chave}")
+@router.put("/configuracoes/{chave}")
+@router.post("/configuracoes/{chave}")
 async def update_config(
     chave: str, 
     config_data: ConfigUpdate,
@@ -315,6 +318,7 @@ async def update_config(
     Atualiza uma configuração específica.
     Requer autenticação de administrador.
     Aceita qualquer chave de configuração.
+    Aceita tanto PUT quanto POST para maior compatibilidade.
     
     Parâmetros:
     - chave: Nome da configuração (path parameter)
@@ -330,7 +334,7 @@ async def update_config(
         )
         
     # Verifica se o valor foi fornecido
-    if not config_data.valor:
+    if config_data.valor is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="O campo 'valor' é obrigatório"

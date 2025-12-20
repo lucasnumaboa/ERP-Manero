@@ -1,6 +1,55 @@
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('loginForm');
     const loginMessage = document.getElementById('loginMessage');
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    const emailInput = document.getElementById('email');
+    const rememberMe = document.getElementById('rememberMe');
+    
+    // Carregar credenciais salvas (se existirem)
+    loadSavedCredentials();
+    
+    // Toggle mostrar/ocultar senha
+    if (togglePassword && passwordInput) {
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Alternar ícone
+            const icon = this.querySelector('i');
+            if (icon) {
+                icon.classList.toggle('fa-eye');
+                icon.classList.toggle('fa-eye-slash');
+            }
+        });
+    }
+    
+    // Função para carregar credenciais salvas
+    function loadSavedCredentials() {
+        const savedEmail = localStorage.getItem('erp_remember_email');
+        const savedPassword = localStorage.getItem('erp_remember_password');
+        const savedRemember = localStorage.getItem('erp_remember_me');
+        
+        if (savedRemember === 'true' && savedEmail && savedPassword) {
+            if (emailInput) emailInput.value = savedEmail;
+            if (passwordInput) passwordInput.value = atob(savedPassword); // Decodifica base64
+            if (rememberMe) rememberMe.checked = true;
+        }
+    }
+    
+    // Função para salvar credenciais
+    function saveCredentials(email, password) {
+        if (rememberMe && rememberMe.checked) {
+            localStorage.setItem('erp_remember_email', email);
+            localStorage.setItem('erp_remember_password', btoa(password)); // Codifica em base64
+            localStorage.setItem('erp_remember_me', 'true');
+        } else {
+            // Limpar credenciais salvas se "lembrar" não estiver marcado
+            localStorage.removeItem('erp_remember_email');
+            localStorage.removeItem('erp_remember_password');
+            localStorage.setItem('erp_remember_me', 'false');
+        }
+    }
     
     // Obtém a URL da API sempre do banco, sem cache local
     async function getApiUrl() {
@@ -89,6 +138,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // Armazenar o token no localStorage
             localStorage.setItem('erp_token', data.access_token);
             localStorage.setItem('erp_token_type', data.token_type);
+            
+            // Salvar credenciais se "lembrar senha" estiver marcado
+            saveCredentials(email, password);
             
             // Exibir mensagem de sucesso
             loginMessage.textContent = 'Login realizado com sucesso! Redirecionando...';

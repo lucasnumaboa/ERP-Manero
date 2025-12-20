@@ -23,6 +23,7 @@ class ProdutoBase(BaseModel):
     categoria_id: int
     tipo_produto: str = "comprado"  # 'comprado' ou 'fabricado'
     comissao: Optional[float] = 0.0
+    faturavel: bool = True
     ativo: bool = True
 
 class ProdutoCreate(ProdutoBase):
@@ -38,6 +39,7 @@ class ProdutoUpdate(BaseModel):
     categoria_id: Optional[int] = None
     tipo_produto: Optional[str] = None
     comissao: Optional[float] = None
+    faturavel: Optional[bool] = None
     ativo: Optional[bool] = None
 
 class Produto(ProdutoBase):
@@ -46,17 +48,20 @@ class Produto(ProdutoBase):
     data_cadastro: datetime
     categoria_nome: Optional[str] = None
     caminho_imagem: Optional[str] = None
+    faturavel: Optional[bool] = True
+    usuario_id: Optional[int] = None
 
 # Rotas
 @router.get("/", response_model=List[Produto])
 async def listar_produtos(
     ativo: Optional[bool] = None,
     categoria_id: Optional[int] = None,
+    apenas_meus: Optional[bool] = None,
     current_user: UserInDB = Depends(get_current_user)
 ):
     """
     Lista todos os produtos cadastrados no sistema.
-    Pode filtrar por status (ativo/inativo) e categoria.
+    Pode filtrar por status (ativo/inativo), categoria e dono do produto.
     """
     query = "SELECT p.*, c.nome AS categoria_nome FROM produtos p LEFT JOIN categorias_produtos c ON p.categoria_id = c.id WHERE 1=1"
     params = []
@@ -68,6 +73,11 @@ async def listar_produtos(
     if categoria_id is not None:
         query += " AND p.categoria_id = %s"
         params.append(categoria_id)
+    
+    # Filtrar apenas produtos do usuário atual
+    if apenas_meus:
+        query += " AND p.usuario_id = %s"
+        params.append(current_user.id)
     
     with get_db_cursor() as cursor:
         cursor.execute(query, params)
@@ -109,6 +119,7 @@ async def criar_produto(
     categoria_id: int = Form(...),
     tipo_produto: str = Form("comprado"),
     comissao: float = Form(0.0),
+    faturavel: bool = Form(True),
     ativo: bool = Form(True),
     imagens: List[UploadFile] = File(None),
     current_user: UserInDB = Depends(get_current_user)
@@ -190,14 +201,14 @@ async def criar_produto(
             INSERT INTO produtos (
                 codigo, nome, descricao, preco_custo, preco_venda,
                 estoque_atual, estoque_minimo, categoria_id, tipo_produto,
-                comissao, caminho_imagem, ativo
+                comissao, caminho_imagem, faturavel, ativo, usuario_id
             )
-            VALUES (%s, %s, %s, %s, %s, 0, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, 0, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 codigo, nome, descricao, preco_custo, preco_venda,
                 estoque_minimo, categoria_id, tipo_produto, comissao,
-                caminho_imagem, ativo
+                caminho_imagem, faturavel, ativo, current_user.id
             )
         )
         
@@ -284,6 +295,8 @@ async def atualizar_produto(
         update_data["tipo_produto"] = produto.tipo_produto
     if produto.comissao is not None:
         update_data["comissao"] = produto.comissao
+    if produto.faturavel is not None:
+        update_data["faturavel"] = produto.faturavel
     if produto.ativo is not None:
         update_data["ativo"] = produto.ativo
     
@@ -325,6 +338,7 @@ async def upload_imagens_produto(
     categoria_id: int = Form(...),
     tipo_produto: str = Form("comprado"),
     comissao: float = Form(0.0),
+    faturavel: bool = Form(True),
     ativo: bool = Form(True),
     imagens: List[UploadFile] = File(None),
     current_user: UserInDB = Depends(get_current_user)
@@ -427,13 +441,14 @@ async def upload_imagens_produto(
                 tipo_produto = %s,
                 comissao = %s, 
                 caminho_imagem = %s, 
+                faturavel = %s,
                 ativo = %s
             WHERE id = %s
             """,
             (
                 codigo, nome, descricao, preco_custo, preco_venda,
                 estoque_minimo, categoria_id, tipo_produto, comissao,
-                caminho_imagem, ativo, produto_id
+                caminho_imagem, faturavel, ativo, produto_id
             )
         )
         

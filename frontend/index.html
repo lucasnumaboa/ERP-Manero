@@ -10,6 +10,9 @@
     <link rel="stylesheet" href="css/permissions.css">
 </head>
 <body class="login-page">
+    <!-- Canvas para animação de fundo estilo ERP/Next.js -->
+    <canvas id="bgCanvas"></canvas>
+    
     <div class="login-container">
         <div class="login-logo">
             <img src="erp-manero.gif" alt="ERP Maneiro Logo" class="logo-gif">
@@ -23,9 +26,18 @@
                     <label for="email"><i class="fas fa-user"></i></label>
                     <input type="email" id="email" name="email" placeholder="Email" required>
                 </div>
-                <div class="form-group">
+                <div class="form-group password-group">
                     <label for="password"><i class="fas fa-lock"></i></label>
                     <input type="password" id="password" name="password" placeholder="Senha" required>
+                    <button type="button" id="togglePassword" class="toggle-password" title="Mostrar/Ocultar senha">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <div class="form-group remember-group">
+                    <label class="remember-label">
+                        <input type="checkbox" id="rememberMe" name="rememberMe">
+                        <span>Lembrar senha</span>
+                    </label>
                 </div>
                 <div class="form-group">
                     <button type="submit" class="btn-login">Entrar</button>
@@ -41,6 +53,7 @@
     <script src="js/redirect_fix.js"></script>
     <script src="js/api_config.js"></script>
     <script src="js/login.js"></script>
+    <script src="js/login-animation.js"></script>
 </body>
 </html>
 

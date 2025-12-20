@@ -26,21 +26,37 @@ body {
 
 /* Estilos da Página de Login */
 .login-page {
-    background: linear-gradient(135deg, #3498db, #2c3e50);
+    background: #0a192f;
     height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Canvas de animação de fundo */
+#bgCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: auto;
 }
 
 .login-container {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 40px rgba(100, 255, 218, 0.1);
     width: 100%;
     max-width: 400px;
     padding: 2rem;
     text-align: center;
+    position: relative;
+    z-index: 10;
+    backdrop-filter: blur(10px);
 }
 
 .login-logo {
@@ -75,7 +91,7 @@ body {
     position: relative;
 }
 
-.form-group label {
+.login-form .form-group label:not(.remember-label) {
     position: absolute;
     left: 15px;
     top: 12px;
@@ -138,6 +154,71 @@ body {
     background-color: rgba(46, 204, 113, 0.1);
     color: var(--success-color);
     border: 1px solid var(--success-color);
+}
+
+/* Estilos para mostrar/ocultar senha */
+.password-group {
+    position: relative;
+}
+
+.password-group input {
+    padding-right: 45px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #aaa;
+    padding: 5px;
+    font-size: 1rem;
+    transition: color 0.3s;
+}
+
+.toggle-password:hover {
+    color: var(--secondary-color);
+}
+
+.toggle-password:focus {
+    outline: none;
+}
+
+/* Estilos para checkbox "Lembrar senha" */
+.login-form .remember-group {
+    text-align: left;
+    margin-bottom: 1rem !important;
+    display: block !important;
+    visibility: visible !important;
+}
+
+.login-form .remember-label {
+    position: static !important;
+    display: flex !important;
+    align-items: center;
+    cursor: pointer;
+    color: #555;
+    font-size: 0.9rem;
+    left: auto !important;
+    top: auto !important;
+    transform: none !important;
+}
+
+.login-form .remember-label input[type="checkbox"] {
+    width: 16px !important;
+    height: 16px !important;
+    margin-right: 8px;
+    cursor: pointer;
+    accent-color: var(--secondary-color);
+    padding: 0 !important;
+}
+
+.login-form .remember-label span {
+    user-select: none;
+    color: #555;
 }
 
 /* Estilos para Atividades Recentes no Homepage */

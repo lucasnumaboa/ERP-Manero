@@ -83,12 +83,15 @@ async function updateMenuBasedOnPermissions() {
             'vendedores.html': 'vendedores_visualizar',
             'compras.html': 'compras_visualizar',
             'fornecedores.html': 'fornecedores_visualizar',
+            'plataformas_venda.html': 'fornecedores_visualizar',
             'estoque.html': 'estoque_visualizar',
+            'exportar_estoque.html': 'estoque_visualizar',
             'financeiro.html': 'financeiro_visualizar',
             'contas_pagar.html': 'financeiro_visualizar',
             'contas_receber.html': 'financeiro_visualizar',
             'condicoes_pagamento.html': 'financeiro_visualizar',
             'relatorios.html': 'dashboard_visualizar',
+            'metas.html': 'metas_visualizar',
             'configuracoes.html': 'configuracoes_visualizar'
         };
         

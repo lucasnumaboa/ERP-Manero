@@ -68,6 +68,32 @@ async def listar_vendedores(
     
     return vendedores
 
+@router.get("/me/vinculado", response_model=Vendedor)
+async def obter_vendedor_vinculado(
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """
+    Obtém o vendedor vinculado ao usuário logado.
+    """
+    with get_db_cursor() as cursor:
+        cursor.execute(
+            "SELECT * FROM vendedores WHERE usuario_id = %s",
+            (current_user.id,)
+        )
+        vendedor = cursor.fetchone()
+    
+    if not vendedor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Nenhum vendedor vinculado a este usuário"
+        )
+    
+    # Converter o campo data_cadastro para string
+    if 'data_cadastro' in vendedor and vendedor['data_cadastro']:
+        vendedor['data_cadastro'] = vendedor['data_cadastro'].isoformat()
+    
+    return vendedor
+
 @router.get("/{vendedor_id}", response_model=Vendedor)
 async def obter_vendedor(
     vendedor_id: int,

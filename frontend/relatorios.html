@@ -10,18 +10,21 @@
     <link rel="stylesheet" href="css/submenu.css">
     <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/theme-dark.css">
+    <link rel="stylesheet" href="css/theme-light.css">
     <style>
         .relatorio-container {
             padding: 20px;
         }
 
         .filtro-container {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
+            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            backdrop-filter: blur(20px);
         }
 
         .filtro-row {
@@ -45,16 +48,18 @@
         .filtro-group label {
             font-weight: 600;
             font-size: 14px;
-            color: #2c3e50;
+            color: var(--text-secondary, #a8b2d1);
         }
 
         .filtro-group input[type="date"],
         .filtro-group select {
             padding: 8px 12px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
             border-radius: 4px;
             font-size: 14px;
             min-width: 150px;
+            background: rgba(10, 25, 47, 0.8);
+            color: var(--text-primary, #e6f1ff);
         }
 
         .btn-gerar {
@@ -101,17 +106,18 @@
         }
 
         .card-resumo {
-            background: white;
-            border: 1px solid #e9ecef;
+            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
             border-radius: 8px;
             padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             text-align: center;
+            backdrop-filter: blur(20px);
         }
 
         .card-resumo h3 {
             font-size: 12px;
-            color: #7f8c8d;
+            color: var(--text-muted, #8892b0);
             text-transform: uppercase;
             margin-bottom: 10px;
             font-weight: 600;
@@ -120,7 +126,7 @@
         .card-resumo .valor {
             font-size: 24px;
             font-weight: 700;
-            color: #2c3e50;
+            color: var(--text-primary, #e6f1ff);
         }
 
         .card-resumo.vendas {
@@ -140,20 +146,21 @@
         }
 
         .tabela-container {
-            background: white;
-            border: 1px solid #e9ecef;
+            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 30px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             overflow-x: auto;
+            backdrop-filter: blur(20px);
         }
 
         .tabela-container h2 {
             font-size: 18px;
-            color: #2c3e50;
+            color: var(--accent-primary, #64ffda);
             margin-bottom: 15px;
-            border-bottom: 2px solid #3498db;
+            border-bottom: 2px solid var(--accent-primary, #64ffda);
             padding-bottom: 10px;
         }
 
@@ -163,27 +170,28 @@
         }
 
         table thead {
-            background-color: #f8f9fa;
+            background-color: rgba(100, 255, 218, 0.1);
         }
 
         table th {
             padding: 12px;
             text-align: left;
             font-weight: 600;
-            color: #2c3e50;
-            border-bottom: 2px solid #e9ecef;
+            color: var(--accent-primary, #64ffda);
+            border-bottom: 2px solid var(--border-color, rgba(100, 255, 218, 0.1));
             font-size: 13px;
             text-transform: uppercase;
         }
 
         table td {
             padding: 12px;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
             font-size: 14px;
+            color: var(--text-secondary, #a8b2d1);
         }
 
         table tbody tr:hover {
-            background-color: #f8f9fa;
+            background-color: rgba(100, 255, 218, 0.05);
         }
 
         .valor-moeda {
@@ -200,26 +208,251 @@
             display: none;
             text-align: center;
             padding: 40px;
-            color: #7f8c8d;
+            color: var(--text-muted, #8892b0);
         }
 
         .loading i {
             font-size: 32px;
             margin-bottom: 10px;
-            color: #3498db;
+            color: var(--accent-primary, #64ffda);
         }
 
         .mensagem-vazia {
             text-align: center;
             padding: 40px;
-            color: #7f8c8d;
+            color: var(--text-muted, #8892b0);
             font-size: 16px;
         }
 
         .mensagem-vazia i {
             font-size: 48px;
             margin-bottom: 10px;
-            color: #bdc3c7;
+            color: var(--text-muted, #8892b0);
+        }
+
+        /* Estilos para Modal de IA */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s ease-out;
+            backdrop-filter: blur(20px);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(100, 255, 218, 0.15) 0%, rgba(52, 152, 219, 0.15) 100%);
+            color: var(--accent-primary, #64ffda);
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: white;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-modal:hover {
+            opacity: 0.8;
+        }
+
+        .modal-body {
+            padding: 20px;
+            background: rgba(10, 25, 47, 0.5);
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: rgba(17, 34, 64, 0.8);
+        }
+
+        .tabs-ia {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color, rgba(100, 255, 218, 0.1));
+        }
+
+        .tab-btn-ia {
+            background: none;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-muted, #8892b0);
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab-btn-ia:hover {
+            color: var(--text-primary, #e6f1ff);
+        }
+
+        .tab-btn-ia.active {
+            color: var(--accent-primary, #64ffda);
+            border-bottom-color: var(--accent-primary, #64ffda);
+        }
+
+        .tab-content-ia {
+            display: none;
+        }
+
+        .tab-content-ia.active {
+            display: block;
+        }
+
+        .relatorio-ia-content {
+            background: rgba(10, 25, 47, 0.5);
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            border-radius: 4px;
+            padding: 15px;
+            min-height: 300px;
+        }
+
+        .relatorio-ia-text {
+            color: var(--text-secondary, #a8b2d1);
+            line-height: 1.6;
+            font-size: 14px;
+            word-wrap: break-word;
+        }
+
+        .relatorio-ia-text table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            background: rgba(17, 34, 64, 0.8);
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .relatorio-ia-text table thead {
+            background-color: rgba(100, 255, 218, 0.15);
+            color: var(--accent-primary, #64ffda);
+        }
+
+        .relatorio-ia-text table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            color: var(--accent-primary, #64ffda);
+        }
+
+        .relatorio-ia-text table td {
+            padding: 12px;
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            color: var(--text-secondary, #a8b2d1);
+        }
+
+        .relatorio-ia-text table tbody tr:nth-child(even) {
+            background-color: rgba(100, 255, 218, 0.03);
+        }
+
+        .relatorio-ia-text table tbody tr:hover {
+            background-color: rgba(100, 255, 218, 0.08);
+        }
+
+        .relatorio-ia-text strong {
+            color: var(--accent-primary, #64ffda);
+            font-weight: bold;
+        }
+
+        .relatorio-ia-text ul {
+            list-style-type: disc;
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .relatorio-ia-text li {
+            margin-left: 20px;
+            color: var(--text-secondary, #a8b2d1);
+            margin-bottom: 5px;
+        }
+
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            color: var(--text-muted, #8892b0);
+        }
+
+        .loading-state i {
+            font-size: 48px;
+            color: var(--accent-primary, #64ffda);
+            margin-bottom: 15px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
         }
 
         @media (max-width: 768px) {
@@ -247,6 +480,427 @@
 
             table th, table td {
                 padding: 8px;
+            }
+
+            .modal-content {
+                width: 95%;
+                max-height: 95vh;
+            }
+
+            .tabs-ia {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* ===== ESTILOS DO MAPA DE VENDAS POR REGIÃO ===== */
+        .btn-regiao {
+            background-color: #2ecc71 !important;
+            margin-left: 10px;
+        }
+
+        .btn-regiao:hover {
+            background-color: #27ae60 !important;
+        }
+
+        .resumo-regiao {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .card-resumo-regiao {
+            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+            min-width: 200px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            backdrop-filter: blur(20px);
+        }
+
+        .card-resumo-regiao i {
+            font-size: 32px;
+            color: var(--accent-primary, #64ffda);
+        }
+
+        .card-resumo-regiao .card-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-resumo-regiao .card-label {
+            font-size: 12px;
+            color: var(--text-muted, #8892b0);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .card-resumo-regiao .card-valor {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary, #e6f1ff);
+        }
+
+        .mapa-wrapper {
+            display: flex;
+            gap: 20px;
+            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            backdrop-filter: blur(20px);
+        }
+
+        .mapa-container {
+            flex: 0 0 auto;
+            width: 480px;
+            height: 520px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+
+        .mapa-container svg {
+            display: block;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .estado {
+            fill: #e0e0e0;
+            stroke: #bdbdbd;
+            stroke-width: 1;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .estado:hover {
+            fill: #81c784 !important;
+            stroke: #2e7d32;
+            stroke-width: 2;
+            filter: brightness(1.1);
+        }
+
+        .estado.selecionado {
+            stroke: #1565c0 !important;
+            stroke-width: 3 !important;
+            filter: drop-shadow(0 0 5px rgba(21, 101, 192, 0.5));
+        }
+
+        /* Tooltip do mapa */
+        .tooltip-mapa {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            z-index: 10000;
+            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            max-width: 250px;
+            line-height: 1.5;
+        }
+
+        .esfera-venda {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .esfera-venda:hover {
+            transform: scale(1.2);
+            filter: brightness(1.2) url(#glow);
+        }
+
+        .painel-estado {
+            flex: 1;
+            min-width: 400px;
+            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
+            border-radius: 8px;
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            overflow: hidden;
+            max-height: 650px;
+            overflow-y: auto;
+        }
+
+        .painel-header {
+            background: linear-gradient(135deg, rgba(100, 255, 218, 0.15) 0%, rgba(52, 152, 219, 0.15) 100%);
+            color: var(--accent-primary, #64ffda);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .painel-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .btn-fechar-painel {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .btn-fechar-painel:hover {
+            opacity: 1;
+        }
+
+        .painel-resumo {
+            padding: 15px 20px;
+            background: rgba(10, 25, 47, 0.5);
+            border-bottom: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+        }
+
+        .resumo-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .resumo-label {
+            color: var(--text-muted, #8892b0);
+            font-size: 13px;
+        }
+
+        .resumo-valor {
+            font-weight: 600;
+            color: var(--text-primary, #e6f1ff);
+        }
+
+        .valor-destaque {
+            color: #27ae60 !important;
+            font-size: 18px;
+        }
+
+        .painel-produtos {
+            padding: 15px 20px;
+        }
+
+        .painel-produtos h4 {
+            margin: 0 0 15px 0;
+            font-size: 14px;
+            color: var(--accent-primary, #64ffda);
+        }
+
+        .tabela-produtos-estado {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .tabela-produtos-estado table {
+            width: 100%;
+            font-size: 12px;
+        }
+
+        .tabela-produtos-estado th {
+            background: rgba(100, 255, 218, 0.1);
+            padding: 8px;
+            font-size: 11px;
+            position: sticky;
+            top: 0;
+            color: var(--accent-primary, #64ffda);
+        }
+
+        .tabela-produtos-estado td {
+            padding: 8px;
+            border-bottom: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            color: var(--text-secondary, #a8b2d1);
+        }
+
+        .loading-estado, .erro-estado {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-muted, #8892b0);
+        }
+
+        .loading-estado i, .erro-estado i {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .erro-estado {
+            color: #e74c3c;
+        }
+
+        .legenda-mapa {
+            margin-top: 20px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px 20px;
+        }
+
+        .legenda-mapa h4 {
+            margin: 0 0 15px 0;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+
+        .legenda-itens {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legenda-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+
+        .legenda-cor {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid #bdbdbd;
+        }
+
+        .legenda-esfera {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff9800 0%, #f44336 100%);
+            border: 2px solid white;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+
+        .legenda-dica {
+            margin-top: 15px;
+            font-size: 12px;
+            color: #95a5a6;
+            font-style: italic;
+        }
+
+        .legenda-dica i {
+            margin-right: 5px;
+        }
+
+        /* Legenda no topo - inline */
+        .legenda-mapa-topo {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+        }
+
+        .legenda-itens-inline {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legenda-titulo {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .legenda-titulo i {
+            color: #3498db;
+            margin-right: 5px;
+        }
+
+        .legenda-item-inline {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #495057;
+        }
+
+        .legenda-dica-inline {
+            font-size: 12px;
+            color: #6c757d;
+            font-style: italic;
+            margin-left: auto;
+        }
+
+        .legenda-dica-inline i {
+            margin-right: 5px;
+            color: #3498db;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-success {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .badge-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .badge-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        /* Row coloring for price analysis */
+        .row-competitivo {
+            background-color: rgba(39, 174, 96, 0.15) !important;
+        }
+
+        .row-competitivo:hover {
+            background-color: rgba(39, 174, 96, 0.25) !important;
+        }
+
+        .row-nao-competitivo {
+            background-color: rgba(231, 76, 60, 0.15) !important;
+        }
+
+        .row-nao-competitivo:hover {
+            background-color: rgba(231, 76, 60, 0.25) !important;
+        }
+
+        @media (max-width: 900px) {
+            .mapa-wrapper {
+                flex-direction: column;
+            }
+
+            .painel-estado {
+                width: 100%;
+            }
+
+            .mapa-container {
+                min-width: 100%;
             }
         }
     </style>
@@ -327,6 +981,9 @@
                         <a href="estoque.html"><i class="fas fa-warehouse"></i> Estoque</a>
                     </li>
                     <li>
+                        <a href="exportar_estoque.html"><i class="fas fa-file-export"></i> Exportar Estoque</a>
+                    </li>
+                    <li>
                         <a href="clientes.html"><i class="fas fa-users"></i> Clientes</a>
                     </li>
                     <li>
@@ -342,6 +999,9 @@
                         <a href="fornecedores.html"><i class="fas fa-industry"></i> Fornecedores</a>
                     </li>
                     <li>
+                        <a href="plataformas_venda.html"><i class="fas fa-store"></i> Plataformas de Venda</a>
+                    </li>
+                    <li>
                         <a href="contas_pagar.html"><i class="fas fa-money-bill-wave"></i> Contas a Pagar</a>
                     </li>
                     <li>
@@ -349,6 +1009,9 @@
                     </li>
                     <li>
                         <a href="condicoes_pagamento.html"><i class="fas fa-percent"></i> Condições de Pagamento</a>
+                    </li>
+                    <li>
+                        <a href="metas.html"><i class="fas fa-bullseye"></i> Metas</a>
                     </li>
                     <li class="active">
                         <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
@@ -379,9 +1042,30 @@
                             <label for="dataFim">Data Final:</label>
                             <input type="date" id="dataFim">
                         </div>
+                        <div class="filtro-group">
+                            <label for="plataformaFiltro">Plataforma de Venda:</label>
+                            <select id="plataformaFiltro">
+                                <option value="">Todas as Plataformas</option>
+                            </select>
+                        </div>
+                        <div class="filtro-group">
+                            <label for="vendedorFiltro">Vendedor:</label>
+                            <select id="vendedorFiltro">
+                                <option value="">Todos os Vendedores</option>
+                            </select>
+                        </div>
                         <div class="filtro-group" style="justify-content: flex-end; margin-top: 20px;">
                             <button class="btn-gerar" onclick="gerarRelatorio()">
                                 <i class="fas fa-sync"></i> Gerar Relatório
+                            </button>
+                            <button class="btn-gerar btn-regiao" onclick="gerarRelatorioRegiao()">
+                                <i class="fas fa-map-marked-alt"></i> Vendas por Região
+                            </button>
+                            <button class="btn-gerar" style="background-color: #9b59b6; margin-left: 10px;" onclick="gerarRelatorioIA()">
+                                <i class="fas fa-brain"></i> Gerar por IA
+                            </button>
+                            <button class="btn-gerar" style="background-color: #e67e22; margin-left: 10px;" onclick="abrirAnalisePreco()">
+                                <i class="fas fa-search-dollar"></i> Análise de Preço
                             </button>
                             <button class="btn-exportar" id="btnExportar" onclick="exportarPDF()" disabled>
                                 <i class="fas fa-file-pdf"></i> Exportar PDF
@@ -394,6 +1078,52 @@
                 <div class="loading" id="loading">
                     <i class="fas fa-spinner fa-spin"></i>
                     <p>Gerando relatório...</p>
+                </div>
+
+                <!-- Loading com Progresso para IA -->
+                <div id="loadingIA" style="display: none; padding: 40px 20px; text-align: center;">
+                    <div style="max-width: 500px; margin: 0 auto;">
+                        <h3 style="color: #2c3e50; margin-bottom: 20px;">
+                            <i class="fas fa-brain" style="color: #9b59b6;"></i> Gerando Relatórios por IA
+                        </h3>
+                        <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span style="font-weight: 600; color: #2c3e50;">Progresso</span>
+                                <span style="font-weight: 600; color: #9b59b6;" id="progressoTexto">0/4</span>
+                            </div>
+                            <div style="background: #e9ecef; border-radius: 4px; height: 30px; overflow: hidden;">
+                                <div id="progressoBar" style="background: linear-gradient(90deg, #9b59b6, #8e44ad); height: 100%; width: 0%; transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
+                                    0%
+                                </div>
+                            </div>
+                            <div style="margin-top: 15px; text-align: left;">
+                                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                    <span id="status-vendas" style="display: inline-block; width: 20px; height: 20px; background: #e9ecef; border-radius: 50%; margin-right: 10px; text-align: center; line-height: 20px; color: white; font-size: 12px;">
+                                        <i class="fas fa-circle" style="font-size: 8px;"></i>
+                                    </span>
+                                    <span style="color: #7f8c8d;">Análise de Vendas</span>
+                                </div>
+                                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                    <span id="status-estoque" style="display: inline-block; width: 20px; height: 20px; background: #e9ecef; border-radius: 50%; margin-right: 10px; text-align: center; line-height: 20px; color: white; font-size: 12px;">
+                                        <i class="fas fa-circle" style="font-size: 8px;"></i>
+                                    </span>
+                                    <span style="color: #7f8c8d;">Análise de Estoque</span>
+                                </div>
+                                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                    <span id="status-recomendacoes" style="display: inline-block; width: 20px; height: 20px; background: #e9ecef; border-radius: 50%; margin-right: 10px; text-align: center; line-height: 20px; color: white; font-size: 12px;">
+                                        <i class="fas fa-circle" style="font-size: 8px;"></i>
+                                    </span>
+                                    <span style="color: #7f8c8d;">Recomendações</span>
+                                </div>
+                                <div style="display: flex; align-items: center;">
+                                    <span id="status-estrategia" style="display: inline-block; width: 20px; height: 20px; background: #e9ecef; border-radius: 50%; margin-right: 10px; text-align: center; line-height: 20px; color: white; font-size: 12px;">
+                                        <i class="fas fa-circle" style="font-size: 8px;"></i>
+                                    </span>
+                                    <span style="color: #7f8c8d;">Estratégia Mês</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Conteúdo do Relatório -->
@@ -434,18 +1164,20 @@
                                 <tr>
                                     <th>Código</th>
                                     <th>Produto</th>
+                                    <th>Plataforma</th>
                                     <th style="text-align: right;">Qtd</th>
                                     <th style="text-align: right;">Preço Custo</th>
                                     <th style="text-align: right;">Preço Venda</th>
                                     <th style="text-align: right;">Valor Total</th>
                                     <th style="text-align: right;">Custo</th>
+                                    <th style="text-align: right;">Comissão</th>
                                     <th style="text-align: right;">Lucro</th>
                                     <th style="text-align: right;">Margem %</th>
                                 </tr>
                             </thead>
                             <tbody id="bodyProdutosVendidos">
                                 <tr>
-                                    <td colspan="9" class="mensagem-vazia">
+                                    <td colspan="11" class="mensagem-vazia">
                                         <i class="fas fa-inbox"></i>
                                         <p>Nenhum produto vendido no período</p>
                                     </td>
@@ -503,6 +1235,250 @@
                     </div>
                 </div>
 
+                <!-- Relatórios por IA -->
+                <div id="relatorioIAConteudo" style="display: none;">
+                    <!-- Abas de IA -->
+                    <div style="border-bottom: 2px solid #e9ecef; margin-bottom: 20px;">
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="tab-btn-ia active" data-tab="vendas" style="padding: 12px 20px; background: none; border: none; border-bottom: 3px solid #9b59b6; color: #9b59b6; cursor: pointer; font-weight: 600;">
+                                <i class="fas fa-chart-line"></i> Análise de Vendas
+                            </button>
+                            <button class="tab-btn-ia" data-tab="estoque" style="padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent; color: #7f8c8d; cursor: pointer; font-weight: 600;">
+                                <i class="fas fa-boxes"></i> Análise de Estoque
+                            </button>
+                            <button class="tab-btn-ia" data-tab="recomendacoes" style="padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent; color: #7f8c8d; cursor: pointer; font-weight: 600;">
+                                <i class="fas fa-lightbulb"></i> Recomendações
+                            </button>
+                            <button class="tab-btn-ia" data-tab="estrategia" style="padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent; color: #7f8c8d; cursor: pointer; font-weight: 600;">
+                                <i class="fas fa-chess"></i> Estratégia Mês
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Conteúdo das Abas -->
+                    <div id="tab-vendas" class="tab-content-ia active" style="display: block; padding: 20px; background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border-radius: 8px; border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));"></div>
+                    <div id="tab-estoque" class="tab-content-ia" style="display: none; padding: 20px; background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border-radius: 8px; border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));"></div>
+                    <div id="tab-recomendacoes" class="tab-content-ia" style="display: none; padding: 20px; background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border-radius: 8px; border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));"></div>
+                    <div id="tab-estrategia" class="tab-content-ia" style="display: none; padding: 20px; background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border-radius: 8px; border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));"></div>
+                </div>
+
+                <!-- Relatório de Vendas por Região -->
+                <div id="relatorioRegiaoConteudo" style="display: none;">
+                    <!-- Filtro de Plataforma para Região -->
+                    <div class="filtro-container" style="margin-bottom: 15px;">
+                        <div class="filtro-row">
+                            <div class="filtro-group">
+                                <label for="plataformaRegiaoFiltro">Filtrar por Plataforma:</label>
+                                <select id="plataformaRegiaoFiltro" onchange="carregarVendasPorRegiao()">
+                                    <option value="">Todas as Plataformas</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Legenda (logo abaixo do filtro, sempre visível) -->
+                    <div class="legenda-mapa-topo" style="background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));">
+                        <div class="legenda-itens-inline">
+                            <span class="legenda-titulo" style="color: var(--accent-primary, #64ffda);"><i class="fas fa-info-circle"></i> Legenda:</span>
+                            <div class="legenda-item-inline">
+                                <span class="legenda-cor" style="background: #c8e6c9;"></span>
+                                <span style="color: var(--text-secondary, #a8b2d1);">Baixa</span>
+                            </div>
+                            <div class="legenda-item-inline">
+                                <span class="legenda-cor" style="background: #81c784;"></span>
+                                <span style="color: var(--text-secondary, #a8b2d1);">Média</span>
+                            </div>
+                            <div class="legenda-item-inline">
+                                <span class="legenda-cor" style="background: #4caf50;"></span>
+                                <span style="color: var(--text-secondary, #a8b2d1);">Alta</span>
+                            </div>
+                            <span class="legenda-dica-inline" style="color: var(--text-muted, #8892b0);"><i class="fas fa-hand-pointer"></i> Clique em um estado para ver os produtos</span>
+                        </div>
+                    </div>
+
+                    <!-- Loading do Mapa -->
+                    <div id="loadingMapa" style="display: none; padding: 60px 20px; text-align: center;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: #3498db; margin-bottom: 20px;"></i>
+                        <p style="font-size: 18px; color: #7f8c8d;">Carregando mapa de vendas por região...</p>
+                    </div>
+
+                    <!-- Conteúdo do Mapa -->
+                    <div id="mapaConteudo" style="display: none;">
+                        <!-- Resumo -->
+                        <div class="resumo-regiao">
+                            <div class="card-resumo-regiao">
+                                <i class="fas fa-map-marked-alt"></i>
+                                <div class="card-info">
+                                    <span class="card-label">Estados com Vendas</span>
+                                    <span class="card-valor" id="totalEstadosVenda">0</span>
+                                </div>
+                            </div>
+                            <div class="card-resumo-regiao">
+                                <i class="fas fa-dollar-sign"></i>
+                                <div class="card-info">
+                                    <span class="card-label">Valor Total</span>
+                                    <span class="card-valor" id="valorTotalRegiao">R$ 0,00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Container do Mapa e Painel -->
+                        <div class="mapa-wrapper">
+                            <!-- Mapa do Brasil -->
+                            <div class="mapa-container" id="mapaContainer">
+                                <!-- SVG do mapa será inserido via JavaScript -->
+                            </div>
+
+                            <!-- Painel Lateral com Detalhes do Estado (toda a direita) -->
+                            <div class="painel-estado" id="painelEstado" style="display: none;">
+                                <!-- Conteúdo será preenchido via JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Relatório de Análise de Preço -->
+                <div id="relatorioAnalisePrecoConteudo" style="display: none;">
+                    <!-- Header com botão de nova pesquisa -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div>
+                            <h2 style="color: var(--accent-primary, #64ffda); margin: 0;">
+                                <i class="fas fa-search-dollar"></i> Análise de Preço
+                            </h2>
+                            <p id="dataUltimaAnalise" style="color: var(--text-muted, #8892b0); font-size: 14px; margin-top: 5px;"></p>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button id="btnReplicarSugestao" class="btn-gerar" style="background-color: #9b59b6; display: none;" onclick="abrirModalReplicarSugestao()">
+                                <i class="fas fa-magic"></i> Replicar Sugestão
+                            </button>
+                            <button class="btn-gerar" style="background-color: #e67e22;" onclick="iniciarNovaAnalisePreco()">
+                                <i class="fas fa-sync"></i> Gerar Nova Pesquisa
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Resumo -->
+                    <div class="resumo-cards" id="resumoAnalisePreco">
+                        <div class="card-resumo vendas">
+                            <h3>Total Analisados</h3>
+                            <div class="valor" id="totalAnalisados">0</div>
+                        </div>
+                        <div class="card-resumo lucro">
+                            <h3>Preços Competitivos</h3>
+                            <div class="valor" id="totalCompetitivos">0</div>
+                        </div>
+                        <div class="card-resumo compras">
+                            <h3>Preços Não Competitivos</h3>
+                            <div class="valor" id="totalNaoCompetitivos">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Análises -->
+                    <div class="tabela-container">
+                        <h2><i class="fas fa-table"></i> Resultado da Análise</h2>
+                        <table id="tabelaAnalisePreco">
+                            <thead>
+                                <tr>
+                                    <th>Produto</th>
+                                    <th style="text-align: right;">Preço ERP</th>
+                                    <th style="text-align: center;">Competitivo?</th>
+                                    <th style="text-align: right;">Preço Sugerido</th>
+                                    <th>Justificativa</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bodyAnalisePreco">
+                                <tr>
+                                    <td colspan="5" class="mensagem-vazia">
+                                        <i class="fas fa-inbox"></i>
+                                        <p>Nenhuma análise encontrada</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Modal Replicar Sugestão -->
+                <div id="modalReplicarSugestao" class="modal" style="display: none;">
+                    <div class="modal-content" style="max-width: 800px; max-height: 80vh; overflow-y: auto;">
+                        <div class="modal-header">
+                            <h2><i class="fas fa-magic"></i> Replicar Sugestão de Preços</h2>
+                            <button class="close-modal" onclick="fecharModalReplicarSugestao()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <p style="margin-bottom: 15px; color: var(--text-muted, #666);">
+                                Selecione os produtos que deseja atualizar com o preço sugerido:
+                            </p>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" id="selecionarTodosPrecos" onchange="toggleSelecionarTodosPrecos()">
+                                    <strong>Selecionar Todos</strong>
+                                </label>
+                            </div>
+                            <table id="tabelaReplicarPrecos" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 40px;"></th>
+                                        <th>Produto</th>
+                                        <th style="text-align: right;">Preço Atual</th>
+                                        <th style="text-align: right;">Preço Sugerido</th>
+                                        <th style="text-align: right;">Diferença</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bodyReplicarPrecos">
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Barra de progresso (oculta inicialmente) -->
+                        <div id="progressoReplicar" style="display: none; margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span style="font-weight: 600; color: var(--text-primary, #2c3e50);">Atualizando preços...</span>
+                                <span id="progressoReplicarTexto" style="font-weight: 600; color: #9b59b6;">0%</span>
+                            </div>
+                            <div style="background: #e9ecef; border-radius: 4px; height: 25px; overflow: hidden;">
+                                <div id="progressoReplicarBar" style="background: linear-gradient(90deg, #9b59b6, #8e44ad); height: 100%; width: 0%; transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
+                                    0%
+                                </div>
+                            </div>
+                            <p id="produtoAtualReplicar" style="margin-top: 10px; color: var(--text-muted, #7f8c8d); font-size: 13px; text-align: center;"></p>
+                        </div>
+
+                        <div id="botoesReplicar" class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 15px; border-top: 1px solid var(--border-color, #ddd);">
+                            <button class="btn-cancelar" onclick="fecharModalReplicarSugestao()">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                            <button id="btnConfirmarReplicar" class="btn-gerar" style="background-color: #27ae60;" onclick="confirmarReplicarSugestao()">
+                                <i class="fas fa-check"></i> Confirmar Alterações
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading Análise de Preço -->
+                <div id="loadingAnalisePreco" style="display: none; padding: 40px 20px; text-align: center;">
+                    <div style="max-width: 500px; margin: 0 auto;">
+                        <h3 style="color: #2c3e50; margin-bottom: 20px;">
+                            <i class="fas fa-search-dollar" style="color: #e67e22;"></i> Análise de Preço Iniciada
+                        </h3>
+                        <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span style="font-weight: 600; color: #2c3e50;">Progresso</span>
+                                <span style="font-weight: 600; color: #e67e22;" id="progressoAnaliseTexto">0%</span>
+                            </div>
+                            <div style="background: #e9ecef; border-radius: 4px; height: 30px; overflow: hidden;">
+                                <div id="progressoAnaliseBar" style="background: linear-gradient(90deg, #e67e22, #d35400); height: 100%; width: 0%; transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
+                                    0%
+                                </div>
+                            </div>
+                            <p id="produtoAtualAnalise" style="margin-top: 15px; color: #7f8c8d; font-size: 14px;">Iniciando análise...</p>
+                        </div>
+                        <div class="alert" style="background: rgba(230, 126, 34, 0.1); border: 1px solid #e67e22; color: #e67e22;">
+                            <i class="fas fa-info-circle"></i> Você será notificado quando a análise for concluída.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
                 <!-- Mensagem Inicial -->
                 <div id="mensagemInicial" style="text-align: center; padding: 60px 20px;">
                     <i class="fas fa-chart-bar" style="font-size: 64px; color: #bdc3c7; margin-bottom: 20px;"></i>
@@ -517,8 +1493,14 @@
     <script src="js/auth.js"></script>
     <script src="js/api.js"></script>
     <script src="js/sidebar.js"></script>
+    <script src="js/sidebar-template.js"></script>
     <script src="js/permissions.js"></script>
+    <script src="js/gerar-relatorio-ia.js"></script>
+    <script src="js/mapa-brasil.js"></script>
+    <script src="js/analise-precos.js"></script>
     <script src="js/relatorios.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="js/internal-animation.js"></script>
+    <script src="js/theme-switcher.js"></script>
 </body>
 </html>

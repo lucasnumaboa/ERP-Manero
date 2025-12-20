@@ -13,7 +13,8 @@
     <link rel="stylesheet" href="css/submenu.css">
     <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/permissions.css">
+    <link rel="stylesheet" href="css/theme-dark.css">
+    <link rel="stylesheet" href="css/theme-light.css">
     <style>
         .estoque-baixo {
             background-color: rgba(255, 0, 0, 0.1);
@@ -405,6 +406,231 @@
             font-weight: 500;
             color: #495057;
         }
+        
+        /* View Mode Toggle */
+        .view-mode-toggle {
+            display: flex;
+            gap: 5px;
+            margin-left: auto;
+        }
+        
+        .view-mode-btn {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #666;
+        }
+        
+        .view-mode-btn:hover {
+            background: #e0e0e0;
+            color: #333;
+        }
+        
+        .view-mode-btn.active {
+            background: #4a6cf7;
+            border-color: #4a6cf7;
+            color: white;
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        /* Grid View Styles */
+        .estoque-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 10px;
+        }
+        
+        .estoque-grid-item {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .estoque-grid-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .estoque-grid-item.estoque-baixo {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .grid-item-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .grid-item-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 1px solid #e0e0e0;
+            flex-shrink: 0;
+        }
+        
+        .grid-item-image-placeholder {
+            width: 60px;
+            height: 60px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+        
+        .grid-item-image-placeholder i {
+            color: #ccc;
+            font-size: 1.5em;
+        }
+        
+        .grid-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .grid-item-name {
+            font-weight: 600;
+            font-size: 1em;
+            color: #333;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .grid-item-code {
+            font-size: 0.85em;
+            color: #666;
+        }
+        
+        .grid-item-category {
+            font-size: 0.8em;
+            color: #888;
+            background: #f5f5f5;
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-top: 4px;
+        }
+        
+        .grid-item-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .grid-item-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 10px 0;
+            border-top: 1px solid #f0f0f0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .grid-stat {
+            text-align: center;
+        }
+        
+        .grid-stat-label {
+            font-size: 0.75em;
+            color: #888;
+            text-transform: uppercase;
+        }
+        
+        .grid-stat-value {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .grid-stat-value.text-danger {
+            color: #dc3545;
+        }
+        
+        .grid-stat-value.text-success {
+            color: #28a745;
+        }
+        
+        .grid-item-price {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #4a6cf7;
+            text-align: center;
+            padding: 8px 0;
+        }
+        
+        .grid-item-actions {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: auto;
+            padding-top: 10px;
+        }
+        
+        .grid-item-actions .btn-icon {
+            padding: 8px 12px;
+            border-radius: 4px;
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .grid-item-actions .btn-icon:hover {
+            background: #4a6cf7;
+            color: white;
+            border-color: #4a6cf7;
+        }
+        
+        /* Compact Table Styles */
+        .compact-table {
+            font-size: 0.9em;
+        }
+        
+        .compact-table th,
+        .compact-table td {
+            padding: 8px 10px;
+        }
+        
+        .view-container {
+            display: none;
+        }
+        
+        .view-container.active {
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            .estoque-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            }
+            
+            .view-mode-toggle {
+                margin-top: 10px;
+                margin-left: 0;
+            }
+            
+            .card-header {
+                flex-wrap: wrap;
+            }
+        }
     </style>
 </head>
 <body>
@@ -448,6 +674,9 @@
                         <a href="estoque.html"><i class="fas fa-warehouse"></i> Estoque</a>
                     </li>
                     <li>
+                        <a href="exportar_estoque.html"><i class="fas fa-file-export"></i> Exportar Estoque</a>
+                    </li>
+                    <li>
                         <a href="clientes.html"><i class="fas fa-users"></i> Clientes</a>
                     </li>
                     <li>
@@ -463,6 +692,9 @@
                         <a href="fornecedores.html"><i class="fas fa-industry"></i> Fornecedores</a>
                     </li>
                     <li>
+                        <a href="plataformas_venda.html"><i class="fas fa-store"></i> Plataformas de Venda</a>
+                    </li>
+                    <li>
                         <a href="contas_pagar.html"><i class="fas fa-money-bill-wave"></i> Contas a Pagar</a>
                     </li>
                     <li>
@@ -470,6 +702,9 @@
                     </li>
                     <li>
                         <a href="condicoes_pagamento.html"><i class="fas fa-percent"></i> Condições de Pagamento</a>
+                    </li>
+                    <li>
+                        <a href="metas.html"><i class="fas fa-bullseye"></i> Metas</a>
                     </li>
                     <li>
                         <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
@@ -490,7 +725,9 @@
                 <div class="page-header">
                     <h1>Consulta de Estoque</h1>
                     <p>Visualize e gerencie o estoque de produtos</p>
-
+                    <button class="btn-primary" onclick="abrirExportarCatalogo()" style="margin-top: 10px;">
+                        <i class="fas fa-file-pdf"></i> Exportar Catálogo
+                    </button>
                 </div>
 
                 <!-- Filtros de Estoque -->
@@ -512,17 +749,38 @@
                                 </label>
                             </div>
                             <div class="checkbox-item">
-                                <input type="checkbox" id="filtroComEstoque" class="filter-checkbox">
+                                <input type="checkbox" id="filtroComEstoque" class="filter-checkbox" checked>
                                 <label for="filtroComEstoque" class="checkbox-label">
                                     <span class="checkbox-custom"></span>
-                                    Mostrar apenas o que tem estoque
+                                    Apenas com estoque
                                 </label>
                             </div>
                             <div class="checkbox-item">
-                                <input type="checkbox" id="filtroSomenteAtivo" class="filter-checkbox">
+                                <input type="checkbox" id="filtroSomenteAtivo" class="filter-checkbox" checked>
                                 <label for="filtroSomenteAtivo" class="checkbox-label">
                                     <span class="checkbox-custom"></span>
-                                    Somente produtos ativos
+                                    Apenas ativos
+                                </label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="filtroApenasFaturaveis" class="filter-checkbox" checked>
+                                <label for="filtroApenasFaturaveis" class="checkbox-label">
+                                    <span class="checkbox-custom"></span>
+                                    Apenas faturáveis
+                                </label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="filtroApenasComFoto" class="filter-checkbox" checked>
+                                <label for="filtroApenasComFoto" class="checkbox-label">
+                                    <span class="checkbox-custom"></span>
+                                    Apenas com foto
+                                </label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="filtroApenasMeuEstoque" class="filter-checkbox">
+                                <label for="filtroApenasMeuEstoque" class="checkbox-label">
+                                    <span class="checkbox-custom"></span>
+                                    Apenas meu estoque
                                 </label>
                             </div>
                         </div>
@@ -558,32 +816,77 @@
                 <div class="settings-card">
                     <div class="card-header">
                         <h2><i class="fas fa-warehouse"></i> Produtos em Estoque</h2>
+                        <div class="view-mode-toggle">
+                            <button class="view-mode-btn active" data-view="list" title="Visualização em Lista">
+                                <i class="fas fa-list"></i>
+                            </button>
+                            <button class="view-mode-btn" data-view="grid" title="Visualização em Grade">
+                                <i class="fas fa-th"></i>
+                            </button>
+                            <button class="view-mode-btn" data-view="table" title="Visualização em Tabela">
+                                <i class="fas fa-table"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="card-description">
                         Visualize e gerencie o estoque de produtos
                     </div>
                     <div class="configurations-content">
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Imagem</th>
-                                        <th>Código</th>
-                                        <th>Nome</th>
-                                        <th>Categoria</th>
-                                        <th class="text-center">Estoque Atual</th>
-                                        <th class="text-center">Estoque Mínimo</th>
-                                        <th class="text-right">Preço de Venda</th>
-                                        <th class="text-right">Comissão (R$)</th>
-                                        <th class="actions-column">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="estoqueTableBody">
-                                    <tr>
-                                        <td colspan="8" class="text-center">Carregando produtos...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <!-- View: Lista (modo atual) -->
+                        <div id="viewList" class="view-container active">
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Imagem</th>
+                                            <th>Código</th>
+                                            <th>Nome</th>
+                                            <th>Categoria</th>
+                                            <th class="text-center">Estoque Atual</th>
+                                            <th class="text-center">Estoque Mínimo</th>
+                                            <th class="text-right">Preço de Venda</th>
+                                            <th class="text-right">Comissão (R$)</th>
+                                            <th class="actions-column">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="estoqueTableBody">
+                                        <tr>
+                                            <td colspan="9" class="text-center">Carregando produtos...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- View: Grid -->
+                        <div id="viewGrid" class="view-container" style="display: none;">
+                            <div id="estoqueGridContainer" class="estoque-grid">
+                                <div class="text-center">Carregando produtos...</div>
+                            </div>
+                        </div>
+                        
+                        <!-- View: Tabela Compacta -->
+                        <div id="viewTable" class="view-container" style="display: none;">
+                            <div class="table-container">
+                                <table class="data-table compact-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Nome</th>
+                                            <th>Categoria</th>
+                                            <th class="text-center">Estoque</th>
+                                            <th class="text-center">Mínimo</th>
+                                            <th class="text-right">Preço</th>
+                                            <th class="actions-column">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="estoqueCompactTableBody">
+                                        <tr>
+                                            <td colspan="7" class="text-center">Carregando produtos...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -767,14 +1070,304 @@
         </div>
     </div>
 
+    <!-- Modal de Exportar Catálogo -->
+    <div class="modal" id="exportarCatalogoModal">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh;">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-pdf"></i> Exportar Catálogo</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 150px);">
+                <!-- Dados do Vendedor -->
+                <div class="catalogo-section">
+                    <h3><i class="fas fa-user-tie"></i> Dados do Vendedor</h3>
+                    <div id="catalogoVendedorInfo" class="catalogo-vendedor-info">
+                        <p class="text-muted">Carregando dados do vendedor...</p>
+                    </div>
+                </div>
+
+                <!-- Seleção de Categorias -->
+                <div class="catalogo-section">
+                    <h3><i class="fas fa-tags"></i> Filtrar por Categorias</h3>
+                    <p class="text-muted" style="font-size: 12px; margin-bottom: 10px;">Selecione categorias para filtrar os produtos (opcional)</p>
+                    <div id="catalogoCategoriasContainer" class="catalogo-checkboxes-container">
+                        <p class="text-muted">Carregando categorias...</p>
+                    </div>
+                </div>
+
+                <!-- Seleção de Produtos -->
+                <div class="catalogo-section">
+                    <h3><i class="fas fa-box"></i> Selecionar Produtos</h3>
+                    <div class="catalogo-produtos-header">
+                        <span id="catalogoContadorSelecionados">0 produto(s) selecionado(s)</span>
+                        <div class="catalogo-produtos-actions">
+                            <button type="button" class="btn-outline btn-sm" onclick="selecionarTodosProdutos()">
+                                <i class="fas fa-check-double"></i> Selecionar Todos
+                            </button>
+                            <button type="button" class="btn-outline btn-sm" onclick="limparSelecaoProdutos()">
+                                <i class="fas fa-times"></i> Limpar Seleção
+                            </button>
+                        </div>
+                    </div>
+                    <div id="catalogoProdutosContainer" class="catalogo-produtos-container">
+                        <p class="text-muted">Carregando produtos...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" onclick="fecharExportarCatalogo()">Cancelar</button>
+                <button class="btn-primary" id="btnGerarCatalogo" onclick="gerarCatalogoPDF()">
+                    <i class="fas fa-file-pdf"></i> Gerar PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Estilos do Modal de Exportar Catálogo */
+        .catalogo-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .catalogo-section h3 {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .catalogo-vendedor-info {
+            padding: 10px;
+        }
+        
+        .vendedor-info-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .vendedor-info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .vendedor-info-item i {
+            color: #4a6cf7;
+            font-size: 16px;
+        }
+        
+        .vendedor-info-item span {
+            font-size: 14px;
+            color: #333;
+        }
+        
+        .vendedor-info-error {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            color: #856404;
+        }
+        
+        .vendedor-info-error i {
+            color: #856404;
+            font-size: 18px;
+        }
+        
+        .catalogo-checkboxes-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            max-height: 120px;
+            overflow-y: auto;
+            padding: 5px;
+        }
+        
+        .catalogo-checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .catalogo-checkbox-item:hover {
+            border-color: #4a6cf7;
+        }
+        
+        .catalogo-checkbox-item input[type="checkbox"] {
+            cursor: pointer;
+        }
+        
+        .catalogo-checkbox-item label {
+            cursor: pointer;
+            font-size: 13px;
+            margin: 0;
+        }
+        
+        .catalogo-produtos-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .catalogo-produtos-header span {
+            font-weight: 600;
+            color: #4a6cf7;
+        }
+        
+        .catalogo-produtos-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .catalogo-produtos-actions .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
+        .catalogo-produtos-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 5px;
+        }
+        
+        .catalogo-produto-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .catalogo-produto-item:hover {
+            border-color: #4a6cf7;
+            box-shadow: 0 2px 8px rgba(74, 108, 247, 0.15);
+        }
+        
+        .catalogo-produto-item.selecionado {
+            border-color: #4a6cf7;
+            background: rgba(74, 108, 247, 0.05);
+        }
+        
+        .catalogo-produto-item input[type="checkbox"] {
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        
+        .catalogo-produto-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            cursor: pointer;
+        }
+        
+        .catalogo-produto-thumb {
+            width: 45px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            flex-shrink: 0;
+        }
+        
+        .catalogo-produto-thumb-placeholder {
+            width: 45px;
+            height: 45px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .catalogo-produto-thumb-placeholder i {
+            color: #ccc;
+        }
+        
+        .catalogo-produto-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+        
+        .catalogo-produto-nome {
+            font-size: 13px;
+            font-weight: 500;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .catalogo-produto-preco {
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a6cf7;
+        }
+        
+        @media (max-width: 768px) {
+            .vendedor-info-display {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .catalogo-produtos-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .catalogo-produtos-header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+        }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/api.js"></script>
     <script src="js/sidebar.js"></script>
+    <script src="js/sidebar-template.js"></script>
     <script src="js/pagination.js"></script>
     <script src="js/permissions.js"></script>
     <script src="js/setupModals.js"></script>
+    <script src="js/webhook-estoque.js"></script>
     <script src="js/estoque.js"></script>
-    <script src="js/filtro-pesquisa.js"></script>
+    <script src="js/exportar-catalogo.js"></script>
+    <script src="js/internal-animation.js"></script>
+    <script src="js/theme-switcher.js"></script>
 </body>
 </html>
 

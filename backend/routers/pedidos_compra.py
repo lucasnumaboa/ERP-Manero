@@ -53,11 +53,12 @@ class PedidoCompraDetalhado(PedidoCompra):
 async def listar_pedidos_compra(
     status: Optional[str] = None,
     fornecedor_id: Optional[int] = None,
+    apenas_meus: Optional[bool] = None,
     current_user: UserInDB = Depends(get_current_user)
 ):
     """
     Lista todos os pedidos de compra cadastrados no sistema.
-    Pode filtrar por status e fornecedor.
+    Pode filtrar por status, fornecedor e apenas_meus (pedidos do usuário atual).
     """
     query = "SELECT * FROM pedidos_compra WHERE 1=1"
     params = []
@@ -69,6 +70,11 @@ async def listar_pedidos_compra(
     if fornecedor_id is not None:
         query += " AND fornecedor_id = %s"
         params.append(fornecedor_id)
+    
+    # Filtro para mostrar apenas pedidos do usuário atual
+    if apenas_meus:
+        query += " AND usuario_id = %s"
+        params.append(current_user.id)
     
     query += " ORDER BY data_pedido DESC"
     

@@ -52,7 +52,7 @@ async function verificarAcessoAdmin() {
         }
         
         // Faz a requisição diretamente usando fetch com o token
-        const response = await fetch(`${getApiBaseUrl()}/api/usuarios/perfil`, {
+        const response = await fetch(`${await getApiBaseUrl()}/api/usuarios/perfil`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -583,7 +583,7 @@ async function salvarNovaConfiguracao(configData) {
             return;
         }
         
-        const response = await fetch(`${getApiBaseUrl()}/api/configuracoes`, {
+        const response = await fetch(`${await getApiBaseUrl()}/api/configuracoes`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -621,7 +621,8 @@ async function atualizarConfiguracao(configData) {
             descricao: configData.descricao || null
         };
         
-        const response = await fetch(`${getApiBaseUrl()}/api/configuracoes/${configData.chave}`, {
+        // O endpoint é /api/configuracoes/configuracoes/{chave} - usando PUT conforme documentação da API
+        const response = await fetch(`${await getApiBaseUrl()}/api/configuracoes/configuracoes/${configData.chave}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -655,7 +656,7 @@ async function excluirConfiguracao(configChave) {
             return;
         }
         
-        const response = await fetch(`${getApiBaseUrl()}/api/configuracoes/${configChave}`, {
+        const response = await fetch(`${await getApiBaseUrl()}/api/configuracoes/${configChave}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -1041,6 +1042,8 @@ async function editarGrupo(id) {
         document.querySelector('input[name="configuracoes_editar"]').checked = grupo.configuracoes_editar;
         document.querySelector('input[name="financeiro_visualizar"]').checked = grupo.financeiro_visualizar;
         document.querySelector('input[name="financeiro_editar"]').checked = grupo.financeiro_editar;
+        document.querySelector('input[name="metas_visualizar"]').checked = grupo.metas_visualizar;
+        document.querySelector('input[name="metas_editar"]').checked = grupo.metas_editar;
         
         // Abrir modal
         const modal = document.getElementById('grupoModal');
@@ -1119,7 +1122,9 @@ async function salvarGrupo() {
         configuracoes_visualizar: formData.get('configuracoes_visualizar') === 'on',
         configuracoes_editar: formData.get('configuracoes_editar') === 'on',
         financeiro_visualizar: formData.get('financeiro_visualizar') === 'on',
-        financeiro_editar: formData.get('financeiro_editar') === 'on'
+        financeiro_editar: formData.get('financeiro_editar') === 'on',
+        metas_visualizar: formData.get('metas_visualizar') === 'on',
+        metas_editar: formData.get('metas_editar') === 'on'
     };
     
     try {
@@ -1468,3 +1473,172 @@ async function salvarUsuario() {
         alert(`Erro ao salvar usuário: ${error.message}`);
     }
 }
+
+// =====================================================
+// FUNÇÕES DE WEBHOOK
+// =====================================================
+
+// Carrega as configurações de webhook do banco de dados
+async function carregarConfiguracoesWebhook() {
+    try {
+        const configuracoes = await apiGet('/api/configuracoes/configuracoes/');
+        
+        const webhookUrl = configuracoes.find(c => c.chave === 'webhook_url');
+        const webhookAtivo = configuracoes.find(c => c.chave === 'webhook_ativo');
+        
+        // Preenche os campos
+        const urlInput = document.getElementById('webhook_url');
+        const ativoCheckbox = document.getElementById('webhook_ativo');
+        const statusLabel = document.getElementById('webhook_status_label');
+        
+        if (urlInput) {
+            urlInput.value = webhookUrl ? webhookUrl.valor : '';
+        }
+        
+        if (ativoCheckbox) {
+            const isAtivo = webhookAtivo && webhookAtivo.valor === 'true';
+            ativoCheckbox.checked = isAtivo;
+            atualizarLabelWebhook(isAtivo);
+        }
+        
+        console.log('Configurações de webhook carregadas');
+    } catch (error) {
+        console.error('Erro ao carregar configurações de webhook:', error);
+    }
+}
+
+// Atualiza o label de status do webhook
+function atualizarLabelWebhook(ativo) {
+    const statusLabel = document.getElementById('webhook_status_label');
+    if (statusLabel) {
+        if (ativo) {
+            statusLabel.textContent = 'Ativado';
+            statusLabel.className = 'webhook-status-text ativo';
+        } else {
+            statusLabel.textContent = 'Desativado';
+            statusLabel.className = 'webhook-status-text inativo';
+        }
+    }
+}
+
+// Salva as configurações de webhook
+async function salvarConfiguracoesWebhook(event) {
+    event.preventDefault();
+    
+    const webhookUrl = document.getElementById('webhook_url').value;
+    const webhookAtivo = document.getElementById('webhook_ativo').checked;
+    
+    try {
+        // Salva a URL do webhook
+        await atualizarConfiguracao({
+            chave: 'webhook_url',
+            valor: webhookUrl,
+            descricao: 'URL do webhook para notificação de movimentação de estoque'
+        });
+        
+        // Salva o status do webhook
+        await atualizarConfiguracao({
+            chave: 'webhook_ativo',
+            valor: webhookAtivo ? 'true' : 'false',
+            descricao: 'Ativa/desativa o envio de notificações via webhook (true/false)'
+        });
+        
+        alert('Configurações de webhook salvas com sucesso!');
+        
+        // Recarrega as configurações do banco de dados na tabela
+        carregarDadosConfiguracoes();
+    } catch (error) {
+        console.error('Erro ao salvar configurações de webhook:', error);
+        alert('Erro ao salvar configurações de webhook. Por favor, tente novamente.');
+    }
+}
+
+// Testa o webhook enviando uma mensagem de teste
+async function testarWebhook() {
+    const webhookUrl = document.getElementById('webhook_url').value;
+    
+    if (!webhookUrl || webhookUrl.trim() === '') {
+        alert('Por favor, preencha a URL do webhook antes de testar.');
+        return;
+    }
+    
+    try {
+        // Busca vendedores ativos com telefone
+        const vendedores = await apiGet('/api/vendedores', { ativo: true });
+        const vendedoresComTelefone = vendedores.filter(v => v.telefone && v.telefone.trim() !== '');
+        
+        if (vendedoresComTelefone.length === 0) {
+            alert('Nenhum vendedor ativo com telefone encontrado. Cadastre vendedores com telefone para testar o webhook.');
+            return;
+        }
+        
+        // Monta mensagem de teste
+        const mensagemTeste = `🔔 *TESTE DE WEBHOOK*\n\nEsta é uma mensagem de teste do sistema ERP Maneiro.\n\n✅ Se você recebeu esta mensagem, o webhook está funcionando corretamente!\n\n📅 Data/Hora: ${new Date().toLocaleString('pt-BR')}`;
+        
+        let sucesso = 0;
+        let falha = 0;
+        
+        // Envia para cada vendedor
+        for (const vendedor of vendedoresComTelefone) {
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        telefone: vendedor.telefone,
+                        mensagem: mensagemTeste,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                
+                if (response.ok) {
+                    sucesso++;
+                } else {
+                    falha++;
+                }
+            } catch (error) {
+                console.error(`Erro ao enviar para ${vendedor.telefone}:`, error);
+                falha++;
+            }
+        }
+        
+        alert(`Teste de webhook concluído!\n\n✅ Sucesso: ${sucesso}\n❌ Falha: ${falha}\n\nTotal de vendedores: ${vendedoresComTelefone.length}`);
+    } catch (error) {
+        console.error('Erro ao testar webhook:', error);
+        alert('Erro ao testar webhook. Verifique a URL e tente novamente.');
+    }
+}
+
+// Configura os eventos do webhook
+function setupWebhookEvents() {
+    // Formulário de webhook
+    const webhookForm = document.getElementById('webhookForm');
+    if (webhookForm) {
+        webhookForm.addEventListener('submit', salvarConfiguracoesWebhook);
+    }
+    
+    // Botão de testar webhook
+    const btnTestarWebhook = document.getElementById('btnTestarWebhook');
+    if (btnTestarWebhook) {
+        btnTestarWebhook.addEventListener('click', testarWebhook);
+    }
+    
+    // Checkbox de ativar/desativar
+    const webhookAtivo = document.getElementById('webhook_ativo');
+    if (webhookAtivo) {
+        webhookAtivo.addEventListener('change', function() {
+            atualizarLabelWebhook(this.checked);
+        });
+    }
+    
+    // Carrega as configurações de webhook
+    carregarConfiguracoesWebhook();
+}
+
+// Adiciona a inicialização do webhook ao DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Configura os eventos do webhook
+    setupWebhookEvents();
+});

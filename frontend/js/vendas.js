@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
     carregarProdutos();
     carregarVendedores();
     carregarCondicoesPagamento();
+    carregarPlataformas();
     
     // Define datas padrão dos filtros (primeiro dia do mês até hoje)
     const hoje = new Date();
@@ -159,7 +160,7 @@ async function carregarVendas() {
             console.warn('Usuário sem permissão para visualizar vendas');
             const tbody = document.getElementById('vendasTableBody');
             if (tbody) {
-                tbody.innerHTML = '<tr><td colspan="12" class="text-center">Você não tem acesso para visualizar vendas.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="13" class="text-center">Você não tem acesso para visualizar vendas.</td></tr>';
             }
             return;
         }
@@ -167,14 +168,14 @@ async function carregarVendas() {
         // Não carrega vendas automaticamente - aguarda aplicação de filtros
         const tbody = document.getElementById('vendasTableBody');
         if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="12" class="text-center">Use os filtros acima para visualizar as vendas</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="13" class="text-center">Use os filtros acima para visualizar as vendas</td></tr>';
         }
         
         console.log('Página de vendas carregada - aguardando aplicação de filtros');
     } catch (error) {
         console.error('Erro ao carregar vendas:', error);
         // Exibir mensagem de erro
-        document.getElementById('vendasTableBody').innerHTML = '<tr><td colspan="12" class="text-center">Erro ao carregar vendas. Por favor, tente novamente.</td></tr>';
+        document.getElementById('vendasTableBody').innerHTML = '<tr><td colspan="13" class="text-center">Erro ao carregar vendas. Por favor, tente novamente.</td></tr>';
     }
 }
 
@@ -397,7 +398,7 @@ function limparFiltros() {
     // Limpa a tabela
     const tbody = document.getElementById('vendasTableBody');
     if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="12" class="text-center">Use os filtros acima para visualizar as vendas</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="13" class="text-center">Use os filtros acima para visualizar as vendas</td></tr>';
     }
     
     console.log('Filtros limpos');
@@ -534,7 +535,7 @@ async function renderizarVendas(vendas) {
     tbody.innerHTML = '';
     
     if (vendas.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" class="text-center">Nenhuma venda encontrada</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="13" class="text-center">Nenhuma venda encontrada</td></tr>';
         return;
     }
     
@@ -622,6 +623,9 @@ async function renderizarVendas(vendas) {
             contasPagarHTML = '<td><span class="cp-badge cp-sem-vendedor"><i class="fas fa-ban"></i> Sem vendedor</span></td>';
         }
         
+        // Verifica se pode mostrar botão de devolução (apenas para vendas finalizadas)
+        const podeDevolucao = podeEditar && statusKey === 'finalizada';
+        
         tr.innerHTML = `
             <td>${venda.id}</td>
             <td>${venda.cliente_nome}</td>
@@ -630,6 +634,7 @@ async function renderizarVendas(vendas) {
             ${produtosHTML}
             <td><span class="status-badge ${statusKey}">${label}</span></td>
             <td>${venda.vendedor_nome ? venda.vendedor_nome : '-'}</td>
+            <td>${venda.plataforma_nome ? venda.plataforma_nome : '-'}</td>
             <td>${venda.condicao_pagamento_nome ? venda.condicao_pagamento_nome : '-'}</td>
             <td>${formatarMoeda(comissao)}</td>
             ${contasReceberHTML}
@@ -645,6 +650,11 @@ async function renderizarVendas(vendas) {
                     </button>
                     <button class="btn-icon btn-delete" data-id="${venda.id}" title="Excluir">
                         <i class="fas fa-trash"></i>
+                    </button>
+                    ` : ''}
+                    ${podeDevolucao ? `
+                    <button class="btn-devolucao" data-id="${venda.id}" data-codigo="${venda.codigo}" data-cliente="${venda.cliente_nome}" data-valor="${venda.valor_total}" data-vendedor="${venda.vendedor_nome || '-'}" title="Devolução">
+                        <i class="fas fa-undo-alt"></i> Devolução
                     </button>
                     ` : ''}
                 </div>
@@ -695,6 +705,17 @@ async function renderizarVendas(vendas) {
     // Adicionar event listeners para os botões de criar CP
     document.querySelectorAll('.btn-criar-cp').forEach(btn => {
         btn.addEventListener('click', () => criarContasPagar(parseInt(btn.dataset.vendaId), btn.dataset.vendaCodigo, parseInt(btn.dataset.vendedorId)));
+    });
+    
+    // Adicionar event listeners para os botões de devolução
+    document.querySelectorAll('.btn-devolucao').forEach(btn => {
+        btn.addEventListener('click', () => abrirModalDevolucao(
+            parseInt(btn.dataset.id),
+            btn.dataset.codigo,
+            btn.dataset.cliente,
+            parseFloat(btn.dataset.valor),
+            btn.dataset.vendedor
+        ));
     });
 }
 
@@ -928,6 +949,43 @@ function preencherSelectCondicoesPagamento(condicoes) {
     }
 }
 
+// Função para carregar plataformas de venda - Método de Venda
+async function carregarPlataformas() {
+    try {
+        // Usa a API centralizada para buscar plataformas de venda
+        const plataformas = await apiGet('/api/plataformas-venda', { ativo: true });
+        console.log('Plataformas de venda carregadas da API:', plataformas);
+        preencherSelectPlataformas(plataformas);
+    } catch (error) {
+        console.error('Erro ao carregar plataformas:', error);
+    }
+}
+
+// Função para preencher o select de plataformas (Método de Venda)
+function preencherSelectPlataformas(plataformas) {
+    const selectPlataforma = document.getElementById('plataforma_id');
+    
+    if (!selectPlataforma) {
+        console.error('Select plataforma_id não encontrado');
+        return;
+    }
+    
+    // Limpar opções existentes, mantendo a primeira
+    selectPlataforma.innerHTML = '<option value="">Selecione...</option>';
+    
+    // Preencher com as plataformas de venda da API
+    if (plataformas && plataformas.length > 0) {
+        plataformas.forEach(plataforma => {
+            const option = document.createElement('option');
+            option.value = plataforma.id;
+            option.textContent = plataforma.nome;
+            selectPlataforma.appendChild(option);
+        });
+    } else {
+        console.log('Nenhuma plataforma de venda encontrada na API');
+    }
+}
+
 // Funções para manipulação de vendas
 function abrirModalNovaVenda() {
     console.log('Função abrirModalNovaVenda iniciada');
@@ -1021,6 +1079,7 @@ async function editarVenda(id) {
     document.getElementById('cliente_id').value = vendaAtual.cliente_id || '';
     document.getElementById('vendedor_id').value = vendaAtual.vendedor_id || '';
     document.getElementById('condicao_pagamento_id').value = vendaAtual.condicao_pagamento_id || '';
+    document.getElementById('plataforma_id').value = vendaAtual.plataforma_id || '';
     document.getElementById('data_entrega').value = vendaAtual.data_entrega || '';
     document.getElementById('forma_pagamento').value = vendaAtual.forma_pagamento || '';
     // Normalizar status para garantir seleção correta no <select>
@@ -1182,9 +1241,19 @@ async function salvarVenda() {
         return total + (item.comissao_item || 0);
     }, 0);
 
+    // Validar se uma plataforma (Método de Venda) foi selecionada
+    const plataformaSelect = document.getElementById('plataforma_id');
+    const plataformaId = plataformaSelect ? parseInt(plataformaSelect.value) : null;
+    
+    if (!plataformaId) {
+        alert('Por favor, selecione um Método de Venda.');
+        return;
+    }
+
     const vendaData = {
         cliente_id: clienteId, // Usando o ID do cliente selecionado no formulário
         cliente_nome: clienteNome, // Adicionando o nome do cliente para garantir que seja salvo corretamente
+        plataforma_id: plataformaId, // Método de Venda (obrigatório)
         data_entrega: document.getElementById('data_entrega').value, // Usando o campo data_entrega do formulário
         forma_pagamento: document.getElementById('forma_pagamento').value, // Usando a forma de pagamento selecionada no formulário
         observacoes: document.getElementById('observacoes').value,
@@ -1236,6 +1305,26 @@ async function criarVenda(vendaData) {
         
         // Usa a API centralizada
         await apiPost('/api/vendas', vendaData);
+        
+        // Notifica via webhook sobre a saída de produtos
+        if (vendaData.itens && vendaData.itens.length > 0 && window.webhookEstoque) {
+            console.log('[Vendas] Notificando saída de produtos via webhook...');
+            
+            // Obter nome do vendedor selecionado
+            const vendedorSelect = document.getElementById('vendedor_id');
+            let vendedorNome = '';
+            if (vendedorSelect && vendedorSelect.selectedIndex > 0) {
+                vendedorNome = vendedorSelect.options[vendedorSelect.selectedIndex].textContent;
+            }
+            
+            // Dados adicionais do pedido para o webhook
+            const dadosPedido = {
+                comissao_total: vendaData.comissao_total || 0,
+                vendedor_nome: vendedorNome
+            };
+            
+            window.webhookEstoque.notificarSaidaProdutos(vendaData.itens, dadosPedido);
+        }
         
         alert('Venda criada com sucesso!');
         fecharModalVenda();
@@ -1661,7 +1750,8 @@ function formatarStatus(status) {
     const statusMap = {
         'pendente': 'Pendente',
         'finalizada': 'Finalizada',
-        'cancelada': 'Cancelada'
+        'cancelada': 'Cancelada',
+        'devolvido': 'Devolvido'
     };
     return statusMap[status] || status;
 }
@@ -1978,6 +2068,149 @@ async function atualizarContasAReceber(codigoVenda, novoStatus) {
         console.error('❌ Erro ao buscar contas a receber:', error);
     }
 }
+
+// ==========================================
+// FUNÇÕES DE DEVOLUÇÃO DE VENDA
+// ==========================================
+
+/**
+ * Abre o modal de devolução com os dados da venda
+ */
+function abrirModalDevolucao(vendaId, codigo, cliente, valor, vendedor) {
+    console.log('Abrindo modal de devolução para venda:', vendaId, codigo);
+    
+    // Preenche os dados no modal
+    document.getElementById('devolucaoVendaId').value = vendaId;
+    document.getElementById('devolucaoPedidoCodigo').textContent = codigo;
+    document.getElementById('devolucaoCliente').textContent = cliente;
+    document.getElementById('devolucaoValor').textContent = formatarMoeda(valor);
+    document.getElementById('devolucaoVendedor').textContent = vendedor;
+    
+    // Limpa a justificativa
+    document.getElementById('devolucaoJustificativa').value = '';
+    
+    // Exibe o modal
+    const modal = document.getElementById('devolucaoModal');
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+    document.body.classList.add('modal-open');
+}
+
+/**
+ * Fecha o modal de devolução
+ */
+function fecharModalDevolucao() {
+    const modal = document.getElementById('devolucaoModal');
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+    document.body.classList.remove('modal-open');
+    
+    // Limpa o formulário
+    document.getElementById('devolucaoForm').reset();
+}
+
+/**
+ * Processa a devolução da venda
+ */
+async function processarDevolucao() {
+    const vendaId = document.getElementById('devolucaoVendaId').value;
+    const justificativa = document.getElementById('devolucaoJustificativa').value.trim();
+    
+    // Valida a justificativa
+    if (!justificativa) {
+        alert('Por favor, informe a justificativa da devolução.');
+        return;
+    }
+    
+    // Confirma a ação
+    const confirmar = confirm('Tem certeza que deseja processar a devolução desta venda?\n\nEsta ação não pode ser desfeita.');
+    if (!confirmar) {
+        return;
+    }
+    
+    // Desabilita o botão durante o processamento
+    const btnConfirmar = document.getElementById('btnConfirmarDevolucao');
+    const textoOriginal = btnConfirmar.innerHTML;
+    btnConfirmar.disabled = true;
+    btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+    
+    try {
+        console.log('Processando devolução da venda:', vendaId);
+        
+        // Chama a API de devolução
+        const response = await apiPost(`/api/vendas/${vendaId}/devolucao`, {
+            justificativa: justificativa
+        });
+        
+        console.log('Resposta da devolução:', response);
+        
+        // Monta a mensagem de sucesso
+        let mensagem = response.mensagem || 'Devolução processada com sucesso!';
+        
+        if (response.titulo_devolucao_codigo && response.titulo_devolucao_valor > 0) {
+            mensagem += `\n\nTítulo de devolução de comissão gerado:\n`;
+            mensagem += `Código: ${response.titulo_devolucao_codigo}\n`;
+            mensagem += `Valor: ${formatarMoeda(response.titulo_devolucao_valor)}`;
+        }
+        
+        alert(mensagem);
+        
+        // Fecha o modal
+        fecharModalDevolucao();
+        
+        // Recarrega a lista de vendas
+        aplicarFiltros();
+        
+    } catch (error) {
+        console.error('Erro ao processar devolução:', error);
+        
+        let errorMessage = 'Erro ao processar devolução: ';
+        if (error.detail) {
+            errorMessage += error.detail;
+        } else if (error.message) {
+            errorMessage += error.message;
+        } else {
+            errorMessage += 'Verifique os dados e tente novamente.';
+        }
+        
+        alert(errorMessage);
+    } finally {
+        // Reabilita o botão
+        btnConfirmar.disabled = false;
+        btnConfirmar.innerHTML = textoOriginal;
+    }
+}
+
+// Configura os botões do modal de devolução
+document.addEventListener('DOMContentLoaded', function() {
+    // Botão para cancelar devolução
+    const btnCancelarDevolucao = document.getElementById('btnCancelarDevolucao');
+    if (btnCancelarDevolucao) {
+        btnCancelarDevolucao.addEventListener('click', fecharModalDevolucao);
+    }
+    
+    // Botão para confirmar devolução
+    const btnConfirmarDevolucao = document.getElementById('btnConfirmarDevolucao');
+    if (btnConfirmarDevolucao) {
+        btnConfirmarDevolucao.addEventListener('click', processarDevolucao);
+    }
+    
+    // Fechar modal ao clicar no X
+    const closeButtonsDevolucao = document.querySelectorAll('#devolucaoModal .close-modal');
+    closeButtonsDevolucao.forEach(btn => {
+        btn.addEventListener('click', fecharModalDevolucao);
+    });
+    
+    // Fechar modal ao clicar fora
+    const devolucaoModal = document.getElementById('devolucaoModal');
+    if (devolucaoModal) {
+        devolucaoModal.addEventListener('click', function(e) {
+            if (e.target === devolucaoModal) {
+                fecharModalDevolucao();
+            }
+        });
+    }
+});
 
 // Configura os botões do modal de cliente
 document.addEventListener('DOMContentLoaded', function() {

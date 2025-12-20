@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Any
+from datetime import datetime
 from database import get_db_cursor
 from auth import get_current_user, UserInDB
 
@@ -19,8 +20,11 @@ class MovimentacaoEstoqueCreate(MovimentacaoEstoqueBase):
 
 class MovimentacaoEstoque(MovimentacaoEstoqueBase):
     id: int
-    data_movimentacao: str
+    data_movimentacao: Any  # Aceita datetime ou string
     usuario_id: int
+    
+    class Config:
+        from_attributes = True
 
 # Rotas
 @router.get("/movimentacoes", response_model=List[MovimentacaoEstoque])
@@ -128,11 +132,17 @@ async def listar_produtos_estoque(
     categoria_id: Optional[int] = None,
     com_estoque: Optional[bool] = None,
     ativo: Optional[bool] = None,
+    nome: Optional[str] = None,
+    faturavel: Optional[bool] = None,
+    apenas_meus: Optional[bool] = None,
+    com_foto: Optional[bool] = None,
     current_user: UserInDB = Depends(get_current_user)
 ):
     """
     Lista todos os produtos com informações de estoque.
-    Pode filtrar por produtos abaixo do estoque mínimo, categoria, produtos com estoque e produtos ativos.
+    Pode filtrar por produtos abaixo do estoque mínimo, categoria, produtos com estoque, produtos ativos, nome, faturavel e apenas_meus.
+    Para usuários não-administradores, retorna apenas produtos com faturavel = TRUE.
+    Inclui o campo usuario_id para controle de permissões no frontend.
     """
     query = """
         SELECT p.*, c.nome as categoria_nome
@@ -141,6 +151,14 @@ async def listar_produtos_estoque(
         WHERE 1=1
     """
     params = []
+    
+    # Se o usuário não for admin, filtra apenas produtos faturáveis
+    if current_user.nivel_acesso != 'admin':
+        query += " AND (p.faturavel = TRUE OR p.faturavel IS NULL)"
+    
+    # Filtro explícito por faturavel (para exportação de estoque)
+    if faturavel is not None and faturavel:
+        query += " AND p.faturavel = TRUE"
     
     if abaixo_minimo is not None and abaixo_minimo:
         query += " AND p.estoque_atual < p.estoque_minimo"
@@ -155,6 +173,20 @@ async def listar_produtos_estoque(
     if ativo is not None:
         query += " AND p.ativo = %s"
         params.append(ativo)
+    
+    # Filtro por nome (busca parcial, case-insensitive)
+    if nome is not None and nome.strip():
+        query += " AND p.nome LIKE %s"
+        params.append(f"%{nome.strip()}%")
+    
+    # Filtro para mostrar apenas produtos do usuário atual
+    if apenas_meus:
+        query += " AND p.usuario_id = %s"
+        params.append(current_user.id)
+    
+    # Filtro para mostrar apenas produtos com foto
+    if com_foto:
+        query += " AND p.caminho_imagem IS NOT NULL AND p.caminho_imagem != ''"
     
     query += " ORDER BY p.nome"
     

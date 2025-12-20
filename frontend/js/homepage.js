@@ -149,12 +149,15 @@ async function setupShortcuts() {
         'vendas-shortcut': 'vendas_visualizar',
         'vendedores-shortcut': 'vendedores_visualizar',
         'estoque-shortcut': 'estoque_visualizar',
+        'exportar_estoque-shortcut': 'estoque_visualizar',
         'financeiro-shortcut': 'financeiro_visualizar',
         'compras-shortcut': 'compras_visualizar',
         'fornecedores-shortcut': 'fornecedores_visualizar',
+        'plataformas_venda-shortcut': 'fornecedores_visualizar',
         'contas_pagar-shortcut': 'financeiro_visualizar',
         'contas_receber-shortcut': 'financeiro_visualizar',
         'condicoes_pagamento-shortcut': 'financeiro_visualizar',
+        'metas-shortcut': 'metas_visualizar',
         'relatorios-shortcut': 'dashboard_visualizar',
         'configuracoes-shortcut': 'configuracoes_visualizar'
     };

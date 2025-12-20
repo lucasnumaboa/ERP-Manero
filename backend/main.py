@@ -32,6 +32,9 @@ import routers.clientes as clientes
 import routers.dashboard as dashboard
 import routers.configuracoes as configuracoes
 import routers.condicoes_pagamento as condicoes_pagamento
+import routers.metas as metas
+import routers.plataformas_venda as plataformas_venda
+import routers.analise_precos as analise_precos
 
 # Importa o gerenciador de timeout
 from timeout_manager import start_timeout_manager
@@ -167,6 +170,9 @@ app.include_router(clientes.router, prefix="/api/clientes", tags=["Clientes"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
 app.include_router(configuracoes.router, prefix="/api/configuracoes", tags=["Configurações"])
 app.include_router(condicoes_pagamento.router, prefix="/api/condicoes-pagamento", tags=["Condições de Pagamento"])
+app.include_router(metas.router, prefix="/api/metas", tags=["Metas e Premiações"])
+app.include_router(plataformas_venda.router, prefix="/api/plataformas-venda", tags=["Plataformas de Venda"])
+app.include_router(analise_precos.router, prefix="/api/analise-precos", tags=["Análise de Preços"])
 
 # Configuração para servir arquivos estáticos (uploads)
 import os

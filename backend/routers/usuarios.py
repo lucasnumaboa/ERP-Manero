@@ -76,7 +76,9 @@ async def get_grupo_permissions(
         "configuracoes_visualizar": grupo.get('configuracoes_visualizar'),
         "configuracoes_editar": grupo.get('configuracoes_editar'),
         "financeiro_visualizar": grupo.get('financeiro_visualizar'),
-        "financeiro_editar": grupo.get('financeiro_editar')
+        "financeiro_editar": grupo.get('financeiro_editar'),
+        "metas_visualizar": grupo.get('metas_visualizar'),
+        "metas_editar": grupo.get('metas_editar')
     }
 @router.get("/", response_model=List[Usuario])
 async def listar_usuarios(current_user: UserInDB = Depends(get_current_user)):

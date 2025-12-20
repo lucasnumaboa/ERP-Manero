@@ -9,6 +9,97 @@
     <link rel="stylesheet" href="css/modulos.css">
     <link rel="stylesheet" href="css/submenu.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/theme-dark.css">
+    <link rel="stylesheet" href="css/theme-light.css">
+    <style>
+        /* Webhook Form Styles */
+        .webhook-form-group {
+            margin-bottom: 20px;
+        }
+        .webhook-form-group > label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-secondary, #a8b2d1);
+        }
+        .webhook-form-group input[type="url"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            border-radius: 4px;
+            font-size: 14px;
+            background: rgba(10, 25, 47, 0.8);
+            color: var(--text-primary, #e6f1ff);
+        }
+        .webhook-form-group .help-text {
+            display: block;
+            margin-top: 5px;
+            font-size: 12px;
+            color: var(--text-muted, #8892b0);
+        }
+        
+        /* Switch Toggle para Webhook */
+        .webhook-toggle-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 5px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+            flex-shrink: 0;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(100, 255, 218, 0.2);
+            transition: .4s;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+        }
+        input:checked + .slider {
+            background-color: #27ae60;
+        }
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+        .slider.round {
+            border-radius: 26px;
+        }
+        .slider.round:before {
+            border-radius: 50%;
+        }
+        .webhook-status-text {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .webhook-status-text.ativo {
+            color: #27ae60;
+        }
+        .webhook-status-text.inativo {
+            color: #e74c3c;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
@@ -51,6 +142,9 @@
                         <a href="estoque.html"><i class="fas fa-warehouse"></i> Estoque</a>
                     </li>
                     <li>
+                        <a href="exportar_estoque.html"><i class="fas fa-file-export"></i> Exportar Estoque</a>
+                    </li>
+                    <li>
                         <a href="clientes.html"><i class="fas fa-users"></i> Clientes</a>
                     </li>
                     <li>
@@ -66,6 +160,9 @@
                         <a href="fornecedores.html"><i class="fas fa-industry"></i> Fornecedores</a>
                     </li>
                     <li>
+                        <a href="plataformas_venda.html"><i class="fas fa-store"></i> Plataformas de Venda</a>
+                    </li>
+                    <li>
                         <a href="contas_pagar.html"><i class="fas fa-money-bill-wave"></i> Contas a Pagar</a>
                     </li>
                     <li>
@@ -73,6 +170,9 @@
                     </li>
                     <li>
                         <a href="condicoes_pagamento.html"><i class="fas fa-percent"></i> Condições de Pagamento</a>
+                    </li>
+                    <li>
+                        <a href="metas.html"><i class="fas fa-bullseye"></i> Metas</a>
                     </li>
                     <li>
                         <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
@@ -215,6 +315,55 @@
                     <div class="configurations-header">
                         <h1><i class="fas fa-database"></i> Configurações do Sistema</h1>
                         <p class="configurations-subtitle">Gerencie as configurações do banco de dados do sistema</p>
+                    </div>
+                    
+                    <!-- Seção de Webhook -->
+                    <div class="settings-card" style="margin-bottom: 20px;">
+                        <div class="card-header">
+                            <h2><i class="fas fa-bell"></i> Notificações de Estoque (Webhook)</h2>
+                            <p class="card-description">Configure o webhook para notificar vendedores sobre movimentações de estoque</p>
+                        </div>
+                        <div class="configurations-content">
+                            <form id="webhookForm">
+                                <div class="webhook-form-group">
+                                    <label for="webhook_url"><i class="fas fa-link"></i> URL do Webhook</label>
+                                    <input type="url" id="webhook_url" name="webhook_url" 
+                                           placeholder="https://api.exemplo.com/webhook">
+                                    <span class="help-text">URL que receberá as notificações de movimentação de estoque</span>
+                                </div>
+                                <div class="webhook-form-group">
+                                    <label><i class="fas fa-toggle-on"></i> Status do Webhook</label>
+                                    <div class="webhook-toggle-wrapper">
+                                        <label class="switch">
+                                            <input type="checkbox" id="webhook_ativo" name="webhook_ativo">
+                                            <span class="slider round"></span>
+                                        </label>
+                                        <span id="webhook_status_label" class="webhook-status-text inativo">Desativado</span>
+                                    </div>
+                                    <span class="help-text">Ativa/desativa o envio de notificações para vendedores</span>
+                                </div>
+                                <div class="webhook-form-group">
+                                    <button type="submit" class="btn-primary">
+                                        <i class="fas fa-save"></i> Salvar Configurações de Webhook
+                                    </button>
+                                    <button type="button" class="btn-outline" id="btnTestarWebhook" style="margin-left: 10px;">
+                                        <i class="fas fa-paper-plane"></i> Testar Webhook
+                                    </button>
+                                </div>
+                            </form>
+                            <div class="webhook-info" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #3498db;">
+                                <h4 style="margin: 0 0 10px 0; color: #2c3e50;"><i class="fas fa-info-circle"></i> Como funciona</h4>
+                                <p style="margin: 0; font-size: 14px; color: #666;">
+                                    Quando ativado, o sistema enviará notificações via webhook para todos os vendedores ativos que possuem telefone cadastrado.
+                                    As notificações são enviadas nos seguintes eventos:
+                                </p>
+                                <ul style="margin: 10px 0 0 20px; font-size: 14px; color: #666;">
+                                    <li><strong>Entrada de produtos:</strong> Quando uma compra é recebida</li>
+                                    <li><strong>Saída de produtos:</strong> Quando uma venda é criada</li>
+                                    <li><strong>Movimentação manual:</strong> Quando há entrada/saída manual no estoque</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="settings-card">
@@ -384,6 +533,14 @@
                                 <label><input type="checkbox" name="financeiro_editar"> Editar</label>
                             </div>
                         </div>
+                        
+                        <div class="permission-module">
+                            <h4>Metas</h4>
+                            <div class="permission-options">
+                                <label><input type="checkbox" name="metas_visualizar"> Visualizar</label>
+                                <label><input type="checkbox" name="metas_editar"> Editar</label>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="form-group mt-3">
@@ -399,8 +556,11 @@
     <script src="js/api_config.js"></script>
     <script src="js/api.js"></script>
     <script src="js/sidebar.js"></script>
+    <script src="js/sidebar-template.js"></script>
     <script src="js/tabs.js"></script>
     <script src="js/setupModals.js"></script>
     <script src="js/configuracoes.js"></script>
+    <script src="js/internal-animation.js"></script>
+    <script src="js/theme-switcher.js"></script>
 </body>
 </html>

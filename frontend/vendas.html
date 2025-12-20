@@ -11,16 +11,19 @@
     <link rel="stylesheet" href="css/submenu.css">
     <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/theme-dark.css">
+    <link rel="stylesheet" href="css/theme-light.css">
     <style>
         /* Estilos dos Filtros Reformulados */
         .filter-container {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
+            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             max-width: 100%;
+            backdrop-filter: blur(20px);
         }
 
         .filter-row {
@@ -60,26 +63,26 @@
             align-items: center;
             cursor: pointer;
             font-size: 14px;
-            color: #495057;
+            color: var(--text-secondary, #a8b2d1);
             user-select: none;
         }
 
         .checkbox-custom {
             width: 18px;
             height: 18px;
-            border: 2px solid #6c757d;
+            border: 2px solid var(--text-muted, #8892b0);
             border-radius: 3px;
             margin-right: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
-            background: white;
+            background: rgba(10, 25, 47, 0.8);
         }
 
         .filter-checkbox:checked + .checkbox-label .checkbox-custom {
-            background: #007bff;
-            border-color: #007bff;
+            background: var(--accent-primary, #64ffda);
+            border-color: var(--accent-primary, #64ffda);
         }
 
         .filter-checkbox:checked + .checkbox-label .checkbox-custom::after {
@@ -90,7 +93,7 @@
         }
 
         .checkbox-label:hover .checkbox-custom {
-            border-color: #007bff;
+            border-color: var(--accent-primary, #64ffda);
             transform: scale(1.05);
         }
 
@@ -104,7 +107,7 @@
 
         .control-label {
             font-size: 14px;
-            color: #495057;
+            color: var(--text-secondary, #a8b2d1);
             font-weight: 500;
             white-space: nowrap;
         }
@@ -117,17 +120,19 @@
 
         .filter-input {
             padding: 8px 12px;
-            border: 1px solid #ced4da;
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
             border-radius: 4px;
             font-size: 14px;
             min-width: 200px;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background: rgba(10, 25, 47, 0.8);
+            color: var(--text-primary, #e6f1ff);
         }
 
         .filter-input:focus {
             outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+            border-color: var(--accent-primary, #64ffda);
+            box-shadow: 0 0 0 2px rgba(100, 255, 218, 0.25);
         }
 
         .search-btn {
@@ -146,18 +151,19 @@
 
         .filter-select {
             padding: 8px 12px;
-            border: 1px solid #ced4da;
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
             border-radius: 4px;
             font-size: 14px;
             min-width: 150px;
-            background: white;
+            background: rgba(10, 25, 47, 0.8);
+            color: var(--text-primary, #e6f1ff);
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .filter-select:focus {
             outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+            border-color: var(--accent-primary, #64ffda);
+            box-shadow: 0 0 0 2px rgba(100, 255, 218, 0.25);
         }
 
         .btn-clear-filters {
@@ -223,8 +229,8 @@
         }
 
         .produtos-badge {
-            background-color: #e7f3ff;
-            color: #0056b3;
+            background-color: rgba(100, 255, 218, 0.15);
+            color: var(--accent-primary, #64ffda);
             padding: 2px 8px;
             border-radius: 12px;
             font-size: 12px;
@@ -236,14 +242,15 @@
             position: absolute;
             top: 100%;
             left: 0;
-            background: white;
-            border: 1px solid #ddd;
+            background: var(--gradient-card, rgba(17, 34, 64, 0.98));
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
             border-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
             z-index: 100;
             min-width: 300px;
             padding: 10px;
             margin-top: 5px;
+            backdrop-filter: blur(20px);
         }
 
         .produtos-list.show {
@@ -252,7 +259,7 @@
 
         .produto-item {
             padding: 8px;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
             font-size: 13px;
         }
 
@@ -262,11 +269,11 @@
 
         .produto-nome {
             font-weight: 500;
-            color: #333;
+            color: var(--text-primary, #e6f1ff);
         }
 
         .produto-detalhes {
-            color: #666;
+            color: var(--text-muted, #8892b0);
             font-size: 12px;
             margin-top: 2px;
         }
@@ -289,13 +296,13 @@
         }
 
         .cr-criado {
-            background-color: #d4edda;
-            color: #155724;
+            background-color: rgba(100, 255, 218, 0.15);
+            color: var(--success-color, #64ffda);
         }
 
         .cr-nao-criado {
-            background-color: #fff3cd;
-            color: #856404;
+            background-color: rgba(255, 217, 61, 0.15);
+            color: var(--warning-color, #ffd93d);
         }
 
         .btn-criar-cr {
@@ -331,18 +338,18 @@
         }
 
         .cp-criado {
-            background-color: #d4edda;
-            color: #155724;
+            background-color: rgba(100, 255, 218, 0.15);
+            color: var(--success-color, #64ffda);
         }
 
         .cp-nao-criado {
-            background-color: #fff3cd;
-            color: #856404;
+            background-color: rgba(255, 217, 61, 0.15);
+            color: var(--warning-color, #ffd93d);
         }
 
         .cp-sem-vendedor {
-            background-color: #f8d7da;
-            color: #721c24;
+            background-color: rgba(255, 107, 107, 0.15);
+            color: var(--danger-color, #ff6b6b);
         }
 
         .btn-criar-cp {
@@ -427,6 +434,92 @@
             border-bottom: 2px solid #007bff;
             padding-bottom: 0.5rem;
         }
+
+        /* Estilos para o modal de devolução */
+        .devolucao-info {
+            background: rgba(100, 255, 218, 0.1);
+            border: 1px solid rgba(100, 255, 218, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .devolucao-info p {
+            margin: 8px 0;
+            color: var(--text-primary, #333);
+        }
+
+        .devolucao-aviso {
+            background: rgba(255, 193, 7, 0.15);
+            border: 1px solid rgba(255, 193, 7, 0.5);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        .devolucao-aviso i {
+            color: #ffc107;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .devolucao-aviso ul {
+            margin: 10px 0 0 0;
+            padding-left: 20px;
+        }
+
+        .devolucao-aviso li {
+            margin: 5px 0;
+            color: var(--text-secondary, #666);
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn-danger:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        /* Botão de devolução na tabela */
+        .btn-devolucao {
+            background-color: #fd7e14;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+
+        .btn-devolucao:hover {
+            background-color: #e96b02;
+        }
+
+        /* Status devolvido */
+        .status-badge.devolvido {
+            background-color: rgba(253, 126, 20, 0.15);
+            color: #fd7e14;
+        }
     </style>
 </head>
 <body>
@@ -438,6 +531,15 @@
                 <button id="toggleSidebar" class="toggle-sidebar">
                     <i class="fas fa-bars"></i>
                 </button>
+            </div>
+            <!-- Theme Switch -->
+            <div class="theme-switch-wrapper">
+                <span class="switch-label"><i class="fas fa-moon"></i></span>
+                <label class="theme-switch">
+                    <input type="checkbox" id="themeSwitch">
+                    <span class="slider"></span>
+                </label>
+                <span class="switch-label"><i class="fas fa-sun"></i></span>
             </div>
             <div class="sidebar-user">
                 <div class="user-avatar">
@@ -470,6 +572,9 @@
                         <a href="estoque.html"><i class="fas fa-warehouse"></i> Estoque</a>
                     </li>
                     <li>
+                        <a href="exportar_estoque.html"><i class="fas fa-file-export"></i> Exportar Estoque</a>
+                    </li>
+                    <li>
                         <a href="clientes.html"><i class="fas fa-users"></i> Clientes</a>
                     </li>
                     <li class="active">
@@ -485,6 +590,9 @@
                         <a href="fornecedores.html"><i class="fas fa-industry"></i> Fornecedores</a>
                     </li>
                     <li>
+                        <a href="plataformas_venda.html"><i class="fas fa-store"></i> Plataformas de Venda</a>
+                    </li>
+                    <li>
                         <a href="contas_pagar.html"><i class="fas fa-money-bill-wave"></i> Contas a Pagar</a>
                     </li>
                     <li>
@@ -492,6 +600,9 @@
                     </li>
                     <li>
                         <a href="condicoes_pagamento.html"><i class="fas fa-percent"></i> Condições de Pagamento</a>
+                    </li>
+                    <li>
+                        <a href="metas.html"><i class="fas fa-bullseye"></i> Metas</a>
                     </li>
                     <li>
                         <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
@@ -619,6 +730,7 @@
                                 <th>Produtos</th>
                                 <th>Status</th>
                                 <th>Vendedor</th>
+                                <th>Método de Venda</th>
                                 <th>Condição Pagamento</th>
                                 <th>Comissão (R$)</th>
                                 <th>Contas a Receber</th>
@@ -628,7 +740,7 @@
                         </thead>
                         <tbody id="vendasTableBody">
                             <tr>
-                                <td colspan="12" class="text-center">Carregando vendas...</td>
+                                <td colspan="13" class="text-center">Carregando vendas...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -685,6 +797,14 @@
                         <div class="form-group">
                             <label for="condicao_pagamento_id">Condição de Pagamento</label>
                             <select id="condicao_pagamento_id" name="condicao_pagamento_id">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="plataforma_id">Método de Venda <span style="color: red;">*</span></label>
+                            <select id="plataforma_id" name="plataforma_id" required>
                                 <option value="">Selecione...</option>
                             </select>
                         </div>
@@ -845,6 +965,52 @@
         </div>
     </div>
 
+    <!-- Modal de Devolução -->
+    <div class="modal" id="devolucaoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-undo-alt"></i> Devolução de Venda</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="devolucao-info">
+                    <p><strong>Pedido:</strong> <span id="devolucaoPedidoCodigo">-</span></p>
+                    <p><strong>Cliente:</strong> <span id="devolucaoCliente">-</span></p>
+                    <p><strong>Valor Total:</strong> <span id="devolucaoValor">-</span></p>
+                    <p><strong>Vendedor:</strong> <span id="devolucaoVendedor">-</span></p>
+                </div>
+                
+                <div class="devolucao-aviso">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>Atenção!</strong> Esta ação irá:
+                        <ul>
+                            <li>Retornar os produtos ao estoque</li>
+                            <li>Cancelar os títulos de contas a receber</li>
+                            <li>Se houver comissão, cancelar o título de contas a pagar e criar um título de devolução</li>
+                            <li>Notificar o vendedor via webhook (se configurado)</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <form id="devolucaoForm">
+                    <input type="hidden" id="devolucaoVendaId">
+                    <div class="form-group">
+                        <label for="devolucaoJustificativa">Justificativa da Devolução <span style="color: red;">*</span></label>
+                        <textarea id="devolucaoJustificativa" name="justificativa" rows="4" required 
+                            placeholder="Descreva o motivo da devolução..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnCancelarDevolucao">Cancelar</button>
+                <button class="btn-danger" id="btnConfirmarDevolucao">
+                    <i class="fas fa-undo-alt"></i> Confirmar Devolução
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal para Novo Cliente -->
     <div class="modal" id="clienteModal">
         <div class="modal-content">
@@ -886,10 +1052,14 @@
     <script src="js/auth.js"></script>
     <script src="js/api.js"></script>
     <script src="js/sidebar.js"></script>
+    <script src="js/sidebar-template.js"></script>
     <script src="js/pagination.js"></script>
     <script src="js/permissions.js"></script>
     <script src="js/setupModals.js"></script>
+    <script src="js/webhook-estoque.js"></script>
     <script src="js/vendas.js"></script>
     <script src="js/filtro-pesquisa.js"></script>
+    <script src="js/internal-animation.js"></script>
+    <script src="js/theme-switcher.js"></script>
 </body>
 </html>

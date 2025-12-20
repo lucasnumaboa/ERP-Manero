@@ -1,3 +1,6 @@
+// Variável global para armazenar dados do produto original (para detectar alterações de preço)
+let produtoOriginal = null;
+
 // Verifica se o usuário está autenticado
 document.addEventListener('DOMContentLoaded', function() {
     // Verifica autenticação
@@ -65,7 +68,10 @@ async function loadProdutos() {
     if (categoria) queryParams.categoria_id = categoria;
     if (status !== '') queryParams.ativo = status;
     
-    console.log('Filtros aplicados:', { categoria_id: categoria, ativo: status });
+    // Filtra apenas produtos do usuário atual (para edição)
+    queryParams.apenas_meus = true;
+    
+    console.log('Filtros aplicados:', { categoria_id: categoria, ativo: status, apenas_meus: true });
     
     try {
         // Usa a API centralizada
@@ -654,10 +660,14 @@ function openProdutoModal(produtoId = null) {
                 if (produto && produto.caminho_imagem) {
                     carregarImagensProduto(produto.caminho_imagem);
                 }
+                // Guarda os dados originais do produto para comparar preço depois
+                produtoOriginal = produto ? { ...produto } : null;
+                console.log('[Webhook] Produto original guardado para comparação de preço:', produtoOriginal);
             });
         } else {
             // Se for novo produto, limpa o ID do formulário e gera um novo código
             form.removeAttribute('data-id');
+            produtoOriginal = null; // Limpa dados do produto original
             console.log('Removido atributo data-id do formulário');
             
             // Gera o próximo código de produto automaticamente
@@ -759,6 +769,9 @@ function preencherFormularioProduto(produto, produtoId) {
         const categoriaInput = document.getElementById('categoria_id');
         if (categoriaInput) categoriaInput.value = produto.categoria_id || '';
         
+        const faturavelInput = document.getElementById('faturavel');
+        if (faturavelInput) faturavelInput.checked = produto.faturavel !== false;
+        
         const ativoInput = document.getElementById('ativo');
         if (ativoInput) ativoInput.checked = produto.ativo;
         
@@ -855,11 +868,54 @@ async function saveProduto() {
         const estoque_minimo = parseInt(document.getElementById('estoque_minimo')?.value || 0);
         const categoria_id = document.getElementById('categoria_id')?.value || '';
         const tipo_produto = document.getElementById('tipo_produto')?.value || 'comprado';
+        const faturavel = document.getElementById('faturavel')?.checked || false;
         const ativo = document.getElementById('ativo')?.checked || false;
         
         // Coleta as imagens
         const imagensInput = document.getElementById('imagens_produto');
-        const imagens = imagensInput ? imagensInput.files : [];
+        const imagensOriginais = imagensInput ? imagensInput.files : [];
+        
+        // Comprime as imagens antes de enviar
+        let imagens = [];
+        if (imagensOriginais.length > 0) {
+            console.log('Comprimindo imagens antes do envio...');
+            try {
+                for (let i = 0; i < imagensOriginais.length; i++) {
+                    const originalFile = imagensOriginais[i];
+                    console.log(`Comprimindo imagem ${i + 1}/${imagensOriginais.length}: ${originalFile.name} (${ImageCompressor.formatFileSize(originalFile.size)})`);
+                    
+                    // Comprime a imagem
+                    const compressedBlob = await ImageCompressor.compress(originalFile, {
+                        maxWidth: 1920,
+                        maxHeight: 1080,
+                        quality: 0.8,
+                        maxSizeMB: 1,
+                        debug: true
+                    });
+                    
+                    // Converte Blob para File mantendo o nome original
+                    const compressedFile = ImageCompressor.blobToFile(compressedBlob, originalFile.name);
+                    imagens.push(compressedFile);
+                    
+                    console.log(`Imagem ${i + 1} comprimida: ${ImageCompressor.formatFileSize(compressedFile.size)}`);
+                }
+                console.log('Todas as imagens foram comprimidas com sucesso!');
+            } catch (error) {
+                console.error('Erro ao comprimir imagens:', error);
+                alert('Erro ao comprimir imagens. Tentando enviar originais...');
+                imagens = Array.from(imagensOriginais);
+            }
+        }
+        
+        // Obtém o ID do usuário atual
+        const userData = getUserData();
+        const usuario_id = userData ? userData.id : null;
+        
+        if (!usuario_id) {
+            console.error('ID do usuário não encontrado!');
+            alert('Erro: Não foi possível identificar o usuário. Por favor, faça login novamente.');
+            return;
+        }
         
         // Cria FormData para envio
         const formData = new FormData();
@@ -872,7 +928,9 @@ async function saveProduto() {
         formData.append('categoria_id', categoria_id);
         formData.append('tipo_produto', tipo_produto);
         formData.append('comissao', comissao);
+        formData.append('faturavel', faturavel);
         formData.append('ativo', ativo);
+        formData.append('usuario_id', usuario_id);
         
         // Adiciona as imagens ao FormData
         for (let i = 0; i < imagens.length; i++) {
@@ -928,7 +986,7 @@ async function saveProduto() {
                 console.log(`Atualizando produto ID: ${produtoId} sem imagens`);
                 const jsonData = {
                     codigo, nome, descricao, preco_custo, preco_venda,
-                    estoque_minimo, categoria_id, tipo_produto, comissao, ativo
+                    estoque_minimo, categoria_id, tipo_produto, comissao, faturavel, ativo, usuario_id
                 };
                 data = await apiPut(`/api/produtos/${produtoId}`, jsonData);
             }
@@ -939,6 +997,33 @@ async function saveProduto() {
         }
         
         console.log('Produto salvo com sucesso:', data);
+        
+        // Se for edição e o preço de venda mudou, notifica via webhook
+        if (produtoId && produtoOriginal && window.webhookEstoque) {
+            const precoAnterior = parseFloat(produtoOriginal.preco_venda) || 0;
+            const precoNovo = preco_venda;
+            
+            if (precoAnterior !== precoNovo) {
+                console.log('[Webhook] Detectada alteração de preço:', { precoAnterior, precoNovo });
+                
+                // Monta os dados do produto para o webhook
+                const dadosProdutoWebhook = {
+                    id: produtoId,
+                    nome: nome,
+                    codigo: codigo,
+                    preco_venda: precoNovo,
+                    comissao: comissao,
+                    faturavel: faturavel,
+                    estoque_atual: produtoOriginal.estoque_atual
+                };
+                
+                // Envia notificação de alteração de preço
+                window.webhookEstoque.notificarAlteracaoPreco(dadosProdutoWebhook, precoAnterior, precoNovo);
+            }
+        }
+        
+        // Limpa os dados do produto original
+        produtoOriginal = null;
         
         // Fecha o modal
         closeModal('produtoModal');

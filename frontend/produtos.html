@@ -13,7 +13,8 @@
     <link rel="stylesheet" href="css/submenu.css">
     <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/permissions.css">
+    <link rel="stylesheet" href="css/theme-dark.css">
+    <link rel="stylesheet" href="css/theme-light.css">
     <style>
         /* Estilos dos Filtros Reformulados */
         .filter-container {
@@ -217,6 +218,15 @@
                     <i class="fas fa-bars"></i>
                 </button>
             </div>
+            <!-- Theme Switch -->
+            <div class="theme-switch-wrapper">
+                <span class="switch-label"><i class="fas fa-moon"></i></span>
+                <label class="theme-switch">
+                    <input type="checkbox" id="themeSwitch">
+                    <span class="slider"></span>
+                </label>
+                <span class="switch-label"><i class="fas fa-sun"></i></span>
+            </div>
             <div class="sidebar-user">
                 <div class="user-avatar">
                     <i class="fas fa-user-circle"></i>
@@ -248,6 +258,9 @@
                         <a href="estoque.html"><i class="fas fa-warehouse"></i> Estoque</a>
                     </li>
                     <li>
+                        <a href="exportar_estoque.html"><i class="fas fa-file-export"></i> Exportar Estoque</a>
+                    </li>
+                    <li>
                         <a href="clientes.html"><i class="fas fa-users"></i> Clientes</a>
                     </li>
                     <li>
@@ -263,6 +276,9 @@
                         <a href="fornecedores.html"><i class="fas fa-industry"></i> Fornecedores</a>
                     </li>
                     <li>
+                        <a href="plataformas_venda.html"><i class="fas fa-store"></i> Plataformas de Venda</a>
+                    </li>
+                    <li>
                         <a href="contas_pagar.html"><i class="fas fa-money-bill-wave"></i> Contas a Pagar</a>
                     </li>
                     <li>
@@ -270,6 +286,9 @@
                     </li>
                     <li>
                         <a href="condicoes_pagamento.html"><i class="fas fa-percent"></i> Condições de Pagamento</a>
+                    </li>
+                    <li>
+                        <a href="metas.html"><i class="fas fa-bullseye"></i> Metas</a>
                     </li>
                     <li>
                         <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
@@ -454,12 +473,21 @@
                         <div id="preview_imagens" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;"></div>
                         <small style="color: #666;">Selecione até 3 imagens para o produto</small>
                     </div>
-                    <div class="form-group">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="ativo" name="ativo" checked>
-                            <span class="checkmark"></span>
-                            Produto Ativo
-                        </label>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="faturavel" name="faturavel" checked>
+                                <span class="checkmark"></span>
+                                Faturável (visível para vendedores)
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="ativo" name="ativo" checked>
+                                <span class="checkmark"></span>
+                                Produto Ativo
+                            </label>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -502,10 +530,15 @@
     <script src="js/auth.js"></script>
     <script src="js/api.js"></script>
     <script src="js/sidebar.js"></script>
+    <script src="js/sidebar-template.js"></script>
     <script src="js/permissions.js"></script>
     <script src="js/pagination.js"></script>
+    <script src="js/image-compressor.js"></script>
+    <script src="js/webhook-estoque.js"></script>
     <script src="js/produtos.js"></script>
     <script src="js/setupModals.js"></script>
     <script src="js/filtro-pesquisa.js"></script>
+    <script src="js/internal-animation.js"></script>
+    <script src="js/theme-switcher.js"></script>
 </body>
 </html>

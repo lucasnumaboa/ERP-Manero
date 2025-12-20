@@ -1,5 +1,10 @@
 // Verifica se o usuário está autenticado
 
+// Variável para armazenar o modo de visualização atual
+let currentViewMode = 'list';
+// Variável para armazenar os produtos carregados
+let loadedProducts = [];
+
 document.addEventListener('DOMContentLoaded', function() {
     // Verifica autenticação
     if (!isAuthenticated()) {
@@ -30,7 +35,68 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Configura os filtros
     setupFilters();
+    
+    // Configura os botões de modo de visualização
+    setupViewModeToggle();
 });
+
+// Configura os botões de alternância de modo de visualização
+function setupViewModeToggle() {
+    const viewModeButtons = document.querySelectorAll('.view-mode-btn');
+    
+    viewModeButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const viewMode = this.getAttribute('data-view');
+            
+            // Remove a classe active de todos os botões
+            viewModeButtons.forEach(b => b.classList.remove('active'));
+            
+            // Adiciona a classe active ao botão clicado
+            this.classList.add('active');
+            
+            // Atualiza o modo de visualização
+            switchViewMode(viewMode);
+        });
+    });
+}
+
+// Alterna entre os modos de visualização
+function switchViewMode(viewMode) {
+    currentViewMode = viewMode;
+    
+    // Esconde todos os containers de visualização
+    document.querySelectorAll('.view-container').forEach(container => {
+        container.style.display = 'none';
+        container.classList.remove('active');
+    });
+    
+    // Mostra o container correspondente ao modo selecionado
+    let containerId;
+    switch(viewMode) {
+        case 'list':
+            containerId = 'viewList';
+            break;
+        case 'grid':
+            containerId = 'viewGrid';
+            break;
+        case 'table':
+            containerId = 'viewTable';
+            break;
+        default:
+            containerId = 'viewList';
+    }
+    
+    const container = document.getElementById(containerId);
+    if (container) {
+        container.style.display = 'block';
+        container.classList.add('active');
+    }
+    
+    // Re-renderiza os produtos no novo modo se já temos dados carregados
+    if (loadedProducts && loadedProducts.length > 0) {
+        renderCurrentView(loadedProducts);
+    }
+}
 
 // Verifica se o usuário tem permissão para editar estoque e mostra/oculta o botão "Nova Movimentação - teste"
 async function checkMovimentacaoPermission() {
@@ -100,6 +166,9 @@ async function loadEstoque() {
     const abaixoMinimo = document.getElementById('filtroAbaixoMinimo').checked;
     const comEstoque = document.getElementById('filtroComEstoque').checked;
     const somenteAtivo = document.getElementById('filtroSomenteAtivo').checked;
+    const apenasFaturaveis = document.getElementById('filtroApenasFaturaveis').checked;
+    const apenasComFoto = document.getElementById('filtroApenasComFoto').checked;
+    const apenasMeuEstoque = document.getElementById('filtroApenasMeuEstoque').checked;
     const categoriaId = document.getElementById('filtroCategoria').value || null;
     const termoPesquisa = document.getElementById('filtroPesquisa').value.trim();
     
@@ -118,6 +187,21 @@ async function loadEstoque() {
     // Adiciona o filtro de produtos ativos
     if (somenteAtivo) {
         queryParams.ativo = true;
+    }
+    
+    // Adiciona o filtro de produtos faturáveis
+    if (apenasFaturaveis) {
+        queryParams.faturavel = true;
+    }
+    
+    // Adiciona o filtro de produtos com foto
+    if (apenasComFoto) {
+        queryParams.com_foto = true;
+    }
+    
+    // Adiciona o filtro de apenas meu estoque (produtos do usuário logado)
+    if (apenasMeuEstoque) {
+        queryParams.apenas_meus = true;
     }
     
     // Adiciona o termo de pesquisa se existir
@@ -143,9 +227,12 @@ async function loadEstoque() {
             // Ordena os produtos por código (ID)
             data.sort((a, b) => a.id - b.id);
             
+            // Armazena os produtos carregados
+            loadedProducts = data;
+            
             // Configuração da paginação
-            window.currentDisplayFunction = displayEstoque;
-            initPagination(data, displayEstoque);
+            window.currentDisplayFunction = renderCurrentView;
+            initPagination(data, renderCurrentView);
         } else {
             // Se não recebeu dados válidos, mostra mensagem de erro
             document.getElementById('estoqueTableBody').innerHTML = '<tr><td colspan="7" class="text-center text-danger">Dados de estoque inválidos. Tente novamente.</td></tr>';
@@ -156,12 +243,32 @@ async function loadEstoque() {
     }
 }
 
-// Exibe os produtos em estoque na tabela
+// Renderiza os produtos no modo de visualização atual
+async function renderCurrentView(produtos) {
+    // Armazena os produtos para uso posterior
+    loadedProducts = produtos;
+    
+    switch(currentViewMode) {
+        case 'list':
+            await displayEstoque(produtos);
+            break;
+        case 'grid':
+            await displayEstoqueGrid(produtos);
+            break;
+        case 'table':
+            await displayEstoqueCompact(produtos);
+            break;
+        default:
+            await displayEstoque(produtos);
+    }
+}
+
+// Exibe os produtos em estoque na tabela (modo lista)
 async function displayEstoque(produtos) {
     const tableBody = document.getElementById('estoqueTableBody');
     
     if (!produtos || produtos.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Nenhum produto encontrado</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="9" class="text-center">Nenhum produto encontrado</td></tr>';
         return;
     }
     
@@ -170,6 +277,10 @@ async function displayEstoque(produtos) {
     // Verifica se o usuário tem permissão para editar estoque
     const canEditEstoque = await hasPermission('estoque_editar');
     
+    // Obtém o ID do usuário atual para verificar se é o dono do produto
+    const userData = getUserData();
+    const currentUserId = userData ? userData.id : null;
+    
     produtos.forEach(produto => {
         const row = document.createElement('tr');
         
@@ -177,6 +288,9 @@ async function displayEstoque(produtos) {
         if (produto.estoque_atual < produto.estoque_minimo) {
             row.classList.add('estoque-baixo');
         }
+        
+        // Verifica se o usuário atual é o dono do produto (compara por ID)
+        const isOwner = produto.usuario_id == currentUserId;
         
         // Botões de ação com base na permissão
         let actionButtons = `
@@ -188,8 +302,8 @@ async function displayEstoque(produtos) {
             </button>
         `;
         
-        // Adiciona o botão de movimentação apenas se tiver permissão
-        if (canEditEstoque) {
+        // Adiciona o botão de movimentação apenas se tiver permissão E for o dono do produto
+        if (canEditEstoque && isOwner) {
             actionButtons += `
                 <button class="btn-icon" onclick="addMovimentacao(${produto.id})" title="Adicionar Movimentação">
                     <i class="fas fa-plus-circle"></i>
@@ -232,11 +346,180 @@ async function displayEstoque(produtos) {
     });
 }
 
+// Exibe os produtos em estoque no modo grid
+async function displayEstoqueGrid(produtos) {
+    const gridContainer = document.getElementById('estoqueGridContainer');
+    
+    if (!produtos || produtos.length === 0) {
+        gridContainer.innerHTML = '<div class="text-center" style="padding: 40px;">Nenhum produto encontrado</div>';
+        return;
+    }
+    
+    gridContainer.innerHTML = '';
+    
+    // Verifica se o usuário tem permissão para editar estoque
+    const canEditEstoque = await hasPermission('estoque_editar');
+    
+    // Obtém o ID do usuário atual para verificar se é o dono do produto
+    const userData = getUserData();
+    const currentUserId = userData ? userData.id : null;
+    
+    produtos.forEach(produto => {
+        const gridItem = document.createElement('div');
+        gridItem.className = 'estoque-grid-item';
+        
+        // Adiciona classe para destacar produtos abaixo do estoque mínimo
+        if (produto.estoque_atual < produto.estoque_minimo) {
+            gridItem.classList.add('estoque-baixo');
+        }
+        
+        // Verifica se o usuário atual é o dono do produto (compara por ID)
+        const isOwner = produto.usuario_id == currentUserId;
+        
+        // Cria o elemento de imagem
+        let imagemHtml = '';
+        if (produto.caminho_imagem) {
+            const primeiraImagem = produto.caminho_imagem.split(',')[0].trim();
+            if (primeiraImagem) {
+                imagemHtml = `<img src="http://localhost:8000/uploads/${primeiraImagem.replace('uploads/', '')}" alt="${produto.nome}" class="grid-item-image">`;
+            } else {
+                imagemHtml = `<div class="grid-item-image-placeholder"><i class="fas fa-image"></i></div>`;
+            }
+        } else {
+            imagemHtml = `<div class="grid-item-image-placeholder"><i class="fas fa-image"></i></div>`;
+        }
+        
+        // Botões de ação
+        let actionButtons = `
+            <button class="btn-icon" onclick="viewDetalhes(${produto.id})" title="Ver Detalhes">
+                <i class="fas fa-info-circle"></i>
+            </button>
+            <button class="btn-icon" onclick="viewHistorico(${produto.id})" title="Ver Histórico">
+                <i class="fas fa-history"></i>
+            </button>
+        `;
+        
+        // Adiciona o botão de movimentação apenas se tiver permissão E for o dono do produto
+        if (canEditEstoque && isOwner) {
+            actionButtons += `
+                <button class="btn-icon" onclick="addMovimentacao(${produto.id})" title="Adicionar Movimentação">
+                    <i class="fas fa-plus-circle"></i>
+                </button>
+            `;
+        }
+        
+        // Determina a classe de cor do estoque
+        const estoqueClass = produto.estoque_atual < produto.estoque_minimo ? 'text-danger' : 
+                            produto.estoque_atual > produto.estoque_minimo * 2 ? 'text-success' : '';
+        
+        gridItem.innerHTML = `
+            <div class="grid-item-header">
+                ${imagemHtml}
+                <div class="grid-item-info">
+                    <div class="grid-item-name" title="${produto.nome}">${produto.nome}</div>
+                    <div class="grid-item-code">Cód: ${produto.codigo || '-'}</div>
+                    <span class="grid-item-category">${produto.categoria_nome || 'Sem categoria'}</span>
+                </div>
+            </div>
+            <div class="grid-item-body">
+                <div class="grid-item-stats">
+                    <div class="grid-stat">
+                        <div class="grid-stat-label">Estoque</div>
+                        <div class="grid-stat-value ${estoqueClass}">${produto.estoque_atual}</div>
+                    </div>
+                    <div class="grid-stat">
+                        <div class="grid-stat-label">Mínimo</div>
+                        <div class="grid-stat-value">${produto.estoque_minimo}</div>
+                    </div>
+                </div>
+                <div class="grid-item-price">${formatNumber(produto.preco_venda)}</div>
+                <div class="grid-item-actions">
+                    ${actionButtons}
+                </div>
+            </div>
+        `;
+        
+        gridContainer.appendChild(gridItem);
+    });
+}
+
+// Exibe os produtos em estoque na tabela compacta
+async function displayEstoqueCompact(produtos) {
+    const tableBody = document.getElementById('estoqueCompactTableBody');
+    
+    if (!produtos || produtos.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum produto encontrado</td></tr>';
+        return;
+    }
+    
+    tableBody.innerHTML = '';
+    
+    // Verifica se o usuário tem permissão para editar estoque
+    const canEditEstoque = await hasPermission('estoque_editar');
+    
+    // Obtém o ID do usuário atual para verificar se é o dono do produto
+    const userData = getUserData();
+    const currentUserId = userData ? userData.id : null;
+    
+    produtos.forEach(produto => {
+        const row = document.createElement('tr');
+        
+        // Adiciona classe para destacar produtos abaixo do estoque mínimo
+        if (produto.estoque_atual < produto.estoque_minimo) {
+            row.classList.add('estoque-baixo');
+        }
+        
+        // Verifica se o usuário atual é o dono do produto (compara por ID)
+        const isOwner = produto.usuario_id == currentUserId;
+        
+        // Botões de ação compactos
+        let actionButtons = `
+            <button class="btn-icon btn-sm" onclick="viewDetalhes(${produto.id})" title="Ver Detalhes">
+                <i class="fas fa-info-circle"></i>
+            </button>
+            <button class="btn-icon btn-sm" onclick="viewHistorico(${produto.id})" title="Ver Histórico">
+                <i class="fas fa-history"></i>
+            </button>
+        `;
+        
+        // Adiciona o botão de movimentação apenas se tiver permissão E for o dono do produto
+        if (canEditEstoque && isOwner) {
+            actionButtons += `
+                <button class="btn-icon btn-sm" onclick="addMovimentacao(${produto.id})" title="Adicionar Movimentação">
+                    <i class="fas fa-plus-circle"></i>
+                </button>
+            `;
+        }
+        
+        row.innerHTML = `
+            <td>${produto.codigo || '-'}</td>
+            <td>${produto.nome}</td>
+            <td>${produto.categoria_nome || '-'}</td>
+            <td class="text-center">${produto.estoque_atual}</td>
+            <td class="text-center">${produto.estoque_minimo}</td>
+            <td class="text-right">${formatNumber(produto.preco_venda)}</td>
+            <td class="actions">
+                ${actionButtons}
+            </td>
+        `;
+        
+        tableBody.appendChild(row);
+    });
+}
+
 // Configura os filtros de estoque
 function setupFilters() {
     const filtroAbaixoMinimo = document.getElementById('filtroAbaixoMinimo');
     const filtroComEstoque = document.getElementById('filtroComEstoque');
     const filtroSomenteAtivo = document.getElementById('filtroSomenteAtivo');
+    const filtroApenasFaturaveis = document.getElementById('filtroApenasFaturaveis');
+    const filtroApenasComFoto = document.getElementById('filtroApenasComFoto');
+    const filtroApenasMeuEstoque = document.getElementById('filtroApenasMeuEstoque');
+    
+    // Como filtroComEstoque começa marcado por padrão, desabilita o filtroAbaixoMinimo
+    if (filtroComEstoque.checked) {
+        filtroAbaixoMinimo.disabled = true;
+    }
     
     // Configura o evento de mudança para o filtro de estoque mínimo
     filtroAbaixoMinimo.addEventListener('change', function() {
@@ -265,6 +548,21 @@ function setupFilters() {
     
     // Configura o evento de mudança para o filtro de produtos ativos
     filtroSomenteAtivo.addEventListener('change', function() {
+        loadEstoque();
+    });
+    
+    // Configura o evento de mudança para o filtro de produtos faturáveis
+    filtroApenasFaturaveis.addEventListener('change', function() {
+        loadEstoque();
+    });
+    
+    // Configura o evento de mudança para o filtro de produtos com foto
+    filtroApenasComFoto.addEventListener('change', function() {
+        loadEstoque();
+    });
+    
+    // Configura o evento de mudança para o filtro de apenas meu estoque
+    filtroApenasMeuEstoque.addEventListener('change', function() {
         loadEstoque();
     });
     
@@ -314,18 +612,22 @@ async function loadCategorias() {
     }
 }
 
-// Limpa todos os filtros
+// Limpa todos os filtros (restaura os padrões)
 function limparFiltros() {
     const filtroAbaixoMinimo = document.getElementById('filtroAbaixoMinimo');
     const filtroComEstoque = document.getElementById('filtroComEstoque');
     
+    // Restaura os valores padrão
     filtroAbaixoMinimo.checked = false;
-    filtroAbaixoMinimo.disabled = false;
+    filtroAbaixoMinimo.disabled = true; // Desabilitado porque comEstoque estará marcado
     
-    filtroComEstoque.checked = false;
+    filtroComEstoque.checked = true; // Padrão: marcado
     filtroComEstoque.disabled = false;
     
-    document.getElementById('filtroSomenteAtivo').checked = false;
+    document.getElementById('filtroSomenteAtivo').checked = true; // Padrão: marcado
+    document.getElementById('filtroApenasFaturaveis').checked = true; // Padrão: marcado
+    document.getElementById('filtroApenasComFoto').checked = true; // Padrão: marcado
+    document.getElementById('filtroApenasMeuEstoque').checked = false; // Padrão: desmarcado
     document.getElementById('filtroCategoria').value = '';
     document.getElementById('filtroPesquisa').value = '';
     loadEstoque();
@@ -635,6 +937,13 @@ async function saveMovimentacao() {
                 // Usa a API centralizada para fazer a requisição
                 await apiPost('/api/estoque/movimentacoes', movimentacao);
                 console.log('API respondeu com sucesso!');
+                
+                // Notifica via webhook sobre a movimentação manual
+                if (window.webhookEstoque) {
+                    const tipoMovimento = movimentacao.tipo === 'entrada' ? 'entrada' : 'saida';
+                    console.log(`[Estoque] Notificando ${tipoMovimento} manual via webhook...`);
+                    window.webhookEstoque.notificarMovimentacaoManual(tipoMovimento, movimentacao.produto_id, movimentacao.quantidade, movimentacao.motivo);
+                }
             } catch (error) {
                 console.warn('Erro ao tentar enviar para API, mas a interface já simulou sucesso:', error.message);
             }

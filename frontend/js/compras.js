@@ -99,9 +99,18 @@ async function loadCompras() {
     // Mostra mensagem de carregamento
     document.getElementById('comprasTableBody').innerHTML = '<tr><td colspan="7" class="text-center">Carregando compras...</td></tr>';
     
+    // Obtém o filtro de apenas minhas compras
+    const apenasMinhasCompras = document.getElementById('filtroApenasMinhasCompras').checked;
+    
+    // Prepara os parâmetros de consulta
+    const queryParams = {};
+    if (apenasMinhasCompras) {
+        queryParams.apenas_meus = true;
+    }
+    
     try {
         // Usa a nova API centralizada
-        const data = await apiGet('/api/compras');
+        const data = await apiGet('/api/compras', queryParams);
         // Configuração da paginação
         window.currentDisplayFunction = displayCompras;
         initPagination(data, displayCompras);
@@ -129,13 +138,44 @@ function setupFilters() {
             aplicarFiltros();
         });
     }
+    
+    // Filtro de apenas minhas compras
+    const filtroApenasMinhasCompras = document.getElementById('filtroApenasMinhasCompras');
+    if (filtroApenasMinhasCompras) {
+        filtroApenasMinhasCompras.addEventListener('change', function() {
+            loadCompras();
+        });
+    }
+    
+    // Botão limpar filtros
+    const btnLimparFiltros = document.getElementById('btnLimparFiltros');
+    if (btnLimparFiltros) {
+        btnLimparFiltros.addEventListener('click', limparFiltros);
+    }
+}
+
+// Limpa todos os filtros
+function limparFiltros() {
+    document.getElementById('filtroPesquisa').value = '';
+    document.getElementById('filterStatus').value = '';
+    document.getElementById('filtroApenasMinhasCompras').checked = true; // Padrão: marcado
+    loadCompras();
 }
 
 // Aplica os filtros na tabela de compras
 async function aplicarFiltros() {
     try {
-        // Busca todas as compras novamente
-        const compras = await apiGet('/api/compras');
+        // Obtém o filtro de apenas minhas compras
+        const apenasMinhasCompras = document.getElementById('filtroApenasMinhasCompras').checked;
+        
+        // Prepara os parâmetros de consulta
+        const queryParams = {};
+        if (apenasMinhasCompras) {
+            queryParams.apenas_meus = true;
+        }
+        
+        // Busca as compras com o filtro de usuário
+        const compras = await apiGet('/api/compras', queryParams);
         
         // Obtém os valores dos filtros
         const termoPesquisa = document.getElementById('filtroPesquisa').value.toLowerCase();
@@ -434,6 +474,9 @@ async function loadFornecedoresWithSelection(selectedFornecedorId) {
             fornecedorSelect.appendChild(option);
         });
         
+        // Adicionar campo de pesquisa para fornecedores
+        adicionarPesquisaFornecedores();
+        
         return true;
     } catch (error) {
         console.error('Erro ao carregar fornecedores:', error);
@@ -465,9 +508,45 @@ async function loadFornecedores() {
             option.textContent = fornecedor.nome;
             fornecedorSelect.appendChild(option);
         });
+        
+        // Adicionar campo de pesquisa para fornecedores
+        adicionarPesquisaFornecedores();
     } catch (error) {
         console.error('Erro ao carregar fornecedores:', error);
         fornecedorSelect.innerHTML = '<option value="">Erro ao carregar fornecedores</option>';
+    }
+}
+
+// Função para adicionar campo de pesquisa para fornecedores
+function adicionarPesquisaFornecedores() {
+    // Verificar se o campo já existe
+    if (!document.getElementById('pesquisaFornecedor')) {
+        const selectFornecedor = document.getElementById('fornecedor_id');
+        const container = selectFornecedor.parentElement;
+        
+        // Criar campo de pesquisa
+        const pesquisaDiv = document.createElement('div');
+        pesquisaDiv.className = 'form-group mb-2';
+        pesquisaDiv.innerHTML = `
+            <label for="pesquisaFornecedor">Pesquisar Fornecedor:</label>
+            <input type="text" id="pesquisaFornecedor" class="form-control" placeholder="Digite para pesquisar...">
+        `;
+        
+        // Inserir antes do select
+        container.insertBefore(pesquisaDiv, selectFornecedor);
+        
+        // Adicionar evento de pesquisa
+        document.getElementById('pesquisaFornecedor').addEventListener('input', function(e) {
+            const termo = e.target.value.toLowerCase();
+            const options = selectFornecedor.querySelectorAll('option');
+            
+            options.forEach(option => {
+                if (option.value === '') return; // Pular a opção "Selecione..."
+                
+                const visivel = option.textContent.toLowerCase().includes(termo);
+                option.style.display = visivel ? '' : 'none';
+            });
+        });
     }
 }
 
@@ -676,8 +755,8 @@ async function loadProdutos() {
     produtoSelect.innerHTML = '<option value="">Carregando produtos...</option>';
     
     try {
-        // Usa a nova API centralizada
-        const data = await apiGet('/api/produtos', { ativo: true });
+        // Usa a nova API centralizada - filtra apenas produtos do usuário atual
+        const data = await apiGet('/api/produtos', { ativo: true, apenas_meus: true });
         
         // Limpa o select
         produtoSelect.innerHTML = '<option value="">Selecione...</option>';
@@ -699,6 +778,9 @@ async function loadProdutos() {
                 calcularSubtotal();
             }
         });
+        
+        // Adicionar campo de pesquisa para produtos
+        adicionarPesquisaProdutos();
     } catch (error) {
         console.error('Erro ao carregar produtos:', error);
         produtoSelect.innerHTML = '<option value="">Erro ao carregar produtos</option>';
@@ -710,6 +792,39 @@ async function loadProdutos() {
                 document.getElementById('preco_unitario').value = selectedOption.dataset.preco;
                 calcularSubtotal();
             }
+        });
+    }
+}
+
+// Função para adicionar campo de pesquisa para produtos
+function adicionarPesquisaProdutos() {
+    // Verificar se o campo já existe
+    if (!document.getElementById('pesquisaProduto')) {
+        const selectProduto = document.getElementById('produto_id');
+        const container = selectProduto.parentElement;
+        
+        // Criar campo de pesquisa
+        const pesquisaDiv = document.createElement('div');
+        pesquisaDiv.className = 'form-group mb-2';
+        pesquisaDiv.innerHTML = `
+            <label for="pesquisaProduto">Pesquisar Produto:</label>
+            <input type="text" id="pesquisaProduto" class="form-control" placeholder="Digite para pesquisar...">
+        `;
+        
+        // Inserir antes do select
+        container.insertBefore(pesquisaDiv, selectProduto);
+        
+        // Adicionar evento de pesquisa
+        document.getElementById('pesquisaProduto').addEventListener('input', function(e) {
+            const termo = e.target.value.toLowerCase();
+            const options = selectProduto.querySelectorAll('option');
+            
+            options.forEach(option => {
+                if (option.value === '') return; // Pular a opção "Selecione..."
+                
+                const visivel = option.textContent.toLowerCase().includes(termo);
+                option.style.display = visivel ? '' : 'none';
+            });
         });
     }
 }
@@ -803,12 +918,23 @@ async function saveCompra() {
     // Obtém o ID da compra do atributo data-id do formulário
     const compraId = form.getAttribute('data-id');
     
+    // Obtém o ID do usuário atual
+    const userData = getUserData();
+    const usuario_id = userData ? userData.id : null;
+    
+    if (!usuario_id) {
+        console.error('ID do usuário não encontrado!');
+        alert('Erro: Não foi possível identificar o usuário. Por favor, faça login novamente.');
+        return;
+    }
+    
     // Coleta os dados do formulário
     const compraData = {
         fornecedor_id: parseInt(document.getElementById('fornecedor_id').value),
         data_previsao: document.getElementById('data_compra').value, // O campo no HTML é data_compra, mas no backend é data_previsao
         observacoes: document.getElementById('observacoes').value,
         status: document.getElementById('status').value,
+        usuario_id: usuario_id,
         itens: []
     };
     
@@ -1011,8 +1137,23 @@ async function receberCompra(compraId) {
     console.log(loadingMessage);
     
     try {
+        // Busca os itens da compra antes de receber para notificar via webhook
+        let itensCompra = [];
+        try {
+            const compraDetalhes = await apiGet(`/api/compras/${compraId}`);
+            itensCompra = compraDetalhes.itens || [];
+        } catch (error) {
+            console.warn('Erro ao buscar itens da compra para webhook:', error);
+        }
+        
         // Usa a nova API centralizada
         await apiPost(`/api/estoque/receber-pedido/${compraId}`);
+        
+        // Notifica via webhook sobre a entrada de produtos
+        if (itensCompra.length > 0 && window.webhookEstoque) {
+            console.log('[Compras] Notificando entrada de produtos via webhook...');
+            window.webhookEstoque.notificarEntradaProdutos(itensCompra);
+        }
         
         // Fecha o modal
         closeModal('compraModal');

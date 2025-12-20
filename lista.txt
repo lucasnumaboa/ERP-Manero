@@ -1,0 +1,55 @@
+Crie um ERP completo com as seguintes especificações:
+
+✅ Frontend: HTML + CSS + JS (puro)
+✅ Backend: Python (utilizando Flask ou FastAPI)
+✅ Banco de dados: MySQL
+✅ Estrutura do projeto organizada por pastas (ex: frontend/, backend/, db/, etc)
+✅ Criar um sistema simples de CRUD para:
+
+Sistema de login/register
+Clientes
+Produtos
+Vendas (incluindo selecionar cliente, produtos, total e data)
+
+Regras obrigatórias para o desenvolvimento:
+
+Criar um arquivo .env para armazenar as configurações de conexão com o banco (host, usuário, senha, db) ✅
+Criar um script init_db.py que leia o .env e crie as tabelas automaticamente no MySQL ✅
+Criar as rotas do backend (API REST) para cadastro, listagem, edição e exclusão de:
+    a. Clientes ✅
+    b. Produtos ✅
+    c. Vendas ✅
+
+O frontend deve consumir as rotas da API com fetch/AJAX, exibindo dados dinâmicos e atualizando sem recarregar a página ✅
+
+Extras desejáveis (se possível):
+Use Bootstrap ou alguma estilização mínima para deixar visual amigável
+
+Crie um README com instruções para rodar o projeto (instalar pacotes, rodar servidor, rodar init_db, etc)
+
+faça o sistema já em prod, faça ele ler os dados do banco de dados.
+
+Marque como ✅ (ok) tudo que for sendo implementado com sucesso (no próprio código, como comentário)
+
+lista de desenvolvimento (marcar ok na frente do que for feito)
+cadastro:
+Produto
+Clientes e Fornecedores
+vendedores
+Categoria de produtos
+
+Compras:
+pedido de compra
+lançamento de estoque
+
+vendas:
+pedidos de venda
+objetos de postagem
+frente de caixa
+propostas comerciais
+
+financeiro:
+Caixas e bancos
+contas a pagar
+contas a receber
+controle de caixa
