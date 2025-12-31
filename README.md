@@ -94,6 +94,7 @@ cd ERP-Maneiro
 
 ### 2. Configure as variáveis de ambiente
 
+
 ```bash
 cp .env.docker .env
 ```
