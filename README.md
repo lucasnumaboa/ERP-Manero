@@ -83,7 +83,60 @@ python gui.py
 
 ---
 
-## Instalação
+## Instalação com Docker (Recomendado)
+
+### 1. Clone o repositório
+
+```bash
+git clone https://github.com/seu-usuario/ERP-Maneiro.git
+cd ERP-Maneiro
+```
+
+### 2. Configure as variáveis de ambiente
+
+```bash
+cp .env.docker .env
+```
+
+### 3. Inicie os containers
+
+```bash
+docker-compose up -d --build
+```
+
+### 4. Acesse o sistema
+
+| Serviço | URL |
+|---------|-----|
+| Frontend | http://localhost:3000 |
+| API | http://localhost:8000 |
+| Docs API | http://localhost:8000/docs |
+
+### Credenciais padrão
+
+| Campo | Valor |
+|-------|-------|
+| Email | `admin@erpmaneiro.com` |
+| Senha | `admin123` |
+
+> ⚠️ **Altere a senha após o primeiro acesso!**
+
+### Comandos úteis
+
+```bash
+# Ver logs
+docker-compose logs -f
+
+# Parar containers
+docker-compose down
+
+# Parar e remover dados
+docker-compose down -v
+```
+
+---
+
+## Instalação Manual
 
 ### 1. Clone e instale dependências
 

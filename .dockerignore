@@ -1,0 +1,52 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv
+venv
+ENV
+.eggs
+*.egg-info
+.pytest_cache
+.mypy_cache
+
+# IDEs
+.idea
+.vscode
+*.swp
+*.swo
+
+# Backups and temp files
+backups/
+*.bak
+*.tmp
+*.log
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+.docker*
+.env.docker
+
+# Other
+*.JPG
+*.jpg
+*.gif
+GITHUB/
+Repo-Github/
+comprime-imagem-filme/
+erp-autopost-facebook/
+*.bat
+*.sql
+last_api_url.json
+lista.txt
+
+# Backend venv
+backend/venv/
+backend/__pycache__/
