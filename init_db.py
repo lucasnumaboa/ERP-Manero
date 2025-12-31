@@ -579,7 +579,7 @@ try:
         ('api_port', '8000', 'Porta da API'),
         ('environment', 'production', 'Ambiente de execução da aplicação'),
         ('allowed_origins', 'https://erpmaneiro.com,https://www.erpmaneiro.com', 'Origens permitidas para CORS em produção'),
-        ('apikey_openrouter', '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', 'Chave de API do OpenRouter'),
+        ('apikey_openrouter', 'sk-or-v1-etc...', 'Chave de API do OpenRouter'),
         ('model_openrouter', 'openai/gpt-oss-20b:free', 'Modelo de IA do OpenRouter para gerar relatórios')
     ]
     
