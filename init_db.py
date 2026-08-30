@@ -72,6 +72,8 @@ tables = {
             fornecedores_editar BOOLEAN DEFAULT FALSE,
             estoque_visualizar BOOLEAN DEFAULT FALSE,
             estoque_editar BOOLEAN DEFAULT FALSE,
+            depositos_visualizar BOOLEAN DEFAULT FALSE,
+            depositos_editar BOOLEAN DEFAULT FALSE,
             configuracoes_visualizar BOOLEAN DEFAULT FALSE,
             configuracoes_editar BOOLEAN DEFAULT FALSE,
             financeiro_visualizar BOOLEAN DEFAULT FALSE,
@@ -111,6 +113,18 @@ tables = {
         )
     """,
     
+# Tabela de depósitos
+"depositos": """
+    CREATE TABLE IF NOT EXISTS depositos (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nome VARCHAR(100) NOT NULL UNIQUE,
+        descricao TEXT,
+        padrao BOOLEAN DEFAULT FALSE,
+        ativo BOOLEAN DEFAULT TRUE,
+        data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+""",
+
 # Tabela de produtos
 "produtos": """
     CREATE TABLE IF NOT EXISTS produtos (
@@ -126,14 +140,34 @@ tables = {
         tipo_produto ENUM('comprado', 'fabricado') DEFAULT 'comprado',
         comissao DECIMAL(4, 0) DEFAULT 0,
         caminho_imagem TEXT,
+        caminho_video VARCHAR(255),
         faturavel BOOLEAN DEFAULT TRUE,
+        post_olx BOOLEAN DEFAULT FALSE,
+        post_facebook BOOLEAN DEFAULT FALSE,
         ativo BOOLEAN DEFAULT TRUE,
         usuario_id INT,
+        deposito_id INT,
         data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (categoria_id) REFERENCES categorias_produtos(id),
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+        FOREIGN KEY (deposito_id) REFERENCES depositos(id)
     )
 """,
+
+    # Tabela de consumo de produtos (Bill of Materials)
+    # Permite vincular produtos componentes a um produto fabricado
+    "produtos_consumo": """
+        CREATE TABLE IF NOT EXISTS produtos_consumo (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            produto_id INT NOT NULL COMMENT 'ID do produto pai (fabricado)',
+            consumo_produto_id INT NOT NULL COMMENT 'ID do produto componente',
+            quantidade DECIMAL(10, 2) NOT NULL DEFAULT 1 COMMENT 'Quantidade necessária por unidade do produto pai',
+            data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE,
+            FOREIGN KEY (consumo_produto_id) REFERENCES produtos(id) ON DELETE CASCADE,
+            UNIQUE KEY unique_produto_consumo (produto_id, consumo_produto_id)
+        )
+    """,
 
     
     # Tabela de clientes e fornecedores
@@ -216,6 +250,7 @@ tables = {
             documento_referencia VARCHAR(50),
             data_movimentacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             usuario_id INT,
+            valor_unitario DECIMAL(10, 2) NULL COMMENT 'Valor unitário do produto na entrada (para cálculo de preço médio ponderado)',
             FOREIGN KEY (produto_id) REFERENCES produtos(id),
             FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
         )
@@ -287,6 +322,7 @@ tables = {
             desconto DECIMAL(10, 2) DEFAULT 0,
             subtotal DECIMAL(10, 2) NOT NULL,
             comissao_item DECIMAL(10, 2) DEFAULT 0,
+            custo_item DECIMAL(10, 2) NULL COMMENT 'Custo do produto no momento da venda (para cálculo histórico de lucro)',
             FOREIGN KEY (pedido_id) REFERENCES pedidos_venda(id),
             FOREIGN KEY (produto_id) REFERENCES produtos(id)
         )
@@ -510,6 +546,319 @@ tables = {
             FOREIGN KEY (produto_id) REFERENCES produtos(id),
             FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
         )
+    """,
+    
+    # ============================================
+    # TABELAS DO OLX FINDER
+    # ============================================
+    
+    # Tabela de categorias OLX
+    "olx_categorias": """
+        CREATE TABLE IF NOT EXISTS olx_categorias (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nome VARCHAR(100) NOT NULL,
+            parent_id INT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (parent_id) REFERENCES olx_categorias(id) ON DELETE CASCADE,
+            UNIQUE KEY unique_olx_category (nome, parent_id)
+        )
+    """,
+    
+    # Tabela de flags de pesquisa OLX
+    "olx_flags": """
+        CREATE TABLE IF NOT EXISTS olx_flags (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nome VARCHAR(100) NOT NULL,
+            incluir BOOLEAN NOT NULL DEFAULT TRUE,
+            palavras_chave TEXT NOT NULL,
+            usuario_id INT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+        )
+    """,
+    
+    # Tabela de pesquisas OLX
+    "olx_pesquisas": """
+        CREATE TABLE IF NOT EXISTS olx_pesquisas (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nome_produto VARCHAR(255) NOT NULL,
+            preco_maximo DECIMAL(10, 2) NOT NULL,
+            instrucoes TEXT,
+            usuario_id INT NOT NULL,
+            categoria_id INT NULL,
+            subcategoria_id INT NULL,
+            flags TEXT,
+            ativo BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+            FOREIGN KEY (categoria_id) REFERENCES olx_categorias(id),
+            FOREIGN KEY (subcategoria_id) REFERENCES olx_categorias(id)
+        )
+    """,
+    
+    # Tabela de produtos encontrados OLX
+    "olx_produtos": """
+        CREATE TABLE IF NOT EXISTS olx_produtos (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            usuario_id INT NOT NULL,
+            pesquisa_id INT,
+            link VARCHAR(500) NOT NULL,
+            titulo VARCHAR(255) NOT NULL,
+            imagem VARCHAR(500),
+            data_publicacao DATETIME,
+            preco DECIMAL(10, 2),
+            descricao TEXT,
+            visivel BOOLEAN NOT NULL DEFAULT FALSE,
+            avaliado BOOLEAN NOT NULL DEFAULT FALSE,
+            enviado INT NOT NULL DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+            FOREIGN KEY (pesquisa_id) REFERENCES olx_pesquisas(id) ON DELETE SET NULL,
+            UNIQUE KEY unique_olx_product (link, usuario_id)
+        )
+    """,
+    
+    # ============================================
+    # TABELAS DE GERENCIAMENTO DE SOFTWARES
+    # ============================================
+    
+    # Tabela principal de softwares
+    "softwares": """
+        CREATE TABLE IF NOT EXISTS softwares (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nome_arquivo VARCHAR(255) NOT NULL UNIQUE,
+            descricao TEXT,
+            versao INT DEFAULT 1,
+            tamanho BIGINT,
+            usuario_id INT,
+            data_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        )
+    """,
+    
+    # Tabela de histórico de versões de softwares
+    "softwares_historico": """
+        CREATE TABLE IF NOT EXISTS softwares_historico (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            software_id INT NOT NULL,
+            versao INT NOT NULL,
+            alteracoes TEXT NOT NULL,
+            usuario_id INT,
+            data_alteracao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (software_id) REFERENCES softwares(id) ON DELETE CASCADE,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        )
+    """,
+    
+    # ============================================
+    # TABELAS DE PRODUTOS 3D
+    # ============================================
+    
+    # Tabela de categorias de produtos 3D
+    "categorias_3d": """
+        CREATE TABLE IF NOT EXISTS categorias_3d (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nome VARCHAR(100) NOT NULL UNIQUE,
+            descricao TEXT,
+            ativo BOOLEAN DEFAULT TRUE,
+            usuario_id INT,
+            data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        )
+    """,
+    
+    # Tabela de subcategorias de produtos 3D (vinculada a uma categoria)
+    "subcategorias_3d": """
+        CREATE TABLE IF NOT EXISTS subcategorias_3d (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nome VARCHAR(100) NOT NULL,
+            descricao TEXT,
+            categoria_id INT NOT NULL,
+            ativo BOOLEAN DEFAULT TRUE,
+            usuario_id INT,
+            data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (categoria_id) REFERENCES categorias_3d(id) ON DELETE CASCADE,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+            UNIQUE KEY unique_subcategoria_por_categoria (nome, categoria_id)
+        )
+    """,
+    
+    # Tabela de produtos 3D
+    "produtos_3d": """
+        CREATE TABLE IF NOT EXISTS produtos_3d (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            titulo VARCHAR(255) NOT NULL,
+            descricao TEXT,
+            categoria_id INT NOT NULL,
+            subcategoria_id INT,
+            usuario_id INT,
+            ativo BOOLEAN DEFAULT TRUE,
+            data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (categoria_id) REFERENCES categorias_3d(id),
+            FOREIGN KEY (subcategoria_id) REFERENCES subcategorias_3d(id) ON DELETE SET NULL,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        )
+    """,
+    
+    # Tabela de arquivos de produtos 3D (imagens, vídeos, STL)
+    "arquivos_produto_3d": """
+        CREATE TABLE IF NOT EXISTS arquivos_produto_3d (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            produto_id INT NOT NULL,
+            tipo ENUM('imagem', 'video', 'stl', 'gif') NOT NULL,
+            nome_arquivo VARCHAR(255) NOT NULL,
+            caminho VARCHAR(500) NOT NULL,
+            tamanho BIGINT,
+            ordem INT DEFAULT 0,
+            data_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (produto_id) REFERENCES produtos_3d(id) ON DELETE CASCADE
+        )
+    """,
+    
+    # Tabela de relacionamento N:N entre produtos 3D e categorias (múltiplas categorias por produto)
+    "produtos_3d_categorias": """
+        CREATE TABLE IF NOT EXISTS produtos_3d_categorias (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            produto_id INT NOT NULL,
+            categoria_id INT NOT NULL,
+            data_vinculo TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (produto_id) REFERENCES produtos_3d(id) ON DELETE CASCADE,
+            FOREIGN KEY (categoria_id) REFERENCES categorias_3d(id) ON DELETE CASCADE,
+            UNIQUE KEY unique_produto_categoria (produto_id, categoria_id)
+        )
+    """,
+
+    
+    # ============================================
+    # TABELAS DE CALENDÁRIO DE DATAS COMEMORATIVAS
+    # ============================================
+    
+    # Tabela de calendário de datas comemorativas
+    "calendario": """
+        CREATE TABLE IF NOT EXISTS calendario (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            data DATE NOT NULL,
+            descricao VARCHAR(255) NOT NULL,
+            notifica BOOLEAN DEFAULT TRUE COMMENT 'Se deve enviar notificação para esta data',
+            usuario_id INT,
+            data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+            UNIQUE KEY unique_data_descricao (data, descricao)
+        )
+    """,
+    
+    # Tabela de configuração de notificações do calendário
+    "calendario_config": """
+        CREATE TABLE IF NOT EXISTS calendario_config (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            notifica_ativo BOOLEAN DEFAULT FALSE COMMENT 'Se o sistema de notificação está ativo',
+            total_notificacoes INT DEFAULT 3 COMMENT 'Quantidade de notificações a enviar antes da data',
+            dias_antes INT DEFAULT 30 COMMENT 'Quantos dias antes da data começar a notificar',
+            ultima_execucao TIMESTAMP NULL COMMENT 'Última vez que a rotina de verificação foi executada',
+            data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )
+    """,
+    
+    # Tabela de histórico de notificações enviadas
+    "calendario_notificacoes": """
+        CREATE TABLE IF NOT EXISTS calendario_notificacoes (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            calendario_id INT NOT NULL,
+            data_envio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            numero_notificacao INT NOT NULL COMMENT 'Qual notificação foi (1, 2, 3...)',
+            vendedores_notificados INT DEFAULT 0,
+            FOREIGN KEY (calendario_id) REFERENCES calendario(id) ON DELETE CASCADE
+        )
+    """,
+
+    # ============================================
+    # TABELAS DE CONTROLE FINANCEIRO
+    # ============================================
+
+    # Tabela de categorias de controle (lucro / desconto)
+    "controle_categorias": """
+        CREATE TABLE IF NOT EXISTS controle_categorias (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nome VARCHAR(100) NOT NULL,
+            tipo ENUM('lucro', 'desconto') NOT NULL,
+            descricao TEXT,
+            ativo BOOLEAN DEFAULT TRUE,
+            usuario_id INT,
+            data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+        )
+    """,
+
+    # Tabela de lançamentos de controle financeiro
+    "controle_lancamentos": """
+        CREATE TABLE IF NOT EXISTS controle_lancamentos (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            categoria_id INT,
+            data DATE NOT NULL COMMENT 'Data de referência do lançamento',
+            tipo ENUM('lucro', 'desconto') NOT NULL COMMENT 'Lucro adiciona, desconto subtrai do lucro total',
+            descricao VARCHAR(255) NOT NULL,
+            valor DECIMAL(10, 2) NOT NULL,
+            usuario_id INT,
+            data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (categoria_id) REFERENCES controle_categorias(id) ON DELETE SET NULL,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+        )
+    """,
+
+    # ============================================
+    # TABELAS DE FILAMENTOS 3D
+    # ============================================
+
+    # Tabela de filamentos (cadastro de materiais)
+    "filamentos_3d": """
+        CREATE TABLE IF NOT EXISTS filamentos_3d (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            material VARCHAR(50) NOT NULL COMMENT 'Tipo do material (PLA, PETG, ABS, TPU, etc)',
+            cor VARCHAR(100) NOT NULL COMMENT 'Cor do filamento',
+            peso_gramas DECIMAL(10, 2) NOT NULL DEFAULT 1000 COMMENT 'Peso total do rolo em gramas',
+            estoque_gramas DECIMAL(10, 2) NOT NULL DEFAULT 0 COMMENT 'Estoque disponível em gramas',
+            descricao VARCHAR(255) COMMENT 'Descrição completa do filamento',
+            preco_referencia DECIMAL(10, 2) DEFAULT 0 COMMENT 'Último preço de compra de referência',
+            ativo BOOLEAN DEFAULT TRUE,
+            usuario_id INT,
+            data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+        )
+    """,
+
+    # Tabela de compras de filamento
+    "compras_filamento_3d": """
+        CREATE TABLE IF NOT EXISTS compras_filamento_3d (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            filamento_id INT NOT NULL,
+            fornecedor_id INT COMMENT 'Fornecedor da compra (tabela parceiros)',
+            quantidade INT NOT NULL DEFAULT 1 COMMENT 'Quantidade de rolos comprados',
+            valor_unitario DECIMAL(10, 2) NOT NULL DEFAULT 0 COMMENT 'Valor unitário por rolo',
+            valor_total DECIMAL(10, 2) NOT NULL DEFAULT 0 COMMENT 'Valor total da compra',
+            observacoes TEXT,
+            usuario_id INT,
+            data_compra TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (filamento_id) REFERENCES filamentos_3d(id) ON DELETE CASCADE,
+            FOREIGN KEY (fornecedor_id) REFERENCES parceiros(id) ON DELETE SET NULL,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+        )
+    """,
+
+    # Tabela de custo por hora da impressora 3D
+    "custo_hora_3d": """
+        CREATE TABLE IF NOT EXISTS custo_hora_3d (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            valor_hora DECIMAL(10, 2) NOT NULL DEFAULT 0 COMMENT 'Custo por hora de impressão',
+            descricao VARCHAR(255) DEFAULT 'Custo padrão por hora',
+            usuario_id INT,
+            data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+        )
     """
 }
 
@@ -558,7 +907,21 @@ try:
     conn.commit()
     print("Categorias de produtos criadas com sucesso!")
 except mysql.connector.Error as err:
-    print(f"Erro ao criar categorias: {err}")
+    pass
+
+# Insere o depósito padrão
+try:
+    cursor.execute("""
+        INSERT INTO depositos (nome, descricao, padrao, ativo)
+        VALUES ('Depósito Padrão', 'Depósito padrão do sistema', TRUE, TRUE)
+    """)
+    conn.commit()
+    print("Depósito padrão criado com sucesso!")
+except mysql.connector.Error as err:
+    if err.errno == 1062:
+        print("Depósito padrão já existe.")
+    else:
+        print(f"Erro ao criar depósito padrão: {err}")
 
 # Insere configuração de timeout padrão
 try:
@@ -579,9 +942,24 @@ try:
         ('api_port', '8000', 'Porta da API'),
         ('environment', 'production', 'Ambiente de execução da aplicação'),
         ('allowed_origins', 'https://erpmaneiro.com,https://www.erpmaneiro.com', 'Origens permitidas para CORS em produção'),
-        ('apikey_openrouter', 'sk-or-v1-etc...', 'Chave de API do OpenRouter'),
-        ('model_openrouter', 'openai/gpt-oss-20b:free', 'Modelo de IA do OpenRouter para gerar relatórios')
+        ('apikey_openrouter', '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', 'Chave de API do OpenRouter'),
+        ('model_openrouter', 'openai/gpt-oss-20b:free', 'Modelo de IA do OpenRouter para gerar relatórios'),
+        ('descricao_produto_dados_fixos', '- 30 dias de garantia\n- Entrego em Salto SP\n- Somente venda', 'Dados fixos obrigatórios incluídos nas descrições geradas por IA')
     ]
+    
+    # Configurações de providers de IA adicionais
+    configuracoes_ia = [
+        ('ia_provider', 'openrouter', 'Provider de IA ativo (openrouter / ollama / lmstudio)'),
+        ('ia_think', 'on', 'Nível de raciocínio da IA: off | low | medium | high | on. Use "off" para desabilitar o thinking.'),
+        ('ia_think_tokens', '0', 'Budget máximo de tokens para raciocínio (0 = sem limite). Aplicado nas descrições de produtos.'),
+        ('ollama_model', 'llama3', 'Modelo do Ollama'),
+        ('ollama_url', 'http://localhost:11434', 'URL base do Ollama'),
+        ('ollama_apikey', '', 'Chave de API do Ollama (se necessário)'),
+        ('lmstudio_model', 'default', 'Modelo do LM Studio'),
+        ('lmstudio_url', 'http://localhost:1234', 'URL base do LM Studio'),
+        ('lmstudio_apikey', '', 'Chave de API do LM Studio (se necessário)')
+    ]
+    configuracoes_producao.extend(configuracoes_ia)
     
     for chave, valor, descricao in configuracoes_producao:
         cursor.execute("""
@@ -609,6 +987,7 @@ try:
             compras_visualizar, compras_editar,
             fornecedores_visualizar, fornecedores_editar,
             estoque_visualizar, estoque_editar,
+            depositos_visualizar, depositos_editar,
             configuracoes_visualizar, configuracoes_editar,
             financeiro_visualizar, financeiro_editar,
             metas_visualizar, metas_editar,
@@ -617,7 +996,8 @@ try:
         VALUES (
             'Administrador', 'Grupo com acesso total ao sistema',
             TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
-            TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
+            TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
+            TRUE, TRUE, TRUE, TRUE,
             TRUE, TRUE, TRUE
         )
         ON DUPLICATE KEY UPDATE nome = VALUES(nome)
@@ -766,6 +1146,117 @@ try:
     print("Faixas de premiação padrão criadas com sucesso!")
 except mysql.connector.Error as err:
     print(f"Erro ao criar faixas de premiação: {err}")
+
+# ============================================
+# CONFIGURAÇÕES E DADOS DO OLX FINDER
+# ============================================
+
+# Inserir configurações do OLX Finder
+try:
+    olx_configs = [
+        ('olx_intervalo_minutos', '20', 'Intervalo em minutos entre execuções de pesquisa OLX'),
+        ('olx_modo_execucao', 'loop', 'Modo de execução: "intervalo" (a cada X minutos) ou "loop" (execução contínua)'),
+        ('olx_webhook_url', '', 'URL do webhook para notificações de novos produtos OLX'),
+        ('olx_ativo', 'false', 'Ativa/desativa o sistema de pesquisa OLX'),
+    ]
+    
+    for chave, valor, descricao in olx_configs:
+        cursor.execute("""
+            INSERT INTO configuracoes (chave, valor, descricao)
+            VALUES (%s, %s, %s)
+            ON DUPLICATE KEY UPDATE descricao = VALUES(descricao)
+        """, (chave, valor, descricao))
+    
+    conn.commit()
+    print("Configurações do OLX Finder criadas com sucesso!")
+except mysql.connector.Error as err:
+    print(f"Erro ao criar configurações do OLX Finder: {err}")
+
+# Inserir categorias OLX padrão
+try:
+    # Verificar se já existem categorias OLX
+    cursor.execute("SELECT COUNT(*) FROM olx_categorias")
+    olx_category_count = cursor.fetchone()[0]
+    
+    if olx_category_count == 0:
+        print("Criando categorias OLX padrão...")
+        
+        # Inserir categoria principal: informatica
+        cursor.execute("INSERT INTO olx_categorias (nome, parent_id) VALUES ('informatica', NULL)")
+        conn.commit()
+        cursor.execute("SELECT id FROM olx_categorias WHERE nome = 'informatica' AND parent_id IS NULL")
+        informatica_id = cursor.fetchone()[0]
+        
+        # Inserir subcategorias de informatica
+        subcategories_informatica = [
+            'perifericos-e-acessorios-de-computador',
+            'notebooks',
+            'computadores-e-desktops',
+            'pecas-de-hardware',
+            'conectividade-e-dispositivos-de-rede',
+            'monitores',
+            'tablets-e-e-readers',
+            'armazenamento',
+            'memoria-ram',
+            'placas-de-video',
+            'processadores'
+        ]
+        
+        for subcategory in subcategories_informatica:
+            cursor.execute("INSERT INTO olx_categorias (nome, parent_id) VALUES (%s, %s)", (subcategory, informatica_id))
+        
+        # Inserir categoria principal: games
+        cursor.execute("INSERT INTO olx_categorias (nome, parent_id) VALUES ('games', NULL)")
+        conn.commit()
+        cursor.execute("SELECT id FROM olx_categorias WHERE nome = 'games' AND parent_id IS NULL")
+        games_id = cursor.fetchone()[0]
+        
+        # Inserir subcategorias de games
+        subcategories_games = [
+            'jogos-de-video-game',
+            'consoles-de-video-game',
+            'acessorios-de-video-game'
+        ]
+        
+        for subcategory in subcategories_games:
+            cursor.execute("INSERT INTO olx_categorias (nome, parent_id) VALUES (%s, %s)", (subcategory, games_id))
+        
+        conn.commit()
+        print("Categorias OLX padrão criadas com sucesso!")
+    else:
+        print(f"Já existem {olx_category_count} categorias OLX no banco de dados.")
+        
+except mysql.connector.Error as err:
+    print(f"Erro ao criar categorias OLX: {err}")
+
+# Inserir flags OLX padrão para o usuário admin
+try:
+    # Verificar se existem flags OLX
+    cursor.execute("SELECT COUNT(*) FROM olx_flags")
+    olx_flags_count = cursor.fetchone()[0]
+    
+    if olx_flags_count == 0:
+        # Buscar o ID do usuário admin
+        cursor.execute("SELECT id FROM usuarios WHERE nivel_acesso = 'admin' LIMIT 1")
+        admin_user = cursor.fetchone()
+        
+        if admin_user:
+            admin_id = admin_user[0]
+            default_flags = [
+                ('Defeito', False, 'com defeito, não funciona, tela preta, queimado, com problema, danificado, sem funcionar'),
+                ('Retirada peças', False, 'retirada de peça, para retirada de peças, somente peças, aproveitamento de peças, para sucata, sucata, quebrado'),
+            ]
+            
+            for nome, incluir, palavras in default_flags:
+                cursor.execute("""
+                    INSERT INTO olx_flags (nome, incluir, palavras_chave, usuario_id)
+                    VALUES (%s, %s, %s, %s)
+                """, (nome, incluir, palavras, admin_id))
+            
+            conn.commit()
+            print("Flags OLX padrão criadas para o usuário admin!")
+except mysql.connector.Error as err:
+    print(f"Erro ao criar flags OLX padrão: {err}")
 
 print("Inicialização do banco de dados concluída com sucesso! ✅")
 

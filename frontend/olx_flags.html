@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Maneiro - Flags OLX</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/modulos.css">
+    <link rel="stylesheet" href="css/submenu.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/theme-dark.css">
+    <link rel="stylesheet" href="css/theme-light.css">
+    <style>
+        .badge-include {
+            background: #27ae60;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+        }
+
+        .badge-exclude {
+            background: #e74c3c;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+        }
+
+        .keywords-preview {
+            max-width: 300px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Menu Lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="img/icon.png" alt="ERP Maneiro" class="logo-img">
+                <button id="toggleSidebar" class="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="userName">Carregando...</h3>
+                    <p id="userRole">Carregando...</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <!-- O sidebar-template.js irá popular este menu dinamicamente -->
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <div class="content">
+                <div class="page-header">
+                    <h1><i class="fas fa-filter"></i> Flags de Pesquisa</h1>
+                    <p>Configure filtros para incluir ou excluir produtos baseado em palavras-chave</p>
+                </div>
+
+                <!-- Formulário de Nova Flag -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-header">
+                        <h3><i class="fas fa-plus"></i> Nova Flag</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="flagForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="nome">Nome da Flag *</label>
+                                    <input type="text" id="nome" name="nome" required placeholder="Ex: Defeito">
+                                </div>
+                                <div class="form-group">
+                                    <label>Tipo *</label>
+                                    <div class="radio-group">
+                                        <label>
+                                            <input type="radio" name="incluir" value="true" checked>
+                                            <span class="badge-include">Incluir</span>
+                                        </label>
+                                        <label>
+                                            <input type="radio" name="incluir" value="false">
+                                            <span class="badge-exclude">Excluir</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="palavras_chave">Palavras-chave *</label>
+                                <textarea id="palavras_chave" name="palavras_chave" rows="2" required
+                                    placeholder="Separadas por vírgula: com defeito, não funciona, quebrado"></textarea>
+                                <small class="text-muted">Separe as palavras-chave por vírgula</small>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn-primary">
+                                    <i class="fas fa-save"></i> Salvar Flag
+                                </button>
+                                <button type="button" class="btn-outline" id="btnCancelar" style="display: none;">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </button>
+                            </div>
+                            <input type="hidden" id="flag_id">
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Lista de Flags -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-list"></i> Flags Cadastradas</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table" id="flagsTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nome</th>
+                                        <th>Tipo</th>
+                                        <th>Palavras-chave</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="5" class="text-center">Carregando...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/sidebar-template.js"></script>
+    <script src="js/olx_flags.js"></script>
+    <script src="js/theme-switcher.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,1983 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Maneiro - Produtos 3D</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/permissions.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/modulos.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/theme-dark.css">
+    <link rel="stylesheet" href="css/theme-light.css">
+    <style>
+        /* Estilos específicos para Produtos 3D */
+
+        /* Barra de ações */
+        .actions-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px 0;
+        }
+
+        .actions-left {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn-novo-produto-3d {
+            background: linear-gradient(135deg, #64ffda 0%, #00bfa5 100%) !important;
+            color: #0a192f !important;
+            padding: 12px 24px !important;
+            border: none !important;
+            border-radius: 8px !important;
+            cursor: pointer !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            transition: all 0.3s ease !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        .btn-novo-produto-3d:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(100, 255, 218, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #64ffda;
+            padding: 10px 20px;
+            border: 1px solid #64ffda;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline:hover {
+            background: rgba(100, 255, 218, 0.1);
+        }
+
+        /* Botão Salvar 3D */
+        .btn-salvar-3d {
+            background: linear-gradient(135deg, #64ffda 0%, #00bfa5 100%) !important;
+            color: #0a192f !important;
+            padding: 12px 24px !important;
+            border: none !important;
+            border-radius: 8px !important;
+            cursor: pointer !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .btn-salvar-3d:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(100, 255, 218, 0.4);
+        }
+
+        /* Pesquisa no Select */
+        .select-with-search {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .search-select-input {
+            padding: 10px 15px;
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 8px;
+            background: var(--input-bg, #0a192f);
+            color: var(--text-color, #ccd6f6);
+            font-size: 14px;
+        }
+
+        .search-select-input:focus {
+            outline: none;
+            border-color: #64ffda;
+        }
+
+        /* Botão nova subcategoria */
+        .btn-nova-subcategoria {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+            margin-top: 5px;
+        }
+
+        .btn-nova-subcategoria:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(52, 152, 219, 0.4);
+        }
+
+        /* Categorias Adicionais */
+        .categorias-adicionais-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .categorias-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 30px;
+        }
+
+        .categoria-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(100, 255, 218, 0.15);
+            color: #64ffda;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .categoria-tag .remove-tag {
+            cursor: pointer;
+            font-size: 14px;
+            color: #ff6b6b;
+            transition: transform 0.2s;
+        }
+
+        .categoria-tag .remove-tag:hover {
+            transform: scale(1.2);
+        }
+
+        /* Layout compacto do modal */
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 0;
+        }
+
+        .form-col {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .select-with-search.compact {
+            gap: 5px;
+        }
+
+        .select-with-search.compact .search-select-input {
+            padding: 8px 10px;
+            font-size: 13px;
+        }
+
+        .select-with-search.compact select {
+            padding: 8px 10px;
+            font-size: 13px;
+        }
+
+        .btn-nova-subcategoria-inline {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 8px 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        /* Categorias Adicionais Inline */
+        .compact-categorias {
+            margin-bottom: 10px;
+        }
+
+        .compact-categorias label {
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .categorias-adicionais-inline {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            min-height: 34px;
+            background: rgba(100, 255, 218, 0.05);
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 8px;
+            padding: 6px 10px;
+        }
+
+        .categorias-tags-inline {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .categorias-tags-inline .categoria-tag {
+            padding: 4px 10px;
+            font-size: 12px;
+            border-radius: 15px;
+        }
+
+        .add-categoria-inline select {
+            background: transparent;
+            border: none;
+            color: #64ffda;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+        .add-categoria-inline select:focus {
+            outline: none;
+        }
+
+        .add-categoria-inline select option {
+            background: #112240;
+            color: #ccd6f6;
+        }
+
+        body.theme-light .categorias-adicionais-inline {
+            background: rgba(41, 128, 185, 0.05);
+            border-color: rgba(41, 128, 185, 0.2);
+        }
+
+        body.theme-light .add-categoria-inline select {
+            color: #2980b9;
+        }
+
+        body.theme-light .add-categoria-inline select option {
+            background: #ffffff;
+            color: #333;
+        }
+
+        /* Tags de categoria compactas */
+        body.theme-light .categoria-tag {
+            background: rgba(41, 128, 185, 0.15);
+            color: #2980b9;
+        }
+
+        body.theme-light .categoria-tag .remove-tag {
+            color: #e74c3c;
+        }
+
+        /* Label com ação */
+        .label-with-action {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .label-with-action label {
+            margin-bottom: 0;
+        }
+
+        /* Botão Gerar IA */
+        .btn-gerar-ia {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-gerar-ia:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-gerar-ia:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* Modal de Galeria de Imagens */
+        .modal-galeria {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(245, 245, 245, 0.98);
+            z-index: 10000;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .modal-galeria.active {
+            display: block;
+        }
+
+        .galeria-fechar {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 32px;
+            color: #666;
+            cursor: pointer;
+            z-index: 10001;
+            transition: color 0.2s;
+        }
+
+        .galeria-fechar:hover {
+            color: #333;
+        }
+
+        .galeria-container {
+            display: flex;
+            height: 100%;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .galeria-principal {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .galeria-imagem-container {
+            max-width: 100%;
+            max-height: calc(100vh - 100px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .galeria-imagem-container img {
+            max-width: 100%;
+            max-height: calc(100vh - 140px);
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .galeria-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .galeria-nav:hover {
+            background: #f0f0f0;
+            color: #333;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .galeria-prev {
+            left: 15px;
+        }
+
+        .galeria-next {
+            right: 15px;
+        }
+
+        .galeria-miniaturas {
+            width: 120px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+
+        .galeria-miniatura {
+            width: 100px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .galeria-miniatura:hover {
+            border-color: #2980b9;
+            transform: scale(1.05);
+        }
+
+        .galeria-miniatura.active {
+            border-color: #2980b9;
+            box-shadow: 0 2px 8px rgba(41, 128, 185, 0.4);
+        }
+
+        .galeria-miniatura img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        @media (max-width: 768px) {
+            .galeria-container {
+                flex-direction: column;
+            }
+
+            .galeria-miniaturas {
+                width: 100%;
+                flex-direction: row;
+                height: auto;
+                overflow-x: auto;
+            }
+
+            .galeria-miniatura {
+                width: 60px;
+                height: 50px;
+            }
+
+            .galeria-nav {
+                width: 35px;
+                height: 35px;
+                font-size: 14px;
+            }
+        }
+
+        /* Loading Overlay para Download */
+        .loading-overlay-download {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 25, 47, 0.95);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-overlay-download.active {
+            display: flex;
+        }
+
+        .loading-content-download {
+            text-align: center;
+            color: #64ffda;
+        }
+
+        .loading-content-download i {
+            margin-bottom: 20px;
+        }
+
+        .loading-content-download p {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .loading-content-download small {
+            color: #8892b0;
+        }
+
+        /* Suporte a Tema Claro */
+        body.theme-light .page-header h1 {
+            color: #333 !important;
+        }
+
+        body.theme-light .page-header p {
+            color: #666 !important;
+        }
+
+        body.theme-light .content {
+            background: #f5f5f5 !important;
+        }
+
+        body.theme-light .filter-bar,
+        body.theme-light .filtros-container {
+            background: #ffffff !important;
+            border: 1px solid #e0e0e0 !important;
+        }
+
+        body.theme-light .filter-bar label,
+        body.theme-light .filtros-container label {
+            color: #333 !important;
+        }
+
+        body.theme-light .produto-3d-card {
+            background: #ffffff !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08) !important;
+            border: 1px solid #e0e0e0 !important;
+        }
+
+        body.theme-light .produto-3d-card .card-body {
+            background: #ffffff !important;
+        }
+
+        body.theme-light .produto-3d-card .card-image {
+            background: #f0f0f0 !important;
+        }
+
+        body.theme-light .produto-3d-card .card-title,
+        body.theme-light .produto-3d-card h3 {
+            color: #333 !important;
+        }
+
+        body.theme-light .produto-3d-card .card-category {
+            background: rgba(41, 128, 185, 0.15) !important;
+            color: #2980b9 !important;
+        }
+
+        body.theme-light .produto-3d-card .card-meta,
+        body.theme-light .produto-3d-card .card-meta span,
+        body.theme-light .produto-3d-card p {
+            color: #666 !important;
+        }
+
+        body.theme-light .produto-3d-card .card-actions {
+            border-top-color: #e0e0e0 !important;
+        }
+
+        body.theme-light .produto-3d-card .card-image .no-image {
+            color: #2980b9 !important;
+        }
+
+        body.theme-light .filter-bar select,
+        body.theme-light .search-select-input,
+        body.theme-light #titulo,
+        body.theme-light #descricao,
+        body.theme-light #categoriaId,
+        body.theme-light #novaCategoriaNome,
+        body.theme-light #filtroCategoria,
+        body.theme-light #pesquisaCategoria,
+        body.theme-light input[type="text"],
+        body.theme-light textarea,
+        body.theme-light select {
+            background: #f5f5f5 !important;
+            color: #333 !important;
+            border-color: #ddd !important;
+        }
+
+        body.theme-light .modal-content {
+            background: #ffffff !important;
+        }
+
+        body.theme-light .modal-header {
+            border-bottom-color: #e0e0e0 !important;
+        }
+
+        body.theme-light .modal-header h2 {
+            color: #333 !important;
+        }
+
+        body.theme-light .modal-footer {
+            border-top-color: #e0e0e0 !important;
+        }
+
+        body.theme-light .form-group label,
+        body.theme-light .label-with-action label {
+            color: #333 !important;
+        }
+
+        body.theme-light .modal-tabs {
+            background: #f5f5f5 !important;
+            border-bottom-color: #e0e0e0 !important;
+        }
+
+        body.theme-light .modal-tab {
+            color: #666 !important;
+        }
+
+        body.theme-light .modal-tab.active {
+            color: #2980b9 !important;
+            border-bottom-color: #2980b9 !important;
+            background: #ffffff !important;
+        }
+
+        body.theme-light .modal-tab-content {
+            background: #ffffff !important;
+        }
+
+        body.theme-light .upload-area {
+            border-color: rgba(41, 128, 185, 0.3) !important;
+            background: #f9f9f9 !important;
+        }
+
+        body.theme-light .upload-area i {
+            color: #2980b9 !important;
+        }
+
+        body.theme-light .upload-area p {
+            color: #666 !important;
+        }
+
+        body.theme-light .categoria-item {
+            background: rgba(41, 128, 185, 0.1) !important;
+        }
+
+        body.theme-light .categoria-item .nome {
+            color: #333 !important;
+        }
+
+        body.theme-light .detalhes-info h3,
+        body.theme-light .detalhes-info h4,
+        body.theme-light .detalhes-media h4 {
+            color: #2980b9 !important;
+        }
+
+        body.theme-light .detalhes-info p,
+        body.theme-light #detalhesDescricao {
+            color: #666 !important;
+        }
+
+        body.theme-light .stl-viewer-container {
+            background: #e8e8e8 !important;
+        }
+
+        body.theme-light .arquivo-stl-item {
+            background: rgba(41, 128, 185, 0.1) !important;
+            border-color: rgba(41, 128, 185, 0.3) !important;
+        }
+
+        body.theme-light .arquivo-stl-item span {
+            color: #333 !important;
+        }
+
+        body.theme-light .arquivo-stl-item i {
+            color: #2980b9 !important;
+        }
+
+        body.theme-light .loading-overlay-download {
+            background: rgba(255, 255, 255, 0.95) !important;
+        }
+
+        body.theme-light .loading-content-download {
+            color: #2980b9 !important;
+        }
+
+        body.theme-light .loading-content-download small {
+            color: #666 !important;
+        }
+
+        body.theme-light .actions-bar {
+            background: transparent;
+        }
+
+        body.theme-light .btn-outline {
+            color: #2980b9 !important;
+            border-color: #2980b9 !important;
+        }
+
+        body.theme-light .btn-outline:hover {
+            background: rgba(41, 128, 185, 0.1) !important;
+        }
+
+        @media (max-width: 768px) {
+            .btn-prev {
+                left: 10px;
+            }
+
+            .btn-next {
+                right: 10px;
+            }
+
+            .btn-nav-imagem {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+        }
+
+        .produtos-3d-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .produto-3d-card {
+            background: var(--card-bg, #112240);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        body.theme-light .produto-3d-card {
+            background: #ffffff !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08) !important;
+            border: 1px solid #e0e0e0 !important;
+        }
+
+        .produto-3d-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .produto-3d-card .card-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        body.theme-light .produto-3d-card .card-image {
+            background: #f0f0f0 !important;
+        }
+
+        .produto-3d-card .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .produto-3d-card .card-image .no-image {
+            color: #64ffda;
+            font-size: 48px;
+        }
+
+        body.theme-light .produto-3d-card .card-image .no-image {
+            color: #2980b9 !important;
+        }
+
+        .produto-3d-card .card-body {
+            padding: 15px;
+        }
+
+        body.theme-light .produto-3d-card .card-body {
+            background: #ffffff !important;
+        }
+
+        .produto-3d-card .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ccd6f6;
+            margin-bottom: 8px;
+        }
+
+        body.theme-light .produto-3d-card .card-title {
+            color: #333 !important;
+        }
+
+        .produto-3d-card .card-category {
+            font-size: 12px;
+            color: #64ffda;
+            background: rgba(100, 255, 218, 0.1);
+            padding: 4px 10px;
+            border-radius: 15px;
+            display: inline-block;
+        }
+
+        .produto-3d-card .card-categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .produto-3d-card .card-category-extra {
+            background: rgba(100, 255, 218, 0.25);
+            cursor: help;
+        }
+
+        body.theme-light .produto-3d-card .card-category {
+            color: #2980b9 !important;
+            background: rgba(41, 128, 185, 0.15) !important;
+        }
+
+        body.theme-light .produto-3d-card .card-category-extra {
+            background: rgba(41, 128, 185, 0.3) !important;
+        }
+
+        .produto-3d-card .card-meta {
+            display: flex;
+            gap: 15px;
+            color: #8892b0;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        body.theme-light .produto-3d-card .card-meta {
+            color: #666 !important;
+        }
+
+        .produto-3d-card .card-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        body.theme-light .produto-3d-card .card-meta span {
+            color: #666 !important;
+        }
+
+        .produto-3d-card .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(100, 255, 218, 0.1);
+        }
+
+        body.theme-light .produto-3d-card .card-actions {
+            border-top-color: #e0e0e0 !important;
+        }
+
+        .produto-3d-card .card-actions button {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-ver-detalhes {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-ver-detalhes:hover {
+            transform: scale(1.02);
+        }
+
+        .btn-download {
+            background: rgba(100, 255, 218, 0.1);
+            color: #64ffda;
+            border: 1px solid #64ffda !important;
+        }
+
+        .btn-download:hover {
+            background: rgba(100, 255, 218, 0.2);
+        }
+
+        .btn-editar-card {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+            border: 1px solid #ffc107 !important;
+        }
+
+        .btn-excluir-card {
+            background: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+            border: 1px solid #e74c3c !important;
+        }
+
+        /* Filtros */
+        .filter-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            background: var(--card-bg, #112240);
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        body.theme-light .filter-bar {
+            background: #ffffff !important;
+            border: 1px solid #e0e0e0 !important;
+        }
+
+        body.theme-light .filter-bar label,
+        body.theme-light .filter-bar [style*="color"] {
+            color: #333 !important;
+        }
+
+        .filter-bar select {
+            padding: 10px 15px;
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 8px;
+            background: var(--input-bg, #0a192f);
+            color: var(--text-color, #ccd6f6);
+            min-width: 200px;
+        }
+
+        body.theme-light .filter-bar select {
+            background: #f5f5f5 !important;
+            color: #333 !important;
+            border-color: #ddd !important;
+        }
+
+        .filter-bar select:focus {
+            outline: none;
+            border-color: #64ffda;
+        }
+
+        /* Botão Admin para Categorias */
+        .btn-admin-categoria {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-admin-categoria:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+        }
+
+        /* Upload de arquivos */
+        .upload-area {
+            border: 2px dashed rgba(100, 255, 218, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: #64ffda;
+            background: rgba(100, 255, 218, 0.05);
+        }
+
+        .upload-area i {
+            font-size: 32px;
+            color: #64ffda;
+            margin-bottom: 10px;
+        }
+
+        .upload-area p {
+            color: #8892b0;
+            margin: 0;
+        }
+
+        .preview-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .preview-item {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid rgba(100, 255, 218, 0.2);
+        }
+
+        .preview-item img,
+        .preview-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-item .file-icon {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(100, 255, 218, 0.1);
+            color: #64ffda;
+            font-size: 24px;
+        }
+
+        .preview-item .remove-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 20px;
+            height: 20px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Modal de Detalhes */
+        .modal-detalhes .modal-content {
+            max-width: 900px;
+        }
+
+        .detalhes-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .detalhes-media {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .detalhes-imagens {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .detalhes-imagens img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .detalhes-imagens img:hover {
+            transform: scale(1.05);
+        }
+
+        .stl-viewer-container {
+            width: 100%;
+            height: 300px;
+            background: #0a192f;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .stl-viewer-container canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .stl-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .stl-controls button {
+            padding: 5px 10px;
+            background: rgba(100, 255, 218, 0.2);
+            border: 1px solid #64ffda;
+            color: #64ffda;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .arquivos-stl-lista {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .arquivo-stl-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background: rgba(100, 255, 218, 0.05);
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .arquivo-stl-item:hover {
+            background: rgba(100, 255, 218, 0.1);
+            border-color: #64ffda;
+        }
+
+        .arquivo-stl-item.active {
+            background: rgba(100, 255, 218, 0.15);
+            border-color: #64ffda;
+        }
+
+        .arquivo-stl-item span {
+            color: #ccd6f6;
+            font-size: 14px;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .arquivo-stl-item i {
+            color: #64ffda;
+        }
+
+        .arquivo-acoes {
+            display: flex;
+            gap: 12px;
+        }
+
+        .arquivo-acoes i {
+            cursor: pointer;
+            padding: 5px;
+            transition: transform 0.2s, color 0.2s;
+        }
+
+        .arquivo-acoes i:hover {
+            transform: scale(1.2);
+            color: #00bcd4;
+        }
+
+        .arquivo-acoes .fa-download:hover {
+            color: #4caf50;
+        }
+
+        /* Lista de categorias no modal admin */
+        .categorias-lista {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .categoria-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: rgba(100, 255, 218, 0.05);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .categoria-item .nome {
+            color: #ccd6f6;
+            font-weight: 500;
+        }
+
+        .categoria-item .acoes {
+            display: flex;
+            gap: 8px;
+        }
+
+        .categoria-item .acoes button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* Videos no modal de detalhes */
+        .detalhes-videos {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .detalhes-videos video {
+            width: 200px;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .detalhes-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .produtos-3d-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Upload Progress Overlay */
+        .upload-progress-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 25, 47, 0.97);
+            z-index: 20000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .upload-progress-overlay.active {
+            display: flex;
+        }
+
+        .upload-progress-content {
+            background: #112240;
+            border-radius: 16px;
+            padding: 40px 50px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(100, 255, 218, 0.2);
+        }
+
+        .upload-progress-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .upload-progress-header i {
+            font-size: 48px;
+            color: #64ffda;
+            margin-bottom: 15px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.7;
+                transform: scale(1.05);
+            }
+        }
+
+        .upload-progress-header h3 {
+            color: #ccd6f6;
+            font-size: 22px;
+            margin: 0;
+        }
+
+        .upload-progress-stage {
+            margin-bottom: 25px;
+        }
+
+        .upload-progress-stage-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .upload-progress-stage-title span {
+            color: #64ffda;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .upload-progress-stage-title .percent {
+            color: #8892b0;
+            font-size: 13px;
+        }
+
+        .upload-progress-bar-container {
+            width: 100%;
+            height: 12px;
+            background: rgba(100, 255, 218, 0.1);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .upload-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #64ffda 0%, #00bcd4 50%, #64ffda 100%);
+            background-size: 200% 100%;
+            border-radius: 6px;
+            width: 0%;
+            transition: width 0.3s ease;
+            animation: shimmer 2s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .upload-progress-file-info {
+            color: #8892b0;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .upload-progress-file-info i {
+            color: #64ffda;
+            font-size: 12px;
+        }
+
+        .upload-progress-file-info .filename {
+            color: #ccd6f6;
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .upload-progress-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(100, 255, 218, 0.1);
+        }
+
+        .upload-stat {
+            text-align: center;
+        }
+
+        .upload-stat .value {
+            color: #64ffda;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .upload-stat .label {
+            color: #8892b0;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .upload-progress-warning {
+            margin-top: 20px;
+            padding: 12px 15px;
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 8px;
+            color: #ffc107;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .upload-progress-warning i {
+            font-size: 16px;
+        }
+
+        body.theme-light .upload-progress-overlay {
+            background: rgba(245, 245, 245, 0.97);
+        }
+
+        body.theme-light .upload-progress-content {
+            background: #ffffff;
+            border-color: rgba(41, 128, 185, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        body.theme-light .upload-progress-header h3 {
+            color: #333;
+        }
+
+        body.theme-light .upload-progress-header i {
+            color: #2980b9;
+        }
+
+        body.theme-light .upload-progress-stage-title span {
+            color: #2980b9;
+        }
+
+        body.theme-light .upload-progress-bar-container {
+            background: rgba(41, 128, 185, 0.1);
+        }
+
+        body.theme-light .upload-progress-bar {
+            background: linear-gradient(90deg, #3498db 0%, #2980b9 50%, #3498db 100%);
+            background-size: 200% 100%;
+        }
+
+        body.theme-light .upload-progress-file-info i {
+            color: #2980b9;
+        }
+
+        body.theme-light .upload-progress-file-info .filename {
+            color: #333;
+        }
+
+        body.theme-light .upload-stat .value {
+            color: #2980b9;
+        }
+
+        body.theme-light .upload-stat .label {
+            color: #666;
+        }
+
+        /* STL File Info Styles */
+        .file-info-stl {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+            min-width: 0;
+            padding: 0 8px;
+        }
+
+        .file-info-stl .file-name {
+            font-size: 11px;
+            color: #ccd6f6;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-info-stl .file-size {
+            font-size: 10px;
+            color: #64ffda;
+            font-weight: 600;
+        }
+
+        body.theme-light .file-info-stl .file-name {
+            color: #333;
+        }
+
+        body.theme-light .file-info-stl .file-size {
+            color: #2980b9;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="img/icon.png" alt="ERP Maneiro" class="logo-img">
+                <button id="toggleSidebar" class="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="theme-switch-wrapper">
+                <span class="switch-label"><i class="fas fa-moon"></i></span>
+                <label class="theme-switch">
+                    <input type="checkbox" id="themeSwitch">
+                    <span class="slider"></span>
+                </label>
+                <span class="switch-label"><i class="fas fa-sun"></i></span>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="userName">Carregando...</h3>
+                    <p id="userRole">Carregando...</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="homepage.html"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <div class="content">
+                <div class="page-header">
+                    <h1><i class="fas fa-cube"></i> Produtos 3D</h1>
+                    <p>Gerencie seus modelos 3D, imagens e arquivos STL</p>
+                </div>
+
+                <!-- Ações -->
+                <div class="actions-bar">
+                    <div class="actions-left">
+                        <button class="btn-novo-produto-3d" id="btnNovoProduto3D">
+                            <i class="fas fa-plus"></i> Novo Produto 3D
+                        </button>
+                        <button class="btn-admin-categoria" id="btnGerenciarCategorias" style="display: none;">
+                            <i class="fas fa-folder-plus"></i> Gerenciar Categorias
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div class="filter-bar">
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <label style="color: #8892b0;">Categoria:</label>
+                        <input type="text" id="pesquisaFiltroCategoria" placeholder="Pesquisar..."
+                            style="width: 150px; padding: 8px 12px; border-radius: 6px;">
+                        <select id="filtroCategoria">
+                            <option value="">Todas as categorias</option>
+                        </select>
+
+                        <label style="color: #8892b0; margin-left: 15px;">Subcategoria:</label>
+                        <input type="text" id="pesquisaFiltroSubcategoria" placeholder="Pesquisar..."
+                            style="width: 150px; padding: 8px 12px; border-radius: 6px;">
+                        <select id="filtroSubcategoria">
+                            <option value="">Todas as subcategorias</option>
+                        </select>
+                    </div>
+                    <button class="btn-outline" id="btnLimparFiltro">
+                        <i class="fas fa-times"></i> Limpar Filtro
+                    </button>
+                </div>
+
+                <!-- Grid de Produtos -->
+                <div class="produtos-3d-grid" id="produtos3DGrid">
+                    <p style="color: #8892b0; grid-column: 1 / -1; text-align: center; padding: 40px;">
+                        <i class="fas fa-spinner fa-spin"></i> Carregando produtos...
+                    </p>
+                </div>
+
+                <!-- Paginação -->
+                <div class="pagination">
+                    <button class="btn-page"><i class="fas fa-chevron-left"></i></button>
+                    <button class="btn-page active">1</button>
+                    <button class="btn-page"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de Novo/Editar Produto 3D -->
+    <div class="modal" id="produto3DModal">
+        <div class="modal-content modal-lg modal-vendas">
+            <div class="modal-header">
+                <h2 id="modalTitulo">Novo Produto 3D</h2>
+                <button class="close-modal" onclick="fecharModalProduto()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="produto3DForm">
+                    <input type="hidden" id="produtoId">
+
+                    <!-- Sistema de Abas -->
+                    <div class="modal-tabs">
+                        <button type="button" class="modal-tab active" data-tab="tab-dados-3d">
+                            <i class="fas fa-info-circle"></i> Dados
+                        </button>
+                        <button type="button" class="modal-tab" data-tab="tab-imagens-3d">
+                            <i class="fas fa-image"></i> Imagens
+                        </button>
+                        <button type="button" class="modal-tab" data-tab="tab-videos-3d">
+                            <i class="fas fa-video"></i> Vídeos
+                        </button>
+                        <button type="button" class="modal-tab" data-tab="tab-stl-3d">
+                            <i class="fas fa-cube"></i> Arquivos STL
+                        </button>
+                        <button type="button" class="modal-tab" data-tab="tab-gif-3d">
+                            <i class="fas fa-film"></i> GIF
+                        </button>
+                    </div>
+
+                    <!-- Aba 1: Dados do Produto -->
+                    <div class="modal-tab-content active" id="tab-dados-3d">
+                        <!-- Título em linha única -->
+                        <div class="form-group">
+                            <label for="titulo">Título *</label>
+                            <input type="text" id="titulo" name="titulo" required placeholder="Nome do produto 3D">
+                        </div>
+
+                        <!-- Grid de 2 colunas para Categorias -->
+                        <div class="form-row">
+                            <div class="form-group form-col">
+                                <label for="categoriaId">Categoria Principal *</label>
+                                <div class="select-with-search compact">
+                                    <input type="text" id="pesquisaCategoria" class="search-select-input"
+                                        placeholder="Pesquisar...">
+                                    <select id="categoriaId" name="categoria_id" required>
+                                        <option value="">Selecione</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group form-col">
+                                <label for="subcategoriaId">Subcategoria</label>
+                                <div class="select-with-search compact">
+                                    <input type="text" id="pesquisaSubcategoria" class="search-select-input"
+                                        placeholder="Pesquisar...">
+                                    <select id="subcategoriaId" name="subcategoria_id">
+                                        <option value="">Selecione</option>
+                                    </select>
+                                    <button type="button" id="btnNovaSubcategoria" class="btn-nova-subcategoria-inline"
+                                        title="Criar nova subcategoria" style="display: none;">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Categorias Adicionais em linha única compacta -->
+                        <div class="form-group compact-categorias">
+                            <label>Categorias Adicionais</label>
+                            <div class="categorias-adicionais-inline">
+                                <div id="categoriasAdicionaisTags" class="categorias-tags-inline"></div>
+                                <div class="add-categoria-inline">
+                                    <select id="categoriaAdicionalSelect" name="categoria_adicional">
+                                        <option value="">+ Adicionar...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <input type="hidden" id="categoriasAdicionaisIds" name="categoria_ids" value="">
+                        </div>
+
+                        <!-- Descrição -->
+                        <div class="form-group">
+                            <div class="label-with-action">
+                                <label for="descricao">Descrição</label>
+                                <button type="button" id="btnGerarDescricaoIA3D" class="btn-gerar-ia"
+                                    title="Gerar descrição por IA">
+                                    <i class="fas fa-magic"></i> IA
+                                </button>
+                            </div>
+                            <textarea id="descricao" name="descricao" rows="3"
+                                placeholder="Descrição do produto..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Aba 2: Imagens -->
+                    <div class="modal-tab-content" id="tab-imagens-3d">
+                        <div class="form-group">
+                            <label>Imagens (máximo 3)</label>
+                            <div class="upload-area" id="uploadImagens">
+                                <i class="fas fa-image"></i>
+                                <p>Clique ou arraste imagens aqui</p>
+                                <input type="file" id="inputImagens" multiple accept="image/*" style="display: none;">
+                            </div>
+                            <div class="preview-container" id="previewImagens"></div>
+                        </div>
+                    </div>
+
+                    <!-- Aba 3: Vídeos -->
+                    <div class="modal-tab-content" id="tab-videos-3d">
+                        <div class="form-group">
+                            <label>Vídeos (máximo 3)</label>
+                            <div class="upload-area" id="uploadVideos">
+                                <i class="fas fa-video"></i>
+                                <p>Clique ou arraste vídeos aqui</p>
+                                <input type="file" id="inputVideos" multiple accept="video/*" style="display: none;">
+                            </div>
+                            <div class="preview-container" id="previewVideos"></div>
+                        </div>
+                    </div>
+
+                    <!-- Aba 4: Arquivos STL -->
+                    <div class="modal-tab-content" id="tab-stl-3d">
+                        <div class="form-group">
+                            <label>Arquivos STL</label>
+                            <div class="upload-area" id="uploadSTL">
+                                <i class="fas fa-cube"></i>
+                                <p>Clique ou arraste arquivos STL aqui</p>
+                                <input type="file" id="inputSTL" multiple accept=".stl" style="display: none;">
+                            </div>
+                            <div class="preview-container" id="previewSTL"></div>
+                        </div>
+                    </div>
+
+                    <!-- Aba 5: GIF -->
+                    <div class="modal-tab-content" id="tab-gif-3d">
+                        <div class="form-group">
+                            <label>GIF Animado (máximo 1)</label>
+                            <p style="color: #8892b0; font-size: 13px; margin-bottom: 10px;">
+                                <i class="fas fa-info-circle"></i> O GIF será exibido como imagem padrão do produto na
+                                listagem
+                            </p>
+                            <div class="upload-area" id="uploadGIF">
+                                <i class="fas fa-film"></i>
+                                <p>Clique ou arraste um GIF aqui</p>
+                                <input type="file" id="inputGIF" accept=".gif,image/gif" style="display: none;">
+                            </div>
+                            <div class="preview-container" id="previewGIF"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-outline" id="btnCancelar">Cancelar</button>
+                <button type="button" class="btn-salvar-3d" id="btnSalvar">
+                    <i class="fas fa-save"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes do Produto -->
+    <div class="modal modal-detalhes" id="detalhesModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2 id="detalhesTitulo">Detalhes do Produto</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="detalhes-grid">
+                    <div class="detalhes-info">
+                        <h3 id="detalhesNome" style="color: #64ffda; margin-bottom: 10px;"></h3>
+                        <p style="margin-bottom: 5px;"><strong>Categoria:</strong> <span id="detalhesCategoria"></span>
+                        </p>
+                        <p style="margin-bottom: 5px;"><strong>Subcategoria:</strong> <span
+                                id="detalhesSubcategoria">-</span></p>
+                        <p style="margin-bottom: 15px;"><strong>Criado por:</strong> <span id="detalhesUsuario"></span>
+                        </p>
+                        <p id="detalhesDescricao" style="color: #8892b0;"></p>
+
+                        <h4 style="margin-top: 20px; margin-bottom: 10px; color: #ccd6f6;">
+                            <i class="fas fa-image"></i> Imagens
+                        </h4>
+                        <div class="detalhes-imagens" id="detalhesImagens">
+                            <p style="color: #8892b0;">Nenhuma imagem</p>
+                        </div>
+
+                        <h4 style="margin-top: 20px; margin-bottom: 10px; color: #ccd6f6;">
+                            <i class="fas fa-video"></i> Vídeos
+                        </h4>
+                        <div class="detalhes-videos" id="detalhesVideos">
+                            <p style="color: #8892b0;">Nenhum vídeo</p>
+                        </div>
+                    </div>
+
+                    <div class="detalhes-media">
+                        <h4 style="color: #ccd6f6;"><i class="fas fa-cube"></i> Visualizador 3D</h4>
+                        <div class="stl-viewer-container" id="stlViewerContainer">
+                            <p style="color: #8892b0; text-align: center; padding-top: 130px;">
+                                Selecione um arquivo STL para visualizar
+                            </p>
+                        </div>
+
+                        <h4 style="margin-top: 15px; color: #ccd6f6;">Arquivos STL</h4>
+                        <div class="arquivos-stl-lista" id="arquivosSTLLista">
+                            <p style="color: #8892b0;">Nenhum arquivo STL</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" onclick="fecharModalDetalhes()">Fechar</button>
+                <button class="btn-primary" id="btnDownloadTodos">
+                    <i class="fas fa-download"></i> Baixar Todos os Arquivos
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Gerenciar Categorias (Admin) -->
+    <div class="modal" id="categoriasModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Gerenciar Categorias 3D</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="novaCategoriaForm" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <input type="text" id="novaCategoriaNome" placeholder="Nome da nova categoria" style="flex: 1;"
+                        required>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-plus"></i> Adicionar
+                    </button>
+                </form>
+
+                <h4 style="color: #8892b0; margin-bottom: 10px;">Categorias Existentes</h4>
+                <div class="categorias-lista" id="categoriasLista">
+                    <p style="color: #8892b0; text-align: center;">Carregando...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" onclick="fecharModalCategorias()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Galeria de Imagens -->
+    <div class="modal-galeria" id="imagemAmpliadaModal">
+        <button class="galeria-fechar" onclick="fecharGaleria()">&times;</button>
+
+        <div class="galeria-container">
+            <!-- Área principal da imagem -->
+            <div class="galeria-principal">
+                <button class="galeria-nav galeria-prev" onclick="navegarImagem(-1)">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+
+                <div class="galeria-imagem-container">
+                    <img id="imagemAmpliada" src="" alt="Imagem ampliada">
+                </div>
+
+                <button class="galeria-nav galeria-next" onclick="navegarImagem(1)">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <!-- Miniaturas à direita -->
+            <div class="galeria-miniaturas" id="galeriaMiniaturas">
+                <!-- Miniaturas serão inseridas via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Progress Overlay -->
+    <div class="upload-progress-overlay" id="uploadProgressOverlay">
+        <div class="upload-progress-content">
+            <div class="upload-progress-header">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h3 id="uploadProgressTitle">Salvando Produto...</h3>
+            </div>
+
+            <!-- Stage Progress -->
+            <div class="upload-progress-stage" id="uploadStageContainer">
+                <div class="upload-progress-stage-title">
+                    <span id="uploadStageName"><i class="fas fa-image"></i> Preparando arquivos...</span>
+                    <span class="percent" id="uploadStagePercent">0%</span>
+                </div>
+                <div class="upload-progress-bar-container">
+                    <div class="upload-progress-bar" id="uploadStageBar" style="width: 0%"></div>
+                </div>
+                <div class="upload-progress-file-info">
+                    <i class="fas fa-file"></i>
+                    <span>Arquivo:</span>
+                    <span class="filename" id="uploadFileName">-</span>
+                </div>
+            </div>
+
+            <!-- Overall Progress -->
+            <div class="upload-progress-stage">
+                <div class="upload-progress-stage-title">
+                    <span><i class="fas fa-tasks"></i> Progresso Geral</span>
+                    <span class="percent" id="uploadOverallPercent">0%</span>
+                </div>
+                <div class="upload-progress-bar-container">
+                    <div class="upload-progress-bar" id="uploadOverallBar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="upload-progress-stats">
+                <div class="upload-stat">
+                    <div class="value" id="uploadStatImages">0</div>
+                    <div class="label">Imagens</div>
+                </div>
+                <div class="upload-stat">
+                    <div class="value" id="uploadStatVideos">0</div>
+                    <div class="label">Vídeos</div>
+                </div>
+                <div class="upload-stat">
+                    <div class="value" id="uploadStatSTL">0</div>
+                    <div class="label">STL</div>
+                </div>
+                <div class="upload-stat">
+                    <div class="value" id="uploadStatGIF">0</div>
+                    <div class="label">GIF</div>
+                </div>
+            </div>
+
+            <!-- Warning for large files -->
+            <div class="upload-progress-warning" id="uploadWarningLarge" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Arquivos grandes podem demorar. Por favor, aguarde...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay para Downloads -->
+    <div class="loading-overlay-download" id="loadingOverlayDownload">
+        <div class="loading-content-download">
+            <i class="fas fa-spinner fa-spin fa-3x"></i>
+            <p id="loadingTextDownload">Preparando download...</p>
+            <div class="download-progress-container">
+                <div class="download-progress-bar" id="downloadProgressBar"></div>
+            </div>
+            <small id="downloadProgressText">Aguarde...</small>
+        </div>
+    </div>
+
+    <style>
+        .download-progress-container {
+            width: 200px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            margin: 15px auto;
+            overflow: hidden;
+        }
+
+        .download-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #64ffda, #00bcd4);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/sidebar-template.js"></script>
+    <script src="js/permissions.js"></script>
+    <script src="js/image-compressor.js"></script>
+    <script src="js/setupModals.js"></script>
+    <script src="js/theme-switcher.js"></script>
+    <script src="js/pagination.js"></script>
+    <script src="js/produtos_3d.js"></script>
+</body>
+
+</html>

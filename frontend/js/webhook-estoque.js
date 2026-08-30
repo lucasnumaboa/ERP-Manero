@@ -561,12 +561,75 @@ async function notificarAlteracaoPreco(produto, precoAnterior, precoNovo) {
     }
 }
 
+/**
+ * Notifica sobre envio ou atualização de software
+ * @param {string} nomeArquivo - Nome do arquivo
+ * @param {number} versao - Número da versão
+ * @param {string} descricao - Descrição ou alterações da versão
+ * @returns {Promise}
+ */
+async function notificarNovoSoftware(nomeArquivo, versao, descricao) {
+    if (!webhookConfig) {
+        await carregarConfiguracoesWebhook();
+    }
+
+    if (!webhookConfig.ativo) {
+        console.log('[Webhook] Webhook desativado, notificação ignorada');
+        return { sucesso: 0, falha: 0, ignorado: true };
+    }
+
+    if (!webhookConfig.url || webhookConfig.url.trim() === '') {
+        console.log('[Webhook] URL do webhook não configurada');
+        return { sucesso: 0, falha: 0, ignorado: true };
+    }
+
+    try {
+        const vendedores = await buscarVendedoresAtivosComTelefone();
+
+        if (vendedores.length === 0) {
+            console.log('[Webhook] Nenhum vendedor ativo com telefone encontrado');
+            return { sucesso: 0, falha: 0, ignorado: true };
+        }
+
+        const emoji = versao > 1 ? '🔄' : '🚀';
+        const acao = versao > 1 ? `ATUALIZAÇÃO - v${versao}` : 'NOVO SOFTWARE';
+
+        let mensagem = `${emoji} *SOFTWARE - ${acao}*\n\n`;
+        mensagem += `📦 *Arquivo:* ${nomeArquivo}\n`;
+        mensagem += `🏷️ *Versão:* v${versao}\n`;
+        if (descricao && descricao.trim()) {
+            mensagem += `📝 *Descrição:* ${descricao.trim()}\n`;
+        }
+        mensagem += `\n⏰ *Data/Hora:* ${new Date().toLocaleString('pt-BR')}`;
+
+        let sucesso = 0;
+        let falha = 0;
+
+        for (const vendedor of vendedores) {
+            const resultado = await enviarWebhook(webhookConfig.url, vendedor.telefone, mensagem);
+            if (resultado) {
+                sucesso++;
+            } else {
+                falha++;
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        console.log(`[Webhook] Notificações de software enviadas: ${sucesso} sucesso, ${falha} falha`);
+        return { sucesso, falha, ignorado: false };
+    } catch (error) {
+        console.error('[Webhook] Erro ao notificar software:', error);
+        return { sucesso: 0, falha: 0, erro: error.message };
+    }
+}
+
 // Exporta as funções para uso global
 window.webhookEstoque = {
     notificarEntradaProdutos,
     notificarSaidaProdutos,
     notificarMovimentacaoManual,
     notificarAlteracaoPreco,
+    notificarNovoSoftware,
     recarregarConfiguracoesWebhook,
     carregarConfiguracoesWebhook
 };

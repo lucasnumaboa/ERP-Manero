@@ -6,7 +6,7 @@
 
 // Função para obter a URL da API sempre do banco de dados
 async function getApiUrl() {
-    const defaultUrl = 'http://localhost:8000';
+    const defaultUrl = 'https://erp-api-call.autoservto.com.br';
     
     try {
         // Sempre busca a URL da API do endpoint configuracoes

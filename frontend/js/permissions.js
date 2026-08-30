@@ -1,6 +1,6 @@
 // Utilitário para verificação de permissões em todas as páginas
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Verifica permissões para ações na página atual
     checkPagePermissions();
 });
@@ -10,7 +10,7 @@ async function checkPagePermissions() {
     try {
         // Identifica a página atual
         const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-        
+
         // Mapeamento de páginas para permissões de visualização e edição
         const permissions = {
             'dashboard.html': {
@@ -49,7 +49,7 @@ async function checkPagePermissions() {
                 view: 'estoque_visualizar',
                 edit: 'estoque_editar'
             },
-            'financeiro.html': {
+            'controle_financeiro.html': {
                 view: 'financeiro_visualizar',
                 edit: 'financeiro_editar'
             },
@@ -80,14 +80,40 @@ async function checkPagePermissions() {
             'categorias.html': {
                 view: 'categorias_visualizar',
                 edit: 'categorias_editar'
+            },
+            'depositos.html': {
+                view: 'depositos_visualizar',
+                edit: 'depositos_editar'
+            },
+            // OLX - vinculado à permissão de produtos
+            'olx_flags.html': {
+                view: 'produtos_visualizar',
+                edit: 'produtos_editar'
+            },
+            'olx_pesquisas.html': {
+                view: 'produtos_visualizar',
+                edit: 'produtos_editar'
+            },
+            'olx_produtos.html': {
+                view: 'produtos_visualizar',
+                edit: 'produtos_editar'
+            },
+            // 3D - apenas admin
+            'produtos_3d.html': {
+                view: 'filamentos_3d_visualizar',
+                edit: 'filamentos_3d_visualizar'
+            },
+            'filamentos_3d.html': {
+                view: 'filamentos_3d_visualizar',
+                edit: 'filamentos_3d_visualizar'
             }
         };
-        
+
         // Se a página atual tem permissões associadas
         if (permissions[currentPage]) {
             // Verifica permissão de edição
             const canEdit = await hasPermission(permissions[currentPage].edit);
-            
+
             // Se pode editar, adiciona classe para mostrar botões
             if (canEdit) {
                 document.body.classList.add('has-edit-permission');
@@ -102,12 +128,12 @@ async function checkPagePermissions() {
 function hideEditButtons() {
     // Botões comuns de adição, edição e exclusão
     const editButtons = document.querySelectorAll('.btn-primary, .btn-add, .btn-edit, .btn-delete, .btn-save, [data-action="edit"], [data-action="delete"], #btnNovaVenda, #btnNovoProduto, #btnNovoCliente, #btnNovoFornecedor, #btnNovaCompra');
-    
+
     editButtons.forEach(button => {
         // Oculta o botão completamente
         button.style.display = 'none';
     });
-    
+
     // Desabilita formulários de edição
     const forms = document.querySelectorAll('form');
     forms.forEach(form => {
@@ -115,14 +141,14 @@ function hideEditButtons() {
         inputs.forEach(input => {
             input.disabled = true;
         });
-        
+
         // Oculta botões de submit nos formulários
         const submitButtons = form.querySelectorAll('button[type="submit"], input[type="submit"]');
         submitButtons.forEach(button => {
             button.style.display = 'none';
         });
     });
-    
+
     // Oculta ícones e botões de ação nas tabelas
     const actionIcons = document.querySelectorAll('.action-icons, .table-actions');
     actionIcons.forEach(container => {

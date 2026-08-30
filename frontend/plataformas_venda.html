@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +14,7 @@
     <link rel="stylesheet" href="css/theme-dark.css">
     <link rel="stylesheet" href="css/theme-light.css">
 </head>
+
 <body>
     <div class="app-container">
         <!-- Sidebar / Menu Lateral -->
@@ -41,7 +43,7 @@
                         <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     </li>
                 </ul>
-                
+
                 <!-- Menu Principal -->
                 <ul>
                     <li>
@@ -90,6 +92,9 @@
                         <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
                     </li>
                     <li>
+                        <a href="softwares.html"><i class="fas fa-download"></i> Softwares</a>
+                    </li>
+                    <li>
                         <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
                     </li>
                     <li class="logout">
@@ -104,7 +109,8 @@
             <div class="content">
                 <div class="page-header">
                     <h1>Plataformas de Venda</h1>
-                    <p>Cadastre e gerencie os métodos/plataformas de venda (Mercado Livre, Shopee, Loja Física, etc.)</p>
+                    <p>Cadastre e gerencie os métodos/plataformas de venda (Mercado Livre, Shopee, Loja Física, etc.)
+                    </p>
                 </div>
 
                 <!-- Ações -->
@@ -167,32 +173,35 @@
             <div class="modal-body">
                 <form id="plataformaForm">
                     <input type="hidden" id="plataforma_id">
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="nome">Nome da Plataforma*</label>
-                            <input type="text" id="nome" name="nome" required placeholder="Ex: Mercado Livre, Shopee, Loja Física">
+                            <input type="text" id="nome" name="nome" required
+                                placeholder="Ex: Mercado Livre, Shopee, Loja Física">
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="descricao">Descrição</label>
-                            <textarea id="descricao" name="descricao" rows="3" placeholder="Descrição da plataforma de venda"></textarea>
+                            <textarea id="descricao" name="descricao" rows="3"
+                                placeholder="Descrição da plataforma de venda"></textarea>
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="url">URL/Link</label>
                             <input type="text" id="url" name="url" placeholder="https://www.exemplo.com">
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="taxa_percentual">Taxa da Plataforma (%)</label>
-                            <input type="number" id="taxa_percentual" name="taxa_percentual" step="0.01" min="0" max="100" value="0" placeholder="Ex: 12.5">
+                            <input type="number" id="taxa_percentual" name="taxa_percentual" step="0.01" min="0"
+                                max="100" value="0" placeholder="Ex: 12.5">
                         </div>
                         <div class="form-group">
                             <label for="ativo">Status</label>
@@ -222,4 +231,5 @@
     <script src="js/internal-animation.js"></script>
     <script src="js/theme-switcher.js"></script>
 </body>
+
 </html>

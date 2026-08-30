@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,7 +20,7 @@
             gap: 20px;
             padding: 30px;
         }
-        
+
         .shortcut-card {
             width: 150px;
             height: 150px;
@@ -37,46 +38,46 @@
             color: var(--text-primary, #e6f1ff);
             backdrop-filter: blur(20px);
         }
-        
+
         .shortcut-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 6px 20px rgba(100, 255, 218, 0.15);
             border-color: var(--accent-primary, #64ffda);
         }
-        
+
         .shortcut-icon {
             font-size: 40px;
             margin-bottom: 15px;
             color: var(--accent-primary, #64ffda);
         }
-        
+
         .shortcut-title {
             font-size: 16px;
             font-weight: 500;
             text-align: center;
         }
-        
+
         .welcome-message {
             text-align: center;
             margin: 30px 0;
             color: var(--text-primary, #e6f1ff);
         }
-        
+
         .welcome-message h1 {
             font-size: 28px;
             margin-bottom: 10px;
         }
-        
+
         .welcome-message p {
             font-size: 16px;
             color: var(--text-muted, #8892b0);
         }
-        
+
         /* Grupos de atalhos */
         .shortcuts-section {
             margin-bottom: 30px;
         }
-        
+
         .shortcuts-section-title {
             color: var(--accent-primary, #64ffda);
             font-size: 18px;
@@ -88,11 +89,11 @@
             align-items: center;
             gap: 10px;
         }
-        
+
         .shortcuts-section-title i {
             font-size: 20px;
         }
-        
+
         .shortcuts-grid {
             display: flex;
             flex-wrap: wrap;
@@ -100,6 +101,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="app-container">
         <!-- Sidebar / Menu Lateral -->
@@ -151,7 +153,129 @@
                     <h1>Bem-vindo, <span id="welcomeUserName">Usuário</span>!</h1>
                     <p>Selecione um dos atalhos abaixo para começar a usar o sistema.</p>
                 </div>
-                
+
+                <!-- Notificações de Softwares Atualizados -->
+                <style>
+                    .software-notifications {
+                        margin-bottom: 20px;
+                        padding: 0 30px;
+                    }
+                    .software-notification {
+                        background: linear-gradient(135deg, #1e3a5f 0%, #0a192f 100%);
+                        border-left: 4px solid #64ffda;
+                        border-radius: 8px;
+                        padding: 15px 20px;
+                        margin-bottom: 10px;
+                        display: flex;
+                        align-items: center;
+                        gap: 15px;
+                        animation: slideIn 0.3s ease-out;
+                    }
+                    .software-notification:hover {
+                        transform: translateX(5px);
+                        transition: transform 0.2s ease;
+                    }
+                    .software-notification .notif-icon {
+                        background: #64ffda;
+                        color: #0a192f;
+                        width: 40px;
+                        height: 40px;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 18px;
+                        flex-shrink: 0;
+                    }
+                    .software-notification .notif-content {
+                        flex: 1;
+                    }
+                    .software-notification .notif-title {
+                        color: #64ffda;
+                        font-weight: 600;
+                        font-size: 14px;
+                        margin-bottom: 4px;
+                    }
+                    .software-notification .notif-desc {
+                        color: #a8b2d1;
+                        font-size: 13px;
+                    }
+                    .software-notification .notif-date {
+                        color: #8892b0;
+                        font-size: 12px;
+                        white-space: nowrap;
+                    }
+                    .software-notification .notif-close {
+                        background: none;
+                        border: none;
+                        color: #8892b0;
+                        cursor: pointer;
+                        font-size: 18px;
+                        padding: 5px;
+                    }
+                    .software-notification .notif-close:hover {
+                        color: #64ffda;
+                    }
+                    @keyframes slideIn {
+                        from { opacity: 0; transform: translateX(-20px); }
+                        to { opacity: 1; transform: translateX(0); }
+                    }
+
+                    /* Tema Claro - Notificações de Software */
+                    body.theme-light .software-notification {
+                        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+                        border-left: 4px solid #3498db;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    }
+                    body.theme-light .software-notification .notif-icon {
+                        background: #3498db;
+                        color: #ffffff;
+                    }
+                    body.theme-light .software-notification .notif-title {
+                        color: #3498db;
+                    }
+                    body.theme-light .software-notification .notif-desc {
+                        color: #495057;
+                    }
+                    body.theme-light .software-notification .notif-date {
+                        color: #6c757d;
+                    }
+                    body.theme-light .software-notification .notif-close {
+                        color: #6c757d;
+                    }
+                    body.theme-light .software-notification .notif-close:hover {
+                        color: #3498db;
+                    }
+
+                    /* Tema Claro - Shortcut Cards */
+                    body.theme-light .shortcut-card {
+                        background: var(--bg-card, #ffffff);
+                        border-color: var(--border-color, #e0e0e0);
+                        color: var(--text-primary, #2c3e50);
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    }
+                    body.theme-light .shortcut-card:hover {
+                        box-shadow: 0 6px 20px rgba(52, 152, 219, 0.15);
+                        border-color: var(--accent-primary, #3498db);
+                    }
+                    body.theme-light .shortcut-icon {
+                        color: var(--accent-primary, #3498db);
+                    }
+                    body.theme-light .welcome-message {
+                        color: var(--text-primary, #2c3e50);
+                    }
+                    body.theme-light .welcome-message p {
+                        color: var(--text-muted, #6c757d);
+                    }
+                    body.theme-light .shortcuts-section-title {
+                        color: var(--accent-primary, #3498db);
+                        border-bottom-color: var(--border-color, #e0e0e0);
+                    }
+                </style>
+                <div id="software-notifications" class="software-notifications" style="display: none;">
+                    <!-- Notificações serão carregadas aqui -->
+                </div>
+
                 <!-- Seção de Atividades Recentes -->
                 <div class="recent-activities-section" id="recent-activities-section" style="display: none;">
                     <div class="section-header">
@@ -179,17 +303,19 @@
                         </table>
                     </div>
                 </div>
-                
+
                 <div class="shortcuts-container">
                     <!-- Grupo: Visão Geral -->
                     <div class="shortcuts-section" id="section-geral">
                         <h3 class="shortcuts-section-title"><i class="fas fa-tachometer-alt"></i> Visão Geral</h3>
                         <div class="shortcuts-grid">
-                            <a href="dashboard.html" class="shortcut-card" id="dashboard-shortcut" style="display: none;">
+                            <a href="dashboard.html" class="shortcut-card" id="dashboard-shortcut"
+                                style="display: none;">
                                 <i class="fas fa-chart-bar shortcut-icon"></i>
                                 <span class="shortcut-title">Dashboard</span>
                             </a>
-                            <a href="relatorios.html" class="shortcut-card" id="relatorios-shortcut" style="display: none;">
+                            <a href="relatorios.html" class="shortcut-card" id="relatorios-shortcut"
+                                style="display: none;">
                                 <i class="fas fa-chart-line shortcut-icon"></i>
                                 <span class="shortcut-title">Relatórios</span>
                             </a>
@@ -199,7 +325,7 @@
                             </a>
                         </div>
                     </div>
-                    
+
                     <!-- Grupo: Vendas -->
                     <div class="shortcuts-section" id="section-vendas">
                         <h3 class="shortcuts-section-title"><i class="fas fa-shopping-cart"></i> Vendas</h3>
@@ -212,17 +338,19 @@
                                 <i class="fas fa-users shortcut-icon"></i>
                                 <span class="shortcut-title">Clientes</span>
                             </a>
-                            <a href="vendedores.html" class="shortcut-card" id="vendedores-shortcut" style="display: none;">
+                            <a href="vendedores.html" class="shortcut-card" id="vendedores-shortcut"
+                                style="display: none;">
                                 <i class="fas fa-user-tie shortcut-icon"></i>
                                 <span class="shortcut-title">Vendedores</span>
                             </a>
-                            <a href="plataformas_venda.html" class="shortcut-card" id="plataformas_venda-shortcut" style="display: none;">
+                            <a href="plataformas_venda.html" class="shortcut-card" id="plataformas_venda-shortcut"
+                                style="display: none;">
                                 <i class="fas fa-store shortcut-icon"></i>
                                 <span class="shortcut-title">Plataformas</span>
                             </a>
                         </div>
                     </div>
-                    
+
                     <!-- Grupo: Compras e Estoque -->
                     <div class="shortcuts-section" id="section-compras">
                         <h3 class="shortcuts-section-title"><i class="fas fa-truck"></i> Compras e Estoque</h3>
@@ -231,7 +359,8 @@
                                 <i class="fas fa-truck shortcut-icon"></i>
                                 <span class="shortcut-title">Compras</span>
                             </a>
-                            <a href="fornecedores.html" class="shortcut-card" id="fornecedores-shortcut" style="display: none;">
+                            <a href="fornecedores.html" class="shortcut-card" id="fornecedores-shortcut"
+                                style="display: none;">
                                 <i class="fas fa-building shortcut-icon"></i>
                                 <span class="shortcut-title">Fornecedores</span>
                             </a>
@@ -239,7 +368,8 @@
                                 <i class="fas fa-box shortcut-icon"></i>
                                 <span class="shortcut-title">Produtos</span>
                             </a>
-                            <a href="categorias.html" class="shortcut-card" id="categorias-shortcut" style="display: none;">
+                            <a href="categorias.html" class="shortcut-card" id="categorias-shortcut"
+                                style="display: none;">
                                 <i class="fas fa-tags shortcut-icon"></i>
                                 <span class="shortcut-title">Categorias</span>
                             </a>
@@ -247,37 +377,53 @@
                                 <i class="fas fa-warehouse shortcut-icon"></i>
                                 <span class="shortcut-title">Estoque</span>
                             </a>
-                            <a href="exportar_estoque.html" class="shortcut-card" id="exportar_estoque-shortcut" style="display: none;">
+                            <a href="exportar_estoque.html" class="shortcut-card" id="exportar_estoque-shortcut"
+                                style="display: none;">
                                 <i class="fas fa-file-export shortcut-icon"></i>
                                 <span class="shortcut-title">Exportar</span>
                             </a>
                         </div>
                     </div>
-                    
+
                     <!-- Grupo: Financeiro -->
                     <div class="shortcuts-section" id="section-financeiro">
                         <h3 class="shortcuts-section-title"><i class="fas fa-dollar-sign"></i> Financeiro</h3>
                         <div class="shortcuts-grid">
-                            <a href="contas_pagar.html" class="shortcut-card" id="contas_pagar-shortcut" style="display: none;">
+                            <a href="contas_pagar.html" class="shortcut-card" id="contas_pagar-shortcut"
+                                style="display: none;">
                                 <i class="fas fa-money-bill-wave shortcut-icon"></i>
                                 <span class="shortcut-title">Contas a Pagar</span>
                             </a>
-                            <a href="contas_receber.html" class="shortcut-card" id="contas_receber-shortcut" style="display: none;">
+                            <a href="contas_receber.html" class="shortcut-card" id="contas_receber-shortcut"
+                                style="display: none;">
                                 <i class="fas fa-hand-holding-usd shortcut-icon"></i>
                                 <span class="shortcut-title">Contas a Receber</span>
                             </a>
-                            <a href="condicoes_pagamento.html" class="shortcut-card" id="condicoes_pagamento-shortcut" style="display: none;">
+                            <a href="condicoes_pagamento.html" class="shortcut-card" id="condicoes_pagamento-shortcut"
+                                style="display: none;">
                                 <i class="fas fa-percent shortcut-icon"></i>
                                 <span class="shortcut-title">Condições Pgto</span>
                             </a>
                         </div>
                     </div>
-                    
+
+                    <!-- Grupo: Softwares -->
+                    <div class="shortcuts-section" id="section-softwares">
+                        <h3 class="shortcuts-section-title"><i class="fas fa-download"></i> Softwares</h3>
+                        <div class="shortcuts-grid">
+                            <a href="softwares.html" class="shortcut-card" id="softwares-shortcut">
+                                <i class="fas fa-desktop shortcut-icon"></i>
+                                <span class="shortcut-title">Downloads</span>
+                            </a>
+                        </div>
+                    </div>
+
                     <!-- Grupo: Sistema -->
                     <div class="shortcuts-section" id="section-sistema">
                         <h3 class="shortcuts-section-title"><i class="fas fa-cog"></i> Sistema</h3>
                         <div class="shortcuts-grid">
-                            <a href="configuracoes.html" class="shortcut-card" id="configuracoes-shortcut" style="display: none;">
+                            <a href="configuracoes.html" class="shortcut-card" id="configuracoes-shortcut"
+                                style="display: none;">
                                 <i class="fas fa-cog shortcut-icon"></i>
                                 <span class="shortcut-title">Configurações</span>
                             </a>
@@ -290,6 +436,7 @@
 
     <script src="js/redirect_fix.js"></script>
     <script src="js/api_config.js"></script>
+    <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/sidebar.js"></script>
     <script src="js/sidebar-template.js"></script>
@@ -298,4 +445,5 @@
     <script src="js/internal-animation.js"></script>
     <script src="js/theme-switcher.js"></script>
 </body>
+
 </html>

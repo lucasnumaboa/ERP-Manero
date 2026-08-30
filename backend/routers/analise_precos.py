@@ -89,9 +89,16 @@ async def buscar_precos_internet(produto_nome: str) -> List[dict]:
     
     return resultados
 
-async def chamar_ia_analise(apikey: str, model: str, produto_nome: str, preco_erp: float, fontes: List[dict]) -> dict:
+async def chamar_ia_analise(produto_nome: str, preco_erp: float, fontes: List[dict],
+                           provider: str = 'openrouter', apikey: str = '', model: str = '',
+                           ollama_url: str = 'http://localhost:11434', ollama_model: str = 'llama3',
+                           ollama_apikey: str = '',
+                           lmstudio_url: str = 'http://localhost:1234', lmstudio_model: str = 'default',
+                           lmstudio_apikey: str = '',
+                           ia_think: str = 'yes') -> dict:
     """
-    Chama a IA do OpenRouter para analisar se o preço é competitivo
+    Chama a IA para analisar se o preço é competitivo.
+    Suporta OpenRouter, Ollama e LM Studio.
     """
     try:
         fontes_texto = "\n".join([f"- {f['fonte']}: {f['info']}" for f in fontes])
@@ -122,52 +129,109 @@ Responda APENAS com o JSON, sem texto adicional."""
 
         import json as json_module
         
-        payload = {
-            'model': model,
-            'messages': [{'role': 'user', 'content': prompt}],
-            'stream': False,
-            'temperature': 0.3,
-            'max_tokens': 500
-        }
-        
-        # Encode payload as UTF-8 JSON
-        payload_bytes = json_module.dumps(payload, ensure_ascii=False).encode('utf-8')
+        resposta_ia = None
         
         async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(
-                'https://openrouter.ai/api/v1/chat/completions',
-                headers={
-                    'Content-Type': 'application/json; charset=utf-8',
-                    'Authorization': f'Bearer {apikey}',
-                    'HTTP-Referer': 'https://erpmaneiro.com',
-                    'X-Title': 'ERP Maneiro'
-                },
-                content=payload_bytes
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                resposta_ia = data['choices'][0]['message']['content']
+            if provider == 'openrouter':
+                # ===== OPENROUTER =====
+                payload = {
+                    'model': model,
+                    'messages': [{'role': 'user', 'content': prompt}],
+                    'stream': False,
+                    'temperature': 0.3,
+                    'max_tokens': 500
+                }
+                payload_bytes = json_module.dumps(payload, ensure_ascii=False).encode('utf-8')
                 
+                response = await client.post(
+                    'https://openrouter.ai/api/v1/chat/completions',
+                    headers={
+                        'Content-Type': 'application/json; charset=utf-8',
+                        'Authorization': f'Bearer {apikey}',
+                        'HTTP-Referer': 'https://erpmaneiro.com',
+                        'X-Title': 'ERP Maneiro'
+                    },
+                    content=payload_bytes
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    resposta_ia = data['choices'][0]['message']['content']
+                else:
+                    print(f"[Análise Preços] Erro da API OpenRouter: {response.status_code} - {response.text}")
+                    
+            elif provider == 'ollama':
+                # ===== OLLAMA =====
+                payload = {
+                    'model': ollama_model,
+                    'messages': [{'role': 'user', 'content': prompt}],
+                    'stream': False
+                }
+                # Se think=no, desabilita o modo de raciocínio (ex: DeepSeek-R1)
+                if ia_think == 'no':
+                    payload['think'] = False
+                payload_bytes = json_module.dumps(payload, ensure_ascii=False).encode('utf-8')
+                
+                response = await client.post(
+                    f'{ollama_url}/api/chat',
+                    headers={'Content-Type': 'application/json; charset=utf-8',
+                             **(({'Authorization': f'Bearer {ollama_apikey}'} if ollama_apikey else {}))},
+                    content=payload_bytes
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    resposta_ia = data.get('message', {}).get('content', '')
+                else:
+                    print(f"[Análise Preços] Erro da API Ollama: {response.status_code} - {response.text}")
+                    
+            elif provider == 'lmstudio':
+                # ===== LM STUDIO (OpenAI-compatible) =====
+                payload = {
+                    'model': lmstudio_model,
+                    'messages': [{'role': 'user', 'content': prompt}],
+                    'stream': False,
+                    'temperature': 0.3,
+                    'max_tokens': 500
+                }
+                payload_bytes = json_module.dumps(payload, ensure_ascii=False).encode('utf-8')
+                
+                headers = {'Content-Type': 'application/json; charset=utf-8'}
+                if lmstudio_apikey:
+                    headers['Authorization'] = f'Bearer {lmstudio_apikey}'
+                
+                response = await client.post(
+                    f'{lmstudio_url}/v1/chat/completions',
+                    headers=headers,
+                    content=payload_bytes
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    resposta_ia = data['choices'][0]['message']['content']
+                else:
+                    print(f"[Análise Preços] Erro da API LM Studio: {response.status_code} - {response.text}")
+            else:
+                print(f"[Análise Preços] Provider desconhecido: {provider}")
+            
+            if resposta_ia:
+            
                 # Tentar extrair JSON da resposta
                 import json
                 import re
                 
                 try:
                     # Limpar a resposta para extrair apenas o JSON
-                    # Primeiro tenta encontrar um JSON completo
                     json_match = re.search(r'\{[^{}]*\}', resposta_ia, re.DOTALL)
                     if json_match:
                         resultado = json.loads(json_match.group())
                         return resultado
                     else:
-                        # Tentar parsear diretamente
                         resultado = json.loads(resposta_ia)
                         return resultado
                 except json.JSONDecodeError as je:
                     print(f"[Análise Preços] JSON inválido da IA, tentando extrair manualmente...")
                     
-                    # Tentar extrair valores manualmente usando regex
                     competitivo_match = re.search(r'"preco_competitivo"\s*:\s*"(sim|nao|n[aã]o)"', resposta_ia, re.IGNORECASE)
                     preco_match = re.search(r'"preco_adequado"\s*:\s*(\d+(?:[.,]\d+)?)', resposta_ia)
                     
@@ -181,16 +245,13 @@ Responda APENAS com o JSON, sem texto adicional."""
                         preco_str = preco_match.group(1).replace(',', '.')
                         preco_adequado_val = float(preco_str)
                     
-                    # Extrair justificativa completa - pega tudo após "justificativa": "
                     justificativa_match = re.search(r'"justificativa"\s*:\s*"(.+?)(?:"\s*}|$)', resposta_ia, re.DOTALL)
                     if not justificativa_match:
-                        # Tenta pegar sem o fechamento
                         justificativa_match = re.search(r'"justificativa"\s*:\s*"(.+)', resposta_ia, re.DOTALL)
                     
                     justificativa = f"Preço atual: R$ {preco_erp:.2f}"
                     if justificativa_match:
                         justificativa = justificativa_match.group(1).rstrip('"}').strip()
-                        # Remove escapes de JSON
                         justificativa = justificativa.replace('\\"', '"').replace('\\n', ' ')
                     
                     return {
@@ -198,8 +259,6 @@ Responda APENAS com o JSON, sem texto adicional."""
                         "preco_adequado": preco_adequado_val,
                         "justificativa": justificativa
                     }
-            else:
-                print(f"[Análise Preços] Erro da API: {response.status_code} - {response.text}")
                 
     except Exception as e:
         print(f"[Análise Preços] Erro ao chamar IA: {e}")
@@ -219,28 +278,38 @@ async def executar_analise_precos(usuario_id: int, usuario_telefone: str = None)
     analise_em_andamento[usuario_id] = {"status": "em_andamento", "progresso": 0}
     
     try:
-        # Buscar configurações de IA
+        # Buscar configurações de IA (incluindo provider)
         with get_db_cursor() as cursor:
-            cursor.execute("SELECT chave, valor FROM configuracoes WHERE chave IN ('apikey_openrouter', 'model_openrouter', 'webhook_url', 'webhook_ativo')")
+            cursor.execute("SELECT chave, valor FROM configuracoes WHERE chave IN ('ia_provider', 'apikey_openrouter', 'model_openrouter', 'ollama_model', 'ollama_url', 'ollama_apikey', 'lmstudio_model', 'lmstudio_url', 'lmstudio_apikey', 'webhook_url', 'webhook_ativo', 'ia_think')")
             configs = cursor.fetchall()
             
         config_dict = {c['chave']: c['valor'] for c in configs}
+        ia_provider = config_dict.get('ia_provider', 'openrouter')
         apikey = config_dict.get('apikey_openrouter', '')
         model = config_dict.get('model_openrouter', 'openai/gpt-4o-mini')
+        ollama_model = config_dict.get('ollama_model', 'llama3')
+        ollama_url = config_dict.get('ollama_url', 'http://localhost:11434')
+        ollama_apikey = config_dict.get('ollama_apikey', '')
+        lmstudio_model = config_dict.get('lmstudio_model', 'default')
+        lmstudio_url = config_dict.get('lmstudio_url', 'http://localhost:1234')
+        lmstudio_apikey = config_dict.get('lmstudio_apikey', '')
+        ia_think = config_dict.get('ia_think', 'yes')
         webhook_url = config_dict.get('webhook_url', '')
         webhook_ativo = config_dict.get('webhook_ativo', 'false') == 'true'
         
-        if not apikey:
+        print(f"[Análise Preços] Provider de IA configurado: {ia_provider}")
+        
+        if ia_provider == 'openrouter' and not apikey:
             print("[Análise Preços] API Key do OpenRouter não configurada")
-            analise_em_andamento[usuario_id] = {"status": "erro", "mensagem": "API Key não configurada"}
+            analise_em_andamento[usuario_id] = {"status": "erro", "mensagem": "API Key do OpenRouter não configurada"}
             return
         
-        # Buscar produtos faturáveis
+        # Buscar produtos faturáveis com estoque > 0
         with get_db_cursor() as cursor:
             cursor.execute("""
                 SELECT id, nome, preco_venda 
                 FROM produtos 
-                WHERE faturavel = TRUE AND ativo = TRUE
+                WHERE faturavel = TRUE AND ativo = TRUE AND estoque_atual > 0
                 ORDER BY nome
             """)
             produtos = cursor.fetchall()
@@ -263,13 +332,21 @@ async def executar_analise_precos(usuario_id: int, usuario_telefone: str = None)
                 # Buscar preços na internet
                 fontes = await buscar_precos_internet(produto['nome'])
                 
-                # Chamar IA para análise
+                # Chamar IA para análise (suporta múltiplos providers)
                 resultado_ia = await chamar_ia_analise(
-                    apikey, 
-                    model, 
-                    produto['nome'], 
-                    float(produto['preco_venda']),
-                    fontes
+                    produto_nome=produto['nome'], 
+                    preco_erp=float(produto['preco_venda']),
+                    fontes=fontes,
+                    provider=ia_provider,
+                    apikey=apikey,
+                    model=model,
+                    ollama_url=ollama_url,
+                    ollama_model=ollama_model,
+                    ollama_apikey=ollama_apikey,
+                    lmstudio_url=lmstudio_url,
+                    lmstudio_model=lmstudio_model,
+                    lmstudio_apikey=lmstudio_apikey,
+                    ia_think=ia_think
                 )
                 
                 # Salvar resultado no banco

@@ -23,6 +23,9 @@
     --text-secondary: #a8b2d1;
     --text-muted: #8892b0;
     
+    /* Cores de Inputs */
+    --input-bg: rgba(10, 25, 47, 0.8);
+    
     /* Cores de status */
     --success-color: #64ffda;
     --warning-color: #ffd93d;
@@ -1188,4 +1191,137 @@ table tbody tr:hover {
 
 .sidebar-nav li.logout a:hover {
     background: rgba(255, 107, 107, 0.1) !important;
+}
+
+/* ============================================
+   MODAL DE VENDAS - TABELA DE ITENS
+   ============================================ */
+
+#vendaModal .table-container,
+#vendaModal .data-table {
+    background: rgba(10, 25, 47, 0.8) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+#vendaModal .data-table thead {
+    background: rgba(100, 255, 218, 0.1) !important;
+}
+
+#vendaModal .data-table th {
+    color: var(--accent-primary) !important;
+    background: rgba(100, 255, 218, 0.1) !important;
+    border-bottom: 2px solid var(--border-color) !important;
+}
+
+#vendaModal .data-table td {
+    color: var(--text-secondary) !important;
+    background: transparent !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+#vendaModal .data-table tbody tr:hover {
+    background: rgba(100, 255, 218, 0.05) !important;
+}
+
+#vendaModal .total-row,
+#vendaModal .total-label,
+#vendaModal .total-value {
+    color: var(--text-primary) !important;
+}
+
+#vendaModal #valorTotal,
+#vendaModal #comissaoTotal {
+    color: var(--accent-primary) !important;
+    font-weight: bold;
+}
+
+/* ============================================
+   CONFIGURAÇÕES - NÍVEL DE ACESSO SELECT
+   ============================================ */
+
+#cargo,
+#usuario_nivel_acesso,
+#usuario_grupo_id {
+    background: rgba(10, 25, 47, 0.8) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+#cargo:focus,
+#usuario_nivel_acesso:focus,
+#usuario_grupo_id:focus {
+    border-color: var(--accent-primary) !important;
+    box-shadow: 0 0 0 2px rgba(100, 255, 218, 0.25) !important;
+}
+
+#cargo option,
+#usuario_nivel_acesso option,
+#usuario_grupo_id option {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* ============================================
+   ESTOQUE - MODAL EXPORTAR CATÁLOGO
+   ============================================ */
+
+#exportarCatalogoModal .catalogo-section {
+    background: rgba(17, 34, 64, 0.95) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+#exportarCatalogoModal .catalogo-section h3 {
+    color: var(--accent-primary) !important;
+}
+
+#exportarCatalogoModal .catalogo-checkbox-item {
+    background: rgba(10, 25, 47, 0.8) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+#exportarCatalogoModal .catalogo-checkbox-item:hover {
+    border-color: var(--accent-primary) !important;
+}
+
+#exportarCatalogoModal .catalogo-checkbox-item label {
+    color: var(--text-secondary) !important;
+}
+
+#exportarCatalogoModal .catalogo-produto-item {
+    background: rgba(10, 25, 47, 0.8) !important;
+    border: 2px solid var(--border-color) !important;
+}
+
+#exportarCatalogoModal .catalogo-produto-item:hover {
+    border-color: var(--accent-primary) !important;
+}
+
+#exportarCatalogoModal .catalogo-produto-item.selecionado {
+    border-color: var(--accent-primary) !important;
+    background: rgba(100, 255, 218, 0.1) !important;
+}
+
+#exportarCatalogoModal .catalogo-produto-nome {
+    color: var(--text-primary) !important;
+}
+
+#exportarCatalogoModal .catalogo-produto-preco {
+    color: var(--accent-primary) !important;
+}
+
+#exportarCatalogoModal .vendedor-info-item {
+    background: rgba(10, 25, 47, 0.8) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+#exportarCatalogoModal .vendedor-info-item span {
+    color: var(--text-secondary) !important;
+}
+
+#exportarCatalogoModal .catalogo-produtos-header span {
+    color: var(--accent-primary) !important;
+}
+
+#exportarCatalogoModal .text-muted {
+    color: var(--text-muted) !important;
 }

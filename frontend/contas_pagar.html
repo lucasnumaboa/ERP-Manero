@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,7 +20,7 @@
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             max-width: 100%;
         }
 
@@ -72,7 +73,7 @@
         .filter-input:focus {
             outline: none;
             border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
         }
 
         .search-btn {
@@ -102,7 +103,7 @@
         .filter-select:focus {
             outline: none;
             border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
         }
 
         .btn-clear-filters {
@@ -160,7 +161,8 @@
                 margin-right: 0;
             }
 
-            .filter-input, .filter-select {
+            .filter-input,
+            .filter-select {
                 width: 100%;
                 min-width: unset;
             }
@@ -172,6 +174,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="app-container">
         <!-- Sidebar / Menu Lateral -->
@@ -200,7 +203,7 @@
                         <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     </li>
                 </ul>
-                
+
                 <!-- Menu Principal -->
                 <ul>
                     <li>
@@ -249,6 +252,9 @@
                         <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
                     </li>
                     <li>
+                        <a href="softwares.html"><i class="fas fa-download"></i> Softwares</a>
+                    </li>
+                    <li>
                         <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
                     </li>
                     <li class="logout">
@@ -280,33 +286,36 @@
                             <p style="margin-bottom: 15px; color: #6c757d; font-size: 14px;">
                                 Configure os filtros para visualizar as contas
                             </p>
-                            
+
                             <!-- Linha 1: Código, Fornecedor/Vendedor -->
                             <div class="filter-row">
                                 <div class="filter-control">
                                     <label for="filtroCodigo" class="control-label">Código:</label>
-                                    <input type="text" id="filtroCodigo" class="filter-input" placeholder="Ex: CP202401">
+                                    <input type="text" id="filtroCodigo" class="filter-input"
+                                        placeholder="Ex: CP202401">
                                 </div>
-                                
+
                                 <div class="filter-control">
                                     <label for="filtroCredor" class="control-label">Fornecedor/Vendedor:</label>
-                                    <input type="text" id="filtroCredor" class="filter-input" placeholder="Digite o nome...">
+                                    <input type="text" id="filtroCredor" class="filter-input"
+                                        placeholder="Digite o nome...">
                                 </div>
                             </div>
-                            
+
                             <!-- Linha 2: Data Inicial, Data Final -->
                             <div class="filter-row">
                                 <div class="filter-control">
-                                    <label for="filtroDataInicial" class="control-label">Data Vencimento Inicial:</label>
+                                    <label for="filtroDataInicial" class="control-label">Data Vencimento
+                                        Inicial:</label>
                                     <input type="date" id="filtroDataInicial" class="filter-input">
                                 </div>
-                                
+
                                 <div class="filter-control">
                                     <label for="filtroDataFinal" class="control-label">Data Vencimento Final:</label>
                                     <input type="date" id="filtroDataFinal" class="filter-input">
                                 </div>
                             </div>
-                            
+
                             <!-- Linha 3: Status, Botões -->
                             <div class="filter-row controls-row">
                                 <div class="filter-control">
@@ -318,12 +327,12 @@
                                         <option value="cancelado">Cancelado</option>
                                     </select>
                                 </div>
-                                
+
                                 <button class="btn-clear-filters" id="btnLimparFiltros">
                                     <i class="fas fa-eraser"></i>
                                     Limpar Filtros
                                 </button>
-                                
+
                                 <button class="search-btn" id="btnAplicarFiltros">
                                     <i class="fas fa-search"></i>
                                     Aplicar Filtros
@@ -382,7 +391,7 @@
                             <input type="text" id="descricao" name="descricao" required>
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="fornecedor_id">Fornecedor</label>
@@ -397,7 +406,7 @@
                             </select>
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="valor">Valor*</label>
@@ -408,7 +417,7 @@
                             <input type="date" id="data_vencimento" name="data_vencimento" required>
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="forma_pagamento">Forma de Pagamento</label>
@@ -429,7 +438,7 @@
                             </select>
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="observacoes">Observações</label>
                         <textarea id="observacoes" name="observacoes" rows="3"></textarea>
@@ -455,4 +464,5 @@
     <script src="js/internal-animation.js"></script>
     <script src="js/theme-switcher.js"></script>
 </body>
+
 </html>

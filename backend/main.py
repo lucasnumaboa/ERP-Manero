@@ -35,6 +35,15 @@ import routers.condicoes_pagamento as condicoes_pagamento
 import routers.metas as metas
 import routers.plataformas_venda as plataformas_venda
 import routers.analise_precos as analise_precos
+import routers.olx_finder as olx_finder
+import routers.softwares as softwares
+import routers.produtos_3d as produtos_3d
+import routers.calendario as calendario
+import routers.controle_financeiro as controle_financeiro
+import routers.filamentos_3d as filamentos_3d
+import routers.depositos as depositos
+import routers.produto_chat_ia as produto_chat_ia
+import routers.transcricao as transcricao
 
 # Importa o gerenciador de timeout
 from timeout_manager import start_timeout_manager
@@ -45,6 +54,14 @@ app = FastAPI(
     description=APP_DESCRIPTION,
     version=APP_VERSION
 )
+
+@app.on_event("startup")
+async def startup_event():
+    """Inicializa serviços de background ao iniciar a aplicação"""
+    import routers.calendario as _calendario
+    print("[Startup] Iniciando thread do calendário...")
+    _calendario.iniciar_thread_calendario()
+    print("[Startup] Thread do calendário iniciada com sucesso")
 
 # Configuração do CORS
 # Obter origens permitidas da configuração do banco de dados
@@ -173,12 +190,26 @@ app.include_router(condicoes_pagamento.router, prefix="/api/condicoes-pagamento"
 app.include_router(metas.router, prefix="/api/metas", tags=["Metas e Premiações"])
 app.include_router(plataformas_venda.router, prefix="/api/plataformas-venda", tags=["Plataformas de Venda"])
 app.include_router(analise_precos.router, prefix="/api/analise-precos", tags=["Análise de Preços"])
+app.include_router(olx_finder.router, prefix="/api/olx", tags=["OLX Finder"])
+app.include_router(softwares.router, prefix="/api/softwares", tags=["Softwares"])
+app.include_router(produtos_3d.router, prefix="/api/produtos-3d", tags=["Produtos 3D"])
+app.include_router(calendario.router, prefix="/api", tags=["Calendário"])
+app.include_router(controle_financeiro.router, prefix="/api/controle-financeiro", tags=["Controle Financeiro"])
+app.include_router(filamentos_3d.router, prefix="/api/filamentos-3d", tags=["Filamentos 3D"])
+app.include_router(depositos.router, prefix="/api/depositos", tags=["Depósitos"])
+app.include_router(produto_chat_ia.router, prefix="/api/produto-chat", tags=["Chat IA do Produto"])
+app.include_router(transcricao.router, prefix="/api/transcricao", tags=["Transcrição de Áudio"])
 
 # Configuração para servir arquivos estáticos (uploads)
 import os
 # Usar caminho absoluto para os uploads
 uploads_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend", "uploads")
 app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
+
+# Configuração para servir arquivos de softwares
+softwares_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "Softwares")
+os.makedirs(softwares_path, exist_ok=True)
+app.mount("/softwares", StaticFiles(directory=softwares_path), name="softwares")
 
 @app.get("/")
 async def root():
@@ -214,4 +245,10 @@ if __name__ == "__main__":
     print("Iniciando gerenciador de timeout...")
     start_timeout_manager()
 
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=not is_production)
+    uvicorn.run(
+        "main:app", 
+        host="0.0.0.0", 
+        port=port, 
+        reload=not is_production,
+        timeout_keep_alive=300  # 5 minutos de timeout para uploads grandes
+    )

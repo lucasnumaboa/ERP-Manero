@@ -12,6 +12,8 @@ router = APIRouter()
 class ProdutoVendido(BaseModel):
     codigo: str
     nome: str
+    categoria_id: Optional[int] = None
+    categoria_nome: Optional[str] = None
     plataforma_nome: Optional[str] = None
     quantidade: int
     preco_custo: float
@@ -32,9 +34,18 @@ class ProdutoComprado(BaseModel):
     codigo: str
     nome: str
     fornecedor: str
+    tipo_produto: Optional[str] = None
     quantidade: int
     preco_compra: float
     valor_total_compra: float
+
+class ControleLancamentoResumo(BaseModel):
+    id: int
+    data: str
+    tipo: str
+    categoria_nome: Optional[str] = None
+    descricao: str
+    valor: float
 
 class ResumoRelatorio(BaseModel):
     total_pedidos_venda: int
@@ -42,6 +53,8 @@ class ResumoRelatorio(BaseModel):
     total_pedidos_compra: int
     valor_total_compras: float
     lucro_total: float
+    lucro_total_ajustado: float
+    ajuste_controle: float
     margem_lucro: float
 
 class RelatorioCompleto(BaseModel):
@@ -50,6 +63,7 @@ class RelatorioCompleto(BaseModel):
     produtos_vendidos: List[ProdutoVendido]
     comissoes_vendedores: List[ComissaoVendedor]
     produtos_comprados: List[ProdutoComprado]
+    lancamentos_controle: List[ControleLancamentoResumo]
 
 # Rotas
 @router.get("/completo", response_model=RelatorioCompleto)
@@ -82,7 +96,8 @@ async def relatorio_completo(
                 COALESCE(SUM(valor_total), 0) as faturamento_total
             FROM pedidos_venda
             WHERE DATE(data_pedido) >= %s AND DATE(data_pedido) <= %s
-                AND status NOT IN ('cancelada', 'cancelado')
+                AND LOWER(status) NOT IN ('cancelada', 'cancelado', 'devolvido')
+                AND status IS NOT NULL
         """
         params_vendas = [data_inicio, data_fim]
         
@@ -107,7 +122,8 @@ async def relatorio_completo(
                 COALESCE(SUM(valor_total), 0) as valor_total
             FROM pedidos_compra
             WHERE DATE(data_pedido) >= %s AND DATE(data_pedido) <= %s
-                AND status NOT IN ('cancelada', 'cancelado')
+                AND LOWER(status) NOT IN ('cancelada', 'cancelado', 'devolvido')
+                AND status IS NOT NULL
         """, (data_inicio, data_fim))
         
         compras_result = cursor.fetchone()
@@ -119,7 +135,7 @@ async def relatorio_completo(
             SELECT COALESCE(SUM(
                 COALESCE(pv.valor_total, 0) - 
                 COALESCE((
-                    SELECT COALESCE(SUM(p.preco_custo * ipv.quantidade), 0)
+                    SELECT COALESCE(SUM(COALESCE(ipv.custo_item, p.preco_custo) * ipv.quantidade), 0)
                     FROM itens_pedido_venda ipv
                     JOIN produtos p ON ipv.produto_id = p.id
                     WHERE ipv.pedido_id = pv.id
@@ -128,7 +144,8 @@ async def relatorio_completo(
             ), 0) as lucro_total
             FROM pedidos_venda pv
             WHERE DATE(pv.data_pedido) >= %s AND DATE(pv.data_pedido) <= %s
-                AND pv.status NOT IN ('cancelada', 'cancelado')
+                AND LOWER(pv.status) NOT IN ('cancelada', 'cancelado', 'devolvido')
+                AND pv.status IS NOT NULL
         """
         params_lucro = [data_inicio, data_fim]
         
@@ -145,8 +162,45 @@ async def relatorio_completo(
         lucro_result = cursor.fetchone()
         lucro_total = float(lucro_result["lucro_total"])
         
-        # Margem de lucro
-        margem_lucro = (lucro_total / faturamento_total * 100) if faturamento_total > 0 else 0
+        # ===== LANÇAMENTOS DE CONTROLE FINANCEIRO =====
+        
+        cursor.execute("""
+            SELECT
+                cl.id,
+                cl.data,
+                cl.tipo,
+                cc.nome AS categoria_nome,
+                cl.descricao,
+                cl.valor
+            FROM controle_lancamentos cl
+            LEFT JOIN controle_categorias cc ON cl.categoria_id = cc.id
+            WHERE cl.data >= %s AND cl.data <= %s
+            ORDER BY cl.data ASC
+        """, (data_inicio, data_fim))
+        
+        lancamentos_raw = cursor.fetchall()
+        lancamentos_controle = []
+        ajuste_controle = 0.0
+        
+        for lanc in lancamentos_raw:
+            valor_lanc = float(lanc["valor"])
+            if lanc["tipo"] == "lucro":
+                ajuste_controle += valor_lanc
+            else:
+                ajuste_controle -= valor_lanc
+            lancamentos_controle.append(ControleLancamentoResumo(
+                id=lanc["id"],
+                data=lanc["data"].isoformat() if lanc["data"] else "",
+                tipo=lanc["tipo"],
+                categoria_nome=lanc["categoria_nome"],
+                descricao=lanc["descricao"],
+                valor=valor_lanc
+            ))
+        
+        lucro_total_ajustado = lucro_total + ajuste_controle
+        
+        # Margem de lucro (sobre o lucro já ajustado)
+        margem_lucro = (lucro_total_ajustado / faturamento_total * 100) if faturamento_total > 0 else 0
         
         # ===== PRODUTOS VENDIDOS =====
         
@@ -154,19 +208,23 @@ async def relatorio_completo(
             SELECT 
                 p.codigo,
                 p.nome,
+                p.categoria_id,
+                cat.nome as categoria_nome,
                 plat.nome as plataforma_nome,
                 SUM(ipv.quantidade) as quantidade,
-                p.preco_custo,
+                SUM(ipv.quantidade * COALESCE(ipv.custo_item, p.preco_custo)) / SUM(ipv.quantidade) as preco_custo_medio,
                 AVG(ipv.preco_unitario) as preco_venda,
                 SUM(ipv.quantidade * ipv.preco_unitario) as valor_venda_total,
-                SUM(ipv.quantidade * p.preco_custo) as custo_total,
+                SUM(ipv.quantidade * COALESCE(ipv.custo_item, p.preco_custo)) as custo_total,
                 SUM(CASE WHEN pv.valor_total > 0 THEN pv.comissao_total * (ipv.quantidade * ipv.preco_unitario) / pv.valor_total ELSE 0 END) as comissao_proporcional
             FROM itens_pedido_venda ipv
             JOIN produtos p ON ipv.produto_id = p.id
             JOIN pedidos_venda pv ON ipv.pedido_id = pv.id
             LEFT JOIN plataformas_venda plat ON pv.plataforma_id = plat.id
+            LEFT JOIN categorias_produtos cat ON p.categoria_id = cat.id
             WHERE DATE(pv.data_pedido) >= %s AND DATE(pv.data_pedido) <= %s
-                AND pv.status NOT IN ('cancelada', 'cancelado')
+                AND LOWER(pv.status) NOT IN ('cancelada', 'cancelado', 'devolvido')
+                AND pv.status IS NOT NULL
         """
         params_produtos = [data_inicio, data_fim]
         
@@ -178,7 +236,7 @@ async def relatorio_completo(
             query_produtos += " AND pv.vendedor_id = %s"
             params_produtos.append(vendedor_id)
         
-        query_produtos += " GROUP BY p.id, p.codigo, p.nome, p.preco_custo, plat.nome ORDER BY quantidade DESC"
+        query_produtos += " GROUP BY p.id, p.codigo, p.nome, p.categoria_id, cat.nome, plat.nome ORDER BY quantidade DESC"
         
         cursor.execute(query_produtos, params_produtos)
         
@@ -189,15 +247,21 @@ async def relatorio_completo(
             valor_venda_total = float(produto["valor_venda_total"])
             custo_total = float(produto["custo_total"])
             comissao_proporcional = float(produto["comissao_proporcional"] or 0)
+            
+            # Cálculo CORRETO: Lucro = Venda - Custo - Comissão
             lucro = valor_venda_total - custo_total - comissao_proporcional
+            
+            # Margem = (Lucro / Venda) * 100
             margem = (lucro / valor_venda_total * 100) if valor_venda_total > 0 else 0
             
             produtos_vendidos.append(ProdutoVendido(
                 codigo=produto["codigo"],
                 nome=produto["nome"],
+                categoria_id=produto["categoria_id"],
+                categoria_nome=produto["categoria_nome"],
                 plataforma_nome=produto["plataforma_nome"],
                 quantidade=int(produto["quantidade"]),
-                preco_custo=float(produto["preco_custo"]),
+                preco_custo=float(produto["preco_custo_medio"]),
                 preco_venda=float(produto["preco_venda"]),
                 valor_venda_total=valor_venda_total,
                 custo_total=custo_total,
@@ -217,7 +281,8 @@ async def relatorio_completo(
             FROM pedidos_venda pv
             LEFT JOIN vendedores v ON pv.vendedor_id = v.id
             WHERE DATE(pv.data_pedido) >= %s AND DATE(pv.data_pedido) <= %s
-                AND pv.status NOT IN ('cancelada', 'cancelado')
+                AND LOWER(pv.status) NOT IN ('cancelada', 'cancelado', 'devolvido')
+                AND pv.status IS NOT NULL
                 AND pv.vendedor_id IS NOT NULL
         """
         params_comissoes = [data_inicio, data_fim]
@@ -252,6 +317,7 @@ async def relatorio_completo(
                 p.codigo,
                 p.nome,
                 f.nome as fornecedor,
+                p.tipo_produto,
                 SUM(ipc.quantidade) as quantidade,
                 AVG(ipc.preco_unitario) as preco_compra,
                 SUM(ipc.quantidade * ipc.preco_unitario) as valor_total_compra
@@ -260,8 +326,9 @@ async def relatorio_completo(
             JOIN pedidos_compra pc ON ipc.pedido_id = pc.id
             LEFT JOIN parceiros f ON pc.fornecedor_id = f.id
             WHERE DATE(pc.data_pedido) >= %s AND DATE(pc.data_pedido) <= %s
-                AND pc.status NOT IN ('cancelada', 'cancelado')
-            GROUP BY p.id, p.codigo, p.nome, pc.fornecedor_id, f.nome
+                AND LOWER(pc.status) NOT IN ('cancelada', 'cancelado', 'devolvido')
+                AND pc.status IS NOT NULL
+            GROUP BY p.id, p.codigo, p.nome, p.tipo_produto, pc.fornecedor_id, f.nome
             ORDER BY quantidade DESC
         """, (data_inicio, data_fim))
         
@@ -273,6 +340,7 @@ async def relatorio_completo(
                 codigo=produto["codigo"],
                 nome=produto["nome"],
                 fornecedor=produto["fornecedor"] or "Sem fornecedor",
+                tipo_produto=produto["tipo_produto"],
                 quantidade=int(produto["quantidade"]),
                 preco_compra=float(produto["preco_compra"]),
                 valor_total_compra=float(produto["valor_total_compra"])
@@ -289,11 +357,14 @@ async def relatorio_completo(
             total_pedidos_compra=total_pedidos_compra,
             valor_total_compras=valor_total_compras,
             lucro_total=lucro_total,
+            lucro_total_ajustado=round(lucro_total_ajustado, 2),
+            ajuste_controle=round(ajuste_controle, 2),
             margem_lucro=round(margem_lucro, 2)
         ),
         produtos_vendidos=produtos_vendidos,
         comissoes_vendedores=comissoes_vendedores,
-        produtos_comprados=produtos_comprados
+        produtos_comprados=produtos_comprados,
+        lancamentos_controle=lancamentos_controle
     )
 
 
@@ -359,7 +430,7 @@ async def relatorio_vendas_por_regiao(
             FROM pedidos_venda pv
             JOIN parceiros p ON pv.cliente_id = p.id
             LEFT JOIN itens_pedido_venda ipv ON pv.id = ipv.pedido_id
-            WHERE pv.status NOT IN ('cancelada', 'cancelado')
+            WHERE pv.status NOT IN ('cancelada', 'cancelado', 'devolvido')
                 AND p.estado IS NOT NULL 
                 AND TRIM(p.estado) != ''
         """
@@ -411,6 +482,233 @@ async def relatorio_vendas_por_regiao(
     }
 
 
+# ===== RELATÓRIO DE ESTOQUE =====
+
+class ProdutoEstoque(BaseModel):
+    id: int
+    codigo: str
+    nome: str
+    categoria_nome: Optional[str] = None
+    estoque_atual: int
+    preco_custo: float
+    custo_total: float
+    preco_venda: float
+    valor_venda_total: float
+    preco_medio_venda: Optional[float] = None
+    qtd_vendida: int
+    comissao_percentual: float
+    valorizacao_simulada: float
+    valorizacao_real: Optional[float] = None
+    margem_simulada: float
+    margem_real: Optional[float] = None
+    giro_estoque: Optional[float] = None
+
+class ResumoEstoque(BaseModel):
+    total_produtos: int
+    total_itens: int
+    custo_total_estoque: float
+    valor_venda_total_estoque: float
+    valorizacao_simulada_total: float
+    valorizacao_real_total: float
+    margem_media_simulada: float
+    margem_media_real: float
+
+class RelatorioEstoque(BaseModel):
+    resumo: ResumoEstoque
+    produtos: List[ProdutoEstoque]
+
+@router.get("/estoque", response_model=RelatorioEstoque)
+async def relatorio_estoque(
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """
+    Retorna um relatório completo de estoque com:
+    - Produtos faturáveis com estoque > 0
+    - Custo unitário e total
+    - Valor de venda e valor médio vendido
+    - Valorização simulada (venda - comissão - custo)
+    - Valorização real (média vendida - comissão - custo)
+    - Giro de estoque
+    """
+    
+    with get_db_cursor() as cursor:
+        # Busca produtos faturáveis com estoque > 0
+        cursor.execute("""
+            SELECT 
+                p.id,
+                p.codigo,
+                p.nome,
+                c.nome as categoria_nome,
+                p.estoque_atual,
+                p.preco_custo,
+                p.preco_venda,
+                COALESCE(p.comissao, 0) as comissao_percentual
+            FROM produtos p
+            LEFT JOIN categorias_produtos c ON p.categoria_id = c.id
+            WHERE p.faturavel = TRUE 
+                AND p.estoque_atual > 0
+                AND p.ativo = TRUE
+            ORDER BY p.estoque_atual DESC, p.nome ASC
+        """)
+        
+        produtos_raw = cursor.fetchall()
+        produtos = []
+        
+        total_custo = 0
+        total_valor_venda = 0
+        total_valorizacao_simulada = 0
+        total_valorizacao_real = 0
+        total_itens = 0
+        soma_margem_simulada = 0
+        soma_margem_real = 0
+        produtos_com_venda = 0
+        
+        # Primeira passagem: calcular margem média real dos produtos com vendas
+        margem_real_total = 0
+        produtos_com_venda_temp = 0
+        
+        for prod in produtos_raw:
+            produto_id = prod["id"]
+            preco_custo = float(prod["preco_custo"])
+            comissao_pct = float(prod["comissao_percentual"] or 0)
+            
+            # Busca histórico de vendas para calcular preço médio
+            cursor.execute("""
+                SELECT 
+                    COALESCE(SUM(ipv.quantidade), 0) as qtd_vendida,
+                    COALESCE(AVG(ipv.preco_unitario), 0) as preco_medio
+                FROM itens_pedido_venda ipv
+                JOIN pedidos_venda pv ON ipv.pedido_id = pv.id
+                WHERE ipv.produto_id = %s
+                    AND pv.status NOT IN ('cancelada', 'cancelado', 'devolvido')
+            """, (produto_id,))
+            
+            vendas_result = cursor.fetchone()
+            qtd_vendida = int(vendas_result["qtd_vendida"]) if vendas_result["qtd_vendida"] else 0
+            preco_medio_venda = float(vendas_result["preco_medio"]) if vendas_result["preco_medio"] and qtd_vendida > 0 else None
+            
+            if preco_medio_venda and preco_medio_venda > 0:
+                # Comissão é valor em reais (não percentual)
+                comissao_valor_real = comissao_pct  # Já é o valor em reais
+                valorizacao_unitaria_real = preco_medio_venda - comissao_valor_real - preco_custo
+                margem_real_temp = (valorizacao_unitaria_real / preco_medio_venda * 100) if preco_medio_venda > 0 else 0
+                margem_real_total += margem_real_temp
+                produtos_com_venda_temp += 1
+        
+        # Calcula margem média real para usar em produtos sem vendas
+        margem_media_real_calculada = (margem_real_total / produtos_com_venda_temp) if produtos_com_venda_temp > 0 else 0
+        
+        # Segunda passagem: processar todos os produtos
+        for prod in produtos_raw:
+            produto_id = prod["id"]
+            estoque = int(prod["estoque_atual"])
+            preco_custo = float(prod["preco_custo"])
+            preco_venda = float(prod["preco_venda"])
+            comissao_pct = float(prod["comissao_percentual"] or 0)
+            
+            # Calcula custo total
+            custo_total = estoque * preco_custo
+            
+            # Calcula valor de venda total (potencial)
+            valor_venda_total = estoque * preco_venda
+            
+            # Busca histórico de vendas para calcular preço médio
+            cursor.execute("""
+                SELECT 
+                    COALESCE(SUM(ipv.quantidade), 0) as qtd_vendida,
+                    COALESCE(AVG(ipv.preco_unitario), 0) as preco_medio
+                FROM itens_pedido_venda ipv
+                JOIN pedidos_venda pv ON ipv.pedido_id = pv.id
+                WHERE ipv.produto_id = %s
+                    AND pv.status NOT IN ('cancelada', 'cancelado', 'devolvido')
+            """, (produto_id,))
+            
+            vendas_result = cursor.fetchone()
+            qtd_vendida = int(vendas_result["qtd_vendida"]) if vendas_result["qtd_vendida"] else 0
+            preco_medio_venda = float(vendas_result["preco_medio"]) if vendas_result["preco_medio"] and qtd_vendida > 0 else None
+            
+            # Comissão é valor em reais (não percentual)
+            comissao_valor_simulada = comissao_pct  # Já é o valor em reais
+            
+            # Valorização simulada (por unidade): preço venda - comissão - custo
+            valorizacao_unitaria_simulada = preco_venda - comissao_valor_simulada - preco_custo
+            valorizacao_simulada = valorizacao_unitaria_simulada * estoque
+            
+            # Margem simulada (%)
+            margem_simulada = (valorizacao_unitaria_simulada / preco_venda * 100) if preco_venda > 0 else 0
+            
+            # Valorização real (se teve vendas) ou estimada (se não teve)
+            valorizacao_real = None
+            margem_real = None
+            if preco_medio_venda and preco_medio_venda > 0:
+                # Produto com vendas: usa preço médio real
+                # Comissão é valor em reais (não percentual)
+                comissao_valor_real = comissao_pct  # Já é o valor em reais
+                valorizacao_unitaria_real = preco_medio_venda - comissao_valor_real - preco_custo
+                valorizacao_real = valorizacao_unitaria_real * estoque
+                margem_real = (valorizacao_unitaria_real / preco_medio_venda * 100) if preco_medio_venda > 0 else 0
+                soma_margem_real += margem_real
+                produtos_com_venda += 1
+                total_valorizacao_real += valorizacao_real
+            else:
+                # Produto sem vendas: estima usando preço_custo * margem_média_real
+                # Fórmula: valorização_estimada = preço_custo * (margem_média_real / 100) * estoque
+                if margem_media_real_calculada > 0:
+                    valorizacao_unitaria_estimada = preco_custo * (margem_media_real_calculada / 100)
+                    valorizacao_real = valorizacao_unitaria_estimada * estoque
+                    margem_real = margem_media_real_calculada
+                    total_valorizacao_real += valorizacao_real
+            
+            # Giro de estoque (qtd vendida / estoque atual)
+            giro_estoque = (qtd_vendida / estoque) if estoque > 0 else None
+            
+            # Acumula totais
+            total_custo += custo_total
+            total_valor_venda += valor_venda_total
+            total_valorizacao_simulada += valorizacao_simulada
+            total_itens += estoque
+            soma_margem_simulada += margem_simulada
+            
+            produtos.append(ProdutoEstoque(
+                id=produto_id,
+                codigo=prod["codigo"],
+                nome=prod["nome"],
+                categoria_nome=prod["categoria_nome"],
+                estoque_atual=estoque,
+                preco_custo=round(preco_custo, 2),
+                custo_total=round(custo_total, 2),
+                preco_venda=round(preco_venda, 2),
+                valor_venda_total=round(valor_venda_total, 2),
+                preco_medio_venda=round(preco_medio_venda, 2) if preco_medio_venda else None,
+                qtd_vendida=qtd_vendida,
+                comissao_percentual=round(comissao_pct, 2),
+                valorizacao_simulada=round(valorizacao_simulada, 2),
+                valorizacao_real=round(valorizacao_real, 2) if valorizacao_real is not None else None,
+                margem_simulada=round(margem_simulada, 2),
+                margem_real=round(margem_real, 2) if margem_real is not None else None,
+                giro_estoque=round(giro_estoque, 2) if giro_estoque is not None else None
+            ))
+        
+        # Calcula médias
+        total_produtos = len(produtos)
+        margem_media_simulada = (soma_margem_simulada / total_produtos) if total_produtos > 0 else 0
+        margem_media_real = (soma_margem_real / produtos_com_venda) if produtos_com_venda > 0 else 0
+    
+    return RelatorioEstoque(
+        resumo=ResumoEstoque(
+            total_produtos=total_produtos,
+            total_itens=total_itens,
+            custo_total_estoque=round(total_custo, 2),
+            valor_venda_total_estoque=round(total_valor_venda, 2),
+            valorizacao_simulada_total=round(total_valorizacao_simulada, 2),
+            valorizacao_real_total=round(total_valorizacao_real, 2),
+            margem_media_simulada=round(margem_media_simulada, 2),
+            margem_media_real=round(margem_media_real, 2)
+        ),
+        produtos=produtos
+    )
+
+
 @router.get("/vendas-por-regiao/{sigla_estado}")
 async def detalhe_vendas_estado(
     sigla_estado: str,
@@ -448,7 +746,7 @@ async def detalhe_vendas_estado(
             JOIN parceiros p ON pv.cliente_id = p.id
             JOIN itens_pedido_venda ipv ON pv.id = ipv.pedido_id
             JOIN produtos prod ON ipv.produto_id = prod.id
-            WHERE pv.status NOT IN ('cancelada', 'cancelado')
+            WHERE pv.status NOT IN ('cancelada', 'cancelado', 'devolvido')
                 AND UPPER(TRIM(p.estado)) = %s
         """
         params = [sigla]
@@ -477,7 +775,7 @@ async def detalhe_vendas_estado(
                 COALESCE(SUM(pv.valor_total), 0) as valor_total
             FROM pedidos_venda pv
             JOIN parceiros p ON pv.cliente_id = p.id
-            WHERE pv.status NOT IN ('cancelada', 'cancelado')
+            WHERE pv.status NOT IN ('cancelada', 'cancelado', 'devolvido')
                 AND UPPER(TRIM(p.estado)) = %s
         """
         params_resumo = [sigla]
@@ -513,3 +811,153 @@ async def detalhe_vendas_estado(
         "valor_total": float(resumo["valor_total"]) if resumo else 0,
         "produtos": produtos
     }
+
+
+# ===== RELATÓRIO DE PRODUTOS MENSAIS =====
+
+class ProdutoMensal(BaseModel):
+    id: int
+    codigo: str
+    nome: str
+    categoria_id: Optional[int] = None
+    categoria_nome: Optional[str] = None
+    quantidade_mensal: List[int]  # [jan, fev, mar, ..., dez] - 12 elementos
+    faturamento_mensal: List[float]  # [jan, fev, mar, ..., dez] - 12 elementos
+    lucro_mensal: List[float]  # [jan, fev, mar, ..., dez] - 12 elementos
+    quantidade_total: int
+    faturamento_total: float
+    lucro_total: float
+
+class RelatorioProdutosMensais(BaseModel):
+    periodo: dict
+    produtos: List[ProdutoMensal]
+
+@router.get("/produtos-mensais", response_model=RelatorioProdutosMensais)
+async def relatorio_produtos_mensais(
+    data_inicio: date,
+    data_fim: date,
+    categoria_id: Optional[int] = None,
+    nome_produto: Optional[str] = None,
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """
+    Retorna um relatório de produtos com dados mensais:
+    - Quantidade vendida por mês (Jan a Dez)
+    - Faturamento por mês (Jan a Dez)
+    - Lucro por mês (Jan a Dez)
+    
+    Os dados são agrupados apenas pelo mês, ignorando o ano.
+    Ordenado por nome do produto.
+    
+    Parâmetros:
+    - data_inicio: Data inicial do período
+    - data_fim: Data final do período
+    - categoria_id: (opcional) Filtrar por categoria/grupo
+    - nome_produto: (opcional) Filtrar por nome do produto (contém)
+    """
+    
+    with get_db_cursor() as cursor:
+        # Query para buscar vendas agrupadas por produto e mês
+        query = """
+            SELECT 
+                p.id as produto_id,
+                p.codigo,
+                p.nome,
+                p.categoria_id,
+                c.nome as categoria_nome,
+                MONTH(pv.data_pedido) as mes,
+                SUM(ipv.quantidade) as quantidade,
+                SUM(ipv.quantidade * ipv.preco_unitario) as faturamento,
+                SUM(ipv.quantidade * COALESCE(ipv.custo_item, p.preco_custo)) as custo_total,
+                SUM(CASE 
+                    WHEN pv.valor_total > 0 
+                    THEN pv.comissao_total * (ipv.quantidade * ipv.preco_unitario) / pv.valor_total 
+                    ELSE 0 
+                END) as comissao_proporcional
+            FROM itens_pedido_venda ipv
+            JOIN produtos p ON ipv.produto_id = p.id
+            JOIN pedidos_venda pv ON ipv.pedido_id = pv.id
+            LEFT JOIN categorias_produtos c ON p.categoria_id = c.id
+            WHERE DATE(pv.data_pedido) >= %s AND DATE(pv.data_pedido) <= %s
+                AND LOWER(pv.status) NOT IN ('cancelada', 'cancelado', 'devolvido')
+                AND pv.status IS NOT NULL
+        """
+        params = [data_inicio, data_fim]
+        
+        if categoria_id:
+            query += " AND p.categoria_id = %s"
+            params.append(categoria_id)
+        
+        if nome_produto:
+            query += " AND LOWER(p.nome) LIKE %s"
+            params.append(f"%{nome_produto.lower()}%")
+        
+        query += " GROUP BY p.id, p.codigo, p.nome, p.categoria_id, c.nome, MONTH(pv.data_pedido)"
+        query += " ORDER BY p.nome ASC, mes ASC"
+        
+        cursor.execute(query, params)
+        vendas_raw = cursor.fetchall()
+        
+        # Organiza dados por produto
+        produtos_dict = {}
+        
+        for row in vendas_raw:
+            produto_id = row["produto_id"]
+            mes = int(row["mes"])  # 1 a 12
+            
+            if produto_id not in produtos_dict:
+                produtos_dict[produto_id] = {
+                    "id": produto_id,
+                    "codigo": row["codigo"],
+                    "nome": row["nome"],
+                    "categoria_id": row["categoria_id"],
+                    "categoria_nome": row["categoria_nome"],
+                    "quantidade_mensal": [0] * 12,  # Índice 0 = Jan, 11 = Dez
+                    "faturamento_mensal": [0.0] * 12,
+                    "lucro_mensal": [0.0] * 12,
+                    "quantidade_total": 0,
+                    "faturamento_total": 0.0,
+                    "lucro_total": 0.0
+                }
+            
+            # Índice do mês (0-based)
+            idx = mes - 1
+            
+            quantidade = int(row["quantidade"])
+            faturamento = float(row["faturamento"])
+            custo = float(row["custo_total"])
+            comissao = float(row["comissao_proporcional"] or 0)
+            lucro = faturamento - custo - comissao
+            
+            produtos_dict[produto_id]["quantidade_mensal"][idx] += quantidade
+            produtos_dict[produto_id]["faturamento_mensal"][idx] += faturamento
+            produtos_dict[produto_id]["lucro_mensal"][idx] += lucro
+            
+            produtos_dict[produto_id]["quantidade_total"] += quantidade
+            produtos_dict[produto_id]["faturamento_total"] += faturamento
+            produtos_dict[produto_id]["lucro_total"] += lucro
+        
+        # Converte para lista ordenada por nome
+        produtos = []
+        for prod_data in sorted(produtos_dict.values(), key=lambda x: x["nome"]):
+            produtos.append(ProdutoMensal(
+                id=prod_data["id"],
+                codigo=prod_data["codigo"],
+                nome=prod_data["nome"],
+                categoria_id=prod_data["categoria_id"],
+                categoria_nome=prod_data["categoria_nome"],
+                quantidade_mensal=prod_data["quantidade_mensal"],
+                faturamento_mensal=[round(v, 2) for v in prod_data["faturamento_mensal"]],
+                lucro_mensal=[round(v, 2) for v in prod_data["lucro_mensal"]],
+                quantidade_total=prod_data["quantidade_total"],
+                faturamento_total=round(prod_data["faturamento_total"], 2),
+                lucro_total=round(prod_data["lucro_total"], 2)
+            ))
+    
+    return RelatorioProdutosMensais(
+        periodo={
+            "data_inicio": data_inicio.isoformat(),
+            "data_fim": data_fim.isoformat()
+        },
+        produtos=produtos
+    )

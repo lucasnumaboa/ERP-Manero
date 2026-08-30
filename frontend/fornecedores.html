@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,6 +20,7 @@
         /* Adicione o CSS personalizado aqui */
     </style>
 </head>
+
 <body>
     <div class="app-container">
         <!-- Sidebar / Menu Lateral -->
@@ -47,7 +49,7 @@
                         <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     </li>
                 </ul>
-                
+
                 <!-- Menu Principal -->
                 <ul>
                     <li>
@@ -94,6 +96,9 @@
                     </li>
                     <li>
                         <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
+                    </li>
+                    <li>
+                        <a href="softwares.html"><i class="fas fa-download"></i> Softwares</a>
                     </li>
                     <li>
                         <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
@@ -165,7 +170,7 @@
 
     <!-- Modal de Novo/Editar Fornecedor -->
     <div class="modal" id="fornecedorModal">
-        <div class="modal-content">
+        <div class="modal-content modal-lg modal-vendas">
             <div class="modal-header">
                 <h2 id="modalTitle">Novo Fornecedor</h2>
                 <button class="close-modal">&times;</button>
@@ -173,99 +178,109 @@
             <div class="modal-body">
                 <form id="fornecedorForm">
                     <input type="hidden" id="fornecedor_id">
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="tipo">Tipo</label>
-                            <select id="tipo" name="tipo" required>
-                                <option value="fornecedor">Fornecedor</option>
-                                <option value="ambos">Cliente e Fornecedor</option>
-                            </select>
+
+                    <!-- Sistema de Abas -->
+                    <div class="modal-tabs">
+                        <button type="button" class="modal-tab active" data-tab="tab-dados-fornecedor">
+                            <i class="fas fa-building"></i> Dados
+                        </button>
+                        <button type="button" class="modal-tab" data-tab="tab-endereco-fornecedor">
+                            <i class="fas fa-map-marker-alt"></i> Endereço
+                        </button>
+                    </div>
+
+                    <!-- Aba 1: Dados do Fornecedor -->
+                    <div class="modal-tab-content active" id="tab-dados-fornecedor">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="tipo">Tipo</label>
+                                <select id="tipo" name="tipo" required>
+                                    <option value="fornecedor">Fornecedor</option>
+                                    <option value="ambos">Cliente e Fornecedor</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="ativo">Status</label>
+                                <select id="ativo" name="ativo">
+                                    <option value="true">Ativo</option>
+                                    <option value="false">Inativo</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="ativo">Status</label>
-                            <select id="ativo" name="ativo">
-                                <option value="true">Ativo</option>
-                                <option value="false">Inativo</option>
-                            </select>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nome">Nome/Razão Social*</label>
+                                <input type="text" id="nome" name="nome" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="documento">CPF/CNPJ</label>
+                                <input type="text" id="documento" name="documento">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email">E-mail</label>
+                                <input type="email" id="email" name="email">
+                            </div>
+                            <div class="form-group">
+                                <label for="telefone">Telefone</label>
+                                <input type="text" id="telefone" name="telefone">
+                            </div>
                         </div>
                     </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="nome">Nome/Razão Social*</label>
-                            <input type="text" id="nome" name="nome" required>
+
+                    <!-- Aba 2: Endereço -->
+                    <div class="modal-tab-content" id="tab-endereco-fornecedor">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cep">CEP</label>
+                                <input type="text" id="cep" name="cep">
+                            </div>
+                            <div class="form-group">
+                                <label for="endereco">Endereço</label>
+                                <input type="text" id="endereco" name="endereco">
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="documento">CPF/CNPJ</label>
-                            <input type="text" id="documento" name="documento">
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="email">E-mail</label>
-                            <input type="email" id="email" name="email">
-                        </div>
-                        <div class="form-group">
-                            <label for="telefone">Telefone</label>
-                            <input type="text" id="telefone" name="telefone">
-                        </div>
-                    </div>
-                    
-                    <h3 class="section-title">Endereço</h3>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="endereco">Endereço</label>
-                            <input type="text" id="endereco" name="endereco">
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="cidade">Cidade</label>
-                            <input type="text" id="cidade" name="cidade">
-                        </div>
-                        <div class="form-group small">
-                            <label for="estado">UF</label>
-                            <select id="estado" name="estado">
-                                <option value="">Selecione...</option>
-                                <option value="AC">AC</option>
-                                <option value="AL">AL</option>
-                                <option value="AP">AP</option>
-                                <option value="AM">AM</option>
-                                <option value="BA">BA</option>
-                                <option value="CE">CE</option>
-                                <option value="DF">DF</option>
-                                <option value="ES">ES</option>
-                                <option value="GO">GO</option>
-                                <option value="MA">MA</option>
-                                <option value="MT">MT</option>
-                                <option value="MS">MS</option>
-                                <option value="MG">MG</option>
-                                <option value="PA">PA</option>
-                                <option value="PB">PB</option>
-                                <option value="PR">PR</option>
-                                <option value="PE">PE</option>
-                                <option value="PI">PI</option>
-                                <option value="RJ">RJ</option>
-                                <option value="RN">RN</option>
-                                <option value="RS">RS</option>
-                                <option value="RO">RO</option>
-                                <option value="RR">RR</option>
-                                <option value="SC">SC</option>
-                                <option value="SP">SP</option>
-                                <option value="SE">SE</option>
-                                <option value="TO">TO</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="cep">CEP</label>
-                            <input type="text" id="cep" name="cep">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cidade">Cidade</label>
+                                <input type="text" id="cidade" name="cidade">
+                            </div>
+                            <div class="form-group small">
+                                <label for="estado">UF</label>
+                                <select id="estado" name="estado">
+                                    <option value="">Selecione...</option>
+                                    <option value="AC">AC</option>
+                                    <option value="AL">AL</option>
+                                    <option value="AP">AP</option>
+                                    <option value="AM">AM</option>
+                                    <option value="BA">BA</option>
+                                    <option value="CE">CE</option>
+                                    <option value="DF">DF</option>
+                                    <option value="ES">ES</option>
+                                    <option value="GO">GO</option>
+                                    <option value="MA">MA</option>
+                                    <option value="MT">MT</option>
+                                    <option value="MS">MS</option>
+                                    <option value="MG">MG</option>
+                                    <option value="PA">PA</option>
+                                    <option value="PB">PB</option>
+                                    <option value="PR">PR</option>
+                                    <option value="PE">PE</option>
+                                    <option value="PI">PI</option>
+                                    <option value="RJ">RJ</option>
+                                    <option value="RN">RN</option>
+                                    <option value="RS">RS</option>
+                                    <option value="RO">RO</option>
+                                    <option value="RR">RR</option>
+                                    <option value="SC">SC</option>
+                                    <option value="SP">SP</option>
+                                    <option value="SE">SE</option>
+                                    <option value="TO">TO</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -289,5 +304,5 @@
     <script src="js/internal-animation.js"></script>
     <script src="js/theme-switcher.js"></script>
 </body>
-</html>
 
+</html>

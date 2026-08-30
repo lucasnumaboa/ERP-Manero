@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Maneiro - Controle Financeiro</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/permissions.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/modulos.css">
+    <link rel="stylesheet" href="css/submenu.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/theme-dark.css">
+    <link rel="stylesheet" href="css/theme-light.css">
+    <style>
+        .controle-layout {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .controle-panel {
+            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .controle-panel.categorias {
+            flex: 0 0 360px;
+            min-width: 280px;
+        }
+
+        .controle-panel.lancamentos {
+            flex: 1;
+            min-width: 400px;
+        }
+
+        .controle-panel h2 {
+            font-size: 16px;
+            color: var(--accent-primary, #64ffda);
+            margin-bottom: 16px;
+            border-bottom: 2px solid var(--accent-primary, #64ffda);
+            padding-bottom: 8px;
+        }
+
+        .inline-form {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .inline-form input,
+        .inline-form select {
+            flex: 1;
+            padding: 8px 10px;
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.2));
+            border-radius: 4px;
+            background: rgba(10, 25, 47, 0.8);
+            color: var(--text-primary, #e6f1ff);
+            min-width: 100px;
+        }
+
+        .badge-tipo {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .badge-lucro {
+            background: rgba(39, 174, 96, 0.2);
+            color: #27ae60;
+            border: 1px solid #27ae60;
+        }
+
+        .badge-desconto {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+
+        .table-controle {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .table-controle th {
+            padding: 8px 10px;
+            text-align: left;
+            color: var(--accent-primary, #64ffda);
+            border-bottom: 2px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .table-controle td {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border-color, rgba(100, 255, 218, 0.07));
+            color: var(--text-secondary, #a8b2d1);
+        }
+
+        .table-controle tbody tr:hover {
+            background: rgba(100, 255, 218, 0.04);
+        }
+
+        .btn-del-controle {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 6px;
+            transition: opacity 0.2s;
+        }
+
+        .btn-del-controle:hover {
+            opacity: 0.7;
+        }
+
+        .controle-actions {
+            margin-bottom: 12px;
+        }
+
+        .resumo-cards {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .resumo-card {
+            flex: 1;
+            min-width: 160px;
+            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            border-radius: 8px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .resumo-card .r-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .resumo-card .r-icon.lucro {
+            background: rgba(39, 174, 96, 0.15);
+            color: #27ae60;
+        }
+
+        .resumo-card .r-icon.desconto {
+            background: rgba(231, 76, 60, 0.15);
+            color: #e74c3c;
+        }
+
+        .resumo-card .r-icon.saldo {
+            background: rgba(100, 255, 218, 0.1);
+            color: #64ffda;
+        }
+
+        .resumo-card .r-info h4 {
+            font-size: 11px;
+            color: var(--text-secondary, #8892b0);
+            text-transform: uppercase;
+            margin: 0 0 4px;
+        }
+
+        .resumo-card .r-info p {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary, #e6f1ff);
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Menu Lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="img/icon.png" alt="ERP Maneiro" class="logo-img">
+                <button id="toggleSidebar" class="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="userName">Carregando...</h3>
+                    <p id="userRole">Carregando...</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li>
+                        <a href="homepage.html"><i class="fas fa-home"></i> Home</a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <div class="content">
+                <div class="page-header">
+                    <h1><i class="fas fa-sliders-h" style="margin-right:10px;"></i>Controle Financeiro</h1>
+                    <p>Gerencie categorias de ajuste e lançamentos que impactam o lucro nos relatórios</p>
+                </div>
+
+                <!-- Cards de resumo -->
+                <div class="resumo-cards">
+                    <div class="resumo-card">
+                        <div class="r-icon lucro"><i class="fas fa-arrow-up"></i></div>
+                        <div class="r-info">
+                            <h4>Total Lucros</h4>
+                            <p id="totalLucros">R$ 0,00</p>
+                        </div>
+                    </div>
+                    <div class="resumo-card">
+                        <div class="r-icon desconto"><i class="fas fa-arrow-down"></i></div>
+                        <div class="r-info">
+                            <h4>Total Descontos</h4>
+                            <p id="totalDescontos">R$ 0,00</p>
+                        </div>
+                    </div>
+                    <div class="resumo-card">
+                        <div class="r-icon saldo"><i class="fas fa-balance-scale"></i></div>
+                        <div class="r-info">
+                            <h4>Saldo Líquido</h4>
+                            <p id="saldoLiquido">R$ 0,00</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Layout principal -->
+                <div class="controle-layout">
+                    <!-- Painel de Categorias -->
+                    <div class="controle-panel categorias">
+                        <h2><i class="fas fa-tags"></i> Categorias</h2>
+                        <div class="inline-form">
+                            <input type="text" id="inputNomeCategoria" placeholder="Nome da categoria" />
+                            <select id="selectTipoCategoria">
+                                <option value="lucro">Lucro</option>
+                                <option value="desconto">Desconto</option>
+                            </select>
+                            <button class="btn-primary" id="btnCriarCategoria" style="white-space:nowrap;">
+                                <i class="fas fa-plus"></i> Criar
+                            </button>
+                        </div>
+                        <table class="table-controle">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Tipo</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyControleCategorias">
+                                <tr>
+                                    <td colspan="3" style="text-align:center;color:#8892b0;">Carregando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Painel de Lançamentos -->
+                    <div class="controle-panel lancamentos">
+                        <h2><i class="fas fa-list-alt"></i> Lançamentos de Ajuste</h2>
+                        <div class="controle-actions">
+                            <button class="btn-primary" id="btnNovoControleLancamento">
+                                <i class="fas fa-plus"></i> Novo Lançamento
+                            </button>
+                            <span style="font-size:12px;color:#8892b0;margin-left:12px;">
+                                Estes lançamentos ajustam o lucro nos relatórios.
+                            </span>
+                        </div>
+                        <div class="table-container" style="overflow-x:auto;">
+                            <table class="table-controle">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Tipo</th>
+                                        <th>Categoria</th>
+                                        <th>Descrição</th>
+                                        <th style="text-align:right;">Valor</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyControleLancamentos">
+                                    <tr>
+                                        <td colspan="6" style="text-align:center;color:#8892b0;">Carregando...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Lançamento de Controle -->
+    <div class="modal" id="controleLancamentoModal">
+        <div class="modal-content" style="max-width:520px;">
+            <div class="modal-header">
+                <h2>Novo Lançamento de Controle</h2>
+                <button class="close-modal" id="fecharControleLancamentoModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="controleLancamentoForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cl_data">Data</label>
+                            <input type="date" id="cl_data" name="data" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cl_tipo">Tipo</label>
+                            <select id="cl_tipo" name="tipo" required>
+                                <option value="lucro">Lucro</option>
+                                <option value="desconto">Desconto</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cl_categoria">Categoria</label>
+                            <select id="cl_categoria" name="categoria_id">
+                                <option value="">Sem categoria</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="cl_valor">Valor (R$)</label>
+                            <input type="number" id="cl_valor" name="valor" step="0.01" min="0.01" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="cl_descricao">Descrição</label>
+                        <input type="text" id="cl_descricao" name="descricao" required
+                            placeholder="Ex: Taxa de marketplace, Bônus extra...">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnCancelarControleLancamento">Cancelar</button>
+                <button class="btn-primary" id="btnSalvarControleLancamento">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/permissions.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/sidebar-template.js"></script>
+    <script src="js/controle-financeiro.js"></script>
+    <script src="js/internal-animation.js"></script>
+    <script src="js/theme-switcher.js"></script>
+    <script>
+        // Calcula resumo dos lançamentos
+        function atualizarResumoCards() {
+            const rows = document.querySelectorAll('#tbodyControleLancamentos tr[data-tipo]');
+            let lucros = 0, descontos = 0;
+            rows.forEach(tr => {
+                const val = parseFloat(tr.dataset.valor || 0);
+                if (tr.dataset.tipo === 'lucro') lucros += val;
+                else descontos += val;
+            });
+            const fmt = v => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            document.getElementById('totalLucros').textContent = fmt(lucros);
+            document.getElementById('totalDescontos').textContent = fmt(descontos);
+            const saldo = lucros - descontos;
+            const el = document.getElementById('saldoLiquido');
+            el.textContent = fmt(Math.abs(saldo));
+            el.style.color = saldo >= 0 ? '#27ae60' : '#e74c3c';
+        }
+
+        // Observa mudanças na tabela para recalcular resumo
+        const observer = new MutationObserver(atualizarResumoCards);
+        document.addEventListener('DOMContentLoaded', () => {
+            const tbody = document.getElementById('tbodyControleLancamentos');
+            if (tbody) observer.observe(tbody, { childList: true, subtree: true });
+
+            // Carrega dados automaticamente ao entrar na página dedicada
+            setTimeout(() => {
+                if (window.ControleFinanceiro) {
+                    window.ControleFinanceiro.carregar();
+                }
+            }, 150);
+        });
+    </script>
+</body>
+
+</html>

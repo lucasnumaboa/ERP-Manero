@@ -216,7 +216,7 @@ async function getApiBaseUrlCached() {
     }
     
     // Último fallback
-    apiBaseUrlCache = 'http://localhost:8000';
+    apiBaseUrlCache = 'https://erp-api-call.autoservto.com.br';
     return apiBaseUrlCache;
 }
 
@@ -229,7 +229,7 @@ async function getImageUrlAsync(caminhoImagem) {
 
 // Obtém a URL da imagem (versão síncrona usando cache)
 function getImageUrl(caminhoImagem) {
-    const baseUrl = apiBaseUrlCache || 'http://localhost:8000';
+    const baseUrl = apiBaseUrlCache || 'https://erp-api-call.autoservto.com.br';
     // Remove 'uploads/' se já estiver no caminho, mantém o resto
     return `${baseUrl}/uploads/${caminhoImagem.replace('uploads/', '')}`;
 }
@@ -237,7 +237,7 @@ function getImageUrl(caminhoImagem) {
 // Obtém a URL da imagem para download no ZIP
 // Usa o mesmo formato que funciona no estoque.js: /uploads/produtos/{nomeArquivo}
 function getImageDownloadUrl(caminhoImagem) {
-    const baseUrl = apiBaseUrlCache || 'http://localhost:8000';
+    const baseUrl = apiBaseUrlCache || 'https://erp-api-call.autoservto.com.br';
     // Extrai apenas o nome do arquivo
     const nomeArquivo = caminhoImagem.split('/').pop();
     return `${baseUrl}/uploads/produtos/${nomeArquivo}`;

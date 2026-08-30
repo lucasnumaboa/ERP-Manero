@@ -167,7 +167,7 @@ async def listar_metas(
                 WHERE pv.vendedor_id = %s
                 AND MONTH(pv.data_pedido) = %s
                 AND YEAR(pv.data_pedido) = %s
-                AND pv.status != 'Cancelada'
+                AND pv.status NOT IN ('Cancelada', 'Devolvido')
             """, (meta['vendedor_id'], meta['mes'], meta['ano']))
             vendas = cursor.fetchone()
             
@@ -230,7 +230,7 @@ async def dashboard_metas(
                 WHERE vendedor_id = %s
                 AND MONTH(data_pedido) = %s
                 AND YEAR(data_pedido) = %s
-                AND status != 'Cancelada'
+                AND status NOT IN ('Cancelada', 'Devolvido')
             """, (vendedor['id'], mes, ano))
             vendas = cursor.fetchone()
             
@@ -734,7 +734,7 @@ async def calcular_premiacoes(
                 WHERE vendedor_id = %s
                 AND MONTH(data_pedido) = %s
                 AND YEAR(data_pedido) = %s
-                AND status != 'Cancelada'
+                AND status NOT IN ('Cancelada', 'Devolvido')
             """, (vendedor['id'], mes, ano))
             vendas = cursor.fetchone()
             

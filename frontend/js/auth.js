@@ -6,16 +6,18 @@ async function getApiUrl() {
         const response = await fetch('/api/configuracoes/link_api');
         if (response.ok) {
             const data = await response.json();
-            return data.config?.api_url || 'http://localhost:8000';
+            return data.config?.api_url || 'https://erp-api-call.autoservto.com.br';
         }
     } catch (error) {
         console.warn('Erro ao buscar URL da API:', error);
     }
-    return 'http://localhost:8000';
+    return 'https://erp-api-call.autoservto.com.br';
 }
 
 // Variável para controlar se o modal de sessão expirada já está sendo exibido
 let sessionExpiredModalShown = false;
+// Variável para controlar se já estamos redirecionando para login
+let isRedirectingToLogin = false;
 
 // Verifica se o usuário está autenticado
 function isAuthenticated() {
@@ -44,17 +46,54 @@ function getAuthHeader() {
 
 // Faz logout do sistema
 function logout() {
-    localStorage.removeItem('erp_token');
-    localStorage.removeItem('erp_token_type');
-    localStorage.removeItem('erp_user_data');
+    // Previne múltiplos logouts simultâneos
+    if (isRedirectingToLogin) return;
+    isRedirectingToLogin = true;
+    
+    // Salvar credenciais "lembrar senha" antes de limpar
+    const rememberEmail = localStorage.getItem('erp_remember_email');
+    const rememberPassword = localStorage.getItem('erp_remember_password');
+    const rememberMe = localStorage.getItem('erp_remember_me');
+    
+    // Limpa todo o localStorage
+    localStorage.clear();
+    
+    // Restaurar credenciais "lembrar senha" se existirem
+    if (rememberMe === 'true' && rememberEmail && rememberPassword) {
+        localStorage.setItem('erp_remember_email', rememberEmail);
+        localStorage.setItem('erp_remember_password', rememberPassword);
+        localStorage.setItem('erp_remember_me', rememberMe);
+    }
+    
+    // Limpa o sessionStorage também
+    sessionStorage.clear();
+    
+    // Redireciona para a página de login
     window.location.href = 'index.html';
 }
 
 // Exibe modal informando que o usuário foi desconectado
 function showSessionExpiredModal() {
-    // Evita exibir o modal múltiplas vezes
-    if (sessionExpiredModalShown) return;
+    // Evita exibir o modal múltiplas vezes ou redirecionar múltiplas vezes
+    if (sessionExpiredModalShown || isRedirectingToLogin) return;
     sessionExpiredModalShown = true;
+    isRedirectingToLogin = true;
+    
+    // Salvar credenciais "lembrar senha" antes de limpar
+    const rememberEmail = localStorage.getItem('erp_remember_email');
+    const rememberPassword = localStorage.getItem('erp_remember_password');
+    const rememberMe = localStorage.getItem('erp_remember_me');
+    
+    // Limpa todo o cache imediatamente
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // Restaurar credenciais "lembrar senha" se existirem
+    if (rememberMe === 'true' && rememberEmail && rememberPassword) {
+        localStorage.setItem('erp_remember_email', rememberEmail);
+        localStorage.setItem('erp_remember_password', rememberPassword);
+        localStorage.setItem('erp_remember_me', rememberMe);
+    }
     
     // Cria o modal
     const modalOverlay = document.createElement('div');
@@ -86,11 +125,11 @@ function showSessionExpiredModal() {
     modalHeader.style.color = '#e74c3c';
     
     const modalMessage = document.createElement('p');
-    modalMessage.textContent = 'Sua sessão expirou ou você foi desconectado. Por favor, faça login novamente.';
+    modalMessage.textContent = 'Sua sessão expirou. Redirecionando para o login...';
     modalMessage.style.marginBottom = '20px';
     
     const modalButton = document.createElement('button');
-    modalButton.textContent = 'Fazer Login';
+    modalButton.textContent = 'Ir para Login';
     modalButton.style.padding = '8px 16px';
     modalButton.style.backgroundColor = '#3498db';
     modalButton.style.color = '#fff';
@@ -99,7 +138,9 @@ function showSessionExpiredModal() {
     modalButton.style.cursor = 'pointer';
     
     modalButton.addEventListener('click', function() {
-        document.body.removeChild(modalOverlay);
+        if (document.body.contains(modalOverlay)) {
+            document.body.removeChild(modalOverlay);
+        }
         window.location.href = 'index.html';
     });
     
@@ -110,18 +151,23 @@ function showSessionExpiredModal() {
     
     document.body.appendChild(modalOverlay);
     
-    // Redireciona para a página de login após 3 segundos
+    // Redireciona para a página de login após 2 segundos
     setTimeout(() => {
         if (document.body.contains(modalOverlay)) {
             document.body.removeChild(modalOverlay);
         }
         window.location.href = 'index.html';
-    }, 3000);
+    }, 2000);
 }
 
 // Intercepta respostas HTTP para verificar erros 401
 async function fetchWithAuth(url, options = {}) {
     try {
+        // Se já estamos redirecionando, não faz mais requisições
+        if (isRedirectingToLogin) {
+            return null;
+        }
+
         // Verifica se o token existe antes de fazer a requisição
         const token = localStorage.getItem('erp_token');
         if (!token) {
@@ -129,29 +175,34 @@ async function fetchWithAuth(url, options = {}) {
             showSessionExpiredModal();
             return null;
         }
-        
+
         // Adiciona headers de autenticação se não forem fornecidos
         if (!options.headers) {
             options.headers = getAuthHeader();
         } else if (!options.headers['Authorization']) {
             options.headers = { ...options.headers, ...getAuthHeader() };
         }
-        
+
         const response = await fetch(url, options);
-        
+
         // Verifica se a resposta é 401 Unauthorized
         if (response.status === 401) {
-            console.error('Sessão expirada ou usuário desconectado');
-            // Limpa dados de autenticação
-            localStorage.removeItem('erp_token');
-            localStorage.removeItem('erp_token_type');
-            localStorage.removeItem('erp_user_data');
+            console.error('Erro 401: Sessão expirada');
+            // Mostra modal e redireciona (só uma vez)
             showSessionExpiredModal();
             return null;
         }
-        
+
+        // Qualquer requisição autenticada bem-sucedida (não-401) atualiza o
+        // last_access no backend, então reinicia o contador de sessão exibido.
+        resetSessionTimer();
+
         return response;
     } catch (error) {
+        // Se já estamos redirecionando, não mostra erro
+        if (isRedirectingToLogin) {
+            return null;
+        }
         console.error('Erro na requisição:', error);
         throw error;
     }
@@ -234,12 +285,15 @@ async function getUserPermissions() {
                 fornecedores_editar: true,
                 estoque_visualizar: true,
                 estoque_editar: true,
+                depositos_visualizar: true,
+                depositos_editar: true,
                 configuracoes_visualizar: true,
                 configuracoes_editar: true,
                 financeiro_visualizar: true,
                 financeiro_editar: true,
                 metas_visualizar: true,
-                metas_editar: true
+                metas_editar: true,
+                filamentos_3d_visualizar: true
             };
         }
         
@@ -337,6 +391,100 @@ function getToken() {
     return localStorage.getItem('erp_token');
 }
 
+// ===== Contador de sessão (tempo até desconexão por inatividade) =====
+// O backend desconecta o usuário quando `last_access` fica mais velho que
+// `configuracoes.timeout_time` minutos (ver backend/timeout_manager.py).
+// Esse contador só espelha essa regra na tela; a decisão real continua no backend.
+let sessionTimeoutMinutes = 15;
+let sessionRemainingSeconds = null;
+let sessionTimerInterval = null;
+let sessionConfigInterval = null;
+
+async function fetchSessionTimeoutConfig() {
+    try {
+        const apiUrl = await getApiUrl();
+        const response = await fetch(`${apiUrl}/api/configuracoes/timeout-sessao`, {
+            method: 'GET',
+            headers: { ...getAuthHeader(), 'Content-Type': 'application/json' }
+        });
+        if (response.ok) {
+            const data = await response.json();
+            if (data && data.timeout_minutos) {
+                sessionTimeoutMinutes = data.timeout_minutos;
+            }
+        }
+    } catch (error) {
+        console.warn('Erro ao obter configuração de timeout de sessão:', error);
+    }
+}
+
+function resetSessionTimer() {
+    if (sessionRemainingSeconds !== null) {
+        sessionRemainingSeconds = sessionTimeoutMinutes * 60;
+        updateSessionTimerDisplay();
+    }
+}
+
+function renderSessionTimerBar() {
+    if (document.getElementById('sessionTimerBar')) return;
+
+    const bar = document.createElement('div');
+    bar.id = 'sessionTimerBar';
+    bar.style.cssText = [
+        'position: fixed', 'top: 8px', 'left: 50%', 'transform: translateX(-50%)',
+        'z-index: 99999', 'background: rgba(30,32,45,0.92)', 'color: #fff',
+        'padding: 4px 14px', 'border-radius: 20px', 'font-size: 12px',
+        'font-family: inherit', 'display: flex', 'align-items: center', 'gap: 6px',
+        'box-shadow: 0 2px 10px rgba(0,0,0,0.35)', 'pointer-events: none',
+        'transition: background-color 0.3s ease', 'white-space: nowrap'
+    ].join(';');
+    bar.innerHTML = '<i class="fas fa-clock"></i> <span id="sessionTimerText">--:--</span>';
+    document.body.appendChild(bar);
+}
+
+function updateSessionTimerDisplay() {
+    const textEl = document.getElementById('sessionTimerText');
+    const barEl = document.getElementById('sessionTimerBar');
+    if (!textEl || !barEl || sessionRemainingSeconds === null) return;
+
+    const minutes = Math.floor(sessionRemainingSeconds / 60);
+    const seconds = sessionRemainingSeconds % 60;
+    textEl.textContent = `Sessão expira em ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+    if (sessionRemainingSeconds <= 30) {
+        barEl.style.background = 'rgba(204,45,45,0.95)';
+    } else if (sessionRemainingSeconds <= 120) {
+        barEl.style.background = 'rgba(212,140,20,0.95)';
+    } else {
+        barEl.style.background = 'rgba(30,32,45,0.92)';
+    }
+}
+
+async function initSessionTimer() {
+    if (!isAuthenticated()) return;
+
+    await fetchSessionTimeoutConfig();
+    sessionRemainingSeconds = sessionTimeoutMinutes * 60;
+    renderSessionTimerBar();
+    updateSessionTimerDisplay();
+
+    if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+    sessionTimerInterval = setInterval(function () {
+        if (sessionRemainingSeconds === null) return;
+        sessionRemainingSeconds--;
+        if (sessionRemainingSeconds <= 0) {
+            clearInterval(sessionTimerInterval);
+            showSessionExpiredModal();
+            return;
+        }
+        updateSessionTimerDisplay();
+    }, 1000);
+
+    // Revalida periodicamente a configuração (reflete mudança feita por um admin)
+    if (sessionConfigInterval) clearInterval(sessionConfigInterval);
+    sessionConfigInterval = setInterval(fetchSessionTimeoutConfig, 5 * 60 * 1000);
+}
+
 // Verifica autenticação em páginas protegidas
 document.addEventListener('DOMContentLoaded', function() {
     // Não verifica autenticação na página de login
@@ -347,13 +495,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return;
     }
-    
+
     // Verifica autenticação em todas as outras páginas
     if (!isAuthenticated()) {
         window.location.href = 'index.html';
         return;
     }
-    
+
     // Configura o botão de logout
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
@@ -362,4 +510,7 @@ document.addEventListener('DOMContentLoaded', function() {
             logout();
         });
     }
+
+    // Inicia o contador de tempo até a desconexão por inatividade
+    initSessionTimer();
 });

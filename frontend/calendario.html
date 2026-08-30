@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Maneiro - Calendário</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/modulos.css">
+    <link rel="stylesheet" href="css/submenu.css">
+    <link rel="stylesheet" href="css/permissions.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/theme-dark.css">
+    <link rel="stylesheet" href="css/theme-light.css">
+    <style>
+        .calendario-container {
+            padding: 20px;
+        }
+
+        .config-panel {
+            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(20px);
+        }
+
+        .config-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+        }
+
+        .config-header h2 {
+            color: var(--accent-primary, #64ffda);
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 26px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.toggle-slider {
+            background-color: #27ae60;
+        }
+
+        input:checked+.toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        .config-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .config-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .config-group label {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-secondary, #a8b2d1);
+        }
+
+        .config-group input[type="number"] {
+            padding: 10px 12px;
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            border-radius: 4px;
+            font-size: 14px;
+            width: 120px;
+            background: var(--input-bg, #fff);
+            color: var(--text-primary, #333);
+        }
+
+        .btn-action {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-success {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #229954;
+        }
+
+        .btn-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #d68910;
+        }
+
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .admin-panel {
+            background: rgba(100, 255, 218, 0.05);
+            border: 1px dashed var(--accent-primary, #64ffda);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .admin-panel h3 {
+            color: var(--accent-primary, #64ffda);
+            margin: 0 0 15px 0;
+            font-size: 16px;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border-color, rgba(100, 255, 218, 0.3));
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent-primary, #64ffda);
+            background: rgba(100, 255, 218, 0.05);
+        }
+
+        .upload-area i {
+            font-size: 48px;
+            color: var(--accent-primary, #64ffda);
+            margin-bottom: 10px;
+        }
+
+        .upload-area p {
+            color: var(--text-secondary, #a8b2d1);
+            margin: 0;
+        }
+
+        .tabela-container {
+            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            backdrop-filter: blur(20px);
+        }
+
+        .tabela-container h2 {
+            font-size: 18px;
+            color: var(--accent-primary, #64ffda);
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--accent-primary, #64ffda);
+            padding-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table thead {
+            background-color: rgba(100, 255, 218, 0.1);
+        }
+
+        table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--accent-primary, #64ffda);
+            border-bottom: 2px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            font-size: 14px;
+            color: var(--text-secondary, #a8b2d1);
+        }
+
+        table tbody tr:hover {
+            background-color: rgba(100, 255, 218, 0.05);
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: rgba(39, 174, 96, 0.2);
+            color: #27ae60;
+        }
+
+        .badge-danger {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+
+        .year-nav {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .year-nav button {
+            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            color: var(--accent-primary, #64ffda);
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .year-nav button:hover {
+            background: rgba(100, 255, 218, 0.1);
+        }
+
+        .year-nav span {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary, #e6f1ff);
+        }
+
+        .mensagem-vazia {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted, #8892b0);
+        }
+
+        .mensagem-vazia i {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted, #8892b0);
+        }
+
+        .loading i {
+            font-size: 32px;
+            color: var(--accent-primary, #64ffda);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .status-info {
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .status-info p {
+            margin: 5px 0;
+            color: var(--text-secondary, #a8b2d1);
+            font-size: 13px;
+        }
+
+        .status-info strong {
+            color: var(--accent-primary, #64ffda);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Estilo inicial para ocultar o conteúdo até verificar permissões -->
+    <style>
+        .app-container {
+            display: none;
+        }
+
+        #permission-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: #f8f9fa;
+            z-index: 9999;
+        }
+
+        #permission-loading i {
+            font-size: 48px;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+
+        #permission-loading p {
+            color: #7f8c8d;
+            font-size: 18px;
+        }
+    </style>
+
+    <!-- Tela de carregamento enquanto verifica permissões -->
+    <div id="permission-loading">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Verificando permissões...</p>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar / Menu Lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="img/icon.png" alt="ERP Maneiro" class="logo-img">
+                <button id="toggleSidebar" class="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="userName">Carregando...</h3>
+                    <p id="userRole">Carregando...</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li>
+                        <a href="homepage.html"><i class="fas fa-home"></i> Home</a>
+                    </li>
+                    <li>
+                        <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <div class="calendario-container">
+                <h1><i class="fas fa-calendar-alt"></i> Calendário de Datas Comemorativas</h1>
+
+                <!-- Painel de Configuração -->
+                <div class="config-panel">
+                    <div class="config-header">
+                        <h2><i class="fas fa-bell"></i> Configuração de Notificações</h2>
+                        <div class="toggle-container" id="toggleNotificacaoContainer">
+                            <span style="color: var(--text-secondary, #a8b2d1);">Notificar Datas Comemorativas</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="notificaAtivo">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="configFields" class="hidden">
+                        <div class="config-row">
+                            <div class="config-group">
+                                <label for="totalNotificacoes">Total de Notificações</label>
+                                <input type="number" id="totalNotificacoes" min="1" max="10" value="3"
+                                    placeholder="Ex: 3">
+                            </div>
+                            <div class="config-group">
+                                <label for="diasAntes">Dias Antes da Data</label>
+                                <input type="number" id="diasAntes" min="1" max="90" value="30" placeholder="Ex: 30">
+                            </div>
+                            <div class="config-group" style="align-self: flex-end;">
+                                <button class="btn-action btn-success" onclick="salvarConfig()">
+                                    <i class="fas fa-save"></i> Salvar Configuração
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="status-info" id="statusInfo">
+                            <p><i class="fas fa-info-circle"></i> <strong>Como funciona:</strong></p>
+                            <p>Se configurar 3 notificações e 30 dias antes, o sistema irá dividir: 30 ÷ 3 = 10 dias</p>
+                            <p>Notificações serão enviadas: 30 dias antes, 20 dias antes e 10 dias antes da data.</p>
+                            <p id="ultimaExecucao"></p>
+                        </div>
+                    </div>
+
+                    <!-- Painel Admin -->
+                    <div id="adminPanel" class="admin-panel hidden">
+                        <h3><i class="fas fa-user-shield"></i> Área do Administrador</h3>
+
+                        <div class="config-row">
+                            <div class="upload-area" id="uploadArea"
+                                onclick="document.getElementById('csvFile').click()">
+                                <i class="fas fa-file-csv"></i>
+                                <p>Clique para importar CSV</p>
+                                <p style="font-size: 12px; margin-top: 5px;">Formato: data (DD/MM/AAAA), descrição,
+                                    notifica (sim/não)</p>
+                                <input type="file" id="csvFile" accept=".csv" style="display: none;"
+                                    onchange="importarCSV(this)">
+                            </div>
+                        </div>
+
+                        <div class="config-row">
+                            <button class="btn-action btn-warning" onclick="executarAgora()">
+                                <i class="fas fa-play"></i> Executar Verificação Agora
+                            </button>
+                            <button class="btn-action btn-primary" onclick="abrirModalNovo()">
+                                <i class="fas fa-plus"></i> Adicionar Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navegação por Ano -->
+                <div class="year-nav">
+                    <button onclick="mudarAno(-1)"><i class="fas fa-chevron-left"></i></button>
+                    <span id="anoAtual">2026</span>
+                    <button onclick="mudarAno(1)"><i class="fas fa-chevron-right"></i></button>
+                </div>
+
+                <!-- Loading -->
+                <div class="loading" id="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Carregando datas...</p>
+                </div>
+
+                <!-- Tabela de Datas -->
+                <div class="tabela-container">
+                    <h2><i class="fas fa-list"></i> Datas Cadastradas</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Descrição</th>
+                                <th>Notificar</th>
+                                <th id="thAcoes" class="hidden">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaDatas">
+                            <tr>
+                                <td colspan="4" class="mensagem-vazia">
+                                    <i class="fas fa-calendar-times"></i>
+                                    <p>Nenhuma data cadastrada para este ano</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Adicionar/Editar Data -->
+    <div id="modalData" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 id="modalDataTitulo"><i class="fas fa-calendar-plus"></i> Adicionar Data</h2>
+                <button class="close-modal" onclick="fecharModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="dataId">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="dataEvento"
+                        style="display: block; margin-bottom: 5px; font-weight: 600; color: var(--text-secondary, #666);">Data</label>
+                    <input type="date" id="dataEvento"
+                        style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; background: var(--input-bg, #fff); color: var(--text-primary, #333);">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="descricaoEvento"
+                        style="display: block; margin-bottom: 5px; font-weight: 600; color: var(--text-secondary, #666);">Descrição</label>
+                    <input type="text" id="descricaoEvento" placeholder="Ex: Dia das Mães"
+                        style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; background: var(--input-bg, #fff); color: var(--text-primary, #333);">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="notificaEvento" checked>
+                        <span style="color: var(--text-secondary, #a8b2d1);">Enviar notificação para esta data</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer"
+                style="display: flex; justify-content: flex-end; gap: 10px; padding: 15px; border-top: 1px solid var(--border-color);">
+                <button class="btn-action btn-danger" onclick="fecharModal()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button class="btn-action btn-success" onclick="salvarData()">
+                    <i class="fas fa-save"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/permissions.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/sidebar-template.js"></script>
+
+    <script src="js/theme-switcher.js"></script>
+    <script src="js/calendario.js"></script>
+</body>
+
+</html>

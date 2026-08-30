@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Maneiro - Depósitos</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/permissions.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/produtos.css">
+    <link rel="stylesheet" href="css/modulos.css">
+    <link rel="stylesheet" href="css/submenu.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/theme-dark.css">
+    <link rel="stylesheet" href="css/theme-light.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Menu Lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="img/icon.png" alt="ERP Maneiro" class="logo-img">
+                <button id="toggleSidebar" class="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="userName">Carregando...</h3>
+                    <p id="userRole">Carregando...</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav"></nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <div class="content">
+                <div class="page-header">
+                    <h1>Gerenciamento de Depósitos</h1>
+                    <p>Cadastre, edite e gerencie os depósitos usados para localizar o estoque</p>
+                </div>
+
+                <!-- Ações de Depósitos -->
+                <div class="actions-bar">
+                    <div class="actions-left">
+                        <button class="btn-primary" id="btnNovoDeposito">
+                            <i class="fas fa-plus"></i> Novo Depósito
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabela de Depósitos -->
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Descrição</th>
+                                <th class="text-center">Padrão</th>
+                                <th class="text-center">Produtos</th>
+                                <th class="text-center">Status</th>
+                                <th class="actions-column">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="depositosTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center">Carregando depósitos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de Novo/Editar Depósito -->
+    <div class="modal" id="depositoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Novo Depósito</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="depositoForm">
+                    <div class="form-group">
+                        <label for="nome">Nome</label>
+                        <input type="text" id="nome" name="nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="descricao">Descrição</label>
+                        <textarea id="descricao" name="descricao" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="ativo" name="ativo" checked>
+                            <span class="checkmark"></span>
+                            Depósito Ativo
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnCancelar">Cancelar</button>
+                <button class="btn-primary" id="btnSalvar">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/sidebar-template.js"></script>
+    <script src="js/permissions.js"></script>
+    <script src="js/setupModals.js"></script>
+    <script src="js/depositos.js"></script>
+    <script src="js/internal-animation.js"></script>
+    <script src="js/theme-switcher.js"></script>
+</body>
+
+</html>

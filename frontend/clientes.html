@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,7 +24,7 @@
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             max-width: 100%;
         }
 
@@ -81,12 +82,12 @@
             background: white;
         }
 
-        .filter-checkbox:checked + .checkbox-label .checkbox-custom {
+        .filter-checkbox:checked+.checkbox-label .checkbox-custom {
             background: #007bff;
             border-color: #007bff;
         }
 
-        .filter-checkbox:checked + .checkbox-label .checkbox-custom::after {
+        .filter-checkbox:checked+.checkbox-label .checkbox-custom::after {
             content: '✓';
             color: white;
             font-size: 12px;
@@ -131,7 +132,7 @@
         .filter-input:focus {
             outline: none;
             border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
         }
 
         .search-btn {
@@ -161,7 +162,7 @@
         .filter-select:focus {
             outline: none;
             border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
         }
 
         .btn-clear-filters {
@@ -196,7 +197,8 @@
                 margin-right: 0;
             }
 
-            .filter-input, .filter-select {
+            .filter-input,
+            .filter-select {
                 width: 100%;
                 min-width: unset;
             }
@@ -208,6 +210,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="app-container">
         <!-- Sidebar / Menu Lateral -->
@@ -236,7 +239,7 @@
                         <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     </li>
                 </ul>
-                
+
                 <!-- Menu Principal -->
                 <ul>
                     <li>
@@ -285,6 +288,9 @@
                         <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
                     </li>
                     <li>
+                        <a href="softwares.html"><i class="fas fa-download"></i> Softwares</a>
+                    </li>
+                    <li>
                         <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
                     </li>
                     <li class="logout">
@@ -310,41 +316,43 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Filtros -->
                 <div class="filter-container">
                     <h4 style="margin: 0 0 10px 0; color: #495057; font-size: 16px;">Filtros de Clientes</h4>
-                    <p style="margin: 0 0 15px 0; color: #6c757d; font-size: 14px;">Configure os filtros para visualizar os clientes desejados</p>
-                    
+                    <p style="margin: 0 0 15px 0; color: #6c757d; font-size: 14px;">Configure os filtros para visualizar
+                        os clientes desejados</p>
+
                     <div class="filter-row controls-row">
                         <div class="filter-control">
                             <span class="control-label">Pesquisar:</span>
                             <div class="search-input-group">
-                                <input type="text" id="searchCliente" placeholder="Nome ou email do cliente..." class="filter-input">
+                                <input type="text" id="searchCliente" placeholder="Nome ou email do cliente..."
+                                    class="filter-input">
                                 <button onclick="filtrarClientes()" class="search-btn">
                                     <i class="fas fa-search"></i>
                                 </button>
                             </div>
                         </div>
-                        
+
                         <div class="filter-control">
                             <span class="control-label">Tipo:</span>
-                            <select id="tipoCliente" onchange="filtrarClientes()" class="filter-select">
+                            <select id="tipoCliente" class="filter-select">
                                 <option value="">Todos</option>
                                 <option value="fisica">Pessoa Física</option>
                                 <option value="juridica">Pessoa Jurídica</option>
                             </select>
                         </div>
-                        
+
                         <div class="filter-control">
                             <span class="control-label">Status:</span>
-                            <select id="statusCliente" onchange="filtrarClientes()" class="filter-select">
+                            <select id="statusCliente" class="filter-select">
                                 <option value="">Todos</option>
                                 <option value="ativo">Ativo</option>
                                 <option value="inativo">Inativo</option>
                             </select>
                         </div>
-                        
+
                         <button onclick="limparFiltros()" class="btn-clear-filters">
                             Limpar Filtros
                         </button>
@@ -387,95 +395,114 @@
 
     <!-- Modal de Novo/Editar Cliente -->
     <div class="modal" id="clienteModal">
-        <div class="modal-content">
+        <div class="modal-content modal-lg modal-vendas">
             <div class="modal-header">
                 <h2 id="modalTitle">Novo Cliente</h2>
                 <button class="close-modal">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="clienteForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="nome">Nome/Razão Social</label>
-                            <input type="text" id="nome" name="nome" required>
+                    <!-- Sistema de Abas -->
+                    <div class="modal-tabs">
+                        <button type="button" class="modal-tab active" data-tab="tab-dados-cliente">
+                            <i class="fas fa-user"></i> Dados
+                        </button>
+                        <button type="button" class="modal-tab" data-tab="tab-endereco-cliente">
+                            <i class="fas fa-map-marker-alt"></i> Endereço
+                        </button>
+                    </div>
+
+                    <!-- Aba 1: Dados do Cliente -->
+                    <div class="modal-tab-content active" id="tab-dados-cliente">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nome">Nome/Razão Social</label>
+                                <input type="text" id="nome" name="nome" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="tipo">Tipo</label>
+                                <select id="tipo" name="tipo" required>
+                                    <option value="pessoa_fisica">Pessoa Física</option>
+                                    <option value="pessoa_juridica">Pessoa Jurídica</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="tipo">Tipo</label>
-                            <select id="tipo" name="tipo" required>
-                                <option value="pessoa_fisica">Pessoa Física</option>
-                                <option value="pessoa_juridica">Pessoa Jurídica</option>
-                            </select>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cpf_cnpj">CPF/CNPJ</label>
+                                <input type="text" id="cpf_cnpj" name="cpf_cnpj" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="telefone">Telefone</label>
+                                <input type="text" id="telefone" name="telefone">
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="ativo" name="ativo" checked>
+                                    <span class="checkmark"></span>
+                                    Cliente Ativo
+                                </label>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="cpf_cnpj">CPF/CNPJ</label>
-                            <input type="text" id="cpf_cnpj" name="cpf_cnpj" required>
+
+                    <!-- Aba 2: Endereço -->
+                    <div class="modal-tab-content" id="tab-endereco-cliente">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cep">CEP</label>
+                                <input type="text" id="cep" name="cep">
+                            </div>
+                            <div class="form-group">
+                                <label for="endereco">Endereço</label>
+                                <input type="text" id="endereco" name="endereco">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="email">Email</label>
-                            <input type="email" id="email" name="email">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cidade">Cidade</label>
+                                <input type="text" id="cidade" name="cidade">
+                            </div>
+                            <div class="form-group">
+                                <label for="estado">Estado</label>
+                                <select id="estado" name="estado">
+                                    <option value="">Selecione...</option>
+                                    <option value="AC">AC</option>
+                                    <option value="AL">AL</option>
+                                    <option value="AP">AP</option>
+                                    <option value="AM">AM</option>
+                                    <option value="BA">BA</option>
+                                    <option value="CE">CE</option>
+                                    <option value="DF">DF</option>
+                                    <option value="ES">ES</option>
+                                    <option value="GO">GO</option>
+                                    <option value="MA">MA</option>
+                                    <option value="MT">MT</option>
+                                    <option value="MS">MS</option>
+                                    <option value="MG">MG</option>
+                                    <option value="PA">PA</option>
+                                    <option value="PB">PB</option>
+                                    <option value="PR">PR</option>
+                                    <option value="PE">PE</option>
+                                    <option value="PI">PI</option>
+                                    <option value="RJ">RJ</option>
+                                    <option value="RN">RN</option>
+                                    <option value="RS">RS</option>
+                                    <option value="RO">RO</option>
+                                    <option value="RR">RR</option>
+                                    <option value="SC">SC</option>
+                                    <option value="SP">SP</option>
+                                    <option value="SE">SE</option>
+                                    <option value="TO">TO</option>
+                                </select>
+                            </div>
                         </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="telefone">Telefone</label>
-                            <input type="text" id="telefone" name="telefone">
-                        </div>
-                        <div class="form-group">
-                            <label for="cep">CEP</label>
-                            <input type="text" id="cep" name="cep">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="endereco">Endereço</label>
-                        <input type="text" id="endereco" name="endereco">
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="cidade">Cidade</label>
-                            <input type="text" id="cidade" name="cidade">
-                        </div>
-                        <div class="form-group">
-                            <label for="estado">Estado</label>
-                            <select id="estado" name="estado">
-                                <option value="">Selecione...</option>
-                                <option value="AC">AC</option>
-                                <option value="AL">AL</option>
-                                <option value="AP">AP</option>
-                                <option value="AM">AM</option>
-                                <option value="BA">BA</option>
-                                <option value="CE">CE</option>
-                                <option value="DF">DF</option>
-                                <option value="ES">ES</option>
-                                <option value="GO">GO</option>
-                                <option value="MA">MA</option>
-                                <option value="MT">MT</option>
-                                <option value="MS">MS</option>
-                                <option value="MG">MG</option>
-                                <option value="PA">PA</option>
-                                <option value="PB">PB</option>
-                                <option value="PR">PR</option>
-                                <option value="PE">PE</option>
-                                <option value="PI">PI</option>
-                                <option value="RJ">RJ</option>
-                                <option value="RN">RN</option>
-                                <option value="RS">RS</option>
-                                <option value="RO">RO</option>
-                                <option value="RR">RR</option>
-                                <option value="SC">SC</option>
-                                <option value="SP">SP</option>
-                                <option value="SE">SE</option>
-                                <option value="TO">TO</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="ativo" name="ativo" checked>
-                            <span class="checkmark"></span>
-                            Cliente Ativo
-                        </label>
                     </div>
                 </form>
             </div>
@@ -498,4 +525,5 @@
     <script src="js/internal-animation.js"></script>
     <script src="js/theme-switcher.js"></script>
 </body>
+
 </html>

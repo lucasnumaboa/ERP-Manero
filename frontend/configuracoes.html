@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,12 +17,14 @@
         .webhook-form-group {
             margin-bottom: 20px;
         }
-        .webhook-form-group > label {
+
+        .webhook-form-group>label {
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
             color: var(--text-secondary, #a8b2d1);
         }
+
         .webhook-form-group input[type="url"] {
             width: 100%;
             padding: 10px 12px;
@@ -31,13 +34,14 @@
             background: rgba(10, 25, 47, 0.8);
             color: var(--text-primary, #e6f1ff);
         }
+
         .webhook-form-group .help-text {
             display: block;
             margin-top: 5px;
             font-size: 12px;
             color: var(--text-muted, #8892b0);
         }
-        
+
         /* Switch Toggle para Webhook */
         .webhook-toggle-wrapper {
             display: flex;
@@ -45,6 +49,7 @@
             gap: 12px;
             margin-top: 5px;
         }
+
         .switch {
             position: relative;
             display: inline-block;
@@ -52,11 +57,13 @@
             height: 26px;
             flex-shrink: 0;
         }
+
         .switch input {
             opacity: 0;
             width: 0;
             height: 0;
         }
+
         .slider {
             position: absolute;
             cursor: pointer;
@@ -67,6 +74,7 @@
             background-color: rgba(100, 255, 218, 0.2);
             transition: .4s;
         }
+
         .slider:before {
             position: absolute;
             content: "";
@@ -77,30 +85,38 @@
             background-color: white;
             transition: .4s;
         }
-        input:checked + .slider {
+
+        input:checked+.slider {
             background-color: #27ae60;
         }
-        input:checked + .slider:before {
+
+        input:checked+.slider:before {
             transform: translateX(24px);
         }
+
         .slider.round {
             border-radius: 26px;
         }
+
         .slider.round:before {
             border-radius: 50%;
         }
+
         .webhook-status-text {
             font-weight: bold;
             font-size: 14px;
         }
+
         .webhook-status-text.ativo {
             color: #27ae60;
         }
+
         .webhook-status-text.inativo {
             color: #e74c3c;
         }
     </style>
 </head>
+
 <body>
     <div class="app-container">
         <!-- Sidebar / Menu Lateral -->
@@ -129,7 +145,7 @@
                         <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     </li>
                 </ul>
-                
+
                 <!-- Menu Principal -->
                 <ul>
                     <li>
@@ -176,6 +192,9 @@
                     </li>
                     <li>
                         <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
+                    </li>
+                    <li>
+                        <a href="softwares.html"><i class="fas fa-download"></i> Softwares</a>
                     </li>
                     <li class="active">
                         <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
@@ -241,7 +260,8 @@
                         <form id="passwordForm">
                             <div class="form-group">
                                 <label for="senha_atual">Senha Atual</label>
-                                <input type="password" id="senha_atual" name="senha_atual" placeholder="Sua senha atual">
+                                <input type="password" id="senha_atual" name="senha_atual"
+                                    placeholder="Sua senha atual">
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
@@ -250,7 +270,8 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="confirmar_senha">Confirmar Senha</label>
-                                    <input type="password" id="confirmar_senha" name="confirmar_senha" placeholder="Confirme a nova senha">
+                                    <input type="password" id="confirmar_senha" name="confirmar_senha"
+                                        placeholder="Confirme a nova senha">
                                 </div>
                             </div>
                             <div class="form-group">
@@ -316,20 +337,22 @@
                         <h1><i class="fas fa-database"></i> Configurações do Sistema</h1>
                         <p class="configurations-subtitle">Gerencie as configurações do banco de dados do sistema</p>
                     </div>
-                    
+
                     <!-- Seção de Webhook -->
                     <div class="settings-card" style="margin-bottom: 20px;">
                         <div class="card-header">
                             <h2><i class="fas fa-bell"></i> Notificações de Estoque (Webhook)</h2>
-                            <p class="card-description">Configure o webhook para notificar vendedores sobre movimentações de estoque</p>
+                            <p class="card-description">Configure o webhook para notificar vendedores sobre
+                                movimentações de estoque</p>
                         </div>
                         <div class="configurations-content">
                             <form id="webhookForm">
                                 <div class="webhook-form-group">
                                     <label for="webhook_url"><i class="fas fa-link"></i> URL do Webhook</label>
-                                    <input type="url" id="webhook_url" name="webhook_url" 
-                                           placeholder="https://api.exemplo.com/webhook">
-                                    <span class="help-text">URL que receberá as notificações de movimentação de estoque</span>
+                                    <input type="url" id="webhook_url" name="webhook_url"
+                                        placeholder="https://api.exemplo.com/webhook">
+                                    <span class="help-text">URL que receberá as notificações de movimentação de
+                                        estoque</span>
                                 </div>
                                 <div class="webhook-form-group">
                                     <label><i class="fas fa-toggle-on"></i> Status do Webhook</label>
@@ -338,38 +361,194 @@
                                             <input type="checkbox" id="webhook_ativo" name="webhook_ativo">
                                             <span class="slider round"></span>
                                         </label>
-                                        <span id="webhook_status_label" class="webhook-status-text inativo">Desativado</span>
+                                        <span id="webhook_status_label"
+                                            class="webhook-status-text inativo">Desativado</span>
                                     </div>
-                                    <span class="help-text">Ativa/desativa o envio de notificações para vendedores</span>
+                                    <span class="help-text">Ativa/desativa o envio de notificações para
+                                        vendedores</span>
                                 </div>
                                 <div class="webhook-form-group">
                                     <button type="submit" class="btn-primary">
                                         <i class="fas fa-save"></i> Salvar Configurações de Webhook
                                     </button>
-                                    <button type="button" class="btn-outline" id="btnTestarWebhook" style="margin-left: 10px;">
+                                    <button type="button" class="btn-outline" id="btnTestarWebhook"
+                                        style="margin-left: 10px;">
                                         <i class="fas fa-paper-plane"></i> Testar Webhook
                                     </button>
                                 </div>
                             </form>
-                            <div class="webhook-info" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #3498db;">
-                                <h4 style="margin: 0 0 10px 0; color: #2c3e50;"><i class="fas fa-info-circle"></i> Como funciona</h4>
+                            <div class="webhook-info"
+                                style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #3498db;">
+                                <h4 style="margin: 0 0 10px 0; color: #2c3e50;"><i class="fas fa-info-circle"></i> Como
+                                    funciona</h4>
                                 <p style="margin: 0; font-size: 14px; color: #666;">
-                                    Quando ativado, o sistema enviará notificações via webhook para todos os vendedores ativos que possuem telefone cadastrado.
+                                    Quando ativado, o sistema enviará notificações via webhook para todos os vendedores
+                                    ativos que possuem telefone cadastrado.
                                     As notificações são enviadas nos seguintes eventos:
                                 </p>
                                 <ul style="margin: 10px 0 0 20px; font-size: 14px; color: #666;">
                                     <li><strong>Entrada de produtos:</strong> Quando uma compra é recebida</li>
                                     <li><strong>Saída de produtos:</strong> Quando uma venda é criada</li>
-                                    <li><strong>Movimentação manual:</strong> Quando há entrada/saída manual no estoque</li>
+                                    <li><strong>Movimentação manual:</strong> Quando há entrada/saída manual no estoque
+                                    </li>
                                 </ul>
                             </div>
                         </div>
                     </div>
-                    
+
+                    <!-- Seção de Inteligência Artificial -->
+                    <div class="settings-card" style="margin-bottom: 20px;">
+                        <div class="card-header">
+                            <h2><i class="fas fa-robot"></i> Inteligência Artificial</h2>
+                            <p class="card-description">Configure o provider de IA para geração de relatórios,
+                                descrições e análises de preço</p>
+                        </div>
+                        <div class="configurations-content">
+                            <form id="iaProviderForm">
+                                <div class="webhook-form-group">
+                                    <label for="ia_provider"><i class="fas fa-server"></i> Provider de IA</label>
+                                    <select id="ia_provider" name="ia_provider"
+                                        style="width: 100%; padding: 10px 12px; border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 4px; font-size: 14px; background: rgba(10, 25, 47, 0.8); color: var(--text-primary, #e6f1ff);">
+                                        <option value="openrouter">OpenRouter</option>
+                                        <option value="ollama">Ollama</option>
+                                        <option value="lmstudio">LM Studio</option>
+                                    </select>
+                                    <span class="help-text">Selecione qual serviço de IA será utilizado pelo
+                                        sistema</span>
+                                </div>
+
+                                <!-- Campos OpenRouter -->
+                                <div id="openrouter_fields">
+                                    <div class="webhook-form-group">
+                                        <label for="ia_apikey_openrouter"><i class="fas fa-key"></i> API Key do
+                                            OpenRouter</label>
+                                        <input type="password" id="ia_apikey_openrouter" name="apikey_openrouter"
+                                            placeholder="sk-or-v1-..."
+                                            style="width: 100%; padding: 10px 12px; border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 4px; font-size: 14px; background: rgba(10, 25, 47, 0.8); color: var(--text-primary, #e6f1ff);">
+                                        <span class="help-text">Chave de API do OpenRouter para acessar os modelos de
+                                            IA</span>
+                                    </div>
+                                    <div class="webhook-form-group">
+                                        <label for="ia_model_openrouter"><i class="fas fa-brain"></i> Modelo
+                                            OpenRouter</label>
+                                        <input type="text" id="ia_model_openrouter" name="model_openrouter"
+                                            placeholder="openai/gpt-oss-20b:free"
+                                            style="width: 100%; padding: 10px 12px; border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 4px; font-size: 14px; background: rgba(10, 25, 47, 0.8); color: var(--text-primary, #e6f1ff);">
+                                        <span class="help-text">Nome do modelo de IA a ser utilizado no
+                                            OpenRouter</span>
+                                    </div>
+                                </div>
+
+                                <!-- Campos Ollama -->
+                                <div id="ollama_fields" style="display: none;">
+                                    <div class="webhook-form-group">
+                                        <label for="ia_ollama_url"><i class="fas fa-link"></i> URL do Ollama</label>
+                                        <input type="url" id="ia_ollama_url" name="ollama_url"
+                                            placeholder="http://localhost:11434"
+                                            style="width: 100%; padding: 10px 12px; border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 4px; font-size: 14px; background: rgba(10, 25, 47, 0.8); color: var(--text-primary, #e6f1ff);">
+                                        <span class="help-text">URL base do servidor Ollama (padrão:
+                                            http://localhost:11434)</span>
+                                    </div>
+                                    <div class="webhook-form-group">
+                                        <label for="ia_ollama_model"><i class="fas fa-brain"></i> Modelo Ollama</label>
+                                        <input type="text" id="ia_ollama_model" name="ollama_model" placeholder="llama3"
+                                            style="width: 100%; padding: 10px 12px; border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 4px; font-size: 14px; background: rgba(10, 25, 47, 0.8); color: var(--text-primary, #e6f1ff);">
+                                        <span class="help-text">Nome do modelo instalado no Ollama (ex: llama3, mistral,
+                                            codellama)</span>
+                                    </div>
+                                    <div class="webhook-form-group">
+                                        <label for="ia_ollama_apikey"><i class="fas fa-key"></i> API Key do Ollama
+                                            (opcional)</label>
+                                        <input type="text" id="ia_ollama_apikey" name="ollama_apikey" autocomplete="off"
+                                            placeholder="Deixe vazio se não necessário"
+                                            style="width: 100%; padding: 10px 12px; border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 4px; font-size: 14px; background: rgba(10, 25, 47, 0.8); color: var(--text-primary, #e6f1ff);">
+                                        <span class="help-text">Chave de API do Ollama (se configurada no
+                                            servidor)</span>
+                                    </div>
+                                    <div class="webhook-form-group">
+                                        <label for="ia_ollama_think"><i class="fas fa-brain"></i> Reasoning (Nível de
+                                            Raciocínio)</label>
+                                        <select id="ia_ollama_think" name="ollama_think"
+                                            style="width: 100%; padding: 10px 12px; border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 4px; font-size: 14px; background: rgba(10, 25, 47, 0.8); color: var(--text-primary, #e6f1ff);">
+                                            <option value="on">on &mdash; ativado (modelo decide)</option>
+                                            <option value="high">high &mdash; raciocínio intenso</option>
+                                            <option value="medium">medium &mdash; raciocínio moderado</option>
+                                            <option value="low">low &mdash; raciocínio leve</option>
+                                            <option value="off">off &mdash; sem raciocínio</option>
+                                        </select>
+                                        <span class="help-text">Controla o nível de raciocínio interno do modelo. "off"
+                                            desabilita o thinking (ex: DeepSeek-R1, magistral).</span>
+                                    </div>
+                                </div>
+
+                                <!-- Campos LM Studio -->
+                                <div id="lmstudio_fields" style="display: none;">
+                                    <div class="webhook-form-group">
+                                        <label for="ia_lmstudio_url"><i class="fas fa-link"></i> URL do LM
+                                            Studio</label>
+                                        <input type="url" id="ia_lmstudio_url" name="lmstudio_url"
+                                            placeholder="http://localhost:1234"
+                                            style="width: 100%; padding: 10px 12px; border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 4px; font-size: 14px; background: rgba(10, 25, 47, 0.8); color: var(--text-primary, #e6f1ff);">
+                                        <span class="help-text">URL base do servidor LM Studio (padrão:
+                                            http://localhost:1234)</span>
+                                    </div>
+                                    <div class="webhook-form-group">
+                                        <label for="ia_lmstudio_model"><i class="fas fa-brain"></i> Modelo LM
+                                            Studio</label>
+                                        <input type="text" id="ia_lmstudio_model" name="lmstudio_model"
+                                            placeholder="default"
+                                            style="width: 100%; padding: 10px 12px; border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 4px; font-size: 14px; background: rgba(10, 25, 47, 0.8); color: var(--text-primary, #e6f1ff);">
+                                        <span class="help-text">Nome do modelo carregado no LM Studio</span>
+                                    </div>
+                                    <div class="webhook-form-group">
+                                        <label for="ia_lmstudio_apikey"><i class="fas fa-key"></i> API Key do LM Studio
+                                            (opcional)</label>
+                                        <input type="text" id="ia_lmstudio_apikey" name="lmstudio_apikey"
+                                            autocomplete="off" placeholder="Deixe vazio se não necessário"
+                                            style="width: 100%; padding: 10px 12px; border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 4px; font-size: 14px; background: rgba(10, 25, 47, 0.8); color: var(--text-primary, #e6f1ff);">
+                                        <span class="help-text">Chave de API do LM Studio (se configurada no
+                                            servidor)</span>
+                                    </div>
+                                    <div class="webhook-form-group">
+                                        <label for="ia_lmstudio_think"><i class="fas fa-brain"></i> Reasoning (Nível de
+                                            Raciocínio)</label>
+                                        <select id="ia_lmstudio_think" name="lmstudio_think"
+                                            style="width: 100%; padding: 10px 12px; border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 4px; font-size: 14px; background: rgba(10, 25, 47, 0.8); color: var(--text-primary, #e6f1ff);">
+                                            <option value="on">on &mdash; ativado (modelo decide)</option>
+                                            <option value="high">high &mdash; raciocínio intenso</option>
+                                            <option value="medium">medium &mdash; raciocínio moderado</option>
+                                            <option value="low">low &mdash; raciocínio leve</option>
+                                            <option value="off">off &mdash; sem raciocínio</option>
+                                        </select>
+                                        <span class="help-text">Controla o nível de raciocínio interno do modelo. "off"
+                                            desabilita o thinking (ex: magistral, DeepSeek-R1).</span>
+                                    </div>
+                                </div>
+
+                                <div class="webhook-form-group">
+                                    <label for="ia_think_tokens"><i class="fas fa-coins"></i> Budget de Tokens para
+                                        Raciocínio</label>
+                                    <input type="number" id="ia_think_tokens" name="ia_think_tokens" min="0" step="100"
+                                        placeholder="0"
+                                        style="width: 100%; padding: 10px 12px; border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 4px; font-size: 14px; background: rgba(10, 25, 47, 0.8); color: var(--text-primary, #e6f1ff);">
+                                    <span class="help-text">Máximo de tokens usados para raciocínio nas descrições de
+                                        produtos (0 = sem limite). Ex: 500, 1000, 2000.</span>
+                                </div>
+
+                                <div class="webhook-form-group">
+                                    <button type="submit" class="btn-primary">
+                                        <i class="fas fa-save"></i> Salvar Configurações de IA
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
                     <div class="settings-card">
                         <div class="card-header">
                             <h2><i class="fas fa-cogs"></i> Configurações do Banco de Dados</h2>
-                            <p class="card-description">Visualize e edite as configurações armazenadas no banco de dados</p>
+                            <p class="card-description">Visualize e edite as configurações armazenadas no banco de dados
+                            </p>
                         </div>
                         <div id="configuracoes-container" class="configurations-content">
                             <div class="loading-state">
@@ -451,7 +630,7 @@
                             <input type="text" id="grupo_descricao" name="descricao" required>
                         </div>
                     </div>
-                    
+
                     <h3>Permissões</h3>
                     <div class="permissions-container">
                         <div class="permission-module">
@@ -461,7 +640,7 @@
                                 <label><input type="checkbox" name="dashboard_editar"> Editar</label>
                             </div>
                         </div>
-                        
+
                         <div class="permission-module">
                             <h4>Produtos</h4>
                             <div class="permission-options">
@@ -469,7 +648,7 @@
                                 <label><input type="checkbox" name="produtos_editar"> Editar</label>
                             </div>
                         </div>
-                        
+
                         <div class="permission-module">
                             <h4>Clientes</h4>
                             <div class="permission-options">
@@ -477,7 +656,7 @@
                                 <label><input type="checkbox" name="clientes_editar"> Editar</label>
                             </div>
                         </div>
-                        
+
                         <div class="permission-module">
                             <h4>Vendas</h4>
                             <div class="permission-options">
@@ -485,7 +664,7 @@
                                 <label><input type="checkbox" name="vendas_editar"> Editar</label>
                             </div>
                         </div>
-                        
+
                         <div class="permission-module">
                             <h4>Vendedores</h4>
                             <div class="permission-options">
@@ -493,7 +672,7 @@
                                 <label><input type="checkbox" name="vendedores_editar"> Editar</label>
                             </div>
                         </div>
-                        
+
                         <div class="permission-module">
                             <h4>Compras</h4>
                             <div class="permission-options">
@@ -501,7 +680,7 @@
                                 <label><input type="checkbox" name="compras_editar"> Editar</label>
                             </div>
                         </div>
-                        
+
                         <div class="permission-module">
                             <h4>Fornecedores</h4>
                             <div class="permission-options">
@@ -509,7 +688,7 @@
                                 <label><input type="checkbox" name="fornecedores_editar"> Editar</label>
                             </div>
                         </div>
-                        
+
                         <div class="permission-module">
                             <h4>Estoque</h4>
                             <div class="permission-options">
@@ -517,7 +696,15 @@
                                 <label><input type="checkbox" name="estoque_editar"> Editar</label>
                             </div>
                         </div>
-                        
+
+                        <div class="permission-module">
+                            <h4>Depósitos</h4>
+                            <div class="permission-options">
+                                <label><input type="checkbox" name="depositos_visualizar"> Visualizar</label>
+                                <label><input type="checkbox" name="depositos_editar"> Editar</label>
+                            </div>
+                        </div>
+
                         <div class="permission-module">
                             <h4>Configurações</h4>
                             <div class="permission-options">
@@ -525,7 +712,7 @@
                                 <label><input type="checkbox" name="configuracoes_editar"> Editar</label>
                             </div>
                         </div>
-                        
+
                         <div class="permission-module">
                             <h4>Financeiro</h4>
                             <div class="permission-options">
@@ -533,7 +720,7 @@
                                 <label><input type="checkbox" name="financeiro_editar"> Editar</label>
                             </div>
                         </div>
-                        
+
                         <div class="permission-module">
                             <h4>Metas</h4>
                             <div class="permission-options">
@@ -542,7 +729,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="form-group mt-3">
                         <button type="submit" class="btn-primary">Salvar</button>
                         <button type="button" class="btn-outline close-modal">Cancelar</button>
@@ -563,4 +750,5 @@
     <script src="js/internal-animation.js"></script>
     <script src="js/theme-switcher.js"></script>
 </body>
+
 </html>

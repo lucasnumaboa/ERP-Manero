@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Maneiro - Produtos OLX</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/modulos.css">
+    <link rel="stylesheet" href="css/submenu.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/theme-dark.css">
+    <link rel="stylesheet" href="css/theme-light.css">
+    <style>
+        .badge-active {
+            background: #27ae60;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .badge-inactive {
+            background: #e74c3c;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .product-count {
+            background: #3498db;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .flags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.05);
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .flag-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+
+        .flag-checkbox.include {
+            border-color: #27ae60;
+        }
+
+        .flag-checkbox.exclude {
+            border-color: #e74c3c;
+        }
+
+        .badge-include {
+            background: #27ae60;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+
+        .badge-exclude {
+            background: #e74c3c;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+
+        .page-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Menu Lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="img/icon.png" alt="ERP Maneiro" class="logo-img">
+                <button id="toggleSidebar" class="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="userName">Carregando...</h3>
+                    <p id="userRole">Carregando...</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <!-- O sidebar-template.js irá popular este menu dinamicamente -->
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <div class="content">
+                <div class="page-header">
+                    <h1><i class="fas fa-box-open"></i> Produtos OLX</h1>
+                    <p>Configure pesquisas automáticas de produtos na OLX</p>
+                </div>
+
+                <!-- Ações da página -->
+                <div class="page-actions">
+                    <button class="btn-primary" id="btnAddPesquisa">
+                        <i class="fas fa-plus"></i> Adicionar Pesquisa
+                    </button>
+                </div>
+
+                <!-- Lista de Pesquisas -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-list"></i> Pesquisas Cadastradas</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table" id="pesquisasTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Produto</th>
+                                        <th>Preço Máx</th>
+                                        <th>Categoria</th>
+                                        <th>Produtos</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="7" class="text-center">Carregando...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de Pesquisa -->
+    <div class="modal-overlay" id="modalPesquisa">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle"><i class="fas fa-plus"></i> Nova Pesquisa</h3>
+                <button class="modal-close" onclick="fecharModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="pesquisaForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nome_produto">Nome do Produto *</label>
+                            <input type="text" id="nome_produto" name="nome_produto" required
+                                placeholder="Ex: RTX 3060">
+                        </div>
+                        <div class="form-group">
+                            <label for="preco_maximo">Preço Máximo (R$) *</label>
+                            <input type="number" step="0.01" id="preco_maximo" name="preco_maximo" required
+                                placeholder="Ex: 1500.00">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="categoria_id">Categoria</label>
+                            <select id="categoria_id" name="categoria_id">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="subcategoria_id">Subcategoria</label>
+                            <select id="subcategoria_id" name="subcategoria_id" disabled>
+                                <option value="">Selecione uma categoria...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="instrucoes">Instruções</label>
+                        <textarea id="instrucoes" name="instrucoes" rows="2"
+                            placeholder="Instruções especiais para a pesquisa..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Flags de Pesquisa</label>
+                        <div id="flagsContainer" class="flags-container">
+                            <p class="text-muted">Carregando flags...</p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="ativo" name="ativo" checked>
+                            Ativo
+                        </label>
+                    </div>
+                    <div class="form-group" style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button type="button" class="btn-outline" onclick="fecharModal()">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Salvar Pesquisa
+                        </button>
+                    </div>
+                    <input type="hidden" id="pesquisa_id">
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/sidebar-template.js"></script>
+    <script src="js/olx_produtos.js"></script>
+    <script src="js/theme-switcher.js"></script>
+</body>
+
+</html>

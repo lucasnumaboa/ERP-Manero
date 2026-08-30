@@ -36,6 +36,8 @@ class GrupoUsuarioBase(BaseModel):
     fornecedores_editar: bool = False
     estoque_visualizar: bool = False
     estoque_editar: bool = False
+    depositos_visualizar: bool = False
+    depositos_editar: bool = False
     configuracoes_visualizar: bool = False
     configuracoes_editar: bool = False
     financeiro_visualizar: bool = False
@@ -75,18 +77,20 @@ async def create_grupo_usuario(
     
     with get_db_cursor(commit=True) as cursor:
         cursor.execute(
-            """INSERT INTO grupo_usuario 
-               (nome, descricao, dashboard_visualizar, dashboard_editar, produtos_visualizar, produtos_editar, 
-                clientes_visualizar, clientes_editar, vendas_visualizar, vendas_editar, vendedores_visualizar, 
-                vendedores_editar, compras_visualizar, compras_editar, fornecedores_visualizar, fornecedores_editar, 
-                estoque_visualizar, estoque_editar, configuracoes_visualizar, configuracoes_editar, 
+            """INSERT INTO grupo_usuario
+               (nome, descricao, dashboard_visualizar, dashboard_editar, produtos_visualizar, produtos_editar,
+                clientes_visualizar, clientes_editar, vendas_visualizar, vendas_editar, vendedores_visualizar,
+                vendedores_editar, compras_visualizar, compras_editar, fornecedores_visualizar, fornecedores_editar,
+                estoque_visualizar, estoque_editar, depositos_visualizar, depositos_editar,
+                configuracoes_visualizar, configuracoes_editar,
                 financeiro_visualizar, financeiro_editar, metas_visualizar, metas_editar)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-            (grupo.nome, grupo.descricao, grupo.dashboard_visualizar, grupo.dashboard_editar, 
-             grupo.produtos_visualizar, grupo.produtos_editar, grupo.clientes_visualizar, grupo.clientes_editar, 
-             grupo.vendas_visualizar, grupo.vendas_editar, grupo.vendedores_visualizar, grupo.vendedores_editar, 
-             grupo.compras_visualizar, grupo.compras_editar, grupo.fornecedores_visualizar, grupo.fornecedores_editar, 
-             grupo.estoque_visualizar, grupo.estoque_editar, grupo.configuracoes_visualizar, grupo.configuracoes_editar, 
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            (grupo.nome, grupo.descricao, grupo.dashboard_visualizar, grupo.dashboard_editar,
+             grupo.produtos_visualizar, grupo.produtos_editar, grupo.clientes_visualizar, grupo.clientes_editar,
+             grupo.vendas_visualizar, grupo.vendas_editar, grupo.vendedores_visualizar, grupo.vendedores_editar,
+             grupo.compras_visualizar, grupo.compras_editar, grupo.fornecedores_visualizar, grupo.fornecedores_editar,
+             grupo.estoque_visualizar, grupo.estoque_editar, grupo.depositos_visualizar, grupo.depositos_editar,
+             grupo.configuracoes_visualizar, grupo.configuracoes_editar,
              grupo.financeiro_visualizar, grupo.financeiro_editar, grupo.metas_visualizar, grupo.metas_editar)
         )
         
@@ -165,19 +169,21 @@ async def update_grupo_usuario(
         
         # Atualizar o grupo
         cursor.execute(
-            """UPDATE grupo_usuario SET 
-               nome = %s, descricao = %s, dashboard_visualizar = %s, dashboard_editar = %s, 
-               produtos_visualizar = %s, produtos_editar = %s, clientes_visualizar = %s, clientes_editar = %s, 
-               vendas_visualizar = %s, vendas_editar = %s, vendedores_visualizar = %s, vendedores_editar = %s, 
-               compras_visualizar = %s, compras_editar = %s, fornecedores_visualizar = %s, fornecedores_editar = %s, 
-               estoque_visualizar = %s, estoque_editar = %s, configuracoes_visualizar = %s, configuracoes_editar = %s, 
+            """UPDATE grupo_usuario SET
+               nome = %s, descricao = %s, dashboard_visualizar = %s, dashboard_editar = %s,
+               produtos_visualizar = %s, produtos_editar = %s, clientes_visualizar = %s, clientes_editar = %s,
+               vendas_visualizar = %s, vendas_editar = %s, vendedores_visualizar = %s, vendedores_editar = %s,
+               compras_visualizar = %s, compras_editar = %s, fornecedores_visualizar = %s, fornecedores_editar = %s,
+               estoque_visualizar = %s, estoque_editar = %s, depositos_visualizar = %s, depositos_editar = %s,
+               configuracoes_visualizar = %s, configuracoes_editar = %s,
                financeiro_visualizar = %s, financeiro_editar = %s, metas_visualizar = %s, metas_editar = %s
                WHERE id = %s""",
-            (grupo.nome, grupo.descricao, grupo.dashboard_visualizar, grupo.dashboard_editar, 
-             grupo.produtos_visualizar, grupo.produtos_editar, grupo.clientes_visualizar, grupo.clientes_editar, 
-             grupo.vendas_visualizar, grupo.vendas_editar, grupo.vendedores_visualizar, grupo.vendedores_editar, 
-             grupo.compras_visualizar, grupo.compras_editar, grupo.fornecedores_visualizar, grupo.fornecedores_editar, 
-             grupo.estoque_visualizar, grupo.estoque_editar, grupo.configuracoes_visualizar, grupo.configuracoes_editar, 
+            (grupo.nome, grupo.descricao, grupo.dashboard_visualizar, grupo.dashboard_editar,
+             grupo.produtos_visualizar, grupo.produtos_editar, grupo.clientes_visualizar, grupo.clientes_editar,
+             grupo.vendas_visualizar, grupo.vendas_editar, grupo.vendedores_visualizar, grupo.vendedores_editar,
+             grupo.compras_visualizar, grupo.compras_editar, grupo.fornecedores_visualizar, grupo.fornecedores_editar,
+             grupo.estoque_visualizar, grupo.estoque_editar, grupo.depositos_visualizar, grupo.depositos_editar,
+             grupo.configuracoes_visualizar, grupo.configuracoes_editar,
              grupo.financeiro_visualizar, grupo.financeiro_editar, grupo.metas_visualizar, grupo.metas_editar, grupo_id)
         )
         
@@ -287,6 +293,19 @@ async def check_api_status():
                 "message": f"Erro ao verificar status: {str(e)}"
             }
         )
+
+@router.get("/timeout-sessao")
+async def get_timeout_sessao(current_user = Depends(get_current_user)):
+    """
+    Endpoint autenticado (qualquer usuário) para obter o tempo de timeout de sessão,
+    usado pelo contador de sessão exibido no topo das páginas do sistema.
+    """
+    with get_db_cursor() as cursor:
+        cursor.execute("SELECT valor FROM configuracoes WHERE chave = 'timeout_time'")
+        result = cursor.fetchone()
+        timeout_minutos = int(result["valor"]) if result and result["valor"] else 15
+
+    return {"timeout_minutos": timeout_minutos}
 
 @router.get("/configuracoes/")
 async def get_all_configs(current_user = Depends(get_current_user)):

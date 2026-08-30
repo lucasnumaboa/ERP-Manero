@@ -73,6 +73,8 @@ async def get_grupo_permissions(
         "fornecedores_editar": grupo.get('fornecedores_editar'),
         "estoque_visualizar": grupo.get('estoque_visualizar'),
         "estoque_editar": grupo.get('estoque_editar'),
+        "depositos_visualizar": grupo.get('depositos_visualizar'),
+        "depositos_editar": grupo.get('depositos_editar'),
         "configuracoes_visualizar": grupo.get('configuracoes_visualizar'),
         "configuracoes_editar": grupo.get('configuracoes_editar'),
         "financeiro_visualizar": grupo.get('financeiro_visualizar'),
@@ -181,6 +183,17 @@ async def criar_usuario(
         # Obtém o ID do usuário criado
         cursor.execute("SELECT LAST_INSERT_ID()")
         usuario_id = cursor.fetchone()["LAST_INSERT_ID()"]
+        
+        # Cria as flags OLX padrão para o novo usuário
+        default_flags = [
+            ('Defeito', False, 'com defeito, não funciona, tela preta, queimado, com problema, danificado, sem funcionar'),
+            ('Retirada peças', False, 'retirada de peça, para retirada de peças, somente peças, aproveitamento de peças, para sucata, sucata, quebrado'),
+        ]
+        for nome_flag, incluir, palavras in default_flags:
+            cursor.execute("""
+                INSERT INTO olx_flags (nome, incluir, palavras_chave, usuario_id)
+                VALUES (%s, %s, %s, %s)
+            """, (nome_flag, incluir, palavras, usuario_id))
         
         # Obtém os dados do usuário criado
         cursor.execute(

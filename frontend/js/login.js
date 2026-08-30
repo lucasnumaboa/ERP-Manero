@@ -1,20 +1,20 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const loginForm = document.getElementById('loginForm');
     const loginMessage = document.getElementById('loginMessage');
     const togglePassword = document.getElementById('togglePassword');
     const passwordInput = document.getElementById('password');
     const emailInput = document.getElementById('email');
     const rememberMe = document.getElementById('rememberMe');
-    
+
     // Carregar credenciais salvas (se existirem)
     loadSavedCredentials();
-    
+
     // Toggle mostrar/ocultar senha
     if (togglePassword && passwordInput) {
-        togglePassword.addEventListener('click', function() {
+        togglePassword.addEventListener('click', function () {
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);
-            
+
             // Alternar ícone
             const icon = this.querySelector('i');
             if (icon) {
@@ -23,20 +23,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     // Função para carregar credenciais salvas
     function loadSavedCredentials() {
         const savedEmail = localStorage.getItem('erp_remember_email');
         const savedPassword = localStorage.getItem('erp_remember_password');
         const savedRemember = localStorage.getItem('erp_remember_me');
-        
+
         if (savedRemember === 'true' && savedEmail && savedPassword) {
             if (emailInput) emailInput.value = savedEmail;
             if (passwordInput) passwordInput.value = atob(savedPassword); // Decodifica base64
             if (rememberMe) rememberMe.checked = true;
         }
     }
-    
+
     // Função para salvar credenciais
     function saveCredentials(email, password) {
         if (rememberMe && rememberMe.checked) {
@@ -50,18 +50,18 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.setItem('erp_remember_me', 'false');
         }
     }
-    
+
     // Obtém a URL da API sempre do banco, sem cache local
     async function getApiUrl() {
-        const defaultUrl = 'http://localhost:8000';
-        
+        const defaultUrl = 'https://erp-api-call.autoservto.com.br';
+
         try {
             // Sempre tenta buscar a URL da API do endpoint configuracoes
             const response = await fetch(`${defaultUrl}/api/configuracoes/link_api`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
             });
-            
+
             if (response.ok) {
                 const data = await response.json();
                 if (data && data.valor) {
@@ -71,108 +71,153 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.warn('Erro ao obter URL da API do servidor, usando fallback:', error);
         }
-        
+
         // Se falhar, retorna a URL padrão
         return defaultUrl;
     }
-    
 
-    
+
+
     // Verificar e sincronizar a URL da API ao carregar a página
     checkApiConnection();
-    
-    loginForm.addEventListener('submit', async function(e) {
+
+    loginForm.addEventListener('submit', async function (e) {
         e.preventDefault();
-        
+
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
-        
+        const loginBtn = document.querySelector('.btn-login');
+        const originalBtnText = loginBtn.textContent;
+
         // Limpar mensagens anteriores
         loginMessage.className = 'message-container';
         loginMessage.style.display = 'none';
         loginMessage.textContent = '';
-        
-        try {
-            // Obter a URL da API
-            const apiUrl = await getApiUrl();
-            
-            // Formatar os dados conforme esperado pela API (username = email)
-            const formData = new FormData();
-            formData.append('username', email);
-            formData.append('password', password);
-            
-            // Adicionar timeout para a requisição
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 segundos de timeout
-            
-            // Fazer a requisição de login
-            const response = await fetch(`${apiUrl}/token`, {
-                method: 'POST',
-                body: formData,
-                signal: controller.signal
-            }).catch(error => {
-                if (error.name === 'AbortError') {
-                    throw new Error('Tempo limite de conexão excedido. Verifique se o servidor está acessível.');
-                } else if (error.message.includes('Failed to fetch')) {
-                    throw new Error('Não foi possível conectar ao servidor, entre em contato com a administração');
+
+        // Função para atualizar estado do botão
+        const setButtonState = (loading, text = originalBtnText) => {
+            loginBtn.disabled = loading;
+            loginBtn.textContent = text;
+            if (loading) {
+                loginBtn.style.cursor = 'not-allowed';
+                loginBtn.style.opacity = '0.7';
+            } else {
+                loginBtn.style.cursor = 'pointer';
+                loginBtn.style.opacity = '1';
+            }
+        };
+
+        const maxRetries = 3;
+        let attempt = 1;
+
+        const tryLogin = async () => {
+            try {
+                // Atualizar estado do botão
+                if (attempt > 1) {
+                    setButtonState(true, `Tentando conectar (${attempt}/${maxRetries})...`);
                 } else {
-                    throw error;
+                    setButtonState(true, 'Entrando...');
                 }
-            });
-            
-            clearTimeout(timeoutId);
-            
-            if (!response) {
-                throw new Error('Não foi possível conectar ao servidor, entre em contato com a administração');
+
+                // Obter a URL da API
+                const apiUrl = await getApiUrl();
+
+                // Formatar os dados conforme esperado pela API (username = email)
+                const formData = new FormData();
+                formData.append('username', email);
+                formData.append('password', password);
+
+                // Adicionar timeout para a requisição
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s para facilitar teste de retry
+
+                // Fazer a requisição de login
+                const response = await fetch(`${apiUrl}/token`, {
+                    method: 'POST',
+                    body: formData,
+                    signal: controller.signal
+                }).catch(error => {
+                    if (error.name === 'AbortError') {
+                        throw new Error('TIMEOUT');
+                    } else if (error.message.includes('Failed to fetch')) {
+                        throw new Error('CONNECTION_ERROR');
+                    } else {
+                        throw error;
+                    }
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!response) {
+                    throw new Error('CONNECTION_ERROR');
+                }
+
+                const data = await response.json().catch(() => {
+                    throw new Error('INVALID_RESPONSE');
+                });
+
+                if (!response.ok) {
+                    // Se for erro de auth (401/403), não faz retry
+                    if (response.status === 401 || response.status === 403) {
+                        throw new Error(data.detail || 'Falha na autenticação');
+                    }
+                    throw new Error(data.detail || 'Erro no servidor');
+                }
+
+                // Login bem-sucedido
+                // Armazenar o token no localStorage
+                localStorage.setItem('erp_token', data.access_token);
+                localStorage.setItem('erp_token_type', data.token_type);
+
+                // Salvar credenciais se "lembrar senha" estiver marcado
+                saveCredentials(email, password);
+
+                // Exibir mensagem de sucesso
+                loginMessage.textContent = 'Login realizado com sucesso! Redirecionando...';
+                loginMessage.classList.add('success-message');
+                loginMessage.style.display = 'block';
+
+                // Redirecionar para a homepage após um breve delay
+                setTimeout(() => {
+                    window.location.href = 'homepage.html';
+                }, 1500);
+
+            } catch (error) {
+                console.error(`Tentativa ${attempt} falhou:`, error);
+
+                const isRetryable = error.message === 'TIMEOUT' || error.message === 'CONNECTION_ERROR' || error.message === 'Erro no servidor';
+
+                if (isRetryable && attempt < maxRetries) {
+                    attempt++;
+                    setTimeout(tryLogin, 1000); // Wait 1s before retrying
+                } else {
+                    // Falha final
+                    setButtonState(false);
+
+                    let msg = error.message;
+                    if (msg === 'TIMEOUT') msg = 'Tempo limite excedido. Verifique sua conexão.';
+                    if (msg === 'CONNECTION_ERROR') msg = 'Não foi possível conectar ao servidor.';
+                    if (msg === 'INVALID_RESPONSE') msg = 'Resposta inválida do servidor.';
+
+                    loginMessage.textContent = msg;
+                    loginMessage.classList.add('error-message');
+                    loginMessage.style.display = 'block';
+
+                    if (msg.includes('conectar') || msg.includes('Tempo limite')) {
+                        showConfigApiButton(loginMessage);
+                    }
+                }
             }
-            
-            const data = await response.json().catch(() => {
-                throw new Error('Resposta inválida do servidor. Verifique a URL da API.');
-            });
-            
-            if (!response.ok) {
-                throw new Error(data.detail || 'Falha na autenticação');
-            }
-            
-            // Login bem-sucedido
-            // Armazenar o token no localStorage
-            localStorage.setItem('erp_token', data.access_token);
-            localStorage.setItem('erp_token_type', data.token_type);
-            
-            // Salvar credenciais se "lembrar senha" estiver marcado
-            saveCredentials(email, password);
-            
-            // Exibir mensagem de sucesso
-            loginMessage.textContent = 'Login realizado com sucesso! Redirecionando...';
-            loginMessage.classList.add('success-message');
-            loginMessage.style.display = 'block';
-            
-            // Redirecionar para a homepage após um breve delay
-            setTimeout(() => {
-                window.location.href = 'homepage.html';
-            }, 1500);
-            
-        } catch (error) {
-            // Exibir mensagem de erro
-            loginMessage.textContent = error.message || 'Erro ao fazer login. Verifique suas credenciais.';
-            loginMessage.classList.add('error-message');
-            loginMessage.style.display = 'block';
-            console.error('Erro de login:', error);
-            
-            // Se for um erro de conexão, mostrar botão para configurar API
-            if (error.message.includes('conectar ao servidor') || 
-                error.message.includes('Failed to fetch') || 
-                error.message.includes('Tempo limite')) {
-                showConfigApiButton(loginMessage);
-            }
-        }
+        };
+
+        tryLogin();
     });
-    
+
     // Função para mostrar botão de configuração da API
     function showConfigApiButton(container) {
         // Verificar se já existe um botão
         if (container.querySelector('.config-api-btn')) return;
-        
+
         const configBtn = document.createElement('button');
         configBtn.textContent = 'Configurar URL da API';
         configBtn.className = 'btn-secondary config-api-btn';
@@ -183,14 +228,14 @@ document.addEventListener('DOMContentLoaded', function() {
         configBtn.style.border = 'none';
         configBtn.style.borderRadius = '4px';
         configBtn.style.cursor = 'pointer';
-        
-        configBtn.addEventListener('click', function() {
+
+        configBtn.addEventListener('click', function () {
             window.location.href = 'config_api.html';
         });
-        
+
         container.appendChild(configBtn);
     }
-    
+
     // Função para verificar a conexão com a API
     async function checkApiConnection() {
         const apiUrl = await getApiUrl();
@@ -199,7 +244,7 @@ document.addEventListener('DOMContentLoaded', function() {
         statusElement.style.fontSize = '12px';
         statusElement.style.marginTop = '10px';
         statusElement.style.textAlign = 'center';
-        
+
         // Adicionar ao DOM se não existir
         if (!document.getElementById('api-status')) {
             const loginContainer = document.querySelector('.login-container');
@@ -207,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 loginContainer.appendChild(statusElement);
             }
         }
-        
+
         // Criar indicadores de status
         statusElement.innerHTML = `
             <div class="status-container">
@@ -216,16 +261,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span id="api-status-text">Verificando...</span>
             </div>
         `;
-        
+
         const statusIndicator = document.getElementById('api-status-indicator');
         const statusText = document.getElementById('api-status-text');
-        
+
         if (!statusIndicator || !statusText) return;
-        
+
         // Configurar timeout para a requisição
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 segundos de timeout
-        
+
         // Primeiro tentar o endpoint de status
         fetch(`${apiUrl}/api/configuracoes/status`, {
             method: 'GET',
@@ -237,7 +282,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (response.ok) {
                     statusIndicator.className = 'status-indicator status-online';
                     statusText.textContent = 'Online';
-                    
+
                     // Verificar se a URL da API no servidor é diferente da armazenada localmente
                     return response.json().then(data => {
                         if (data && data.config && data.config.api_url && data.config.api_url !== apiUrl) {
@@ -255,7 +300,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 clearTimeout(timeoutId);
                 console.error('Erro ao verificar status da API:', error);
-                
+
                 if (error.name === 'AbortError') {
                     statusIndicator.className = 'status-indicator status-offline';
                     statusText.textContent = 'Timeout';
@@ -263,12 +308,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     statusIndicator.className = 'status-indicator status-offline';
                     statusText.textContent = 'Offline';
                 }
-                
+
                 // Tentar endpoint alternativo
                 tryAlternativeEndpoint(apiUrl, statusIndicator, statusText);
             });
     }
-    
+
     // Função para tentar endpoints alternativos se o principal falhar
     function tryAlternativeEndpoint(apiUrl, statusIndicator, statusText) {
         // Tentar o endpoint link_api
@@ -280,7 +325,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (response.ok) {
                     statusIndicator.className = 'status-indicator status-online';
                     statusText.textContent = 'Online';
-                    
+
                     // Verificar se a URL da API no banco é diferente da armazenada localmente
                     return response.json().then(data => {
                         if (data && data.valor && data.valor !== apiUrl) {
@@ -317,10 +362,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 showConfigApiButton(document.querySelector('.login-container') || document.body);
             });
     }
+    // Funções de Loading
 });
 
 // Adicionar estilos para os indicadores de status
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const style = document.createElement('style');
     style.textContent = `
         .status-indicator {

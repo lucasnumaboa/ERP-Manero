@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,12 +16,14 @@
     <link rel="stylesheet" href="css/theme-light.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
     <!-- Estilo inicial para ocultar o conteúdo até verificar permissões -->
     <style>
         .app-container {
             display: none;
         }
+
         #permission-loading {
             display: flex;
             flex-direction: column;
@@ -34,23 +37,25 @@
             background-color: #f8f9fa;
             z-index: 9999;
         }
+
         #permission-loading i {
             font-size: 48px;
             color: #3498db;
             margin-bottom: 20px;
         }
+
         #permission-loading p {
             color: #7f8c8d;
             font-size: 18px;
         }
     </style>
-    
+
     <!-- Tela de carregamento enquanto verifica permissões -->
     <div id="permission-loading">
         <i class="fas fa-spinner fa-spin"></i>
         <p>Verificando permissões...</p>
     </div>
-    
+
     <div class="app-container">
         <!-- Sidebar / Menu Lateral -->
         <aside class="sidebar">
@@ -87,9 +92,9 @@
                     <li>
                         <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
                     </li>
-                    
+
                     <li class="nav-separator"></li>
-                    
+
                     <!-- Grupo: Vendas -->
                     <li class="nav-group">
                         <div class="nav-group-header" data-group="vendas">
@@ -104,7 +109,7 @@
                             <a href="metas.html"><i class="fas fa-bullseye"></i> <span>Metas</span></a>
                         </div>
                     </li>
-                    
+
                     <!-- Grupo: Compras e Estoque -->
                     <li class="nav-group">
                         <div class="nav-group-header" data-group="compras">
@@ -116,7 +121,7 @@
                             <a href="fornecedores.html"><i class="fas fa-industry"></i> <span>Fornecedores</span></a>
                         </div>
                     </li>
-                    
+
                     <!-- Grupo: Produtos -->
                     <li class="nav-group">
                         <div class="nav-group-header" data-group="produtos">
@@ -130,7 +135,7 @@
                             <a href="exportar_estoque.html"><i class="fas fa-file-export"></i> <span>Exportar</span></a>
                         </div>
                     </li>
-                    
+
                     <!-- Grupo: Financeiro -->
                     <li class="nav-group">
                         <div class="nav-group-header" data-group="financeiro">
@@ -138,12 +143,15 @@
                             <i class="fas fa-chevron-down toggle-icon"></i>
                         </div>
                         <div class="nav-group-items">
-                            <a href="contas_pagar.html"><i class="fas fa-money-bill-wave"></i> <span>Contas a Pagar</span></a>
-                            <a href="contas_receber.html"><i class="fas fa-hand-holding-usd"></i> <span>Contas a Receber</span></a>
-                            <a href="condicoes_pagamento.html"><i class="fas fa-percent"></i> <span>Condições Pgto</span></a>
+                            <a href="contas_pagar.html"><i class="fas fa-money-bill-wave"></i> <span>Contas a
+                                    Pagar</span></a>
+                            <a href="contas_receber.html"><i class="fas fa-hand-holding-usd"></i> <span>Contas a
+                                    Receber</span></a>
+                            <a href="condicoes_pagamento.html"><i class="fas fa-percent"></i> <span>Condições
+                                    Pgto</span></a>
                         </div>
                     </li>
-                    
+
                     <!-- Grupo: Relatórios -->
                     <li class="nav-group">
                         <div class="nav-group-header" data-group="relatorios">
@@ -154,9 +162,20 @@
                             <a href="relatorios.html"><i class="fas fa-chart-line"></i> <span>Relatórios</span></a>
                         </div>
                     </li>
-                    
+
                     <li class="nav-separator"></li>
-                    
+
+                    <!-- Grupo: Softwares -->
+                    <li class="nav-group">
+                        <div class="nav-group-header" data-group="softwares">
+                            <span><i class="fas fa-download group-icon"></i> Softwares</span>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </div>
+                        <div class="nav-group-items">
+                            <a href="softwares.html"><i class="fas fa-desktop"></i> <span>Downloads</span></a>
+                        </div>
+                    </li>
+
                     <!-- Grupo: Sistema -->
                     <li class="nav-group">
                         <div class="nav-group-header" data-group="sistema">
@@ -167,9 +186,9 @@
                             <a href="configuracoes.html"><i class="fas fa-cog"></i> <span>Configurações</span></a>
                         </div>
                     </li>
-                    
+
                     <li class="nav-separator"></li>
-                    
+
                     <li class="logout">
                         <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Sair</span></a>
                     </li>
@@ -216,7 +235,8 @@
                                     <p class="card-value"></p>
                                 </div>
                             </div>
-                            <div class="summary-card" onclick="window.location.href='vendedores.html'" style="cursor: pointer;">
+                            <div class="summary-card" onclick="window.location.href='vendedores.html'"
+                                style="cursor: pointer;">
                                 <div class="card-icon" style="background-color: #6c5ce7;">
                                     <i class="fas fa-user-tie"></i>
                                 </div>
@@ -344,7 +364,8 @@
                 <div class="summary-section">
                     <h4 class="section-title">Contas a Pagar</h4>
                     <div class="summary-grid">
-                        <div class="summary-card" onclick="window.location.href='contas_pagar.html?filtro=hoje'" style="cursor: pointer;">
+                        <div class="summary-card" onclick="window.location.href='contas_pagar.html?filtro=hoje'"
+                            style="cursor: pointer;">
                             <div class="card-icon" style="background-color: #e74c3c;">
                                 <i class="fas fa-calendar-day"></i>
                             </div>
@@ -353,7 +374,8 @@
                                 <p class="card-value" id="contas-pagar-hoje">R$ 0,00</p>
                             </div>
                         </div>
-                        <div class="summary-card" onclick="window.location.href='contas_pagar.html?filtro=mes'" style="cursor: pointer;">
+                        <div class="summary-card" onclick="window.location.href='contas_pagar.html?filtro=mes'"
+                            style="cursor: pointer;">
                             <div class="card-icon" style="background-color: #f39c12;">
                                 <i class="fas fa-calendar"></i>
                             </div>
@@ -369,7 +391,8 @@
                 <div class="summary-section">
                     <h4 class="section-title">Contas a Receber</h4>
                     <div class="summary-grid">
-                        <div class="summary-card" onclick="window.location.href='contas_receber.html?filtro=hoje'" style="cursor: pointer;">
+                        <div class="summary-card" onclick="window.location.href='contas_receber.html?filtro=hoje'"
+                            style="cursor: pointer;">
                             <div class="card-icon" style="background-color: #27ae60;">
                                 <i class="fas fa-calendar-day"></i>
                             </div>
@@ -378,7 +401,8 @@
                                 <p class="card-value" id="contas-receber-hoje">R$ 0,00</p>
                             </div>
                         </div>
-                        <div class="summary-card" onclick="window.location.href='contas_receber.html?filtro=mes'" style="cursor: pointer;">
+                        <div class="summary-card" onclick="window.location.href='contas_receber.html?filtro=mes'"
+                            style="cursor: pointer;">
                             <div class="card-icon" style="background-color: #2ecc71;">
                                 <i class="fas fa-calendar"></i>
                             </div>
@@ -432,4 +456,5 @@
     <script src="js/internal-animation.js"></script>
     <script src="js/theme-switcher.js"></script>
 </body>
+
 </html>

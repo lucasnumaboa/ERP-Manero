@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Maneiro - Softwares</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/permissions.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/modulos.css">
+    <link rel="stylesheet" href="css/submenu.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/theme-dark.css">
+    <link rel="stylesheet" href="css/theme-light.css">
+    <style>
+        .upload-section {
+            background: var(--card-bg, rgba(17, 34, 64, 0.95));
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .upload-section h3 {
+            margin-bottom: 15px;
+            color: var(--text-primary, #e6f1ff);
+        }
+
+        .upload-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .upload-form .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .upload-form .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text-secondary, #a8b2d1);
+        }
+
+        .upload-form input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            border-radius: 4px;
+            background: rgba(10, 25, 47, 0.8);
+            color: var(--text-primary, #e6f1ff);
+        }
+
+        .upload-form textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            border-radius: 4px;
+            resize: vertical;
+            min-height: 60px;
+            background: rgba(10, 25, 47, 0.8);
+            color: var(--text-primary, #e6f1ff);
+        }
+
+        .upload-form button[type="submit"] {
+            width: 100%;
+            flex-basis: 100%;
+            padding: 12px 24px;
+            margin-top: 10px;
+        }
+
+        .softwares-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .software-card {
+            background: var(--card-bg, rgba(17, 34, 64, 0.95));
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            border-radius: 8px;
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .software-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border-color: var(--accent-primary, #64ffda);
+        }
+
+        .software-card h4 {
+            margin: 0 0 10px 0;
+            color: var(--text-primary, #e6f1ff);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .software-card h4 i {
+            color: var(--accent-primary, #64ffda);
+            font-size: 1.5em;
+        }
+
+        .software-info {
+            margin: 10px 0;
+            font-size: 0.9em;
+            color: var(--text-secondary, #a8b2d1);
+        }
+
+        .software-info p {
+            margin: 5px 0;
+        }
+
+        .software-info .version-badge {
+            display: inline-block;
+            background: #27ae60;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.85em;
+        }
+
+        .software-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn-download {
+            background: #3498db;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+        }
+
+        .btn-download:hover {
+            background: #2980b9;
+        }
+
+        .btn-history {
+            background: #9b59b6;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-history:hover {
+            background: #8e44ad;
+        }
+
+        .btn-update {
+            background: #f39c12;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-update:hover {
+            background: #e67e22;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-delete:hover {
+            background: #c0392b;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--card-bg, rgba(17, 34, 64, 0.98));
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.2));
+            border-radius: 8px;
+            padding: 25px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-box-header h3 {
+            margin: 0;
+            color: var(--text-primary, #e6f1ff);
+        }
+
+        .modal-box-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: var(--text-secondary, #a8b2d1);
+        }
+
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .history-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-item .version {
+            font-weight: bold;
+            color: #27ae60;
+        }
+
+        .history-item .date {
+            color: var(--text-secondary, #a8b2d1);
+            font-size: 0.85em;
+        }
+
+        .history-item .changes {
+            margin-top: 8px;
+            white-space: pre-wrap;
+            color: var(--text-primary, #e6f1ff);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary, #a8b2d1);
+        }
+
+        .empty-state i {
+            font-size: 3em;
+            margin-bottom: 15px;
+            opacity: 0.5;
+            color: var(--accent-primary, #64ffda);
+        }
+
+        .file-size {
+            color: var(--text-secondary, #a8b2d1);
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 25, 47, 0.95);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-gif {
+            width: 80px;
+            height: 80px;
+        }
+
+        .loading-text {
+            color: var(--accent-primary, #64ffda);
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .loading-progress-container {
+            width: 280px;
+            background: rgba(100, 255, 218, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            height: 12px;
+            border: 1px solid rgba(100, 255, 218, 0.2);
+        }
+
+        .loading-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #64ffda, #00bcd4, #64ffda);
+            background-size: 200% 100%;
+            border-radius: 10px;
+            animation: shimmer 2s linear infinite;
+            transition: width 0.3s ease;
+        }
+
+        .loading-progress-bar.indeterminate {
+            animation: progressAnimation 1.5s ease-in-out infinite, shimmer 2s linear infinite;
+        }
+
+        @keyframes progressAnimation {
+            0% {
+                width: 0%;
+            }
+            50% {
+                width: 70%;
+            }
+            100% {
+                width: 100%;
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .loading-progress-text {
+            color: var(--text-secondary, #a8b2d1);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        /* Suporte a Tema Claro */
+        body.theme-light .upload-section {
+            background: var(--bg-card, #ffffff);
+            border-color: var(--border-color, #e0e0e0);
+        }
+
+        body.theme-light .upload-section h3 {
+            color: var(--text-primary, #2c3e50);
+        }
+
+        body.theme-light .upload-form .form-group label {
+            color: var(--text-secondary, #495057);
+        }
+
+        body.theme-light .upload-form input[type="file"],
+        body.theme-light .upload-form textarea {
+            background: #ffffff;
+            color: var(--text-primary, #2c3e50);
+            border-color: var(--border-color, #ced4da);
+        }
+
+        body.theme-light .software-card {
+            background: var(--bg-card, #ffffff);
+            border-color: var(--border-color, #e0e0e0);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        body.theme-light .software-card:hover {
+            border-color: var(--accent-primary, #3498db);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        body.theme-light .software-card h4 {
+            color: var(--text-primary, #2c3e50);
+        }
+
+        body.theme-light .software-card h4 i {
+            color: var(--accent-primary, #3498db);
+        }
+
+        body.theme-light .software-info p {
+            color: var(--text-secondary, #495057);
+        }
+
+        body.theme-light .version-badge {
+            background: rgba(41, 128, 185, 0.15);
+            color: #2980b9;
+        }
+
+        body.theme-light .file-size {
+            color: var(--text-muted, #6c757d);
+        }
+
+        body.theme-light .modal-box {
+            background: #ffffff;
+            border-color: var(--border-color, #e0e0e0);
+        }
+
+        body.theme-light .modal-box-header h3 {
+            color: var(--text-primary, #2c3e50);
+        }
+
+        body.theme-light .modal-box-close {
+            color: var(--text-muted, #6c757d);
+        }
+
+        body.theme-light .modal-box-close:hover {
+            color: #e74c3c;
+        }
+
+        body.theme-light .history-item {
+            border-color: var(--border-color, #e0e0e0);
+        }
+
+        body.theme-light .history-item .date {
+            color: var(--text-muted, #6c757d);
+        }
+
+        body.theme-light .history-item .changes {
+            color: var(--text-primary, #2c3e50);
+        }
+
+        body.theme-light .empty-state {
+            color: var(--text-muted, #6c757d);
+        }
+
+        body.theme-light .empty-state i {
+            color: var(--accent-primary, #3498db);
+        }
+
+        body.theme-light .loading-overlay {
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        body.theme-light .loading-text {
+            color: var(--accent-primary, #3498db);
+        }
+
+        body.theme-light .loading-progress-text {
+            color: var(--text-muted, #6c757d);
+        }
+
+        body.theme-light .loading-progress-container {
+            background: rgba(52, 152, 219, 0.1);
+            border-color: rgba(52, 152, 219, 0.2);
+        }
+
+        body.theme-light .loading-progress-bar {
+            background: linear-gradient(90deg, #3498db, #2980b9, #3498db);
+        }
+
+        body.theme-light #updateForm input,
+        body.theme-light #updateForm textarea {
+            background: #ffffff !important;
+            color: var(--text-primary, #2c3e50) !important;
+            border-color: var(--border-color, #ced4da) !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Menu Lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="img/icon.png" alt="ERP Maneiro" class="logo-img">
+                <button id="toggleSidebar" class="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <!-- Theme Switch -->
+            <div class="theme-switch-wrapper">
+                <span class="switch-label"><i class="fas fa-moon"></i></span>
+                <label class="theme-switch">
+                    <input type="checkbox" id="themeSwitch">
+                    <span class="slider"></span>
+                </label>
+                <span class="switch-label"><i class="fas fa-sun"></i></span>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="userName">Carregando...</h3>
+                    <p id="userRole">Carregando...</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li>
+                        <a href="homepage.html"><i class="fas fa-home"></i> Home</a>
+                    </li>
+                    <li>
+                        <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    </li>
+                </ul>
+
+                <!-- Menu Principal -->
+                <ul>
+                    <li>
+                        <a href="produtos.html"><i class="fas fa-box"></i> Produtos</a>
+                    </li>
+                    <li>
+                        <a href="categorias.html"><i class="fas fa-tags"></i> Categorias</a>
+                    </li>
+                    <li>
+                        <a href="estoque.html"><i class="fas fa-warehouse"></i> Estoque</a>
+                    </li>
+                    <li>
+                        <a href="exportar_estoque.html"><i class="fas fa-file-export"></i> Exportar Estoque</a>
+                    </li>
+                    <li>
+                        <a href="clientes.html"><i class="fas fa-users"></i> Clientes</a>
+                    </li>
+                    <li>
+                        <a href="vendas.html"><i class="fas fa-shopping-cart"></i> Vendas</a>
+                    </li>
+                    <li>
+                        <a href="vendedores.html"><i class="fas fa-user-tie"></i> Vendedores</a>
+                    </li>
+                    <li>
+                        <a href="compras.html"><i class="fas fa-truck"></i> Compras</a>
+                    </li>
+                    <li>
+                        <a href="fornecedores.html"><i class="fas fa-industry"></i> Fornecedores</a>
+                    </li>
+                    <li>
+                        <a href="plataformas_venda.html"><i class="fas fa-store"></i> Plataformas de Venda</a>
+                    </li>
+                    <li>
+                        <a href="contas_pagar.html"><i class="fas fa-money-bill-wave"></i> Contas a Pagar</a>
+                    </li>
+                    <li>
+                        <a href="contas_receber.html"><i class="fas fa-hand-holding-usd"></i> Contas a Receber</a>
+                    </li>
+                    <li>
+                        <a href="condicoes_pagamento.html"><i class="fas fa-percent"></i> Condições de Pagamento</a>
+                    </li>
+                    <li>
+                        <a href="metas.html"><i class="fas fa-bullseye"></i> Metas</a>
+                    </li>
+                    <li>
+                        <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
+                    </li>
+                    <li class="active">
+                        <a href="softwares.html"><i class="fas fa-download"></i> Softwares</a>
+                    </li>
+                    <li>
+                        <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
+                    </li>
+                    <li class="logout">
+                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <div class="content">
+                <div class="page-header">
+                    <h1><i class="fas fa-download"></i> Softwares</h1>
+                    <p>Download e gerenciamento de programas internos</p>
+                </div>
+
+                <!-- Seção de Upload (apenas admin) -->
+                <div id="upload-section" class="upload-section" style="display: none;">
+                    <h3><i class="fas fa-upload"></i> Enviar Novo Software</h3>
+                    <form id="uploadForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="arquivo">Arquivo</label>
+                                <input type="file" id="arquivo" name="arquivo" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="descricao">Descrição</label>
+                                <textarea id="descricao" name="descricao" placeholder="Descrição do software..."
+                                    rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <button type="submit"
+                                style="background: #64ffda; color: #0a192f; padding: 12px 30px; font-size: 16px; font-weight: 600; border: none; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-upload"></i> Enviar Software
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Grid de Softwares -->
+                <div id="softwares-container" class="softwares-grid">
+                    <!-- Cards serão carregados dinamicamente -->
+                </div>
+
+                <!-- Estado vazio -->
+                <div id="empty-state" class="empty-state" style="display: none;">
+                    <i class="fas fa-folder-open"></i>
+                    <h3>Nenhum software disponível</h3>
+                    <p>Os softwares serão listados aqui quando forem adicionados.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de Histórico -->
+    <div id="modal-historico" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-box-header">
+                <h3><i class="fas fa-history"></i> Histórico de Versões</h3>
+                <button class="modal-box-close" onclick="fecharModalHistorico()">&times;</button>
+            </div>
+            <ul id="historico-lista" class="history-list">
+                <!-- Itens do histórico serão carregados aqui -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Modal de Atualização -->
+    <div id="modal-atualizar" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-box-header">
+                <h3><i class="fas fa-sync-alt"></i> Atualizar Software</h3>
+                <button class="modal-box-close" onclick="fecharModalAtualizar()">&times;</button>
+            </div>
+            <form id="updateForm">
+                <input type="hidden" id="update-software-id">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="update-arquivo">Novo Arquivo</label>
+                    <input type="file" id="update-arquivo" name="arquivo" required style="width: 100%; padding: 8px;">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="update-alteracoes">Descrição das Alterações <span style="color: red;">*</span></label>
+                    <textarea id="update-alteracoes" name="alteracoes" required
+                        placeholder="Descreva o que foi alterado nesta versão..."
+                        style="width: 100%; padding: 8px; min-height: 100px;"></textarea>
+                </div>
+                <button type="submit" style="width: 100%; background: #64ffda; color: #0a192f; padding: 12px 20px; font-size: 16px; font-weight: 600; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 15px;">
+                    <i class="fas fa-upload"></i> Enviar Atualização
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <img src="img/loading.gif" alt="Carregando..." class="loading-gif">
+        <span class="loading-text" id="loadingText">Enviando software...</span>
+        <div class="loading-progress-container">
+            <div class="loading-progress-bar indeterminate" id="loadingProgressBar"></div>
+        </div>
+        <span class="loading-progress-text" id="loadingProgressText">Aguarde...</span>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/sidebar-template.js"></script>
+    <script src="js/permissions.js"></script>
+    <script src="js/webhook-estoque.js"></script>
+    <script src="js/softwares.js"></script>
+    <script src="js/internal-animation.js"></script>
+    <script src="js/theme-switcher.js"></script>
+</body>
+
+</html>

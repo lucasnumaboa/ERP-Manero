@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Carregar atividades recentes se o usuário tiver permissão
     loadRecentActivities();
     
+    // Carregar notificações de softwares atualizados
+    carregarNotificacoesSoftware();
+    
     // Configurar botão de logout
     setupLogout();
 });
@@ -198,4 +201,81 @@ function setupLogout() {
             window.location.href = 'index.html';
         });
     }
+}
+
+// ===== NOTIFICAÇÕES DE SOFTWARES ATUALIZADOS =====
+
+async function carregarNotificacoesSoftware() {
+    try {
+        const container = document.getElementById('software-notifications');
+        if (!container) return;
+        
+        const softwares = await apiGet('/api/softwares/recentes');
+        
+        if (!softwares || softwares.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+        
+        // Gera HTML das notificações
+        let html = '';
+        softwares.forEach((sw, index) => {
+            const dataFormatada = sw.data_atualizacao 
+                ? new Date(sw.data_atualizacao).toLocaleDateString('pt-BR', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                })
+                : '';
+            
+            const alteracoes = sw.alteracoes || 'Versão inicial';
+            
+            html += `
+                <div class="software-notification" data-index="${index}" onclick="irParaSoftwares(event)" style="cursor: pointer;">
+                    <div class="notif-icon">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <div class="notif-content">
+                        <div class="notif-title">
+                            <i class="fas fa-bell"></i> Software Atualizado: ${sw.nome_arquivo} - Versão ${sw.versao}
+                        </div>
+                        <div class="notif-desc">${alteracoes}</div>
+                    </div>
+                    <div class="notif-date">${dataFormatada}</div>
+                    <button class="notif-close" onclick="fecharNotificacaoSoftware(event, ${index})" title="Fechar">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+        container.style.display = 'block';
+        
+        console.log(`Homepage: ${softwares.length} notificação(ões) de software carregada(s)`);
+        
+    } catch (error) {
+        console.error('Erro ao carregar notificações de software:', error);
+    }
+}
+
+function fecharNotificacaoSoftware(event, index) {
+    event.stopPropagation(); // Evita que o clique no X redirecione para softwares.html
+    const notif = document.querySelector(`.software-notification[data-index="${index}"]`);
+    if (notif) {
+        notif.style.animation = 'slideIn 0.3s ease-out reverse';
+        setTimeout(() => {
+            notif.remove();
+            // Esconde container se não houver mais notificações
+            const container = document.getElementById('software-notifications');
+            if (container && container.children.length === 0) {
+                container.style.display = 'none';
+            }
+        }, 300);
+    }
+}
+
+function irParaSoftwares(event) {
+    // Não redireciona se clicar no botão de fechar
+    if (event.target.closest('.notif-close')) return;
+    window.location.href = 'softwares.html';
 }

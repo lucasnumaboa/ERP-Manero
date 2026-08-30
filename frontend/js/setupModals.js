@@ -91,15 +91,8 @@ function setupModals() {
         });
     });
     
-    // Fechar modal ao clicar fora dele
-    window.addEventListener('click', (event) => {
-        const modals = document.querySelectorAll('.modal');
-        modals.forEach(modal => {
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-    });
+    // REMOVIDO: Fechar modal ao clicar fora dele
+    // Modais agora só fecham ao clicar no X ou botão Cancelar/Fechar
     
     // Configurar barras de pesquisa nos selects
     setupSelectSearches();

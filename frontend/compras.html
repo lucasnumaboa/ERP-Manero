@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,7 +24,7 @@
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             max-width: 100%;
         }
 
@@ -81,12 +82,12 @@
             background: white;
         }
 
-        .filter-checkbox:checked + .checkbox-label .checkbox-custom {
+        .filter-checkbox:checked+.checkbox-label .checkbox-custom {
             background: #007bff;
             border-color: #007bff;
         }
 
-        .filter-checkbox:checked + .checkbox-label .checkbox-custom::after {
+        .filter-checkbox:checked+.checkbox-label .checkbox-custom::after {
             content: '✓';
             color: white;
             font-size: 12px;
@@ -131,7 +132,7 @@
         .filter-input:focus {
             outline: none;
             border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
         }
 
         .search-btn {
@@ -161,7 +162,7 @@
         .filter-select:focus {
             outline: none;
             border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
         }
 
         .btn-clear-filters {
@@ -196,7 +197,8 @@
                 margin-right: 0;
             }
 
-            .filter-input, .filter-select {
+            .filter-input,
+            .filter-select {
                 width: 100%;
                 min-width: unset;
             }
@@ -206,8 +208,86 @@
                 width: 100%;
             }
         }
+
+        /* Estilos para dropdown de status inline */
+        .status-select-inline {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: #f8f9fa;
+        }
+
+        .status-select-inline:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        .status-select-inline:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .status-select-inline option {
+            background: white;
+            color: #333;
+        }
+
+        /* Cores específicas por status */
+        .status-select-inline.status-pendente {
+            background-color: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+
+        .status-select-inline.status-aprovado {
+            background-color: #cce5ff;
+            border-color: #007bff;
+            color: #004085;
+        }
+
+        .status-select-inline.status-recebido {
+            background-color: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .status-select-inline.status-cancelado {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        /* Estilos para botão de produtos na tabela */
+        .produtos-preview {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--accent-primary, #64ffda);
+            background: transparent;
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .produtos-preview:hover {
+            background: rgba(100, 255, 218, 0.1);
+            border-color: var(--accent-primary, #64ffda);
+            transform: scale(1.02);
+        }
+
+        .produtos-badge {
+            font-weight: 600;
+        }
     </style>
 </head>
+
 <body>
     <div class="app-container">
         <!-- Sidebar / Menu Lateral -->
@@ -236,7 +316,7 @@
                         <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     </li>
                 </ul>
-                
+
                 <!-- Menu Principal -->
                 <ul>
                     <li>
@@ -285,6 +365,9 @@
                         <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
                     </li>
                     <li>
+                        <a href="softwares.html"><i class="fas fa-download"></i> Softwares</a>
+                    </li>
+                    <li>
                         <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
                     </li>
                     <li class="logout">
@@ -308,6 +391,10 @@
                         <i class="fas fa-plus"></i> Nova Compra
                     </button>
 
+                    <button class="btn-primary" id="btnFabricarProduto" style="background-color: #28a745;">
+                        <i class="fas fa-cogs"></i> Fabricar Produto
+                    </button>
+
                     <button class="btn-outline" id="btnConsultarEstoque">
                         <i class="fas fa-warehouse"></i> Consultar Estoque
                     </button>
@@ -317,7 +404,7 @@
                         <p style="margin-bottom: 15px; color: #6c757d; font-size: 14px;">
                             Configure os filtros para visualizar as compras
                         </p>
-                        
+
                         <!-- Linha de checkboxes -->
                         <div class="filter-row checkboxes-row">
                             <div class="checkbox-item">
@@ -328,19 +415,20 @@
                                 </label>
                             </div>
                         </div>
-                        
+
                         <!-- Linha de controles -->
                         <div class="filter-row controls-row">
                             <div class="filter-control">
                                 <label for="filtroPesquisa" class="control-label">Fornecedor:</label>
                                 <div class="search-input-group">
-                                    <input type="text" id="filtroPesquisa" class="filter-input" placeholder="Pesquisar fornecedor...">
+                                    <input type="text" id="filtroPesquisa" class="filter-input"
+                                        placeholder="Pesquisar fornecedor...">
                                     <button class="search-btn">
                                         <i class="fas fa-search"></i>
                                     </button>
                                 </div>
                             </div>
-                            
+
                             <div class="filter-control">
                                 <label for="filterStatus" class="control-label">Status:</label>
                                 <select id="filterStatus" class="filter-select">
@@ -350,7 +438,7 @@
                                     <option value="cancelada">Cancelada</option>
                                 </select>
                             </div>
-                            
+
                             <label></label>
                             <button class="btn-clear-filters" id="btnLimparFiltros">
                                 <i class="fas fa-eraser"></i>
@@ -369,6 +457,7 @@
                                 <th>Fornecedor</th>
                                 <th>Data</th>
                                 <th>Valor Total</th>
+                                <th>Produtos</th>
                                 <th>Status</th>
                                 <th>Responsável</th>
                                 <th>Ações</th>
@@ -376,7 +465,7 @@
                         </thead>
                         <tbody id="comprasTableBody">
                             <tr>
-                                <td colspan="7" class="text-center">Carregando compras...</td>
+                                <td colspan="8" class="text-center">Carregando compras...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -396,89 +485,108 @@
 
     <!-- Modal de Nova/Editar Compra -->
     <div class="modal" id="compraModal">
-        <div class="modal-content modal-lg">
+        <div class="modal-content modal-lg modal-vendas">
             <div class="modal-header">
                 <h2 id="modalTitle">Nova Compra</h2>
                 <button class="close-modal">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="compraForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="fornecedor_id">Fornecedor</label>
-                            <div class="select-with-button">
-                                <select id="fornecedor_id" name="fornecedor_id" required>
-                                    <option value="">Selecione...</option>
-                                    <option value="1">Fornecedor A</option>
-                                    <option value="2">Fornecedor B</option>
-                                    <option value="3">Fornecedor C</option>
-                                </select>
-                                <button type="button" class="btn-outline btn-sm" id="btnNovoFornecedorModal">
-                                    <i class="fas fa-plus"></i> Novo
-                                </button>
+                    <!-- Sistema de Abas -->
+                    <div class="modal-tabs">
+                        <button type="button" class="modal-tab active" data-tab="tab-dados-compra">
+                            <i class="fas fa-truck"></i> Dados
+                        </button>
+                        <button type="button" class="modal-tab" data-tab="tab-itens-compra">
+                            <i class="fas fa-box"></i> Itens
+                        </button>
+                        <button type="button" class="modal-tab" data-tab="tab-status-compra">
+                            <i class="fas fa-check-circle"></i> Status
+                        </button>
+                    </div>
+
+                    <!-- Aba 1: Dados da Compra -->
+                    <div class="modal-tab-content active" id="tab-dados-compra">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="fornecedor_id">Fornecedor</label>
+                                <div class="select-with-button">
+                                    <select id="fornecedor_id" name="fornecedor_id" required>
+                                        <option value="">Selecione...</option>
+                                    </select>
+                                    <button type="button" class="btn-outline btn-sm" id="btnNovoFornecedorModal">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="data_compra">Data da Compra</label>
+                                <input type="date" id="data_compra" name="data_compra" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="previsao_entrega">Previsão de Entrega</label>
+                                <input type="date" id="previsao_entrega" name="previsao_entrega">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="data_compra">Data</label>
-                            <input type="date" id="data_compra" name="data_compra" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="previsao_entrega">Previsão de Entrega</label>
-                            <input type="date" id="previsao_entrega" name="previsao_entrega">
+                            <label for="observacoes">Observações</label>
+                            <textarea id="observacoes" name="observacoes" rows="2"
+                                placeholder="Observações da compra..."></textarea>
                         </div>
                     </div>
 
-                    <h3 class="section-title">Itens da Compra</h3>
-                    <div class="table-container">
-                        <table class="data-table" id="itensCompraTable">
-                            <thead>
-                                <tr>
-                                    <th>Produto</th>
-                                    <th>Quantidade</th>
-                                    <th>Preço Unit.</th>
-                                    <th>Subtotal</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="itensCompraTableBody">
-                                <tr>
-                                    <td colspan="5" class="text-center">Nenhum item adicionado</td>
-                                </tr>
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colspan="5">
-                                        <button type="button" class="btn-outline btn-sm" id="btnAdicionarItem">
-                                            <i class="fas fa-plus"></i> Adicionar Item
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                    
-                    <div class="form-row total-row">
-                        <div class="form-group total-label">
-                            <label>Valor Total:</label>
+                    <!-- Aba 2: Itens da Compra -->
+                    <div class="modal-tab-content" id="tab-itens-compra">
+                        <div class="itens-header">
+                            <button type="button" class="btn-outline btn-sm" id="btnAdicionarItem">
+                                <i class="fas fa-plus"></i> Adicionar Item
+                            </button>
+                            <div class="totais-inline">
+                                <span><strong>Total:</strong> <span id="valorTotal">R$ 0,00</span></span>
+                            </div>
                         </div>
-                        <div class="form-group total-value">
-                            <span id="valorTotal">R$ 0,00</span>
+                        <div class="table-container-compact">
+                            <table class="data-table" id="itensCompraTable">
+                                <thead>
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th>Qtd</th>
+                                        <th>Preço</th>
+                                        <th>Subtotal</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itensCompraTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center">Nenhum item adicionado</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="observacoes">Observações</label>
-                        <textarea id="observacoes" name="observacoes" rows="3"></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="status">Status</label>
-                        <select id="status" name="status" required>
-                            <option value="pendente">Pendente</option>
-                            <option value="aprovado">Aprovado</option>
-                            <option value="recebido">Recebido</option>
-                            <option value="cancelado">Cancelado</option>
-                        </select>
+
+                    <!-- Aba 3: Status -->
+                    <div class="modal-tab-content" id="tab-status-compra">
+                        <div class="form-group">
+                            <label for="status">Status da Compra</label>
+                            <select id="status" name="status" required>
+                                <option value="pendente">Pendente</option>
+                                <option value="aprovado">Aprovado</option>
+                                <option value="recebido">Recebido</option>
+                                <option value="cancelado">Cancelado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Criar Conta a Pagar</label>
+                            <div class="checkbox-row">
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" id="criar_tit_ap" name="criar_tit_ap" checked>
+                                    Criar título ao aprovar/receber
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -572,6 +680,147 @@
         </div>
     </div>
 
+    <!-- Modal para Fabricar Produto -->
+    <div class="modal" id="fabricarModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2><i class="fas fa-cogs"></i> Fabricar Produto</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="fabricarForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fabricar_produto_id">Produto a Fabricar *</label>
+                            <select id="fabricar_produto_id" name="produto_id" required>
+                                <option value="">Selecione um produto fabricado...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="fabricar_quantidade">Quantidade *</label>
+                            <input type="number" id="fabricar_quantidade" name="quantidade" min="1" value="1" required>
+                        </div>
+                    </div>
+
+                    <div id="componentesContainer" style="display: none;">
+                        <h4 style="margin: 20px 0 10px 0; color: #333;">
+                            <i class="fas fa-list"></i> Componentes Necessários
+                        </h4>
+
+                        <!-- Loading indicator com GIF e barra de progresso -->
+                        <div id="loadingCustoContainer"
+                            style="display: none; text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px; margin-bottom: 15px;">
+                            <img src="img/loading.gif" alt="Carregando..."
+                                style="width: 50px; height: 50px; margin-bottom: 10px;">
+                            <p style="margin: 0 0 10px 0; color: #666;">Calculando custo dos componentes...</p>
+                            <div style="background: #e9ecef; border-radius: 10px; height: 20px; overflow: hidden;">
+                                <div id="progressBarCusto"
+                                    style="background: linear-gradient(90deg, #28a745, #20c997); height: 100%; width: 0%; transition: width 0.3s ease; border-radius: 10px;">
+                                </div>
+                            </div>
+                            <p id="progressTextCusto" style="margin: 5px 0 0 0; font-size: 12px; color: #888;">0%</p>
+                        </div>
+
+                        <p id="fabricarStatus" style="margin-bottom: 10px; font-weight: bold;"></p>
+                        <div class="table-container-compact">
+                            <table class="data-table" id="componentesFabricacaoTable">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Componente</th>
+                                        <th>Qtd. Necessária</th>
+                                        <th>Estoque Atual</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="componentesFabricacaoBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center">Selecione um produto para ver os componentes
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Custo Total da Fabricação -->
+                        <div id="custoFabricacaoContainer"
+                            style="margin-top: 15px; padding: 10px; background: #e8f5e9; border-radius: 5px; display: none;">
+                            <h5 style="margin: 0 0 5px 0; color: #2e7d32;">
+                                <i class="fas fa-calculator"></i> Custo Total da Fabricação
+                            </h5>
+                            <p style="margin: 0; font-size: 18px; font-weight: bold; color: #28a745;">
+                                <span id="custoFabricacaoTotal">R$ 0,00</span>
+                            </p>
+                            <small class="text-muted">Baseado no custo atual dos componentes</small>
+                        </div>
+
+                        <!-- Atualizar Preços do Produto -->
+                        <div id="atualizarPrecosContainer"
+                            style="margin-top: 15px; padding: 15px; background: #fff3cd; border-radius: 5px; border: 1px solid #ffc107; display: none;">
+                            <h5 style="margin: 0 0 10px 0; color: #856404;">
+                                <i class="fas fa-tag"></i> Atualizar Preços do Produto
+                            </h5>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="fabricar_preco_venda">Preço de Venda</label>
+                                    <input type="number" id="fabricar_preco_venda" step="0.01" min="0"
+                                        placeholder="R$ 0,00">
+                                </div>
+                                <div class="form-group">
+                                    <label for="fabricar_comissao">Comissão</label>
+                                    <input type="number" id="fabricar_comissao" step="0.01" min="0"
+                                        placeholder="R$ 0,00">
+                                </div>
+                            </div>
+                            <button type="button" class="btn-primary btn-sm" id="btnSalvarPrecosModal"
+                                style="margin-top: 10px;">
+                                <i class="fas fa-save"></i> Salvar Preços
+                            </button>
+                            <span id="salvarPrecosStatus" style="margin-left: 10px; display: none;"></span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnCancelarFabricar">Cancelar</button>
+                <button class="btn-primary" id="btnConfirmarFabricar" style="background-color: #28a745;" disabled>
+                    <i class="fas fa-hammer"></i> Fabricar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Visualizar Produtos da Compra -->
+    <div class="modal" id="produtosCompraModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="produtosCompraModalTitle"><i class="fas fa-box"></i> Produtos da Compra</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <table class="data-table" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Quantidade</th>
+                            <th>Preço Unit.</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="produtosCompraModalBody">
+                    </tbody>
+                </table>
+                <div
+                    style="margin-top: 15px; text-align: right; font-size: 16px; font-weight: bold; color: var(--accent-primary, #64ffda);">
+                    Total: <span id="produtosCompraModalTotal">R$ 0,00</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnFecharProdutosCompra">Fechar</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/auth.js"></script>
     <script src="js/api.js"></script>
     <script src="js/sidebar.js"></script>
@@ -585,5 +834,5 @@
     <script src="js/internal-animation.js"></script>
     <script src="js/theme-switcher.js"></script>
 </body>
-</html>
 
+</html>

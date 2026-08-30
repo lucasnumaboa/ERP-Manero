@@ -23,6 +23,7 @@ class ItemPedidoVenda(ItemPedidoVendaBase):
     subtotal: float
     pedido_id: int
     produto_nome: Optional[str] = None
+    custo_item: Optional[float] = None
 
 class PedidoVendaBase(BaseModel):
     cliente_id: int
@@ -53,6 +54,7 @@ class PedidoVendaUpdate(BaseModel):
     forma_pagamento: Optional[str] = None
     observacoes: Optional[str] = None
     comissao_total: Optional[float] = None
+    itens: Optional[List[ItemPedidoVendaCreate]] = None  # Lista de itens para atualização
 
 class PedidoVenda(PedidoVendaBase):
     id: int
@@ -67,6 +69,7 @@ class PedidoVenda(PedidoVendaBase):
     vendedor_nome: Optional[str] = None
     condicao_pagamento_nome: Optional[str] = None
     plataforma_nome: Optional[str] = None
+    total_pedidos_cliente: Optional[int] = None
 
 class PedidoVendaDetalhado(PedidoVenda):
     itens: List[ItemPedidoVenda]
@@ -84,7 +87,8 @@ async def listar_pedidos_venda(
     Pode filtrar por status, cliente e vendedor.
     """
     query = (
-        "SELECT pv.*, p.nome AS cliente_nome, v.nome AS vendedor_nome, cp.nome AS condicao_pagamento_nome, plat.nome AS plataforma_nome "
+        "SELECT pv.*, p.nome AS cliente_nome, v.nome AS vendedor_nome, cp.nome AS condicao_pagamento_nome, plat.nome AS plataforma_nome, "
+        "(SELECT COUNT(*) FROM pedidos_venda pv2 WHERE pv2.cliente_id = pv.cliente_id) as total_pedidos_cliente "
         "FROM pedidos_venda pv "
         "LEFT JOIN parceiros p ON pv.cliente_id = p.id "
         "LEFT JOIN vendedores v ON pv.vendedor_id = v.id "
@@ -282,17 +286,25 @@ async def criar_pedido_venda(
         for item in pedido.itens:
             subtotal = (item.preco_unitario - item.desconto) * item.quantidade
             
+            # Busca o custo atual do produto para armazenar no histórico
+            cursor.execute(
+                "SELECT preco_custo FROM produtos WHERE id = %s",
+                (item.produto_id,)
+            )
+            produto_custo = cursor.fetchone()
+            custo_item = float(produto_custo["preco_custo"]) if produto_custo else 0
+            
             cursor.execute(
                 """
                 INSERT INTO itens_pedido_venda (
                     pedido_id, produto_id, quantidade, preco_unitario,
-                    desconto, subtotal, comissao_item
+                    desconto, subtotal, comissao_item, custo_item
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     pedido_id, item.produto_id, item.quantidade,
-                    item.preco_unitario, item.desconto, subtotal, item.comissao_item
+                    item.preco_unitario, item.desconto, subtotal, item.comissao_item, custo_item
                 )
             )
             
@@ -435,8 +447,11 @@ async def atualizar_pedido_venda(
 ):
     """
     Atualiza os dados de um pedido de venda existente.
-    Não permite alterar os itens do pedido.
+    Permite alterar os itens do pedido com movimentação de estoque e envio de webhook.
     """
+    import urllib.request
+    import json as json_lib
+    import threading
     # Verifica se o pedido existe
     with get_db_cursor() as cursor:
         cursor.execute(
@@ -575,33 +590,279 @@ async def atualizar_pedido_venda(
     if pedido.comissao_total is not None:
         update_data["comissao_total"] = pedido.comissao_total
     
-    if not update_data:
+    # Verifica se há itens ou outros dados para atualizar
+    if not update_data and not pedido.itens:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Nenhum dado para atualizar"
         )
     
-    # Se o valor do frete ou desconto for alterado, recalcula o valor total
-    if "valor_frete" in update_data or "valor_desconto" in update_data:
-        valor_frete = update_data.get("valor_frete", pedido_atual["valor_frete"])
-        valor_desconto = update_data.get("valor_desconto", pedido_atual["valor_desconto"])
-        # Convert all values to float to ensure consistent types
-        valor_produtos = float(pedido_atual["valor_produtos"])
-        valor_frete = float(valor_frete)
-        valor_desconto = float(valor_desconto)
-        valor_total = valor_produtos + valor_frete - valor_desconto
-        update_data["valor_total"] = valor_total
+    # Variáveis para controle de alterações de itens (para webhook)
+    itens_removidos = []
+    itens_adicionados = []
+    itens_alterados = []
+    houve_alteracao_itens = False
     
     # Atualiza o pedido
     with get_db_cursor(commit=True) as cursor:
-        set_clause = ", ".join([f"{key} = %s" for key in update_data.keys()])
-        values = list(update_data.values())
-        values.append(pedido_id)
+        # Se há itens para atualizar, processa a alteração
+        if pedido.itens is not None:
+            houve_alteracao_itens = True
+            
+            # Obtém os itens atuais do pedido
+            cursor.execute(
+                """SELECT ipv.*, p.nome AS produto_nome 
+                   FROM itens_pedido_venda ipv 
+                   JOIN produtos p ON ipv.produto_id = p.id 
+                   WHERE ipv.pedido_id = %s""",
+                (pedido_id,)
+            )
+            itens_atuais = cursor.fetchall()
+            
+            # Cria dicionário dos itens atuais por produto_id
+            itens_atuais_dict = {item["produto_id"]: item for item in itens_atuais}
+            
+            # Cria dicionário dos novos itens por produto_id
+            novos_itens_dict = {item.produto_id: item for item in pedido.itens}
+            
+            # 1. Identifica itens removidos (estavam antes, não estão mais)
+            for produto_id, item_atual in itens_atuais_dict.items():
+                if produto_id not in novos_itens_dict:
+                    # Item foi removido - devolver ao estoque
+                    quantidade = item_atual["quantidade"]
+                    
+                    # Atualiza o estoque do produto (entrada)
+                    cursor.execute(
+                        "UPDATE produtos SET estoque_atual = estoque_atual + %s WHERE id = %s",
+                        (quantidade, produto_id)
+                    )
+                    
+                    # Registra a movimentação de estoque
+                    cursor.execute(
+                        """INSERT INTO movimentacao_estoque (
+                            produto_id, tipo, quantidade, motivo,
+                            documento_referencia, usuario_id
+                        )
+                        VALUES (%s, 'entrada', %s, %s, %s, %s)""",
+                        (produto_id, quantidade, f"Item removido do pedido {pedido_atual['codigo']}", 
+                         pedido_atual["codigo"], current_user.id)
+                    )
+                    
+                    # Remove o item do pedido
+                    cursor.execute(
+                        "DELETE FROM itens_pedido_venda WHERE pedido_id = %s AND produto_id = %s",
+                        (pedido_id, produto_id)
+                    )
+                    
+                    itens_removidos.append({
+                        "produto_id": produto_id,
+                        "produto_nome": item_atual["produto_nome"],
+                        "quantidade": quantidade
+                    })
+                    print(f"[EDIÇÃO PEDIDO] Item removido: {item_atual['produto_nome']} x{quantidade}")
+            
+            # 2. Identifica itens adicionados (não estavam antes, estão agora)
+            for produto_id, novo_item in novos_itens_dict.items():
+                if produto_id not in itens_atuais_dict:
+                    # Item foi adicionado - retirar do estoque
+                    quantidade = novo_item.quantidade
+                    
+                    # Verifica se há estoque suficiente
+                    cursor.execute(
+                        "SELECT nome, estoque_atual FROM produtos WHERE id = %s",
+                        (produto_id,)
+                    )
+                    produto = cursor.fetchone()
+                    
+                    if not produto:
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f"Produto com ID {produto_id} não encontrado"
+                        )
+                    
+                    if produto["estoque_atual"] < quantidade:
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f"Estoque insuficiente para o produto {produto['nome']}. Disponível: {produto['estoque_atual']}"
+                        )
+                    
+                    # Atualiza o estoque do produto (saída)
+                    cursor.execute(
+                        "UPDATE produtos SET estoque_atual = estoque_atual - %s WHERE id = %s",
+                        (quantidade, produto_id)
+                    )
+                    
+                    # Registra a movimentação de estoque
+                    cursor.execute(
+                        """INSERT INTO movimentacao_estoque (
+                            produto_id, tipo, quantidade, motivo,
+                            documento_referencia, usuario_id
+                        )
+                        VALUES (%s, 'saida', %s, %s, %s, %s)""",
+                        (produto_id, quantidade, f"Item adicionado ao pedido {pedido_atual['codigo']}", 
+                         pedido_atual["codigo"], current_user.id)
+                    )
+                    
+                    # Insere o novo item
+                    subtotal = (novo_item.preco_unitario - novo_item.desconto) * quantidade
+                    
+                    # Busca o custo atual do produto para armazenar no histórico
+                    cursor.execute(
+                        "SELECT preco_custo FROM produtos WHERE id = %s",
+                        (produto_id,)
+                    )
+                    produto_custo = cursor.fetchone()
+                    custo_item = float(produto_custo["preco_custo"]) if produto_custo else 0
+                    
+                    cursor.execute(
+                        """INSERT INTO itens_pedido_venda (
+                            pedido_id, produto_id, quantidade, preco_unitario,
+                            desconto, subtotal, comissao_item, custo_item
+                        )
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+                        (pedido_id, produto_id, quantidade, novo_item.preco_unitario,
+                         novo_item.desconto, subtotal, novo_item.comissao_item, custo_item)
+                    )
+                    
+                    itens_adicionados.append({
+                        "produto_id": produto_id,
+                        "produto_nome": produto["nome"],
+                        "quantidade": quantidade
+                    })
+                    print(f"[EDIÇÃO PEDIDO] Item adicionado: {produto['nome']} x{quantidade}")
+            
+            # 3. Identifica itens alterados (quantidade mudou)
+            for produto_id, novo_item in novos_itens_dict.items():
+                if produto_id in itens_atuais_dict:
+                    item_atual = itens_atuais_dict[produto_id]
+                    quantidade_atual = item_atual["quantidade"]
+                    quantidade_nova = novo_item.quantidade
+                    
+                    if quantidade_atual != quantidade_nova:
+                        diferenca = quantidade_nova - quantidade_atual
+                        
+                        if diferenca > 0:
+                            # Aumentou quantidade - verificar estoque e retirar
+                            cursor.execute(
+                                "SELECT nome, estoque_atual FROM produtos WHERE id = %s",
+                                (produto_id,)
+                            )
+                            produto = cursor.fetchone()
+                            
+                            if produto["estoque_atual"] < diferenca:
+                                raise HTTPException(
+                                    status_code=status.HTTP_400_BAD_REQUEST,
+                                    detail=f"Estoque insuficiente para o produto {produto['nome']}. Disponível: {produto['estoque_atual']}"
+                                )
+                            
+                            # Atualiza o estoque do produto (saída)
+                            cursor.execute(
+                                "UPDATE produtos SET estoque_atual = estoque_atual - %s WHERE id = %s",
+                                (diferenca, produto_id)
+                            )
+                            
+                            # Registra a movimentação de estoque
+                            cursor.execute(
+                                """INSERT INTO movimentacao_estoque (
+                                    produto_id, tipo, quantidade, motivo,
+                                    documento_referencia, usuario_id
+                                )
+                                VALUES (%s, 'saida', %s, %s, %s, %s)""",
+                                (produto_id, diferenca, f"Quantidade aumentada no pedido {pedido_atual['codigo']}", 
+                                 pedido_atual["codigo"], current_user.id)
+                            )
+                        else:
+                            # Diminuiu quantidade - devolver ao estoque
+                            diferenca_abs = abs(diferenca)
+                            
+                            cursor.execute(
+                                "SELECT nome FROM produtos WHERE id = %s",
+                                (produto_id,)
+                            )
+                            produto = cursor.fetchone()
+                            
+                            # Atualiza o estoque do produto (entrada)
+                            cursor.execute(
+                                "UPDATE produtos SET estoque_atual = estoque_atual + %s WHERE id = %s",
+                                (diferenca_abs, produto_id)
+                            )
+                            
+                            # Registra a movimentação de estoque
+                            cursor.execute(
+                                """INSERT INTO movimentacao_estoque (
+                                    produto_id, tipo, quantidade, motivo,
+                                    documento_referencia, usuario_id
+                                )
+                                VALUES (%s, 'entrada', %s, %s, %s, %s)""",
+                                (produto_id, diferenca_abs, f"Quantidade reduzida no pedido {pedido_atual['codigo']}", 
+                                 pedido_atual["codigo"], current_user.id)
+                            )
+                        
+                        # Atualiza o item do pedido
+                        subtotal = (novo_item.preco_unitario - novo_item.desconto) * quantidade_nova
+                        cursor.execute(
+                            """UPDATE itens_pedido_venda 
+                               SET quantidade = %s, preco_unitario = %s, desconto = %s, 
+                                   subtotal = %s, comissao_item = %s
+                               WHERE pedido_id = %s AND produto_id = %s""",
+                            (quantidade_nova, novo_item.preco_unitario, novo_item.desconto,
+                             subtotal, novo_item.comissao_item, pedido_id, produto_id)
+                        )
+                        
+                        itens_alterados.append({
+                            "produto_id": produto_id,
+                            "produto_nome": item_atual["produto_nome"],
+                            "quantidade_anterior": quantidade_atual,
+                            "quantidade_nova": quantidade_nova
+                        })
+                        print(f"[EDIÇÃO PEDIDO] Item alterado: {item_atual['produto_nome']} de {quantidade_atual} para {quantidade_nova}")
+                    else:
+                        # Quantidade igual, mas pode ter alterado preço ou comissão
+                        subtotal = (novo_item.preco_unitario - novo_item.desconto) * quantidade_nova
+                        cursor.execute(
+                            """UPDATE itens_pedido_venda 
+                               SET preco_unitario = %s, desconto = %s, 
+                                   subtotal = %s, comissao_item = %s
+                               WHERE pedido_id = %s AND produto_id = %s""",
+                            (novo_item.preco_unitario, novo_item.desconto,
+                             subtotal, novo_item.comissao_item, pedido_id, produto_id)
+                        )
+            
+            # Recalcula o valor dos produtos e valor total
+            cursor.execute(
+                "SELECT SUM(subtotal) as total FROM itens_pedido_venda WHERE pedido_id = %s",
+                (pedido_id,)
+            )
+            resultado = cursor.fetchone()
+            valor_produtos = float(resultado["total"]) if resultado["total"] else 0
+            
+            valor_frete = float(update_data.get("valor_frete", pedido_atual["valor_frete"]))
+            valor_desconto = float(update_data.get("valor_desconto", pedido_atual["valor_desconto"]))
+            valor_total = valor_produtos + valor_frete - valor_desconto
+            
+            update_data["valor_produtos"] = valor_produtos
+            update_data["valor_total"] = valor_total
         
-        cursor.execute(
-            f"UPDATE pedidos_venda SET {set_clause} WHERE id = %s",
-            values
-        )
+        # Se o valor do frete ou desconto for alterado (sem itens), recalcula o valor total
+        elif "valor_frete" in update_data or "valor_desconto" in update_data:
+            valor_frete = update_data.get("valor_frete", pedido_atual["valor_frete"])
+            valor_desconto = update_data.get("valor_desconto", pedido_atual["valor_desconto"])
+            valor_produtos = float(pedido_atual["valor_produtos"])
+            valor_frete = float(valor_frete)
+            valor_desconto = float(valor_desconto)
+            valor_total = valor_produtos + valor_frete - valor_desconto
+            update_data["valor_total"] = valor_total
+        
+        # Atualiza os dados do pedido
+        if update_data:
+            set_clause = ", ".join([f"{key} = %s" for key in update_data.keys()])
+            values = list(update_data.values())
+            values.append(pedido_id)
+            
+            cursor.execute(
+                f"UPDATE pedidos_venda SET {set_clause} WHERE id = %s",
+                values
+            )
         
         # Se o status foi alterado para "cancelado", devolve os produtos ao estoque
         if pedido.status == "cancelado" and pedido_atual["status"] != "cancelado":
@@ -640,6 +901,107 @@ async def atualizar_pedido_venda(
             (pedido_id,)
         )
         pedido_atualizado = cursor.fetchone()
+        
+        # Busca dados do vendedor para o webhook
+        vendedor_telefone = None
+        vendedor_nome = None
+        if pedido_atualizado.get("vendedor_id"):
+            cursor.execute(
+                "SELECT nome, telefone FROM vendedores WHERE id = %s",
+                (pedido_atualizado["vendedor_id"],)
+            )
+            vendedor = cursor.fetchone()
+            if vendedor:
+                vendedor_telefone = vendedor["telefone"]
+                vendedor_nome = vendedor["nome"]
+        
+        # Envia webhook se houve alteração de itens
+        if houve_alteracao_itens and (itens_removidos or itens_adicionados or itens_alterados):
+            try:
+                # Busca configurações de webhook
+                cursor.execute(
+                    "SELECT valor FROM configuracoes WHERE chave = 'webhook_url'"
+                )
+                webhook_url_row = cursor.fetchone()
+                
+                cursor.execute(
+                    "SELECT valor FROM configuracoes WHERE chave = 'webhook_ativo'"
+                )
+                webhook_ativo_row = cursor.fetchone()
+                
+                webhook_url = webhook_url_row["valor"] if webhook_url_row else None
+                webhook_ativo_valor = webhook_ativo_row["valor"] if webhook_ativo_row else None
+                webhook_ativo = webhook_ativo_valor == "true" or webhook_ativo_valor == "1" or webhook_ativo_valor == True
+                
+                print(f"[EDIÇÃO PEDIDO] Webhook URL: {webhook_url}, Ativo: {webhook_ativo}")
+                
+                if webhook_url and webhook_ativo and vendedor_telefone:
+                    # Monta a mensagem
+                    mensagem = f"📝 *PEDIDO ALTERADO*\n\n"
+                    mensagem += f"📋 *Pedido:* {pedido_atual['codigo']}\n"
+                    mensagem += f"👤 *Vendedor:* {vendedor_nome or 'N/A'}\n\n"
+                    
+                    if itens_removidos:
+                        mensagem += f"❌ *Itens Removidos:*\n"
+                        for item in itens_removidos:
+                            mensagem += f"   • {item['produto_nome']} (Qtd: {item['quantidade']})\n"
+                        mensagem += "\n"
+                    
+                    if itens_adicionados:
+                        mensagem += f"✅ *Itens Adicionados:*\n"
+                        for item in itens_adicionados:
+                            mensagem += f"   • {item['produto_nome']} (Qtd: {item['quantidade']})\n"
+                        mensagem += "\n"
+                    
+                    if itens_alterados:
+                        mensagem += f"🔄 *Itens Alterados:*\n"
+                        for item in itens_alterados:
+                            mensagem += f"   • {item['produto_nome']}: {item['quantidade_anterior']} → {item['quantidade_nova']}\n"
+                        mensagem += "\n"
+                    
+                    mensagem += f"💰 *Novo Valor Total:* R$ {pedido_atualizado['valor_total']:.2f}"
+                    
+                    payload = {
+                        "telefone": vendedor_telefone,
+                        "mensagem": mensagem,
+                        "tipo": "alteracao_pedido",
+                        "pedido_codigo": pedido_atual["codigo"],
+                        "itens_removidos": itens_removidos,
+                        "itens_adicionados": itens_adicionados,
+                        "itens_alterados": itens_alterados,
+                        "timestamp": datetime.now().isoformat()
+                    }
+                    
+                    print(f"[EDIÇÃO PEDIDO] Enviando webhook para: {vendedor_telefone}")
+                    
+                    # Função para enviar webhook em thread separada (não bloqueia)
+                    def enviar_webhook_async(url, data):
+                        try:
+                            req = urllib.request.Request(
+                                url,
+                                data=data,
+                                headers={'Content-Type': 'application/json'},
+                                method='POST'
+                            )
+                            response = urllib.request.urlopen(req, timeout=30)
+                            print(f"[EDIÇÃO PEDIDO] Webhook enviado com sucesso! Status: {response.status}")
+                        except Exception as e:
+                            print(f"[EDIÇÃO PEDIDO] Erro ao enviar webhook (async): {e}")
+                    
+                    # Envia em thread separada para não bloquear a resposta
+                    webhook_data = json_lib.dumps(payload).encode('utf-8')
+                    webhook_thread = threading.Thread(
+                        target=enviar_webhook_async,
+                        args=(webhook_url, webhook_data)
+                    )
+                    webhook_thread.daemon = True
+                    webhook_thread.start()
+                    print(f"[EDIÇÃO PEDIDO] Webhook iniciado em thread separada")
+                else:
+                    print(f"[EDIÇÃO PEDIDO] Webhook não enviado - URL, ativo ou telefone inválido")
+                    
+            except Exception as e:
+                print(f"[EDIÇÃO PEDIDO] Erro ao processar webhook: {e}")
     
     return pedido_atualizado
 
@@ -734,7 +1096,7 @@ async def devolver_pedido_venda(
             estoque_atual = produto_atual["estoque_atual"] or 0
             preco_custo_atual = produto_atual["preco_custo"] or 0
             quantidade_devolvida = item["quantidade"]
-            preco_custo_item = item["preco_unitario"]  # Usa o preço de venda como referência
+            preco_custo_item = item["preco_custo_atual"]  # Usa o preço de custo atual do produto
             
             # Recalcula o preço médio ponderado
             # Fórmula: (estoque_atual * preco_custo_atual + qtd_devolvida * preco_item) / (estoque_atual + qtd_devolvida)

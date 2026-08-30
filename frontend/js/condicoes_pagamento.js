@@ -49,20 +49,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Configurar fechamento ao clicar fora do modal
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                modal.style.display = 'none';
-                modal.classList.remove('active');
-                document.body.classList.remove('modal-open');
-                
-                if (modal.id === 'condicaoModal') {
-                    limparFormularioCondicao();
-                }
-            }
-        });
-    });
+    // REMOVIDO: Fechar modal ao clicar fora
+    // Modais agora só fecham ao clicar no X ou botão Cancelar/Fechar
     
     // Configurar filtros
     document.getElementById('filtroPesquisa').addEventListener('input', filtrarCondicoes);

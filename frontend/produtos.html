@@ -1,5 +1,6 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/modulos.css">
     <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="css/produtos.css">
     <link rel="stylesheet" href="css/permissions.css">
@@ -16,6 +18,49 @@
     <link rel="stylesheet" href="css/theme-dark.css">
     <link rel="stylesheet" href="css/theme-light.css">
     <style>
+        /* Estilos do botão Gerar por IA */
+        .label-with-action {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .label-with-action label {
+            margin-bottom: 0;
+        }
+
+        .btn-gerar-ia {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-gerar-ia:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-gerar-ia:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-gerar-ia i {
+            font-size: 12px;
+        }
+
         /* Estilos dos Filtros Reformulados */
         .filter-container {
             background: #f8f9fa;
@@ -23,7 +68,7 @@
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             max-width: 100%;
         }
 
@@ -81,13 +126,13 @@
             background: white;
         }
 
-        .filter-checkbox:checked + .checkbox-label .checkbox-custom {
+        .filter-checkbox:checked+.checkbox-label .checkbox-custom {
             background: #007bff;
             border-color: #007bff;
         }
 
-        .filter-checkbox:checked + .checkbox-label .checkbox-custom::after {
-            content: '✓';
+        .filter-checkbox:checked+.checkbox-label .checkbox-custom::after {
+            content: 'âœ“';
             color: white;
             font-size: 12px;
             font-weight: bold;
@@ -131,7 +176,7 @@
         .filter-input:focus {
             outline: none;
             border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
         }
 
         .search-btn {
@@ -161,7 +206,7 @@
         .filter-select:focus {
             outline: none;
             border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
         }
 
         .btn-clear-filters {
@@ -196,7 +241,8 @@
                 margin-right: 0;
             }
 
-            .filter-input, .filter-select {
+            .filter-input,
+            .filter-select {
                 width: 100%;
                 min-width: unset;
             }
@@ -208,7 +254,103 @@
         }
     </style>
 </head>
+
 <body>
+    <!-- Loading Overlay para Produtos -->
+    <div class="loading-overlay-produtos" id="loadingOverlayProdutos">
+        <div class="loading-content-produtos">
+            <img src="img/loading.gif" alt="Carregando..." class="loading-gif-produtos">
+            <span class="loading-text-produtos" id="loadingTextProdutos">Salvando produto...</span>
+            <div class="loading-progress-container-produtos">
+                <div class="loading-progress-bar-produtos" id="loadingProgressBarProdutos"></div>
+            </div>
+            <span class="loading-progress-text-produtos" id="loadingProgressTextProdutos">Aguarde...</span>
+        </div>
+    </div>
+
+    <style>
+        /* Loading Overlay Styles */
+        .loading-overlay-produtos {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 25, 47, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .loading-overlay-produtos.active {
+            display: flex;
+        }
+
+        .loading-content-produtos {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 40px;
+            background: rgba(17, 34, 64, 0.95);
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .loading-gif-produtos {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+
+        .loading-text-produtos {
+            color: #64ffda;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .loading-progress-container-produtos {
+            width: 240px;
+            background: rgba(100, 255, 218, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            height: 10px;
+            border: 1px solid rgba(100, 255, 218, 0.2);
+        }
+
+        .loading-progress-bar-produtos {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #64ffda, #00bcd4, #64ffda);
+            background-size: 200% 100%;
+            border-radius: 10px;
+            animation: progressAnimationProdutos 1.5s ease-in-out infinite;
+        }
+
+        @keyframes progressAnimationProdutos {
+            0% {
+                width: 0%;
+            }
+
+            50% {
+                width: 70%;
+            }
+
+            100% {
+                width: 100%;
+            }
+        }
+
+        .loading-progress-text-produtos {
+            color: #a8b2d1;
+            font-size: 14px;
+        }
+    </style>
+
     <div class="app-container">
         <!-- Sidebar / Menu Lateral -->
         <aside class="sidebar">
@@ -245,7 +387,7 @@
                         <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     </li>
                 </ul>
-                
+
                 <!-- Menu Principal -->
                 <ul>
                     <li class="active">
@@ -294,6 +436,9 @@
                         <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
                     </li>
                     <li>
+                        <a href="softwares.html"><i class="fas fa-download"></i> Softwares</a>
+                    </li>
+                    <li>
                         <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
                     </li>
                     <li class="logout">
@@ -317,47 +462,64 @@
                         <button class="btn-primary" id="btnNovoProduto">
                             <i class="fas fa-plus"></i> Novo Produto
                         </button>
-
+                        <button class="btn-primary" id="btnRecalcularCusto"
+                            style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <i class="fas fa-calculator"></i> Recalcular Custo
+                        </button>
+                        <button class="btn-primary" id="btnAtualizarDescricoes"
+                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="fas fa-magic"></i> Atualizar Descrições
+                        </button>
+                        <button class="btn-primary" id="btnCadastroMassa"
+                            style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                            <i class="fas fa-images"></i> Cadastrar em Massa
+                        </button>
                     </div>
-                    
+
                 </div>
-                
+
                 <!-- Filtros -->
                 <div class="filter-container">
                     <h4 style="margin: 0 0 10px 0; color: #495057; font-size: 16px;">Filtros de Produtos</h4>
-                    <p style="margin: 0 0 15px 0; color: #6c757d; font-size: 14px;">Configure os filtros para visualizar os produtos desejados</p>
-                    
+                    <p style="margin: 0 0 15px 0; color: #6c757d; font-size: 14px;">Configure os filtros para visualizar
+                        os produtos desejados</p>
+
                     <div class="filter-row controls-row">
                         <div class="filter-control">
                             <span class="control-label">Pesquisar:</span>
                             <div class="search-input-group">
-                                <input type="text" id="filtroPesquisa" placeholder="Digite para pesquisar..." class="filter-input">
+                                <input type="text" id="filtroPesquisa" placeholder="Digite para pesquisar..."
+                                    class="filter-input">
                                 <button onclick="filtrarProdutos()" class="search-btn">
                                     <i class="fas fa-search"></i>
                                 </button>
                             </div>
                         </div>
-                        
+
                         <div class="filter-control">
                             <span class="control-label">Categoria:</span>
-                            <select id="filtroCategoria" onchange="filtrarProdutos()" class="filter-select">
+                            <select id="filtroCategoria" class="filter-select">
                                 <option value="">Todas</option>
-                                <option value="1">Eletrônicos</option>
-                                <option value="2">Móveis</option>
-                                <option value="3">Vestuário</option>
-                                <option value="4">Alimentos</option>
                             </select>
                         </div>
-                        
+
                         <div class="filter-control">
                             <span class="control-label">Status:</span>
-                            <select id="filtroStatus" onchange="filtrarProdutos()" class="filter-select">
+                            <select id="filtroStatus" class="filter-select">
                                 <option value="">Todos</option>
                                 <option value="true">Ativo</option>
                                 <option value="false">Inativo</option>
                             </select>
                         </div>
-                        
+
+                        <div class="filter-control checkbox-item">
+                            <label class="checkbox-label" for="filtroApenasComEstoque">
+                                <input type="checkbox" id="filtroApenasComEstoque" class="filter-checkbox">
+                                <span class="checkbox-custom"></span>
+                                Apenas com estoque
+                            </label>
+                        </div>
+
                         <button onclick="limparFiltros()" class="btn-clear-filters">
                             Limpar Filtros
                         </button>
@@ -388,13 +550,9 @@
                     </table>
                 </div>
 
-                <!-- Paginação -->
+                <!-- Paginação (controlada dinamicamente pelo pagination.js) -->
                 <div class="pagination">
-                    <button class="btn-page" disabled><i class="fas fa-chevron-left"></i></button>
-                    <button class="btn-page active">1</button>
-                    <button class="btn-page">2</button>
-                    <button class="btn-page">3</button>
-                    <button class="btn-page"><i class="fas fa-chevron-right"></i></button>
+                    <!-- Botões de paginação são gerados dinamicamente -->
                 </div>
             </div>
         </main>
@@ -402,92 +560,219 @@
 
     <!-- Modal de Novo/Editar Produto -->
     <div class="modal" id="produtoModal">
-        <div class="modal-content">
+        <div class="modal-content modal-lg modal-vendas">
             <div class="modal-header">
                 <h2 id="modalTitle">Novo Produto</h2>
                 <button class="close-modal">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="produtoForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="codigo">Código</label>
-                            <input type="text" id="codigo" name="codigo" required readonly>
-                        </div>
-                        <div class="form-group">
-                            <label for="nome">Nome</label>
-                            <input type="text" id="nome" name="nome" required>
-                        </div>
+                    <!-- Sistema de Abas -->
+                    <div class="modal-tabs">
+                        <button type="button" class="modal-tab active" data-tab="tab-dados-produto">
+                            <i class="fas fa-box"></i> Dados
+                        </button>
+                        <button type="button" class="modal-tab" data-tab="tab-precos-produto">
+                            <i class="fas fa-dollar-sign"></i> Preços
+                        </button>
+                        <button type="button" class="modal-tab" data-tab="tab-imagens-produto">
+                            <i class="fas fa-image"></i> Imagens
+                        </button>
+                        <button type="button" class="modal-tab" data-tab="tab-consumo-produto" id="tabConsumo"
+                            style="display: none;">
+                            <i class="fas fa-cogs"></i> Consumo
+                        </button>
                     </div>
-                    <div class="form-group">
-                        <label for="descricao">Descrição</label>
-                        <textarea id="descricao" name="descricao" rows="3"></textarea>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="preco_custo">Preço de Custo</label>
-                            <input type="text" id="preco_custo" name="preco_custo" inputmode="decimal" pattern="[0-9,]*" required>
+
+                    <!-- Aba 1: Dados do Produto -->
+                    <div class="modal-tab-content active" id="tab-dados-produto">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="codigo">Código</label>
+                                <input type="text" id="codigo" name="codigo" required readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="nome">Nome</label>
+                                <input type="text" id="nome" name="nome" required>
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label for="preco_venda">Preço de Venda</label>
-                            <input type="text" id="preco_venda" name="preco_venda" inputmode="decimal" pattern="[0-9,]*" required>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="estoque_minimo">Estoque Mínimo</label>
-                            <input type="number" id="estoque_minimo" name="estoque_minimo" value="5">
-                        </div>
-                        <div class="form-group">
-                            <label for="categoria_id">Categoria</label>
-                            <div class="input-with-action">
-                                <select id="categoria_id" name="categoria_id" required>
-                                    <option value="">Selecione...</option>
-                                    <option value="1">Eletrônicos</option>
-                                    <option value="2">Móveis</option>
-                                    <option value="3">Vestuário</option>
-                                    <option value="4">Alimentos</option>
-                                </select>
-                                <button type="button" class="btn-link" id="btnNovaCategoriaModal" title="Criar Categoria">
-                                    <i class="fas fa-plus-circle"></i>
+                            <div class="label-with-action">
+                                <label for="descricao">Descrição</label>
+                                <button type="button" id="btnMicDescricao" class="btn-gerar-ia"
+                                    title="Ditar por voz">
+                                    <i class="fas fa-microphone"></i>
                                 </button>
+                                <button type="button" id="btnGerarDescricaoIA" class="btn-gerar-ia"
+                                    title="Gerar descrição por IA">
+                                    <i class="fas fa-magic"></i> Gerar por IA
+                                </button>
+                            </div>
+                            <textarea id="descricao" name="descricao" rows="4"
+                                placeholder="Descrição do produto..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <div class="label-with-action">
+                                <label for="instrucoes_duvidas">Instruções e Dúvidas</label>
+                                <button type="button" id="btnMicInstrucoes" class="btn-gerar-ia"
+                                    title="Ditar por voz">
+                                    <i class="fas fa-microphone"></i>
+                                </button>
+                            </div>
+                            <textarea id="instrucoes_duvidas" name="instrucoes_duvidas" rows="4"
+                                placeholder="Detalhes, condições, respostas para perguntas comuns sobre este produto..."></textarea>
+                            <small style="color: #666;">Usado pela IA do chat de produto para responder dúvidas dos
+                                vendedores sobre este item.</small>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="categoria_id">Categoria</label>
+                                <div class="input-with-action">
+                                    <select id="categoria_id" name="categoria_id" required>
+                                        <option value="">Selecione...</option>
+                                    </select>
+                                    <button type="button" class="btn-link" id="btnNovaCategoriaModal"
+                                        title="Criar Categoria">
+                                        <i class="fas fa-plus-circle"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="tipo_produto">Tipo de Produto</label>
+                                <select id="tipo_produto" name="tipo_produto" required>
+                                    <option value="comprado">Comprado</option>
+                                    <option value="fabricado">Fabricado</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="deposito_id">Depósito</label>
+                                <div class="input-with-action">
+                                    <select id="deposito_id" name="deposito_id">
+                                        <option value="">Selecione...</option>
+                                    </select>
+                                    <button type="button" class="btn-link" id="btnNovoDepositoModal"
+                                        title="Criar Depósito">
+                                        <i class="fas fa-plus-circle"></i>
+                                    </button>
+                                </div>
+                                <small style="color: #666;">Se não for selecionado, o produto usa o depósito
+                                    padrão. <a href="depositos.html" target="_blank">Gerenciar depósitos</a></small>
                             </div>
                         </div>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="tipo_produto">Tipo de Produto</label>
-                            <select id="tipo_produto" name="tipo_produto" required>
-                                <option value="comprado">Comprado</option>
-                                <option value="fabricado">Fabricado</option>
-                            </select>
+
+                    <!-- Aba 2: Preços e Estoque -->
+                    <div class="modal-tab-content" id="tab-precos-produto">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="preco_custo">Preço de Custo</label>
+                                <input type="text" id="preco_custo" name="preco_custo" inputmode="decimal"
+                                    pattern="[0-9,]*">
+                            </div>
+                            <div class="form-group">
+                                <label for="preco_venda">Preço de Venda</label>
+                                <input type="text" id="preco_venda" name="preco_venda" inputmode="decimal"
+                                    pattern="[0-9,]*" required>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="comissao">Comissão (R$)</label>
-                            <input type="text" id="comissao" name="comissao" inputmode="numeric" pattern="[0-9]*" placeholder="Ex: 50">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="estoque_minimo">Estoque Mínimo</label>
+                                <input type="number" id="estoque_minimo" name="estoque_minimo" value="5">
+                            </div>
+                            <div class="form-group">
+                                <label for="comissao">Comissão (R$)</label>
+                                <input type="text" id="comissao" name="comissao" inputmode="numeric" pattern="[0-9]*"
+                                    placeholder="Ex: 50">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="faturavel" name="faturavel" checked>
+                                    <span class="checkmark"></span>
+                                    Faturável (visível para vendedores)
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="ativo" name="ativo" checked>
+                                    <span class="checkmark"></span>
+                                    Produto Ativo
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="post_facebook" name="post_facebook">
+                                    <span class="checkmark"></span>
+                                    📘 Postar no Facebook
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="post_olx" name="post_olx">
+                                    <span class="checkmark"></span>
+                                    🟠 Postar na OLX
+                                </label>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="imagens_produto">Imagens do Produto (máximo 3)</label>
-                        <input type="file" id="imagens_produto" name="imagens_produto" multiple accept="image/*" style="margin-bottom: 10px;">
-                        <div id="preview_imagens" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;"></div>
-                        <small style="color: #666;">Selecione até 3 imagens para o produto</small>
+
+                    <!-- Aba 3: Imagens -->
+                    <div class="modal-tab-content" id="tab-imagens-produto">
+                        <div class="form-group">
+                            <label for="imagens_produto">Imagens do Produto (máximo 5)</label>
+                            <input type="file" id="imagens_produto" name="imagens_produto" multiple accept="image/*"
+                                style="margin-bottom: 10px;">
+                            <div id="preview_imagens"
+                                style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;"></div>
+                            <small style="color: #666;">Selecione até 5 imagens para o produto</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="video_produto">Vídeo do Produto (1 vídeo)</label>
+                            <input type="file" id="video_produto" name="video_produto" accept="video/*"
+                                style="margin-bottom: 10px;">
+                            <div id="preview_video" style="margin-top: 10px;"></div>
+                            <small style="color: #666;">Selecione até 1 vídeo para o produto</small>
+                        </div>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="checkbox-container">
-                                <input type="checkbox" id="faturavel" name="faturavel" checked>
-                                <span class="checkmark"></span>
-                                Faturável (visível para vendedores)
-                            </label>
+
+                    <!-- Aba 4: Consumo (BOM) - apenas para produtos fabricados -->
+                    <div class="modal-tab-content" id="tab-consumo-produto">
+                        <div class="itens-header"
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <p style="margin: 0; color: #666;">Defina os componentes necessários para fabricar este
+                                produto</p>
+                            <button type="button" class="btn-outline btn-sm" id="btnAdicionarConsumo">
+                                <i class="fas fa-plus"></i> Adicionar Componente
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label class="checkbox-container">
-                                <input type="checkbox" id="ativo" name="ativo" checked>
-                                <span class="checkmark"></span>
-                                Produto Ativo
-                            </label>
+                        <div class="table-container-compact">
+                            <table class="data-table" id="consumoTable">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Componente</th>
+                                        <th>Qtd. Necessária</th>
+                                        <th>Estoque Atual</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="consumoTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center">Nenhum componente cadastrado</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
+                        <small style="color: #666; display: block; margin-top: 10px;">
+                            <i class="fas fa-info-circle"></i> Os componentes serão consumidos do estoque quando o
+                            produto for fabricado.
+                        </small>
                     </div>
                 </form>
             </div>
@@ -524,6 +809,601 @@
         </div>
     </div>
 
+    <!-- Modal para Novo Depósito -->
+    <div class="modal" id="depositoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Novo Depósito</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="depositoForm">
+                    <div class="form-group">
+                        <label for="deposito_nome">Nome *</label>
+                        <input type="text" id="deposito_nome" name="nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="deposito_descricao">Descrição</label>
+                        <textarea id="deposito_descricao" name="descricao" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnCancelarDeposito">Cancelar</button>
+                <button class="btn-primary" id="btnSalvarDeposito">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Adicionar Componente de Consumo -->
+    <div class="modal" id="consumoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Adicionar Componente</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="consumoForm">
+                    <div class="form-group">
+                        <label for="consumo_produto_id">Produto Componente *</label>
+                        <select id="consumo_produto_id" name="consumo_produto_id" required>
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="consumo_quantidade">Quantidade Necessária *</label>
+                        <input type="number" id="consumo_quantidade" name="quantidade" min="0.01" step="0.01" value="1"
+                            required>
+                        <small style="color: #666;">Quantidade necessária para fabricar 1 unidade do produto pai</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnCancelarConsumo">Cancelar</button>
+                <button class="btn-primary" id="btnSalvarConsumo">Adicionar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Recalcular Custo -->
+    <div class="modal" id="recalcularCustoModal">
+        <div class="modal-content" style="max-width: 1100px; width: 95%;">
+            <div class="modal-header">
+                <h2><i class="fas fa-calculator"></i> Recalcular Custo de Produtos</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: #8892b0; margin-bottom: 15px;">Recálculo baseado nas últimas compras e movimentações de
+                    entrada que compuseram o estoque atual.</p>
+                <div id="recalcularCustoLoading" style="text-align: center; padding: 40px; display: none;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #64ffda;"></i>
+                    <p style="margin-top: 15px; color: #a8b2d1;">Recalculando custos...</p>
+                </div>
+                <div id="recalcularCustoContent" style="display: none;">
+                    <div
+                        style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                        <span id="recalcularCustoCount" style="color: #a8b2d1; font-size: 14px;"></span>
+                        <input type="text" id="recalcularCustoSearch" placeholder="Pesquisar produto..."
+                            class="filter-input" style="max-width: 300px;">
+                    </div>
+                    <div class="table-container" style="max-height: 500px; overflow-y: auto;">
+                        <table class="data-table" id="recalcularCustoTable">
+                            <thead>
+                                <tr>
+                                    <th style="width:40px;text-align:center;"><input type="checkbox" id="selecionarTodosCusto" title="Selecionar todos" style="cursor:pointer;width:16px;height:16px;"></th>
+                                    <th>Código</th>
+                                    <th>Produto</th>
+                                    <th>Estoque</th>
+                                    <th>Custo Atual (R$)</th>
+                                    <th>Custo Recalculado (R$)</th>
+                                    <th>Diferença</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="recalcularCustoTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnCancelarRecalculo">Cancelar</button>
+                <button class="btn-primary" id="btnAplicarRecalculo"
+                    style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);" disabled>
+                    <i class="fas fa-check"></i> Aplicar Custos
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Confirmar Aplicar Custo -->
+    <div class="modal" id="confirmarAplicarCustoModal">
+        <div class="modal-content" style="max-width: 800px; width: 90%;">
+            <div class="modal-header">
+                <h2><i class="fas fa-check-circle"></i> Confirmar Aplicação de Custos</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: #8892b0; margin-bottom: 15px;">Os seguintes produtos terão o custo atualizado:</p>
+                <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                    <table class="data-table" id="confirmarCustoTable">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Produto</th>
+                                <th>Custo Atual</th>
+                                <th>Novo Custo</th>
+                                <th>Diferença</th>
+                            </tr>
+                        </thead>
+                        <tbody id="confirmarCustoTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnCancelarConfirmarCusto">Cancelar</button>
+                <button class="btn-primary" id="btnConfirmarAplicarCusto"
+                    style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                    <i class="fas fa-check"></i> Confirmar e Aplicar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Atualizar Descrições por IA -->
+    <div class="modal" id="atualizarDescricoesModal">
+        <div class="modal-content" style="max-width: 950px; width: 95%;">
+            <div class="modal-header">
+                <h2><i class="fas fa-magic"></i> Atualizar Descrições por IA</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+                    <input type="text" id="descBulkSearch" placeholder="Pesquisar produto..." class="filter-input" style="flex:1;min-width:180px;">
+                    <select id="descBulkCategoria" class="filter-select" style="min-width:160px;">
+                        <option value="">Todas as categorias</option>
+                    </select>
+                    <button onclick="filtrarProdutosDescBulk()" class="search-btn"><i class="fas fa-search"></i></button>
+                    <button onclick="selecionarTodosDescBulk(true)" class="btn-outline btn-sm" style="padding:6px 12px;font-size:13px;">Sel. Todos</button>
+                    <button onclick="selecionarTodosDescBulk(false)" class="btn-outline btn-sm" style="padding:6px 12px;font-size:13px;">Limpar</button>
+                </div>
+                <div style="margin-bottom:10px;color:#a8b2d1;font-size:14px;">
+                    <span id="descBulkCount">0 produto(s) selecionado(s)</span>
+                </div>
+                <div class="table-container" style="max-height:450px;overflow-y:auto;">
+                    <table class="data-table" id="descBulkTable">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;text-align:center;"><input type="checkbox" id="selecionarTodosDesc" title="Selecionar todos" style="cursor:pointer;width:16px;height:16px;"></th>
+                                <th>Código</th>
+                                <th>Produto</th>
+                                <th>Categoria</th>
+                                <th>Tem Descrição</th>
+                            </tr>
+                        </thead>
+                        <tbody id="descBulkTableBody">
+                            <tr><td colspan="5" class="text-center">Carregando produtos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnCancelarDescBulk">Cancelar</button>
+                <button class="btn-primary" id="btnGerarDescBulk"
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <i class="fas fa-magic"></i> Gerar Descrições
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Resultado Descrições IA -->
+    <div class="modal" id="resultadoDescricoesModal">
+        <div class="modal-content" style="max-width: 950px; width: 95%;">
+            <div class="modal-header">
+                <h2><i class="fas fa-robot"></i> Descrições Geradas por IA</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="descResultadoLoading" style="text-align:center;padding:50px;display:none;">
+                    <i class="fas fa-robot" style="font-size:48px;color:#667eea;animation:fa-bounce 1s infinite;"></i>
+                    <p style="margin-top:15px;color:#a8b2d1;font-size:16px;">Gerando descrições com IA...</p>
+                    <p id="descResultadoProgresso" style="color:#667eea;font-size:13px;margin-top:8px;">Aguarde...</p>
+                </div>
+                <div id="descResultadoContent" style="display:none;">
+                    <p style="color:#a8b2d1;margin-bottom:15px;font-size:14px;">Revise as descrições antes de aplicar. Você pode editar cada uma:</p>
+                    <div id="descResultadoLista" style="max-height:500px;overflow-y:auto;display:flex;flex-direction:column;gap:15px;"></div>
+                </div>
+            </div>
+            <div class="modal-footer" id="descResultadoFooter" style="display:none;">
+                <button class="btn-outline" id="btnCancelarResultadoDesc">Cancelar</button>
+                <button class="btn-primary" id="btnAplicarDescBulk"
+                    style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                    <i class="fas fa-check"></i> OK - Aplicar Todas as Descrições
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Composição de Custo -->
+    <div class="modal" id="composicaoCustoModal">
+        <div class="modal-content" style="max-width: 800px; width: 90%;">
+            <div class="modal-header">
+                <h2><i class="fas fa-search-dollar"></i> Composição do Custo</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="composicaoCustoLoading" style="text-align: center; padding: 30px; display: none;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: #64ffda;"></i>
+                </div>
+                <div id="composicaoCustoContent" style="display: none;">
+                    <div
+                        style="margin-bottom: 15px; padding: 15px; background: rgba(100,255,218,0.05); border-radius: 8px; border: 1px solid rgba(100,255,218,0.1);">
+                        <h3 id="composicaoProdutoNome" style="margin: 0 0 8px 0; color: #ccd6f6;"></h3>
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                            <span style="color: #a8b2d1;">Estoque: <strong id="composicaoEstoque"
+                                    style="color: #64ffda;"></strong></span>
+                            <span style="color: #a8b2d1;">Custo Atual: <strong id="composicaoCustoAtual"
+                                    style="color: #f5576c;"></strong></span>
+                            <span style="color: #a8b2d1;">Custo Recalculado: <strong id="composicaoCustoRecalc"
+                                    style="color: #38ef7d;"></strong></span>
+                        </div>
+                    </div>
+                    <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                        <table class="data-table" id="composicaoCustoTable">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Origem</th>
+                                    <th>Referência</th>
+                                    <th>Qtd Total</th>
+                                    <th>Qtd Usada</th>
+                                    <th>Valor Unit. (R$)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="composicaoCustoTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnFecharComposicao">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cadastro em Massa -->
+    <div class="modal" id="cadastroMassaModal">
+        <div class="modal-content" style="max-width: 1200px; width: 95%; max-height: 95vh; display: flex; flex-direction: column;">
+            <div class="modal-header">
+                <h2><i class="fas fa-images"></i> Cadastro em Massa de Produtos</h2>
+                <button class="close-modal" id="btnFecharCadastroMassa">&times;</button>
+            </div>
+            <div class="modal-body" style="overflow-y: auto; flex: 1;">
+                <!-- Etapa 1: Seleção de Imagens -->
+                <div id="cadastroMassaEtapa1">
+                    <div style="text-align: center; padding: 40px 20px; border: 2px dashed rgba(100,255,218,0.3); border-radius: 12px; cursor: pointer; transition: all 0.3s;" id="dropZoneMassa"
+                        onclick="document.getElementById('inputImagensMassa').click();">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #64ffda; margin-bottom: 15px; display: block;"></i>
+                        <p style="color: #ccd6f6; font-size: 16px; margin-bottom: 8px;">Clique aqui ou arraste imagens para selecionar</p>
+                        <p style="color: #a8b2d1; font-size: 13px;">Formato do nome: <strong style="color: #64ffda;">1-Nome do Produto</strong>, <strong style="color: #64ffda;">2-Nome do Produto</strong>, <strong style="color: #64ffda;">3-Nome do Produto</strong></p>
+                        <p style="color: #8892b0; font-size: 12px; margin-top: 5px;">Até 3 imagens por produto. O nome após o "-" será o nome do produto.</p>
+                        <input type="file" id="inputImagensMassa" multiple accept="image/*" style="display: none;">
+                    </div>
+                </div>
+
+                <!-- Etapa 2: Lista de Produtos Detectados -->
+                <div id="cadastroMassaEtapa2" style="display: none;">
+                    <!-- Topo: botão IA + info -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <span id="cadastroMassaCount" style="color: #a8b2d1; font-size: 14px;">0 produto(s) detectado(s)</span>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <button type="button" class="btn-primary btn-sm" id="btnPreencherTudoMassa" style="padding: 8px 16px; font-size: 13px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                                <i class="fas fa-fill-drip"></i> Preencher Tudo
+                            </button>
+                            <button type="button" class="btn-gerar-ia" id="btnCategorizarIAMassa" style="padding: 8px 16px; font-size: 13px;">
+                                <i class="fas fa-tags"></i> Categorizar por IA
+                            </button>
+                            <button type="button" class="btn-gerar-ia" id="btnIAMassa" style="padding: 8px 16px; font-size: 13px;">
+                                <i class="fas fa-magic"></i> Descrições por IA
+                            </button>
+                            <button type="button" class="btn-outline btn-sm" id="btnVoltarEtapa1" style="padding: 6px 14px;">
+                                <i class="fas fa-arrow-left"></i> Voltar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Campos globais -->
+                    <div style="border: 1px solid rgba(100,255,218,0.15); border-radius: 8px; padding: 15px; margin-bottom: 15px; background: rgba(17,34,64,0.3);">
+                        <h4 style="color: #ccd6f6; margin: 0 0 12px 0; font-size: 14px;"><i class="fas fa-cog"></i> Configurações Globais (aplicar a todos)</h4>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+                            <div style="flex: 1; min-width: 150px;">
+                                <label style="color: #a8b2d1; font-size: 12px; display: block; margin-bottom: 4px;">Categoria</label>
+                                <select id="massaCategoria" class="filter-select" style="width: 100%; font-size: 13px; padding: 6px 8px;">
+                                    <option value="">Selecione...</option>
+                                </select>
+                            </div>
+                            <div style="flex: 0 0 130px;">
+                                <label style="color: #a8b2d1; font-size: 12px; display: block; margin-bottom: 4px;">Tipo de Produto</label>
+                                <select id="massaTipo" class="filter-select" style="width: 100%; font-size: 13px; padding: 6px 8px;">
+                                    <option value="comprado">Comprado</option>
+                                    <option value="fabricado">Fabricado</option>
+                                </select>
+                            </div>
+                            <div style="flex: 0 0 110px;">
+                                <label style="color: #a8b2d1; font-size: 12px; display: block; margin-bottom: 4px;">Preço de Custo</label>
+                                <input type="text" id="massaPrecoCusto" class="filter-input" placeholder="0,00" style="width: 100%; font-size: 13px; padding: 6px 8px;">
+                            </div>
+                            <div style="flex: 0 0 110px;">
+                                <label style="color: #a8b2d1; font-size: 12px; display: block; margin-bottom: 4px;">Preço de Venda</label>
+                                <input type="text" id="massaPrecoVenda" class="filter-input" placeholder="0,00" style="width: 100%; font-size: 13px; padding: 6px 8px;">
+                            </div>
+                            <div style="flex: 0 0 100px;">
+                                <label style="color: #a8b2d1; font-size: 12px; display: block; margin-bottom: 4px;">Comissão (R$)</label>
+                                <input type="text" id="massaComissao" class="filter-input" placeholder="0" style="width: 100%; font-size: 13px; padding: 6px 8px;">
+                            </div>
+                            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                                <label style="color: #a8b2d1; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                    <input type="checkbox" id="massaFaturavel" checked> Faturável
+                                </label>
+                                <label style="color: #a8b2d1; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                    <input type="checkbox" id="massaAtivo" checked> Ativo
+                                </label>
+                                <label style="color: #a8b2d1; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                    <input type="checkbox" id="massaPostFacebook"> Facebook
+                                </label>
+                                <label style="color: #a8b2d1; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                    <input type="checkbox" id="massaPostOlx"> OLX
+                                </label>
+                            </div>
+                            <button type="button" class="btn-primary btn-sm" id="btnAplicarGlobal" style="padding: 6px 14px; font-size: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <i class="fas fa-sync"></i> Aplicar a Todos
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Flag: Criar Ordem de Compra -->
+                    <div style="border: 1px solid rgba(100,255,218,0.15); border-radius: 8px; padding: 15px; margin-bottom: 15px; background: rgba(17,34,64,0.3);">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 0;" id="massaCompraHeader">
+                            <label style="color: #ccd6f6; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                                <input type="checkbox" id="massaCriarCompra" style="width: 16px; height: 16px; cursor: pointer;">
+                                <i class="fas fa-truck"></i> Criar Ordem de Compra
+                            </label>
+                        </div>
+                        <div id="massaCompraOpcoes" style="display: none; margin-top: 12px;">
+                            <p style="color: #f0ad4e; font-size: 12px; margin: 0 0 12px 0; padding: 8px 12px; background: rgba(240,173,78,0.1); border: 1px solid rgba(240,173,78,0.2); border-radius: 6px;">
+                                <i class="fas fa-info-circle"></i> A ordem de compra será criada apenas com produtos do tipo <strong>Comprado</strong>. Produtos fabricados serão ignorados.
+                            </p>
+                            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+                                <div style="flex: 1; min-width: 200px;">
+                                    <label style="color: #a8b2d1; font-size: 12px; display: block; margin-bottom: 4px;">Fornecedor</label>
+                                    <select id="massaFornecedor" class="filter-select" style="width: 100%; font-size: 13px; padding: 6px 8px;">
+                                        <option value="">Selecione o fornecedor...</option>
+                                    </select>
+                                </div>
+                                <div style="flex: 0 0 160px;">
+                                    <label style="color: #a8b2d1; font-size: 12px; display: block; margin-bottom: 4px;">Status da Compra</label>
+                                    <select id="massaCompraStatus" class="filter-select" style="width: 100%; font-size: 13px; padding: 6px 8px;">
+                                        <option value="pendente">Pendente</option>
+                                        <option value="aprovado">Aprovado</option>
+                                        <option value="recebido">Recebido</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de produtos -->
+                    <div id="listaProdutosMassa" style="display: flex; flex-direction: column; gap: 12px; max-height: 450px; overflow-y: auto; padding-right: 5px;">
+                        <!-- Produtos serão renderizados aqui -->
+                    </div>
+
+                    <!-- Barra de progresso do salvamento -->
+                    <div id="cadastroMassaProgressContainer" style="display: none; margin-top: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span id="cadastroMassaProgressLabel" style="color: #a8b2d1; font-size: 13px;">Salvando produtos...</span>
+                            <span id="cadastroMassaProgressPercent" style="color: #64ffda; font-size: 13px; font-weight: 600;">0%</span>
+                        </div>
+                        <div style="width: 100%; background: rgba(100,255,218,0.1); border-radius: 10px; overflow: hidden; height: 12px; border: 1px solid rgba(100,255,218,0.2);">
+                            <div id="cadastroMassaProgressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #11998e, #38ef7d); border-radius: 10px; transition: width 0.3s ease;"></div>
+                        </div>
+                        <span id="cadastroMassaProgressDetail" style="color: #8892b0; font-size: 12px; margin-top: 4px; display: block;">Aguarde...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" id="cadastroMassaFooter" style="display: none;">
+                <button class="btn-outline" id="btnCancelarMassa">Cancelar</button>
+                <button class="btn-primary" id="btnSalvarMassa" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                    <i class="fas fa-save"></i> Salvar Todos os Produtos
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Estilos para Cadastro em Massa */
+        #dropZoneMassa:hover {
+            border-color: #64ffda;
+            background: rgba(100,255,218,0.03);
+        }
+        .massa-produto-card {
+            border: 1px solid rgba(100,255,218,0.15);
+            border-radius: 8px;
+            padding: 12px;
+            background: rgba(17,34,64,0.4);
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            transition: border-color 0.2s;
+        }
+        .massa-produto-card:hover {
+            border-color: rgba(100,255,218,0.35);
+        }
+        .massa-produto-thumb {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid rgba(100,255,218,0.2);
+            flex-shrink: 0;
+        }
+        .massa-produto-fields {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .massa-produto-fields .field-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .massa-produto-fields input,
+        .massa-produto-fields textarea,
+        .massa-produto-fields select {
+            background: rgba(10,25,47,0.8);
+            color: #ccd6f6;
+            border: 1px solid rgba(100,255,218,0.2);
+            border-radius: 4px;
+            padding: 5px 8px;
+            font-size: 12px;
+        }
+        .massa-produto-fields input:focus,
+        .massa-produto-fields textarea:focus,
+        .massa-produto-fields select:focus {
+            outline: none;
+            border-color: #64ffda;
+        }
+        .massa-produto-fields textarea {
+            resize: vertical;
+            min-height: 40px;
+        }
+        .massa-remove-btn {
+            background: rgba(245,87,108,0.2);
+            color: #f5576c;
+            border: 1px solid rgba(245,87,108,0.3);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .massa-remove-btn:hover {
+            background: rgba(245,87,108,0.4);
+        }
+        .massa-img-count {
+            font-size: 11px;
+            color: #a8b2d1;
+            background: rgba(100,255,218,0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+            border: 1px solid rgba(100,255,218,0.15);
+        }
+        /* Light theme overrides for massa */
+        [data-theme="light"] .massa-produto-card {
+            background: #f8f9fa;
+            border-color: #dee2e6;
+        }
+        [data-theme="light"] .massa-produto-fields input,
+        [data-theme="light"] .massa-produto-fields textarea,
+        [data-theme="light"] .massa-produto-fields select {
+            background: #fff;
+            color: #333;
+            border-color: #ced4da;
+        }
+        [data-theme="light"] .massa-produto-fields input:focus,
+        [data-theme="light"] .massa-produto-fields textarea:focus,
+        [data-theme="light"] .massa-produto-fields select:focus {
+            border-color: #007bff;
+        }
+    </style>
+
+    <style>
+        /* Estilos para Recalcular Custo */
+        #recalcularCustoTable tbody tr {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        #recalcularCustoTable tbody tr:hover {
+            background: rgba(100, 255, 218, 0.05) !important;
+        }
+
+        .custo-input {
+            width: 120px;
+            padding: 6px 10px;
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 6px;
+            background: rgba(17, 34, 64, 0.8);
+            color: #ccd6f6;
+            font-size: 14px;
+            text-align: right;
+        }
+
+        .custo-input:focus {
+            outline: none;
+            border-color: #64ffda;
+            box-shadow: 0 0 0 2px rgba(100, 255, 218, 0.15);
+        }
+
+        .diff-positiva {
+            color: #f5576c;
+            font-weight: 600;
+        }
+
+        .diff-negativa {
+            color: #38ef7d;
+            font-weight: 600;
+        }
+
+        .diff-zero {
+            color: #a8b2d1;
+        }
+
+        .badge-compra {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(100, 255, 218, 0.1);
+            color: #64ffda;
+            border: 1px solid rgba(100, 255, 218, 0.2);
+        }
+
+        .badge-movimentacao {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(245, 87, 108, 0.1);
+            color: #f5576c;
+            border: 1px solid rgba(245, 87, 108, 0.2);
+        }
+
+        /* Light theme overrides */
+        [data-theme="light"] .custo-input {
+            background: #fff;
+            color: #333;
+            border-color: #ced4da;
+        }
+
+        [data-theme="light"] .custo-input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+    </style>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
     <script src="js/api.js"></script>
@@ -535,10 +1415,13 @@
     <script src="js/pagination.js"></script>
     <script src="js/image-compressor.js"></script>
     <script src="js/webhook-estoque.js"></script>
+    <script src="js/gerar-descricao-ia.js"></script>
     <script src="js/produtos.js"></script>
+    <script src="js/cadastro-massa.js"></script>
     <script src="js/setupModals.js"></script>
     <script src="js/filtro-pesquisa.js"></script>
     <script src="js/internal-animation.js"></script>
     <script src="js/theme-switcher.js"></script>
 </body>
+
 </html>

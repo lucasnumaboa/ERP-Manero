@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Maneiro - Filamentos 3D</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/permissions.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/modulos.css">
+    <link rel="stylesheet" href="css/submenu.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/theme-dark.css">
+    <link rel="stylesheet" href="css/theme-light.css">
+    <style>
+        .tabs-filamentos { display:flex; gap:0; margin-bottom:24px; background:var(--card-bg,#112240); border-radius:12px; overflow:hidden; border:1px solid rgba(100,255,218,0.15); }
+        .tab-btn { flex:1; padding:14px 20px; background:transparent; border:none; color:#8892b0; font-size:14px; font-weight:600; cursor:pointer; transition:all .3s; display:flex; align-items:center; justify-content:center; gap:8px; position:relative; }
+        .tab-btn:hover { color:#64ffda; background:rgba(100,255,218,0.05); }
+        .tab-btn.active { color:#64ffda; background:rgba(100,255,218,0.1); }
+        .tab-btn.active::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#64ffda,#00bfa5); border-radius:3px 3px 0 0; }
+        .tab-content { display:none; }
+        .tab-content.active { display:block; animation:fadeIn .3s ease; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+        .card-section { background:var(--card-bg,#112240); border-radius:12px; padding:24px; margin-bottom:20px; border:1px solid rgba(100,255,218,0.1); }
+        .card-section h3 { color:#64ffda; font-size:16px; margin:0 0 16px; display:flex; align-items:center; gap:8px; }
+
+        .form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; }
+        .form-group-f { display:flex; flex-direction:column; gap:6px; }
+        .form-group-f label { color:#ccd6f6; font-size:13px; font-weight:500; }
+        .form-group-f input, .form-group-f select, .form-group-f textarea { padding:10px 14px; border:1px solid rgba(100,255,218,0.2); border-radius:8px; background:#0a192f; color:#ccd6f6; font-size:14px; transition:border-color .3s; }
+        .form-group-f input:focus, .form-group-f select:focus { outline:none; border-color:#64ffda; }
+        .form-group-f select option { background:#0a192f; color:#ccd6f6; }
+        .custo-hora-inline input { background:#0a192f !important; color:#ccd6f6 !important; }
+        .calc-gramas-input { width:100%; padding:8px; border:1px solid rgba(100,255,218,0.2); border-radius:6px; background:#0a192f; color:#ccd6f6; font-size:13px; }
+        .calc-gramas-input:focus { outline:none; border-color:#64ffda; }
+
+        .btn-action { padding:10px 22px; border:none; border-radius:8px; cursor:pointer; font-weight:600; font-size:14px; display:inline-flex; align-items:center; gap:8px; transition:all .3s; }
+        .btn-action:hover { transform:translateY(-2px); }
+        .btn-primary-f { background:linear-gradient(135deg,#64ffda,#00bfa5); color:#0a192f; }
+        .btn-primary-f:hover { box-shadow:0 4px 15px rgba(100,255,218,0.4); }
+        .btn-danger-f { background:linear-gradient(135deg,#ff6b6b,#e74c3c); color:#fff; }
+        .btn-warning-f { background:linear-gradient(135deg,#ffd93d,#f0c000); color:#0a192f; }
+        .btn-info-f { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; }
+
+        .data-table-f { width:100%; border-collapse:collapse; }
+        .data-table-f th { padding:12px 16px; text-align:left; color:#64ffda; font-size:13px; font-weight:600; border-bottom:2px solid rgba(100,255,218,0.2); }
+        .data-table-f td { padding:12px 16px; color:#ccd6f6; font-size:14px; border-bottom:1px solid rgba(100,255,218,0.08); }
+        .data-table-f tr:hover td { background:rgba(100,255,218,0.03); }
+        .data-table-f .actions-cell { display:flex; gap:8px; }
+        .data-table-f .actions-cell button { padding:6px 10px; border:none; border-radius:6px; cursor:pointer; font-size:12px; transition:all .2s; }
+        .btn-edit-sm { background:rgba(255,193,7,0.15); color:#ffc107; }
+        .btn-delete-sm { background:rgba(231,76,60,0.15); color:#e74c3c; }
+
+        .estoque-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
+        .estoque-card { background:var(--card-bg,#112240); border:1px solid rgba(100,255,218,0.15); border-radius:12px; padding:20px; transition:all .3s; }
+        .estoque-card:hover { transform:translateY(-4px); box-shadow:0 8px 25px rgba(0,0,0,0.3); border-color:#64ffda; }
+        .estoque-card .material-badge { display:inline-block; padding:4px 12px; background:rgba(100,255,218,0.15); color:#64ffda; border-radius:20px; font-size:12px; font-weight:600; margin-bottom:8px; }
+        .estoque-card .cor-label { color:#ccd6f6; font-size:16px; font-weight:600; margin-bottom:12px; }
+        .estoque-card .estoque-bar-container { width:100%; height:8px; background:rgba(100,255,218,0.1); border-radius:4px; overflow:hidden; margin:8px 0; }
+        .estoque-card .estoque-bar { height:100%; background:linear-gradient(90deg,#64ffda,#00bfa5); border-radius:4px; transition:width .5s ease; }
+        .estoque-card .estoque-info { display:flex; justify-content:space-between; color:#8892b0; font-size:13px; }
+        .estoque-card .preco-ref { color:#ffd93d; font-size:13px; margin-top:8px; }
+        .estoque-low { border-color:#ff6b6b !important; }
+        .estoque-low .estoque-bar { background:linear-gradient(90deg,#ff6b6b,#e74c3c) !important; }
+
+        .calc-result { background:rgba(100,255,218,0.05); border:1px solid rgba(100,255,218,0.2); border-radius:12px; padding:20px; margin-top:16px; }
+        .calc-result .result-row { display:flex; justify-content:space-between; padding:8px 0; color:#ccd6f6; font-size:14px; border-bottom:1px solid rgba(100,255,218,0.08); }
+        .calc-result .result-row:last-child { border-bottom:none; }
+        .calc-result .result-row.total { font-weight:700; font-size:16px; color:#64ffda; padding:12px 0; border-top:2px solid rgba(100,255,218,0.2); }
+        .calc-result .result-row.sugerido { color:#ffd93d; font-weight:700; font-size:18px; padding:12px 0; background:rgba(255,217,61,0.08); border-radius:8px; padding-left:12px; padding-right:12px; margin-top:8px; }
+
+        .calc-itens-list { margin-top:16px; }
+        .calc-item { display:flex; align-items:center; gap:16px; padding:14px 16px; background:rgba(100,255,218,0.04); border:1px solid rgba(100,255,218,0.12); border-radius:10px; margin-bottom:10px; position:relative; border-left:3px solid #64ffda; transition:all .2s; }
+        .calc-item:hover { background:rgba(100,255,218,0.08); border-color:rgba(100,255,218,0.25); }
+        .calc-item .item-num { width:28px; height:28px; background:rgba(100,255,218,0.15); color:#64ffda; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
+        .calc-item .item-info { flex:1; }
+        .calc-item .item-info .name { color:#ccd6f6; font-weight:600; font-size:14px; }
+        .calc-item .item-info .detail { color:#8892b0; font-size:12px; margin-top:2px; }
+        .calc-item .item-gramas { width:140px; }
+        .calc-item .btn-remove-item { background:rgba(231,76,60,0.15); color:#e74c3c; border:none; border-radius:8px; padding:8px 12px; cursor:pointer; font-size:13px; transition:all .2s; }
+        .calc-item .btn-remove-item:hover { background:rgba(231,76,60,0.3); transform:scale(1.05); }
+
+        .calc-search-wrapper { position:relative; margin-bottom:16px; }
+        .calc-search-input { width:100%; padding:12px 16px 12px 40px; border:1px solid rgba(100,255,218,0.2); border-radius:10px; background:#0a192f; color:#ccd6f6; font-size:14px; transition:all .3s; }
+        .calc-search-input:focus { outline:none; border-color:#64ffda; box-shadow:0 0 0 3px rgba(100,255,218,0.1); }
+        .calc-search-input::placeholder { color:#4a5568; }
+        .calc-search-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#64ffda; font-size:14px; }
+        .calc-dropdown { position:absolute; top:100%; left:0; right:0; background:#112240; border:1px solid rgba(100,255,218,0.2); border-radius:10px; max-height:250px; overflow-y:auto; z-index:100; display:none; margin-top:4px; box-shadow:0 8px 30px rgba(0,0,0,0.4); }
+        .calc-dropdown.show { display:block; }
+        .calc-dropdown-item { display:flex; align-items:center; gap:12px; padding:12px 16px; cursor:pointer; transition:background .2s; border-bottom:1px solid rgba(100,255,218,0.06); }
+        .calc-dropdown-item:last-child { border-bottom:none; }
+        .calc-dropdown-item:hover { background:rgba(100,255,218,0.08); }
+        .calc-dropdown-item .dd-badge { padding:3px 8px; background:rgba(100,255,218,0.12); color:#64ffda; border-radius:6px; font-size:11px; font-weight:600; }
+        .calc-dropdown-item .dd-name { color:#ccd6f6; font-size:14px; font-weight:500; flex:1; }
+        .calc-dropdown-item .dd-stock { color:#8892b0; font-size:12px; }
+        .calc-dropdown-item.disabled { opacity:0.4; cursor:not-allowed; }
+
+        .calc-config-bar { display:flex; gap:16px; align-items:flex-end; padding:16px; background:rgba(100,255,218,0.03); border:1px solid rgba(100,255,218,0.1); border-radius:10px; margin-top:16px; flex-wrap:wrap; }
+        .calc-config-bar .form-group-f { flex:1; min-width:140px; }
+
+        .custo-hora-inline { display:flex; align-items:center; gap:12px; padding:14px 18px; background:linear-gradient(135deg,rgba(100,255,218,0.06),rgba(0,191,165,0.04)); border:1px solid rgba(100,255,218,0.15); border-radius:10px; margin-bottom:20px; }
+        .custo-hora-inline label { color:#ccd6f6; font-size:13px; font-weight:500; white-space:nowrap; }
+        .custo-hora-inline input { width:120px; padding:8px 12px; border:1px solid rgba(100,255,218,0.2); border-radius:8px; background:#0a192f; color:#ccd6f6; font-size:14px; }
+        .custo-hora-inline .btn-save-custo { padding:8px 16px; }
+
+        .empty-state { text-align:center; padding:40px 20px; color:#8892b0; }
+        .empty-state i { font-size:48px; color:rgba(100,255,218,0.3); margin-bottom:16px; }
+        .empty-state p { font-size:15px; }
+
+        .estoque-card .estoque-actions { display:flex; gap:8px; margin-top:10px; }
+        .estoque-card .btn-edit-estoque { padding:6px 14px; background:rgba(100,255,218,0.12); color:#64ffda; border:1px solid rgba(100,255,218,0.25); border-radius:8px; cursor:pointer; font-size:12px; font-weight:500; transition:all .2s; display:flex; align-items:center; gap:6px; }
+        .estoque-card .btn-edit-estoque:hover { background:rgba(100,255,218,0.2); transform:translateY(-1px); }
+        .estoque-edit-inline { display:flex; gap:8px; align-items:center; margin-top:10px; }
+        .estoque-edit-inline input { width:100px; padding:6px 10px; border:1px solid rgba(100,255,218,0.3); border-radius:6px; background:#0a192f; color:#ccd6f6; font-size:13px; }
+        .estoque-edit-inline .btn-save-est { padding:6px 12px; background:linear-gradient(135deg,#64ffda,#00bfa5); color:#0a192f; border:none; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; }
+        .estoque-edit-inline .btn-cancel-est { padding:6px 12px; background:rgba(231,76,60,0.15); color:#e74c3c; border:none; border-radius:6px; cursor:pointer; font-size:12px; }
+
+        body.theme-light .tabs-filamentos { background:#fff; border-color:#e0e0e0; }
+        body.theme-light .tab-btn { color:#666; }
+        body.theme-light .tab-btn.active { color:#2980b9; background:rgba(41,128,185,0.1); }
+        body.theme-light .tab-btn.active::after { background:linear-gradient(90deg,#2980b9,#3498db); }
+        body.theme-light .card-section { background:#fff; border-color:#e0e0e0; }
+        body.theme-light .card-section h3 { color:#2980b9; }
+        body.theme-light .form-group-f label { color:#333; }
+        body.theme-light .form-group-f input, body.theme-light .form-group-f select, body.theme-light .form-group-f textarea { background:#f5f5f5 !important; color:#333 !important; border-color:#ddd; }
+        body.theme-light .form-group-f select option { background:#fff; color:#333; }
+        body.theme-light .custo-hora-inline input { background:#f5f5f5 !important; color:#333 !important; }
+        body.theme-light .calc-gramas-input { background:#f5f5f5 !important; color:#333 !important; border-color:#ddd; }
+        body.theme-light .data-table-f th { color:#2980b9; border-bottom-color:#e0e0e0; }
+        body.theme-light .data-table-f td { color:#333; border-bottom-color:#eee; }
+        body.theme-light .estoque-card { background:#fff; border-color:#e0e0e0; }
+        body.theme-light .estoque-card .material-badge { background:rgba(41,128,185,0.15); color:#2980b9; }
+        body.theme-light .estoque-card .cor-label { color:#333; }
+        body.theme-light .estoque-card .estoque-bar { background:linear-gradient(90deg,#2980b9,#3498db); }
+        body.theme-light .estoque-card .estoque-info { color:#666; }
+        body.theme-light .calc-result { background:rgba(41,128,185,0.05); border-color:#e0e0e0; }
+        body.theme-light .calc-result .result-row { color:#333; border-bottom-color:#eee; }
+        body.theme-light .calc-result .result-row.total { color:#2980b9; }
+        body.theme-light .calc-item { background:#f9f9f9; border-color:#e0e0e0; border-left-color:#2980b9; }
+        body.theme-light .calc-item .item-num { background:rgba(41,128,185,0.15); color:#2980b9; }
+        body.theme-light .calc-item .item-info .name { color:#333; }
+        body.theme-light .calc-search-input { background:#f5f5f5 !important; color:#333 !important; border-color:#ddd; }
+        body.theme-light .calc-search-icon { color:#2980b9; }
+        body.theme-light .calc-dropdown { background:#fff; border-color:#e0e0e0; box-shadow:0 8px 30px rgba(0,0,0,0.1); }
+        body.theme-light .calc-dropdown-item:hover { background:rgba(41,128,185,0.08); }
+        body.theme-light .calc-dropdown-item .dd-badge { background:rgba(41,128,185,0.12); color:#2980b9; }
+        body.theme-light .calc-dropdown-item .dd-name { color:#333; }
+        body.theme-light .calc-config-bar { background:rgba(41,128,185,0.03); border-color:#e0e0e0; }
+        body.theme-light .custo-hora-inline { background:rgba(41,128,185,0.05); border-color:#e0e0e0; }
+        body.theme-light .custo-hora-inline label { color:#333; }
+        body.theme-light .btn-edit-estoque { background:rgba(41,128,185,0.1) !important; color:#2980b9 !important; border-color:rgba(41,128,185,0.25) !important; }
+        body.theme-light .estoque-edit-inline input { background:#f5f5f5 !important; color:#333 !important; border-color:#ddd; }
+        body.theme-light .page-header h1 { color:#333 !important; }
+        body.theme-light .page-header p { color:#666 !important; }
+        body.theme-light .content { background:#f5f5f5 !important; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="img/icon.png" alt="ERP Maneiro" class="logo-img">
+                <button id="toggleSidebar" class="toggle-sidebar"><i class="fas fa-bars"></i></button>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar"><i class="fas fa-user-circle"></i></div>
+                <div class="user-info">
+                    <h3 id="userName">Carregando...</h3>
+                    <p id="userRole">Carregando...</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="homepage.html"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                </ul>
+                <ul>
+                    <li><a href="produtos.html"><i class="fas fa-box"></i> Produtos</a></li>
+                    <li><a href="produtos_3d.html"><i class="fas fa-cube"></i> Produtos 3D</a></li>
+                    <li class="active"><a href="filamentos_3d.html"><i class="fas fa-layer-group"></i> Filamentos 3D</a></li>
+                    <li><a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a></li>
+                    <li class="logout"><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content">
+                <div class="page-header">
+                    <h1><i class="fas fa-layer-group" style="margin-right:10px;color:#64ffda"></i>Filamentos 3D</h1>
+                    <p>Gerencie filamentos, compras, calculadora de custos e estoque</p>
+                </div>
+
+                <!-- Tabs -->
+                <div class="tabs-filamentos">
+                    <button class="tab-btn active" data-tab="tab-filamento"><i class="fas fa-layer-group"></i> Filamento</button>
+                    <button class="tab-btn" data-tab="tab-compra"><i class="fas fa-shopping-cart"></i> Compra</button>
+                    <button class="tab-btn" data-tab="tab-calculadora"><i class="fas fa-calculator"></i> Calculadora</button>
+                    <button class="tab-btn" data-tab="tab-estoque"><i class="fas fa-boxes"></i> Estoque</button>
+                </div>
+
+                <!-- TAB: Filamento -->
+                <div class="tab-content active" id="tab-filamento">
+                    <div class="card-section">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                            <h3><i class="fas fa-layer-group"></i> Cadastro de Filamentos</h3>
+                            <button class="btn-action btn-primary-f" id="btnNovoFilamento"><i class="fas fa-plus"></i> Novo Filamento</button>
+                        </div>
+                        <!-- Form inline (toggle) -->
+                        <div id="formFilamento" style="display:none;margin-bottom:20px">
+                            <input type="hidden" id="filamentoId">
+                            <div class="form-grid">
+                                <div class="form-group-f">
+                                    <label for="filMaterial">Material *</label>
+                                    <select id="filMaterial">
+                                        <option value="">Selecione...</option>
+                                        <option value="PLA">PLA</option>
+                                        <option value="PETG">PETG</option>
+                                        <option value="ABS">ABS</option>
+                                        <option value="TPU">TPU</option>
+                                        <option value="NYLON">NYLON</option>
+                                        <option value="ASA">ASA</option>
+                                        <option value="PC">PC</option>
+                                        <option value="OUTRO">OUTRO</option>
+                                    </select>
+                                </div>
+                                <div class="form-group-f">
+                                    <label for="filCor">Cor *</label>
+                                    <input type="text" id="filCor" placeholder="Ex: Azul Titanium">
+                                </div>
+                                <div class="form-group-f">
+                                    <label for="filPeso">Peso (gramas)</label>
+                                    <input type="number" id="filPeso" value="1000" min="1">
+                                </div>
+                                <div class="form-group-f">
+                                    <label for="filDescricao">Descrição</label>
+                                    <input type="text" id="filDescricao" placeholder="Descrição do filamento">
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:8px;margin-top:12px">
+                                <button class="btn-action btn-primary-f" id="btnSalvarFilamento"><i class="fas fa-save"></i> Salvar</button>
+                                <button class="btn-action btn-danger-f" id="btnCancelarFilamento"><i class="fas fa-times"></i> Cancelar</button>
+                            </div>
+                        </div>
+                        <div class="table-container" style="overflow-x:auto">
+                            <table class="data-table-f">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Material</th>
+                                        <th>Cor</th>
+                                        <th>Peso (g)</th>
+                                        <th>Estoque (g)</th>
+                                        <th>Preço Ref.</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tblFilamentos">
+                                    <tr><td colspan="8" class="text-center">Carregando...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: Compra -->
+                <div class="tab-content" id="tab-compra">
+                    <div class="card-section">
+                        <h3><i class="fas fa-shopping-cart"></i> Registrar Compra de Filamento</h3>
+                        <div class="form-grid">
+                            <div class="form-group-f">
+                                <label for="compraFornecedor">Fornecedor</label>
+                                <select id="compraFornecedor"><option value="">Selecione...</option></select>
+                            </div>
+                            <div class="form-group-f">
+                                <label for="compraFilamento">Filamento *</label>
+                                <select id="compraFilamento"><option value="">Selecione...</option></select>
+                            </div>
+                            <div class="form-group-f">
+                                <label for="compraQtd">Quantidade (rolos)</label>
+                                <input type="number" id="compraQtd" value="1" min="1">
+                            </div>
+                            <div class="form-group-f">
+                                <label for="compraValor">Valor Unitário (R$)</label>
+                                <input type="number" id="compraValor" step="0.01" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="form-group-f" style="margin-top:12px">
+                            <label for="compraObs">Observações</label>
+                            <input type="text" id="compraObs" placeholder="Observações da compra">
+                        </div>
+                        <button class="btn-action btn-primary-f" id="btnRegistrarCompra" style="margin-top:16px"><i class="fas fa-check"></i> Registrar Compra</button>
+                    </div>
+                    <div class="card-section">
+                        <h3><i class="fas fa-history"></i> Histórico de Compras</h3>
+                        <div style="overflow-x:auto">
+                            <table class="data-table-f">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Filamento</th>
+                                        <th>Fornecedor</th>
+                                        <th>Qtd</th>
+                                        <th>Valor Unit.</th>
+                                        <th>Total</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tblCompras">
+                                    <tr><td colspan="7" class="text-center">Carregando...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: Calculadora -->
+                <div class="tab-content" id="tab-calculadora">
+                    <div class="card-section">
+                        <h3><i class="fas fa-calculator"></i> Calculadora de Custos</h3>
+                        <div class="custo-hora-inline">
+                            <label><i class="fas fa-clock"></i> Custo/Hora (R$):</label>
+                            <input type="number" id="custoHoraInput" step="0.01" min="0" value="0">
+                            <button class="btn-action btn-primary-f btn-save-custo" id="btnSalvarCustoHora"><i class="fas fa-save"></i></button>
+                        </div>
+
+                        <div class="calc-search-wrapper">
+                            <i class="fas fa-search calc-search-icon"></i>
+                            <input type="text" class="calc-search-input" id="calcSearchInput" placeholder="Pesquisar filamento por material ou cor..." autocomplete="off">
+                            <div class="calc-dropdown" id="calcDropdown"></div>
+                        </div>
+
+                        <div class="calc-itens-list" id="calcItensList">
+                            <div class="empty-state" id="calcEmpty">
+                                <i class="fas fa-layer-group"></i>
+                                <p>Pesquise e selecione filamentos acima para calcular</p>
+                            </div>
+                        </div>
+
+                        <div class="calc-config-bar">
+                            <div class="form-group-f">
+                                <label for="calcHoras"><i class="fas fa-clock"></i> Total de Horas</label>
+                                <input type="number" id="calcHoras" step="0.01" min="0" value="0">
+                            </div>
+                            <div class="form-group-f">
+                                <label for="calcTaxaPerc"><i class="fas fa-percentage"></i> Taxa (%)</label>
+                                <input type="number" id="calcTaxaPerc" step="0.01" min="0" value="0">
+                            </div>
+                            <div class="form-group-f">
+                                <label for="calcTaxaValor"><i class="fas fa-dollar-sign"></i> Taxa (R$ fixo)</label>
+                                <input type="number" id="calcTaxaValor" step="0.01" min="0" value="0">
+                            </div>
+                        </div>
+
+                        <div style="display:flex;gap:8px;margin-top:16px">
+                            <button class="btn-action btn-info-f" id="btnCalcular"><i class="fas fa-calculator"></i> Calcular</button>
+                            <button class="btn-action btn-primary-f" id="btnEfetivar" style="display:none"><i class="fas fa-check-double"></i> Efetivar</button>
+                        </div>
+
+                        <div class="calc-result" id="calcResult" style="display:none"></div>
+                    </div>
+                </div>
+
+                <!-- TAB: Estoque -->
+                <div class="tab-content" id="tab-estoque">
+                    <div class="card-section">
+                        <h3><i class="fas fa-boxes"></i> Estoque de Filamentos</h3>
+                        <div class="estoque-grid" id="estoqueGrid">
+                            <div class="empty-state">
+                                <i class="fas fa-boxes"></i>
+                                <p>Carregando estoque...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/sidebar-template.js"></script>
+    <script src="js/permissions.js"></script>
+    <script src="js/setupModals.js"></script>
+    <script src="js/filtro-pesquisa.js"></script>
+    <script src="js/internal-animation.js"></script>
+    <script src="js/theme-switcher.js"></script>
+    <script src="js/filamentos_3d.js"></script>
+</body>
+</html>

@@ -44,14 +44,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         button.addEventListener('click', fecharModal);
     });
     
-    // Fechar modal ao clicar fora
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                fecharModal();
-            }
-        });
-    });
+    // REMOVIDO: Fechar modal ao clicar fora
+    // Modais agora só fecham ao clicar no X ou botão Cancelar/Fechar
 });
 
 // Autenticação

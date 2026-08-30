@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,7 +24,7 @@
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(20px);
         }
 
@@ -110,7 +111,7 @@
             border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
             border-radius: 8px;
             padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
             text-align: center;
             backdrop-filter: blur(20px);
         }
@@ -151,7 +152,7 @@
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 30px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
             overflow-x: auto;
             backdrop-filter: blur(20px);
         }
@@ -365,7 +366,7 @@
             margin: 15px 0;
             background: rgba(17, 34, 64, 0.8);
             border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .relatorio-ia-text table thead {
@@ -429,18 +430,35 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         @keyframes slideIn {
-            from { transform: translateY(-50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         .alert {
@@ -478,7 +496,8 @@
                 font-size: 12px;
             }
 
-            table th, table td {
+            table th,
+            table td {
                 padding: 8px;
             }
 
@@ -519,7 +538,7 @@
             gap: 15px;
             flex: 1;
             min-width: 200px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(20px);
         }
 
@@ -553,7 +572,7 @@
             border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
             border-radius: 8px;
             padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(20px);
         }
 
@@ -607,7 +626,7 @@
             font-size: 13px;
             z-index: 10000;
             pointer-events: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             max-width: 250px;
             line-height: 1.5;
         }
@@ -725,13 +744,15 @@
             color: var(--text-secondary, #a8b2d1);
         }
 
-        .loading-estado, .erro-estado {
+        .loading-estado,
+        .erro-estado {
             padding: 40px 20px;
             text-align: center;
             color: var(--text-muted, #8892b0);
         }
 
-        .loading-estado i, .erro-estado i {
+        .loading-estado i,
+        .erro-estado i {
             font-size: 32px;
             margin-bottom: 10px;
         }
@@ -781,7 +802,7 @@
             border-radius: 50%;
             background: linear-gradient(135deg, #ff9800 0%, #f44336 100%);
             border: 2px solid white;
-            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
         }
 
         .legenda-dica {
@@ -905,12 +926,14 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Estilo inicial para ocultar o conteúdo até verificar permissões -->
     <style>
         .app-container {
             display: none;
         }
+
         #permission-loading {
             display: flex;
             flex-direction: column;
@@ -924,17 +947,19 @@
             background-color: #f8f9fa;
             z-index: 9999;
         }
+
         #permission-loading i {
             font-size: 48px;
             color: #3498db;
             margin-bottom: 20px;
         }
+
         #permission-loading p {
             color: #7f8c8d;
             font-size: 18px;
         }
     </style>
-    
+
     <!-- Tela de carregamento enquanto verifica permissões -->
     <div id="permission-loading">
         <i class="fas fa-spinner fa-spin"></i>
@@ -968,7 +993,7 @@
                         <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     </li>
                 </ul>
-                
+
                 <!-- Menu Principal -->
                 <ul>
                     <li>
@@ -1017,6 +1042,9 @@
                         <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
                     </li>
                     <li>
+                        <a href="softwares.html"><i class="fas fa-download"></i> Softwares</a>
+                    </li>
+                    <li>
                         <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
                     </li>
                     <li class="logout">
@@ -1054,22 +1082,39 @@
                                 <option value="">Todos os Vendedores</option>
                             </select>
                         </div>
-                        <div class="filtro-group" style="justify-content: flex-end; margin-top: 20px;">
-                            <button class="btn-gerar" onclick="gerarRelatorio()">
-                                <i class="fas fa-sync"></i> Gerar Relatório
-                            </button>
-                            <button class="btn-gerar btn-regiao" onclick="gerarRelatorioRegiao()">
-                                <i class="fas fa-map-marked-alt"></i> Vendas por Região
-                            </button>
-                            <button class="btn-gerar" style="background-color: #9b59b6; margin-left: 10px;" onclick="gerarRelatorioIA()">
-                                <i class="fas fa-brain"></i> Gerar por IA
-                            </button>
-                            <button class="btn-gerar" style="background-color: #e67e22; margin-left: 10px;" onclick="abrirAnalisePreco()">
-                                <i class="fas fa-search-dollar"></i> Análise de Preço
-                            </button>
-                            <button class="btn-exportar" id="btnExportar" onclick="exportarPDF()" disabled>
-                                <i class="fas fa-file-pdf"></i> Exportar PDF
-                            </button>
+
+                        <!-- Seção de Botões de Relatório -->
+                        <div class="relatorios-acoes"
+                            style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(100, 255, 218, 0.1);">
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                                <!-- Relatórios Principais -->
+                                <button class="btn-gerar" onclick="gerarRelatorio()" style="flex: 1; min-width: 150px;">
+                                    <i class="fas fa-chart-bar"></i> Relatório Geral
+                                </button>
+                                <button class="btn-gerar" onclick="gerarRelatorioProdutos()"
+                                    style="flex: 1; min-width: 150px; background-color: #2980b9;">
+                                    <i class="fas fa-cubes"></i> Por Produtos
+                                </button>
+                                <button class="btn-gerar btn-regiao" onclick="gerarRelatorioRegiao()"
+                                    style="flex: 1; min-width: 150px;">
+                                    <i class="fas fa-map-marked-alt"></i> Por Região
+                                </button>
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                                <!-- Relatórios Secundários -->
+                                <button class="btn-gerar" onclick="gerarRelatorioEstoque()"
+                                    style="flex: 1; min-width: 140px; background-color: #16a085;">
+                                    <i class="fas fa-boxes"></i> Estoque
+                                </button>
+                                <button class="btn-gerar" onclick="abrirAnalisePreco()"
+                                    style="flex: 1; min-width: 140px; background-color: #e67e22;">
+                                    <i class="fas fa-search-dollar"></i> Análise de Preço
+                                </button>
+                                <button class="btn-gerar" onclick="gerarRelatorioIA()"
+                                    style="flex: 1; min-width: 140px; background-color: #9b59b6;">
+                                    <i class="fas fa-brain"></i> Gerar por IA
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1089,37 +1134,49 @@
                         <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                                 <span style="font-weight: 600; color: #2c3e50;">Progresso</span>
-                                <span style="font-weight: 600; color: #9b59b6;" id="progressoTexto">0/4</span>
+                                <span style="font-weight: 600; color: #9b59b6;" id="progressoTexto">0/5</span>
                             </div>
                             <div style="background: #e9ecef; border-radius: 4px; height: 30px; overflow: hidden;">
-                                <div id="progressoBar" style="background: linear-gradient(90deg, #9b59b6, #8e44ad); height: 100%; width: 0%; transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
+                                <div id="progressoBar"
+                                    style="background: linear-gradient(90deg, #9b59b6, #8e44ad); height: 100%; width: 0%; transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
                                     0%
                                 </div>
                             </div>
                             <div style="margin-top: 15px; text-align: left;">
                                 <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                                    <span id="status-vendas" style="display: inline-block; width: 20px; height: 20px; background: #e9ecef; border-radius: 50%; margin-right: 10px; text-align: center; line-height: 20px; color: white; font-size: 12px;">
+                                    <span id="status-vendas"
+                                        style="display: inline-block; width: 20px; height: 20px; background: #e9ecef; border-radius: 50%; margin-right: 10px; text-align: center; line-height: 20px; color: white; font-size: 12px;">
                                         <i class="fas fa-circle" style="font-size: 8px;"></i>
                                     </span>
                                     <span style="color: #7f8c8d;">Análise de Vendas</span>
                                 </div>
                                 <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                                    <span id="status-estoque" style="display: inline-block; width: 20px; height: 20px; background: #e9ecef; border-radius: 50%; margin-right: 10px; text-align: center; line-height: 20px; color: white; font-size: 12px;">
+                                    <span id="status-estoque"
+                                        style="display: inline-block; width: 20px; height: 20px; background: #e9ecef; border-radius: 50%; margin-right: 10px; text-align: center; line-height: 20px; color: white; font-size: 12px;">
                                         <i class="fas fa-circle" style="font-size: 8px;"></i>
                                     </span>
                                     <span style="color: #7f8c8d;">Análise de Estoque</span>
                                 </div>
                                 <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                                    <span id="status-recomendacoes" style="display: inline-block; width: 20px; height: 20px; background: #e9ecef; border-radius: 50%; margin-right: 10px; text-align: center; line-height: 20px; color: white; font-size: 12px;">
+                                    <span id="status-recomendacoes"
+                                        style="display: inline-block; width: 20px; height: 20px; background: #e9ecef; border-radius: 50%; margin-right: 10px; text-align: center; line-height: 20px; color: white; font-size: 12px;">
                                         <i class="fas fa-circle" style="font-size: 8px;"></i>
                                     </span>
                                     <span style="color: #7f8c8d;">Recomendações</span>
                                 </div>
                                 <div style="display: flex; align-items: center;">
-                                    <span id="status-estrategia" style="display: inline-block; width: 20px; height: 20px; background: #e9ecef; border-radius: 50%; margin-right: 10px; text-align: center; line-height: 20px; color: white; font-size: 12px;">
+                                    <span id="status-estrategia"
+                                        style="display: inline-block; width: 20px; height: 20px; background: #e9ecef; border-radius: 50%; margin-right: 10px; text-align: center; line-height: 20px; color: white; font-size: 12px;">
                                         <i class="fas fa-circle" style="font-size: 8px;"></i>
                                     </span>
                                     <span style="color: #7f8c8d;">Estratégia Mês</span>
+                                </div>
+                                <div style="display: flex; align-items: center; margin-top: 10px;">
+                                    <span id="status-whatsapp"
+                                        style="display: inline-block; width: 20px; height: 20px; background: #e9ecef; border-radius: 50%; margin-right: 10px; text-align: center; line-height: 20px; color: white; font-size: 12px;">
+                                        <i class="fab fa-whatsapp" style="font-size: 10px;"></i>
+                                    </span>
+                                    <span style="color: #25D366;">Relatório WhatsApp</span>
                                 </div>
                             </div>
                         </div>
@@ -1139,8 +1196,16 @@
                             <div class="valor" id="faturamento">R$ 0,00</div>
                         </div>
                         <div class="card-resumo lucro">
-                            <h3>Lucro Total</h3>
+                            <h3>Lucro Total <small style="font-size:10px;color:#8892b0;">(ajustado)</small></h3>
                             <div class="valor" id="lucroTotal">R$ 0,00</div>
+                        </div>
+                        <div class="card-resumo" style="border-left:4px solid #8e44ad;">
+                            <h3>Lucro (bruto)</h3>
+                            <div class="valor" id="lucroOriginal" style="font-size:18px;">R$ 0,00</div>
+                        </div>
+                        <div class="card-resumo" style="border-left:4px solid #f39c12;">
+                            <h3>Ajuste Controle</h3>
+                            <div class="valor" id="ajusteControle" style="font-size:18px;">R$ 0,00</div>
                         </div>
                         <div class="card-resumo margem">
                             <h3>Margem de Lucro</h3>
@@ -1233,6 +1298,32 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Quadro de Ajustes de Controle Financeiro -->
+                    <div id="controleRelatorioContainer" class="tabela-container"
+                        style="display:none; border-left: 4px solid #f39c12;">
+                        <h2 style="color:#f39c12; border-bottom-color:#f39c12;">
+                            <i class="fas fa-sliders-h"></i> Ajustes de Controle Financeiro
+                        </h2>
+                        <p style="color:var(--text-muted,#8892b0);font-size:13px;margin-bottom:12px;">
+                            Lançamentos que ajustam o lucro total do período selecionado.
+                        </p>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo</th>
+                                    <th>Categoria</th>
+                                    <th>Descrição</th>
+                                    <th style="text-align:right;">Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bodyControleRelatorio"></tbody>
+                        </table>
+                        <div id="controleRelatorioTotal"
+                            style="text-align:right;margin-top:12px;font-size:15px;color:var(--text-secondary,#a8b2d1);">
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Relatórios por IA -->
@@ -1240,26 +1331,45 @@
                     <!-- Abas de IA -->
                     <div style="border-bottom: 2px solid #e9ecef; margin-bottom: 20px;">
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button class="tab-btn-ia active" data-tab="vendas" style="padding: 12px 20px; background: none; border: none; border-bottom: 3px solid #9b59b6; color: #9b59b6; cursor: pointer; font-weight: 600;">
+                            <button class="tab-btn-ia active" data-tab="vendas"
+                                style="padding: 12px 20px; background: none; border: none; border-bottom: 3px solid #9b59b6; color: #9b59b6; cursor: pointer; font-weight: 600;">
                                 <i class="fas fa-chart-line"></i> Análise de Vendas
                             </button>
-                            <button class="tab-btn-ia" data-tab="estoque" style="padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent; color: #7f8c8d; cursor: pointer; font-weight: 600;">
+                            <button class="tab-btn-ia" data-tab="estoque"
+                                style="padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent; color: #7f8c8d; cursor: pointer; font-weight: 600;">
                                 <i class="fas fa-boxes"></i> Análise de Estoque
                             </button>
-                            <button class="tab-btn-ia" data-tab="recomendacoes" style="padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent; color: #7f8c8d; cursor: pointer; font-weight: 600;">
+                            <button class="tab-btn-ia" data-tab="recomendacoes"
+                                style="padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent; color: #7f8c8d; cursor: pointer; font-weight: 600;">
                                 <i class="fas fa-lightbulb"></i> Recomendações
                             </button>
-                            <button class="tab-btn-ia" data-tab="estrategia" style="padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent; color: #7f8c8d; cursor: pointer; font-weight: 600;">
+                            <button class="tab-btn-ia" data-tab="estrategia"
+                                style="padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent; color: #7f8c8d; cursor: pointer; font-weight: 600;">
                                 <i class="fas fa-chess"></i> Estratégia Mês
+                            </button>
+                            <button class="tab-btn-ia" data-tab="whatsapp"
+                                style="padding: 12px 20px; background: rgba(37, 211, 102, 0.1); border: none; border-bottom: 3px solid transparent; color: #25D366; cursor: pointer; font-weight: 600;">
+                                <i class="fab fa-whatsapp"></i> Relatório WhatsApp
                             </button>
                         </div>
                     </div>
 
                     <!-- Conteúdo das Abas -->
-                    <div id="tab-vendas" class="tab-content-ia active" style="display: block; padding: 20px; background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border-radius: 8px; border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));"></div>
-                    <div id="tab-estoque" class="tab-content-ia" style="display: none; padding: 20px; background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border-radius: 8px; border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));"></div>
-                    <div id="tab-recomendacoes" class="tab-content-ia" style="display: none; padding: 20px; background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border-radius: 8px; border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));"></div>
-                    <div id="tab-estrategia" class="tab-content-ia" style="display: none; padding: 20px; background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border-radius: 8px; border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));"></div>
+                    <div id="tab-vendas" class="tab-content-ia active"
+                        style="display: block; padding: 20px; background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border-radius: 8px; border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));">
+                    </div>
+                    <div id="tab-estoque" class="tab-content-ia"
+                        style="display: none; padding: 20px; background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border-radius: 8px; border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));">
+                    </div>
+                    <div id="tab-recomendacoes" class="tab-content-ia"
+                        style="display: none; padding: 20px; background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border-radius: 8px; border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));">
+                    </div>
+                    <div id="tab-estrategia" class="tab-content-ia"
+                        style="display: none; padding: 20px; background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border-radius: 8px; border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));">
+                    </div>
+                    <div id="tab-whatsapp" class="tab-content-ia"
+                        style="display: none; padding: 20px; background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border-radius: 8px; border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));">
+                    </div>
                 </div>
 
                 <!-- Relatório de Vendas por Região -->
@@ -1277,9 +1387,11 @@
                     </div>
 
                     <!-- Legenda (logo abaixo do filtro, sempre visível) -->
-                    <div class="legenda-mapa-topo" style="background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));">
+                    <div class="legenda-mapa-topo"
+                        style="background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));">
                         <div class="legenda-itens-inline">
-                            <span class="legenda-titulo" style="color: var(--accent-primary, #64ffda);"><i class="fas fa-info-circle"></i> Legenda:</span>
+                            <span class="legenda-titulo" style="color: var(--accent-primary, #64ffda);"><i
+                                    class="fas fa-info-circle"></i> Legenda:</span>
                             <div class="legenda-item-inline">
                                 <span class="legenda-cor" style="background: #c8e6c9;"></span>
                                 <span style="color: var(--text-secondary, #a8b2d1);">Baixa</span>
@@ -1292,13 +1404,15 @@
                                 <span class="legenda-cor" style="background: #4caf50;"></span>
                                 <span style="color: var(--text-secondary, #a8b2d1);">Alta</span>
                             </div>
-                            <span class="legenda-dica-inline" style="color: var(--text-muted, #8892b0);"><i class="fas fa-hand-pointer"></i> Clique em um estado para ver os produtos</span>
+                            <span class="legenda-dica-inline" style="color: var(--text-muted, #8892b0);"><i
+                                    class="fas fa-hand-pointer"></i> Clique em um estado para ver os produtos</span>
                         </div>
                     </div>
 
                     <!-- Loading do Mapa -->
                     <div id="loadingMapa" style="display: none; padding: 60px 20px; text-align: center;">
-                        <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: #3498db; margin-bottom: 20px;"></i>
+                        <i class="fas fa-spinner fa-spin"
+                            style="font-size: 48px; color: #3498db; margin-bottom: 20px;"></i>
                         <p style="font-size: 18px; color: #7f8c8d;">Carregando mapa de vendas por região...</p>
                     </div>
 
@@ -1340,18 +1454,23 @@
                 <!-- Relatório de Análise de Preço -->
                 <div id="relatorioAnalisePrecoConteudo" style="display: none;">
                     <!-- Header com botão de nova pesquisa -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <div>
                             <h2 style="color: var(--accent-primary, #64ffda); margin: 0;">
                                 <i class="fas fa-search-dollar"></i> Análise de Preço
                             </h2>
-                            <p id="dataUltimaAnalise" style="color: var(--text-muted, #8892b0); font-size: 14px; margin-top: 5px;"></p>
+                            <p id="dataUltimaAnalise"
+                                style="color: var(--text-muted, #8892b0); font-size: 14px; margin-top: 5px;"></p>
                         </div>
                         <div style="display: flex; gap: 10px;">
-                            <button id="btnReplicarSugestao" class="btn-gerar" style="background-color: #9b59b6; display: none;" onclick="abrirModalReplicarSugestao()">
+                            <button id="btnReplicarSugestao" class="btn-gerar"
+                                style="background-color: #9b59b6; display: none;"
+                                onclick="abrirModalReplicarSugestao()">
                                 <i class="fas fa-magic"></i> Replicar Sugestão
                             </button>
-                            <button class="btn-gerar" style="background-color: #e67e22;" onclick="iniciarNovaAnalisePreco()">
+                            <button class="btn-gerar" style="background-color: #e67e22;"
+                                onclick="iniciarNovaAnalisePreco()">
                                 <i class="fas fa-sync"></i> Gerar Nova Pesquisa
                             </button>
                         </div>
@@ -1411,7 +1530,8 @@
                             </p>
                             <div style="margin-bottom: 15px;">
                                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                    <input type="checkbox" id="selecionarTodosPrecos" onchange="toggleSelecionarTodosPrecos()">
+                                    <input type="checkbox" id="selecionarTodosPrecos"
+                                        onchange="toggleSelecionarTodosPrecos()">
                                     <strong>Selecionar Todos</strong>
                                 </label>
                             </div>
@@ -1432,24 +1552,246 @@
                         <!-- Barra de progresso (oculta inicialmente) -->
                         <div id="progressoReplicar" style="display: none; margin-bottom: 15px;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                <span style="font-weight: 600; color: var(--text-primary, #2c3e50);">Atualizando preços...</span>
+                                <span style="font-weight: 600; color: var(--text-primary, #2c3e50);">Atualizando
+                                    preços...</span>
                                 <span id="progressoReplicarTexto" style="font-weight: 600; color: #9b59b6;">0%</span>
                             </div>
                             <div style="background: #e9ecef; border-radius: 4px; height: 25px; overflow: hidden;">
-                                <div id="progressoReplicarBar" style="background: linear-gradient(90deg, #9b59b6, #8e44ad); height: 100%; width: 0%; transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
+                                <div id="progressoReplicarBar"
+                                    style="background: linear-gradient(90deg, #9b59b6, #8e44ad); height: 100%; width: 0%; transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
                                     0%
                                 </div>
                             </div>
-                            <p id="produtoAtualReplicar" style="margin-top: 10px; color: var(--text-muted, #7f8c8d); font-size: 13px; text-align: center;"></p>
+                            <p id="produtoAtualReplicar"
+                                style="margin-top: 10px; color: var(--text-muted, #7f8c8d); font-size: 13px; text-align: center;">
+                            </p>
                         </div>
 
-                        <div id="botoesReplicar" class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 15px; border-top: 1px solid var(--border-color, #ddd);">
+                        <div id="botoesReplicar" class="modal-footer"
+                            style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 15px; border-top: 1px solid var(--border-color, #ddd);">
                             <button class="btn-cancelar" onclick="fecharModalReplicarSugestao()">
                                 <i class="fas fa-times"></i> Cancelar
                             </button>
-                            <button id="btnConfirmarReplicar" class="btn-gerar" style="background-color: #27ae60;" onclick="confirmarReplicarSugestao()">
+                            <button id="btnConfirmarReplicar" class="btn-gerar" style="background-color: #27ae60;"
+                                onclick="confirmarReplicarSugestao()">
                                 <i class="fas fa-check"></i> Confirmar Alterações
                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Relatório de Estoque -->
+                <div id="relatorioEstoqueConteudo" style="display: none;">
+                    <!-- Resumo do Estoque -->
+                    <div class="resumo-cards">
+                        <div class="card-resumo" style="border-left: 4px solid #16a085;">
+                            <h3>Total de Produtos</h3>
+                            <div class="valor" id="estoqueQtdProdutos">0</div>
+                        </div>
+                        <div class="card-resumo" style="border-left: 4px solid #1abc9c;">
+                            <h3>Total de Itens</h3>
+                            <div class="valor" id="estoqueQtdItens">0</div>
+                        </div>
+                        <div class="card-resumo compras">
+                            <h3>Custo Total Estoque</h3>
+                            <div class="valor" id="estoqueCustoTotal">R$ 0,00</div>
+                        </div>
+                        <div class="card-resumo vendas">
+                            <h3>Valor Venda Total</h3>
+                            <div class="valor" id="estoqueValorVenda">R$ 0,00</div>
+                        </div>
+                        <div class="card-resumo lucro">
+                            <h3>Valorização Simulada</h3>
+                            <div class="valor" id="estoqueValorizacaoSimulada">R$ 0,00</div>
+                        </div>
+                        <div class="card-resumo" style="border-left: 4px solid #9b59b6;">
+                            <h3>Valorização Real</h3>
+                            <div class="valor" id="estoqueValorizacaoReal">R$ 0,00</div>
+                        </div>
+                        <div class="card-resumo margem">
+                            <h3>Margem Média Simulada</h3>
+                            <div class="valor" id="estoqueMargemSimulada">0%</div>
+                        </div>
+                        <div class="card-resumo" style="border-left: 4px solid #8e44ad;">
+                            <h3>Margem Média Real</h3>
+                            <div class="valor" id="estoqueMargemReal">0%</div>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Produtos em Estoque -->
+                    <div class="tabela-container">
+                        <h2><i class="fas fa-boxes"></i> Produtos em Estoque (Faturáveis com Estoque > 0)</h2>
+                        <div style="overflow-x: auto;">
+                            <table id="tabelaEstoque">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Produto</th>
+                                        <th>Categoria</th>
+                                        <th style="text-align: right;">Qtd Disp</th>
+                                        <th style="text-align: right;">Custo Unit.</th>
+                                        <th style="text-align: right;">Custo Total</th>
+                                        <th style="text-align: right;">Preço Venda</th>
+                                        <th style="text-align: right;">Preço Médio</th>
+                                        <th style="text-align: right;">Qtd Vendida</th>
+                                        <th style="text-align: right;">Comissão %</th>
+                                        <th style="text-align: right;">Valor. Simulada</th>
+                                        <th style="text-align: right;">Valor. Real</th>
+                                        <th style="text-align: right;">Margem Sim.</th>
+                                        <th style="text-align: right;">Margem Real</th>
+                                        <th style="text-align: right;">Giro</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bodyEstoque">
+                                    <tr>
+                                        <td colspan="15" class="mensagem-vazia">
+                                            <i class="fas fa-inbox"></i>
+                                            <p>Nenhum produto em estoque</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Botão Exportar Estoque -->
+                    <div style="margin-top: 20px; text-align: right;">
+                        <button class="btn-exportar" onclick="exportarEstoquePDF()" style="background-color: #16a085;">
+                            <i class="fas fa-file-pdf"></i> Exportar PDF
+                        </button>
+                        <button class="btn-exportar" onclick="exportarEstoqueExcel()"
+                            style="background-color: #27ae60; margin-left: 10px;">
+                            <i class="fas fa-file-excel"></i> Exportar Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Relatório por Produtos -->
+                <div id="relatorioProdutosConteudo" style="display: none;">
+                    <!-- Filtros Específicos do Relatório -->
+                    <div class="filtro-container" style="margin-bottom: 15px;">
+                        <div class="filtro-row">
+                            <div class="filtro-group">
+                                <label for="categoriaProdutoFiltro">Grupo (Categoria):</label>
+                                <select id="categoriaProdutoFiltro">
+                                    <option value="">Todas as Categorias</option>
+                                </select>
+                            </div>
+                            <div class="filtro-group">
+                                <label for="nomeProdutoFiltro">Nome do Produto:</label>
+                                <input type="text" id="nomeProdutoFiltro" placeholder="Filtrar por nome..."
+                                    style="padding: 8px 12px; border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1)); border-radius: 4px; font-size: 14px; min-width: 200px; background: rgba(10, 25, 47, 0.8); color: var(--text-primary, #e6f1ff);">
+                            </div>
+                            <div class="filtro-group" style="align-self: flex-end;">
+                                <button class="btn-gerar" onclick="filtrarRelatorioProdutos()">
+                                    <i class="fas fa-filter"></i> Filtrar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Quantidade por Mês -->
+                    <div class="tabela-container">
+                        <h2><i class="fas fa-boxes"></i> Quantidade Vendida por Mês</h2>
+                        <div style="overflow-x: auto;">
+                            <table id="tabelaQuantidadeMensal">
+                                <thead>
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th style="text-align: center;">Jan</th>
+                                        <th style="text-align: center;">Fev</th>
+                                        <th style="text-align: center;">Mar</th>
+                                        <th style="text-align: center;">Abr</th>
+                                        <th style="text-align: center;">Mai</th>
+                                        <th style="text-align: center;">Jun</th>
+                                        <th style="text-align: center;">Jul</th>
+                                        <th style="text-align: center;">Ago</th>
+                                        <th style="text-align: center;">Set</th>
+                                        <th style="text-align: center;">Out</th>
+                                        <th style="text-align: center;">Nov</th>
+                                        <th style="text-align: center;">Dez</th>
+                                        <th style="text-align: center; font-weight: 700;">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bodyQuantidadeMensal">
+                                    <tr>
+                                        <td colspan="14" class="mensagem-vazia">
+                                            <i class="fas fa-inbox"></i>
+                                            <p>Nenhum dado disponível</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Faturamento por Mês -->
+                    <div class="tabela-container">
+                        <h2><i class="fas fa-dollar-sign"></i> Faturamento por Mês</h2>
+                        <div style="overflow-x: auto;">
+                            <table id="tabelaFaturamentoMensal">
+                                <thead>
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th style="text-align: right;">Jan</th>
+                                        <th style="text-align: right;">Fev</th>
+                                        <th style="text-align: right;">Mar</th>
+                                        <th style="text-align: right;">Abr</th>
+                                        <th style="text-align: right;">Mai</th>
+                                        <th style="text-align: right;">Jun</th>
+                                        <th style="text-align: right;">Jul</th>
+                                        <th style="text-align: right;">Ago</th>
+                                        <th style="text-align: right;">Set</th>
+                                        <th style="text-align: right;">Out</th>
+                                        <th style="text-align: right;">Nov</th>
+                                        <th style="text-align: right;">Dez</th>
+                                        <th style="text-align: right; font-weight: 700;">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bodyFaturamentoMensal">
+                                    <tr>
+                                        <td colspan="14" class="mensagem-vazia">
+                                            <i class="fas fa-inbox"></i>
+                                            <p>Nenhum dado disponível</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Lucro por Mês -->
+                    <div class="tabela-container">
+                        <h2><i class="fas fa-chart-line"></i> Lucro por Mês</h2>
+                        <div style="overflow-x: auto;">
+                            <table id="tabelaLucroMensal">
+                                <thead>
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th style="text-align: right;">Jan</th>
+                                        <th style="text-align: right;">Fev</th>
+                                        <th style="text-align: right;">Mar</th>
+                                        <th style="text-align: right;">Abr</th>
+                                        <th style="text-align: right;">Mai</th>
+                                        <th style="text-align: right;">Jun</th>
+                                        <th style="text-align: right;">Jul</th>
+                                        <th style="text-align: right;">Ago</th>
+                                        <th style="text-align: right;">Set</th>
+                                        <th style="text-align: right;">Out</th>
+                                        <th style="text-align: right;">Nov</th>
+                                        <th style="text-align: right;">Dez</th>
+                                        <th style="text-align: right; font-weight: 700;">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bodyLucroMensal">
+                                    <tr>
+                                        <td colspan="14" class="mensagem-vazia">
+                                            <i class="fas fa-inbox"></i>
+                                            <p>Nenhum dado disponível</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -1466,26 +1808,30 @@
                                 <span style="font-weight: 600; color: #e67e22;" id="progressoAnaliseTexto">0%</span>
                             </div>
                             <div style="background: #e9ecef; border-radius: 4px; height: 30px; overflow: hidden;">
-                                <div id="progressoAnaliseBar" style="background: linear-gradient(90deg, #e67e22, #d35400); height: 100%; width: 0%; transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
+                                <div id="progressoAnaliseBar"
+                                    style="background: linear-gradient(90deg, #e67e22, #d35400); height: 100%; width: 0%; transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
                                     0%
                                 </div>
                             </div>
-                            <p id="produtoAtualAnalise" style="margin-top: 15px; color: #7f8c8d; font-size: 14px;">Iniciando análise...</p>
+                            <p id="produtoAtualAnalise" style="margin-top: 15px; color: #7f8c8d; font-size: 14px;">
+                                Iniciando análise...</p>
                         </div>
-                        <div class="alert" style="background: rgba(230, 126, 34, 0.1); border: 1px solid #e67e22; color: #e67e22;">
+                        <div class="alert"
+                            style="background: rgba(230, 126, 34, 0.1); border: 1px solid #e67e22; color: #e67e22;">
                             <i class="fas fa-info-circle"></i> Você será notificado quando a análise for concluída.
                         </div>
                     </div>
                 </div>
             </div>
 
-                <!-- Mensagem Inicial -->
-                <div id="mensagemInicial" style="text-align: center; padding: 60px 20px;">
-                    <i class="fas fa-chart-bar" style="font-size: 64px; color: #bdc3c7; margin-bottom: 20px;"></i>
-                    <p style="font-size: 18px; color: #7f8c8d;">Selecione um período e clique em "Gerar Relatório" para visualizar os dados</p>
-                </div>
+            <!-- Mensagem Inicial -->
+            <div id="mensagemInicial" style="text-align: center; padding: 60px 20px;">
+                <i class="fas fa-chart-bar" style="font-size: 64px; color: #bdc3c7; margin-bottom: 20px;"></i>
+                <p style="font-size: 18px; color: #7f8c8d;">Selecione um período e clique em "Gerar Relatório" para
+                    visualizar os dados</p>
             </div>
-        </main>
+    </div>
+    </main>
     </div>
 
     <!-- Scripts -->
@@ -1503,4 +1849,5 @@
     <script src="js/internal-animation.js"></script>
     <script src="js/theme-switcher.js"></script>
 </body>
+
 </html>

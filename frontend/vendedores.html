@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,7 +24,7 @@
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             max-width: 100%;
         }
 
@@ -81,12 +82,12 @@
             background: white;
         }
 
-        .filter-checkbox:checked + .checkbox-label .checkbox-custom {
+        .filter-checkbox:checked+.checkbox-label .checkbox-custom {
             background: #007bff;
             border-color: #007bff;
         }
 
-        .filter-checkbox:checked + .checkbox-label .checkbox-custom::after {
+        .filter-checkbox:checked+.checkbox-label .checkbox-custom::after {
             content: '✓';
             color: white;
             font-size: 12px;
@@ -131,7 +132,7 @@
         .filter-input:focus {
             outline: none;
             border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
         }
 
         .search-btn {
@@ -161,7 +162,7 @@
         .filter-select:focus {
             outline: none;
             border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
         }
 
         .btn-clear-filters {
@@ -196,7 +197,8 @@
                 margin-right: 0;
             }
 
-            .filter-input, .filter-select {
+            .filter-input,
+            .filter-select {
                 width: 100%;
                 min-width: unset;
             }
@@ -208,6 +210,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="app-container">
         <!-- Sidebar / Menu Lateral -->
@@ -236,7 +239,7 @@
                         <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     </li>
                 </ul>
-                
+
                 <!-- Menu Principal -->
                 <ul>
                     <li>
@@ -285,6 +288,9 @@
                         <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
                     </li>
                     <li>
+                        <a href="softwares.html"><i class="fas fa-download"></i> Softwares</a>
+                    </li>
+                    <li>
                         <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
                     </li>
                     <li class="logout">
@@ -316,19 +322,20 @@
                             <p style="margin-bottom: 15px; color: #6c757d; font-size: 14px;">
                                 Configure os filtros para visualizar os vendedores
                             </p>
-                            
+
                             <!-- Linha de controles -->
                             <div class="filter-row controls-row">
                                 <div class="filter-control">
                                     <label for="filtroPesquisa" class="control-label">Pesquisar:</label>
                                     <div class="search-input-group">
-                                        <input type="text" id="filtroPesquisa" class="filter-input" placeholder="Digite para pesquisar...">
+                                        <input type="text" id="filtroPesquisa" class="filter-input"
+                                            placeholder="Digite para pesquisar...">
                                         <button class="search-btn">
                                             <i class="fas fa-search"></i>
                                         </button>
                                     </div>
                                 </div>
-                                
+
                                 <div class="filter-control">
                                     <label for="filtroStatus" class="control-label">Status:</label>
                                     <select id="filtroStatus" class="filter-select">
@@ -337,7 +344,7 @@
                                         <option value="false">Inativos</option>
                                     </select>
                                 </div>
-                                
+
                                 <label></label>
                                 <button class="btn-clear-filters" id="btnLimparFiltros">
                                     <i class="fas fa-eraser"></i>
@@ -345,45 +352,45 @@
                                 </button>
                             </div>
                         </div>
-                </div>
+                    </div>
 
-                <!-- Tabela de Vendedores -->
-                <div class="table-container">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nome</th>
-                                <th>E-mail</th>
-                                <th>Telefone</th>
-                                <th>Comissão (%)</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="vendedoresTableBody">
-                            <tr>
-                                <td colspan="7" class="text-center">Carregando vendedores...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                    <!-- Tabela de Vendedores -->
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>E-mail</th>
+                                    <th>Telefone</th>
+                                    <th>Comissão (%)</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vendedoresTableBody">
+                                <tr>
+                                    <td colspan="7" class="text-center">Carregando vendedores...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
-                <!-- Paginação -->
-                <div class="pagination">
-                    <button class="btn-page"><i class="fas fa-chevron-left"></i></button>
-                    <button class="btn-page active">1</button>
-                    <button class="btn-page">2</button>
-                    <button class="btn-page">3</button>
-                    <button class="btn-page"><i class="fas fa-chevron-right"></i></button>
+                    <!-- Paginação -->
+                    <div class="pagination">
+                        <button class="btn-page"><i class="fas fa-chevron-left"></i></button>
+                        <button class="btn-page active">1</button>
+                        <button class="btn-page">2</button>
+                        <button class="btn-page">3</button>
+                        <button class="btn-page"><i class="fas fa-chevron-right"></i></button>
+                    </div>
                 </div>
-            </div>
         </main>
     </div>
 
     <!-- Modal de Novo/Editar Vendedor -->
     <div class="modal" id="vendedorModal">
-        <div class="modal-content">
+        <div class="modal-content modal-lg modal-vendas">
             <div class="modal-header">
                 <h2 id="modalTitle">Novo Vendedor</h2>
                 <button class="close-modal">&times;</button>
@@ -391,79 +398,89 @@
             <div class="modal-body">
                 <form id="vendedorForm">
                     <input type="hidden" id="vendedor_id">
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="nome">Nome*</label>
-                            <input type="text" id="nome" name="nome" required>
+
+                    <!-- Sistema de Abas -->
+                    <div class="modal-tabs">
+                        <button type="button" class="modal-tab active" data-tab="tab-dados-vendedor">
+                            <i class="fas fa-user"></i> Dados
+                        </button>
+                        <button type="button" class="modal-tab" data-tab="tab-banco-vendedor">
+                            <i class="fas fa-university"></i> Dados Bancários
+                        </button>
+                    </div>
+
+                    <!-- Aba 1: Dados do Vendedor -->
+                    <div class="modal-tab-content active" id="tab-dados-vendedor">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nome">Nome*</label>
+                                <input type="text" id="nome" name="nome" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email">E-mail</label>
+                                <input type="email" id="email" name="email">
+                            </div>
+                            <div class="form-group">
+                                <label for="telefone">Telefone</label>
+                                <input type="text" id="telefone" name="telefone">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="comissao_percentual">Comissão (%)*</label>
+                                <input type="number" id="comissao_percentual" name="comissao_percentual" step="0.01"
+                                    min="0" max="100" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="usuario_id">Usuário Vinculado</label>
+                                <select id="usuario_id" name="usuario_id">
+                                    <option value="">Selecione um usuário...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="ativo">Status</label>
+                                <select id="ativo" name="ativo">
+                                    <option value="true">Ativo</option>
+                                    <option value="false">Inativo</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="email">E-mail</label>
-                            <input type="email" id="email" name="email">
+
+                    <!-- Aba 2: Dados Bancários -->
+                    <div class="modal-tab-content" id="tab-banco-vendedor">
+                        <p style="font-size: 12px; color: #6c757d; margin-bottom: 15px;">Informe pelo menos uma forma de
+                            pagamento (conta bancária ou PIX)</p>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="banco">Banco</label>
+                                <input type="text" id="banco" name="banco" placeholder="Ex: Banco do Brasil">
+                            </div>
+                            <div class="form-group">
+                                <label for="agencia">Agência</label>
+                                <input type="text" id="agencia" name="agencia" placeholder="Ex: 1234">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="telefone">Telefone</label>
-                            <input type="text" id="telefone" name="telefone">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="conta">Conta</label>
+                                <input type="text" id="conta" name="conta" placeholder="Ex: 123456-7">
+                            </div>
+                            <div class="form-group">
+                                <label for="nome_destinatario">Nome do Destinatário</label>
+                                <input type="text" id="nome_destinatario" name="nome_destinatario"
+                                    placeholder="Nome completo">
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="comissao_percentual">Comissão (%)*</label>
-                            <input type="number" id="comissao_percentual" name="comissao_percentual" step="0.01" min="0" max="100" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="usuario_id">Usuário Vinculado</label>
-                            <select id="usuario_id" name="usuario_id">
-                                <option value="">Selecione um usuário...</option>
-                                <!-- Opções serão carregadas dinamicamente -->
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="ativo">Status</label>
-                            <select id="ativo" name="ativo">
-                                <option value="true">Ativo</option>
-                                <option value="false">Inativo</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <!-- Seção de Dados Bancários -->
-                    <h3 style="margin-top: 20px; margin-bottom: 15px; border-bottom: 2px solid #007bff; padding-bottom: 10px;">Dados Bancários</h3>
-                    <p style="font-size: 12px; color: #6c757d; margin-bottom: 15px;">Informe pelo menos uma forma de pagamento (conta bancária ou PIX)</p>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="banco">Banco</label>
-                            <input type="text" id="banco" name="banco" placeholder="Ex: Banco do Brasil">
-                        </div>
-                        <div class="form-group">
-                            <label for="agencia">Agência</label>
-                            <input type="text" id="agencia" name="agencia" placeholder="Ex: 1234">
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="conta">Conta</label>
-                            <input type="text" id="conta" name="conta" placeholder="Ex: 123456-7">
-                        </div>
-                        <div class="form-group">
-                            <label for="nome_destinatario">Nome do Destinatário</label>
-                            <input type="text" id="nome_destinatario" name="nome_destinatario" placeholder="Nome completo">
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="pix">PIX</label>
-                            <input type="text" id="pix" name="pix" placeholder="E-mail, CPF ou Celular">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="pix">PIX</label>
+                                <input type="text" id="pix" name="pix" placeholder="E-mail, CPF ou Celular">
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -487,4 +504,5 @@
     <script src="js/internal-animation.js"></script>
     <script src="js/theme-switcher.js"></script>
 </body>
+
 </html>

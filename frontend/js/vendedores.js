@@ -34,7 +34,43 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Verifica se há parâmetros na URL para abrir o modal
     checkUrlParams();
+    
+    // Configura sistema de abas do modal
+    configurarAbasModalVendedores();
 });
+
+// Função para configurar o sistema de abas do modal de vendedores
+function configurarAbasModalVendedores() {
+    const tabs = document.querySelectorAll('#vendedorModal .modal-tab');
+    const contents = document.querySelectorAll('#vendedorModal .modal-tab-content');
+    
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-tab');
+            
+            // Remover active de todas as abas
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+            
+            // Adicionar active na aba clicada
+            this.classList.add('active');
+            document.getElementById(targetId).classList.add('active');
+        });
+    });
+}
+
+// Função para resetar abas ao abrir modal de vendedores
+function resetarAbasModalVendedores() {
+    const tabs = document.querySelectorAll('#vendedorModal .modal-tab');
+    const contents = document.querySelectorAll('#vendedorModal .modal-tab-content');
+    
+    tabs.forEach(t => t.classList.remove('active'));
+    contents.forEach(c => c.classList.remove('active'));
+    
+    // Ativar primeira aba
+    if (tabs.length > 0) tabs[0].classList.add('active');
+    if (contents.length > 0) contents[0].classList.add('active');
+}
 
 // Carrega os dados do usuário usando a função do auth.js
 async function loadUserData() {
@@ -258,6 +294,9 @@ async function openVendedorModal(vendedorId = null) {
         document.getElementById('comissao_percentual').value = '0';
         document.getElementById('ativo').value = 'true';
     }
+    
+    // Resetar abas para a primeira
+    resetarAbasModalVendedores();
     
     // Exibe o modal
     modal.classList.add('active');

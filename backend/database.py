@@ -1,13 +1,14 @@
 import mysql.connector
 from contextlib import contextmanager
-from config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+from config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT
 
 # Configurações do banco de dados
 db_config = {
     'host': DB_HOST,
     'user': DB_USER,
     'password': DB_PASSWORD,
-    'database': DB_NAME
+    'database': DB_NAME,
+    'port': DB_PORT
 }
 
 @contextmanager

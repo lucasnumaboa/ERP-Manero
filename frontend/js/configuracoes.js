@@ -1,36 +1,39 @@
 // Variáveis globais
 // API_URL é definido no arquivo api.js
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Configurar sidebar toggle
     setupSidebarToggle();
-    
+
     // Configurar logout
     document.getElementById('logoutBtn').addEventListener('click', logout);
-    
+
     // Configurar abas
     setupTabs();
-    
+
     // Carregar dados do usuário
     carregarDadosUsuario();
-    
+
     // Carregar dados da tabela Configuracoes
     carregarDadosConfiguracoes();
-    
+
     // Carregar lista de usuários
     carregarUsuarios();
-    
+
     // Carregar lista de grupos de usuários
     carregarGrupos();
-    
+
     // Configurar formulários
     setupForms();
-    
+
     // Configurar modal de usuário
     setupUsuarioModal();
-    
+
     // Configurar modal de grupo
     setupGrupoModal();
+
+    // Configurar formulário de IA Provider
+    setupIAProviderForm();
 });
 
 // Funções de autenticação
@@ -50,7 +53,7 @@ async function verificarAcessoAdmin() {
             window.location.href = 'index.html';
             return;
         }
-        
+
         // Faz a requisição diretamente usando fetch com o token
         const response = await fetch(`${await getApiBaseUrl()}/api/usuarios/perfil`, {
             method: 'GET',
@@ -59,22 +62,22 @@ async function verificarAcessoAdmin() {
                 'Authorization': `Bearer ${token}`
             }
         });
-        
+
         if (!response.ok) {
             console.error('Erro na requisição:', response.status);
             window.location.href = 'index.html';
             return;
         }
-        
+
         const usuario = await response.json();
-        
+
         // Verifica se a resposta contém dados do usuário
         if (!usuario || !usuario.nivel_acesso) {
             console.error('Dados do usuário inválidos');
             window.location.href = 'index.html';
             return;
         }
-        
+
         if (usuario.nivel_acesso !== 'admin') {
             alert('Acesso restrito. Apenas administradores podem acessar esta página.');
             window.location.href = 'homepage.html';
@@ -107,8 +110,8 @@ function setupSidebarToggle() {
     const toggleBtn = document.getElementById('toggleSidebar');
     const sidebar = document.querySelector('.sidebar');
     const mainContent = document.querySelector('.main-content');
-    
-    toggleBtn.addEventListener('click', function() {
+
+    toggleBtn.addEventListener('click', function () {
         sidebar.classList.toggle('collapsed');
         mainContent.classList.toggle('expanded');
     });
@@ -118,18 +121,18 @@ function setupSidebarToggle() {
 function setupTabs() {
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
-    
+
     tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             // Remover classe active de todos os botões
             tabButtons.forEach(btn => btn.classList.remove('active'));
-            
+
             // Adicionar classe active ao botão clicado
             this.classList.add('active');
-            
+
             // Esconder todos os conteúdos de aba
             tabContents.forEach(content => content.classList.remove('active'));
-            
+
             // Mostrar o conteúdo correspondente à aba clicada
             const tabName = this.dataset.tab;
             document.getElementById(tabName).classList.add('active');
@@ -147,7 +150,7 @@ async function carregarDadosUsuario() {
             window.location.href = 'index.html';
             return;
         }
-        
+
         // Faz a requisição usando a API centralizada
         const usuario = await apiGet('/api/usuarios/me');
         preencherDadosUsuario(usuario);
@@ -161,34 +164,34 @@ function preencherDadosUsuario(usuario) {
     // Preencher campos do formulário de perfil
     const nomeInput = document.getElementById('nome');
     if (nomeInput) nomeInput.value = usuario.nome || '';
-    
+
     const emailInput = document.getElementById('email');
     if (emailInput) emailInput.value = usuario.email || '';
-    
+
     const cargoInput = document.getElementById('cargo');
     if (cargoInput) cargoInput.value = usuario.nivel_acesso || '';
-    
+
     const telefoneInput = document.getElementById('telefone');
     if (telefoneInput) telefoneInput.value = usuario.telefone || '';
-    
+
     // Atualizar nome e função na sidebar
     const userNameElement = document.getElementById('userName');
     if (userNameElement) userNameElement.textContent = usuario.nome || 'Usuário';
-    
+
     const userRoleElement = document.getElementById('userRole');
     if (userRoleElement) userRoleElement.textContent = usuario.nivel_acesso || 'Usuário';
-    
+
     // Controlar visibilidade baseado no nível de acesso
     controlarVisibilidadePorNivel(usuario.nivel_acesso);
 }
 
 function controlarVisibilidadePorNivel(nivelAcesso) {
     const isAdmin = nivelAcesso === 'admin';
-    
+
     // 1. Controlar campo "Nível de Acesso"
     const cargoGroup = document.querySelector('#cargo').closest('.form-group');
     const cargoSelect = document.getElementById('cargo');
-    
+
     if (cargoGroup && cargoSelect) {
         if (isAdmin) {
             // Para admins: mostrar o campo mas desabilitar e adicionar mensagem
@@ -196,7 +199,7 @@ function controlarVisibilidadePorNivel(nivelAcesso) {
             cargoSelect.disabled = true;
             cargoSelect.style.backgroundColor = '#f5f5f5';
             cargoSelect.style.cursor = 'not-allowed';
-            
+
             // Adicionar mensagem explicativa se não existir
             let adminMessage = cargoGroup.querySelector('.admin-protection-message');
             if (!adminMessage) {
@@ -212,25 +215,25 @@ function controlarVisibilidadePorNivel(nivelAcesso) {
             cargoGroup.style.display = 'none';
         }
     }
-    
+
     // 2. Ocultar aba "Usuários" para não-admins
     const usuariosTab = document.querySelector('[data-tab="usuarios"]');
     if (usuariosTab) {
         usuariosTab.style.display = isAdmin ? 'block' : 'none';
     }
-    
+
     // 3. Ocultar aba "Grupos de Usuários" para não-admins
     const gruposTab = document.querySelector('[data-tab="grupos"]');
     if (gruposTab) {
         gruposTab.style.display = isAdmin ? 'block' : 'none';
     }
-    
+
     // 4. Ocultar aba "Configurações" para não-admins
     const configuracoesTab = document.querySelector('[data-tab="configuracoes"]');
     if (configuracoesTab) {
         configuracoesTab.style.display = isAdmin ? 'block' : 'none';
     }
-    
+
     // 4. Se não é admin e está numa aba restrita, redirecionar para a aba "perfil"
     if (!isAdmin) {
         const activeTab = document.querySelector('.tab-btn.active');
@@ -286,15 +289,15 @@ async function carregarDadosConfiguracoes() {
 function preencherDadosConfiguracoes(configuracoes) {
     // Armazenar em cache para uso posterior
     configuracoesCacheadas = configuracoes;
-    
+
     // Verifica se há um container para as configurações
     const configContainer = document.getElementById('configuracoes-container');
     if (!configContainer) return;
-    
+
     // Limpa o container (remove o estado de carregamento)
     configContainer.innerHTML = '';
     configContainer.className = 'configurations-content';
-    
+
     // Verifica se há configurações para exibir
     if (!configuracoes || configuracoes.length === 0) {
         const emptyState = document.createElement('div');
@@ -307,11 +310,11 @@ function preencherDadosConfiguracoes(configuracoes) {
         configContainer.appendChild(emptyState);
         return;
     }
-    
+
     // Cria uma tabela para exibir as configurações
     const table = document.createElement('table');
     table.className = 'table table-striped';
-    
+
     // Cria o cabeçalho da tabela
     const thead = document.createElement('thead');
     thead.innerHTML = `
@@ -323,28 +326,47 @@ function preencherDadosConfiguracoes(configuracoes) {
         </tr>
     `;
     table.appendChild(thead);
-    
+
     // Cria o corpo da tabela
     const tbody = document.createElement('tbody');
-    
+
     // Adiciona cada configuração como uma linha na tabela
     configuracoes.forEach(config => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${config.chave}</td>
-            <td>${config.valor}</td>
-            <td>${config.descricao || ''}</td>
-            <td>
-                <button class="btn btn-sm btn-primary editar-config" data-id="${config.chave}">Editar</button>
 
-            </td>
-        `;
+        // Verifica se é um campo booleano (olx_ativo)
+        if (config.chave === 'olx_ativo') {
+            const isAtivo = config.valor === 'true' || config.valor === '1';
+            tr.innerHTML = `
+                <td>${config.chave}</td>
+                <td>
+                    <div class="webhook-toggle-wrapper">
+                        <label class="switch">
+                            <input type="checkbox" id="olx_ativo_toggle" data-chave="${config.chave}" ${isAtivo ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                        <span id="olx_ativo_label" class="webhook-status-text ${isAtivo ? 'ativo' : 'inativo'}">${isAtivo ? 'Ativado' : 'Desativado'}</span>
+                    </div>
+                </td>
+                <td>${config.descricao || ''}</td>
+                <td>-</td>
+            `;
+        } else {
+            tr.innerHTML = `
+                <td>${config.chave}</td>
+                <td>${config.valor}</td>
+                <td>${config.descricao || ''}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary editar-config" data-id="${config.chave}">Editar</button>
+                </td>
+            `;
+        }
         tbody.appendChild(tr);
     });
-    
+
     table.appendChild(tbody);
     configContainer.appendChild(table);
-    
+
     // Adiciona eventos aos botões de editar e excluir
     document.querySelectorAll('.editar-config').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -352,13 +374,56 @@ function preencherDadosConfiguracoes(configuracoes) {
             abrirModalEditarConfiguracao(id);
         });
     });
-    
+
     document.querySelectorAll('.excluir-config').forEach(btn => {
         btn.addEventListener('click', () => {
             const id = btn.getAttribute('data-id');
             confirmarExclusaoConfiguracao(id);
         });
     });
+
+    // Adiciona evento ao toggle do olx_ativo
+    const olxAtivoToggle = document.getElementById('olx_ativo_toggle');
+    if (olxAtivoToggle) {
+        olxAtivoToggle.addEventListener('change', async function () {
+            const novoValor = this.checked ? 'true' : 'false';
+            const chave = this.getAttribute('data-chave');
+            const label = document.getElementById('olx_ativo_label');
+
+            // Atualiza o label
+            if (label) {
+                label.textContent = this.checked ? 'Ativado' : 'Desativado';
+                label.className = 'webhook-status-text ' + (this.checked ? 'ativo' : 'inativo');
+            }
+
+            // Salva no banco
+            try {
+                const token = localStorage.getItem('erp_token');
+                const response = await fetch(`${await getApiBaseUrl()}/api/configuracoes/configuracoes/${chave}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ valor: novoValor })
+                });
+
+                if (response.ok) {
+                    console.log(`OLX ${this.checked ? 'ativado' : 'desativado'} com sucesso`);
+                } else {
+                    console.error('Erro ao salvar configuração olx_ativo');
+                    // Reverte o toggle em caso de erro
+                    this.checked = !this.checked;
+                    if (label) {
+                        label.textContent = this.checked ? 'Ativado' : 'Desativado';
+                        label.className = 'webhook-status-text ' + (this.checked ? 'ativo' : 'inativo');
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao salvar configuração olx_ativo:', error);
+            }
+        });
+    }
 }
 
 // Função para abrir o modal de nova configuração
@@ -398,24 +463,24 @@ function abrirModalNovaConfiguracao() {
             </div>
         </div>
     `;
-    
+
     // Adicionar modal ao DOM
     const modalContainer = document.createElement('div');
     modalContainer.innerHTML = modalHtml;
     document.body.appendChild(modalContainer);
-    
+
     // Configurar eventos do modal
     const modal = document.getElementById('configModal');
     const closeBtn = modal.querySelector('.close-modal');
     const cancelBtn = document.getElementById('cancelarConfig');
     const form = document.getElementById('configForm');
-    
+
     // Exibir modal com animação
     setTimeout(() => {
         modal.classList.add('active');
         document.body.classList.add('modal-open');
     }, 10);
-    
+
     // Função para fechar modal
     function fecharModal() {
         modal.classList.remove('active');
@@ -426,28 +491,24 @@ function abrirModalNovaConfiguracao() {
             }
         }, 300);
     }
-    
+
     // Fechar modal
     closeBtn.addEventListener('click', fecharModal);
     cancelBtn.addEventListener('click', fecharModal);
-    
-    // Fechar modal ao clicar fora
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            fecharModal();
-        }
-    });
-    
+
+    // REMOVIDO: Fechar modal ao clicar fora
+    // Modais agora só fecham ao clicar no X ou botão Cancelar/Fechar
+
     // Enviar formulário
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const configData = {
             chave: document.getElementById('chave').value,
             valor: document.getElementById('valor').value,
             descricao: document.getElementById('descricao').value
         };
-        
+
         await salvarNovaConfiguracao(configData);
         fecharModal();
     });
@@ -462,7 +523,7 @@ async function abrirModalEditarConfiguracao(chave) {
             alert('Erro: dados de configurações não carregados. Recarregue a página.');
             return;
         }
-        
+
         // Encontrar a configuração pela chave
         const config = configuracoesCacheadas.find(c => c.chave === chave);
         if (!config) {
@@ -470,7 +531,7 @@ async function abrirModalEditarConfiguracao(chave) {
             alert('Erro: configuração não encontrada.');
             return;
         }
-        
+
         // Criar modal dinamicamente
         const modalHtml = `
             <div class="modal" id="configModal">
@@ -489,7 +550,15 @@ async function abrirModalEditarConfiguracao(chave) {
                             </div>
                             <div class="form-group">
                                 <label for="valor"><i class="fas fa-edit"></i> Valor</label>
+                                ${config.chave === 'ia_provider' ? `
+                                <select id="valor" name="valor" class="form-control" required>
+                                    <option value="openrouter" ${config.valor === 'openrouter' ? 'selected' : ''}>OpenRouter</option>
+                                    <option value="ollama" ${config.valor === 'ollama' ? 'selected' : ''}>Ollama</option>
+                                    <option value="lmstudio" ${config.valor === 'lmstudio' ? 'selected' : ''}>LM Studio</option>
+                                </select>
+                                ` : `
                                 <input type="text" id="valor" name="valor" class="form-control" value="${config.valor}" placeholder="Digite o valor da configuração" required>
+                                `}
                             </div>
                             <div class="form-group">
                                 <label for="descricao"><i class="fas fa-info-circle"></i> Descrição</label>
@@ -508,24 +577,24 @@ async function abrirModalEditarConfiguracao(chave) {
                 </div>
             </div>
         `;
-        
+
         // Adicionar modal ao DOM
         const modalContainer = document.createElement('div');
         modalContainer.innerHTML = modalHtml;
         document.body.appendChild(modalContainer);
-        
+
         // Configurar eventos do modal
         const modal = document.getElementById('configModal');
         const closeBtn = modal.querySelector('.close-modal');
         const cancelBtn = document.getElementById('cancelarConfig');
         const form = document.getElementById('configForm');
-        
+
         // Exibir modal com animação
         setTimeout(() => {
             modal.classList.add('active');
             document.body.classList.add('modal-open');
         }, 10);
-        
+
         // Função para fechar modal
         function fecharModal() {
             modal.classList.remove('active');
@@ -536,29 +605,25 @@ async function abrirModalEditarConfiguracao(chave) {
                 }
             }, 300);
         }
-        
+
         // Fechar modal
         closeBtn.addEventListener('click', fecharModal);
         cancelBtn.addEventListener('click', fecharModal);
-        
-        // Fechar modal ao clicar fora
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                fecharModal();
-            }
-        });
-        
+
+        // REMOVIDO: Fechar modal ao clicar fora
+        // Modais agora só fecham ao clicar no X ou botão Cancelar/Fechar
+
         // Enviar formulário
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const configData = {
                 id: document.getElementById('config_id').value,
                 chave: document.getElementById('chave').value,
                 valor: document.getElementById('valor').value,
                 descricao: document.getElementById('descricao').value
             };
-            
+
             await atualizarConfiguracao(configData);
             fecharModal();
         });
@@ -582,7 +647,7 @@ async function salvarNovaConfiguracao(configData) {
             console.error('Token não encontrado');
             return;
         }
-        
+
         const response = await fetch(`${await getApiBaseUrl()}/api/configuracoes`, {
             method: 'POST',
             headers: {
@@ -591,13 +656,13 @@ async function salvarNovaConfiguracao(configData) {
             },
             body: JSON.stringify(configData)
         });
-        
+
         if (!response.ok) {
             console.error('Erro ao salvar configuração:', response.status);
             alert('Erro ao salvar configuração. Por favor, tente novamente.');
             return;
         }
-        
+
         alert('Configuração salva com sucesso!');
         carregarDadosConfiguracoes(); // Recarregar dados
     } catch (error) {
@@ -614,13 +679,13 @@ async function atualizarConfiguracao(configData) {
             console.error('Token não encontrado');
             return;
         }
-        
+
         // Preparar dados para envio no formato JSON
         const requestBody = {
             valor: configData.valor,
             descricao: configData.descricao || null
         };
-        
+
         // O endpoint é /api/configuracoes/configuracoes/{chave} - usando PUT conforme documentação da API
         const response = await fetch(`${await getApiBaseUrl()}/api/configuracoes/configuracoes/${configData.chave}`, {
             method: 'PUT',
@@ -630,14 +695,14 @@ async function atualizarConfiguracao(configData) {
             },
             body: JSON.stringify(requestBody)
         });
-        
+
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             console.error('Erro ao atualizar configuração:', response.status, errorData);
             alert(`Erro ao atualizar configuração: ${errorData.detail || 'Por favor, tente novamente.'}`);
             return;
         }
-        
+
         const result = await response.json();
         alert('Configuração atualizada com sucesso!');
         carregarDadosConfiguracoes(); // Recarregar dados
@@ -655,7 +720,7 @@ async function excluirConfiguracao(configChave) {
             console.error('Token não encontrado');
             return;
         }
-        
+
         const response = await fetch(`${await getApiBaseUrl()}/api/configuracoes/${configChave}`, {
             method: 'DELETE',
             headers: {
@@ -663,13 +728,13 @@ async function excluirConfiguracao(configChave) {
                 'Authorization': `Bearer ${token}`
             }
         });
-        
+
         if (!response.ok) {
             console.error('Erro ao excluir configuração:', response.status);
             alert('Erro ao excluir configuração. Por favor, tente novamente.');
             return;
         }
-        
+
         alert('Configuração excluída com sucesso!');
         carregarDadosConfiguracoes(); // Recarregar dados
     } catch (error) {
@@ -679,39 +744,201 @@ async function excluirConfiguracao(configChave) {
 }
 
 
+// ============================================
+// CONFIGURAÇÕES DE INTELIGÊNCIA ARTIFICIAL
+// ============================================
+
+// Função para alternar campos visíveis baseado no provider selecionado
+function alternarCamposProvider(provider) {
+    document.getElementById('openrouter_fields').style.display = provider === 'openrouter' ? 'block' : 'none';
+    document.getElementById('ollama_fields').style.display = provider === 'ollama' ? 'block' : 'none';
+    document.getElementById('lmstudio_fields').style.display = provider === 'lmstudio' ? 'block' : 'none';
+}
+
+// Função para configurar o formulário de IA Provider
+function setupIAProviderForm() {
+    const providerSelect = document.getElementById('ia_provider');
+    const iaForm = document.getElementById('iaProviderForm');
+
+    if (!providerSelect || !iaForm) return;
+
+    // Alternar campos quando o provider muda
+    providerSelect.addEventListener('change', function () {
+        alternarCamposProvider(this.value);
+    });
+
+    // Carregar configurações de IA do banco
+    carregarConfiguracoesIA();
+
+    // Salvar configurações de IA
+    iaForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const provider = document.getElementById('ia_provider').value;
+
+        // Mapear campos para chaves do banco
+        const configsParaSalvar = [
+            { chave: 'ia_provider', valor: provider },
+            { chave: 'apikey_openrouter', valor: document.getElementById('ia_apikey_openrouter').value },
+            { chave: 'model_openrouter', valor: document.getElementById('ia_model_openrouter').value },
+            { chave: 'ollama_url', valor: document.getElementById('ia_ollama_url').value },
+            { chave: 'ollama_model', valor: document.getElementById('ia_ollama_model').value },
+            { chave: 'ollama_apikey', valor: document.getElementById('ia_ollama_apikey').value },
+            { chave: 'lmstudio_url', valor: document.getElementById('ia_lmstudio_url').value },
+            { chave: 'lmstudio_model', valor: document.getElementById('ia_lmstudio_model').value },
+            { chave: 'lmstudio_apikey', valor: document.getElementById('ia_lmstudio_apikey').value },
+            // Think: usa o select do provider ativo, mas ambos apontam para a mesma chave
+            {
+                chave: 'ia_think', valor: provider === 'lmstudio'
+                    ? document.getElementById('ia_lmstudio_think').value
+                    : document.getElementById('ia_ollama_think').value
+            },
+            { chave: 'ia_think_tokens', valor: document.getElementById('ia_think_tokens').value || '0' }
+        ];
+
+        try {
+            const token = localStorage.getItem('erp_token');
+            let sucessos = 0;
+
+            for (const config of configsParaSalvar) {
+                // Não sobrescreve apikeys com string vazia (preserva o valor existente no banco)
+                const isApikeyField = config.chave.endsWith('_apikey') || config.chave === 'apikey_openrouter';
+                if (isApikeyField && config.valor === '') {
+                    console.log(`[IA Config] Pulando ${config.chave} (vazio) — mantendo valor salvo no banco`);
+                    sucessos++; // Conta como sucesso (não houve erro)
+                    continue;
+                }
+                const response = await fetch(`${await getApiBaseUrl()}/api/configuracoes/configuracoes/${config.chave}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ valor: config.valor })
+                });
+
+                if (response.ok) {
+                    sucessos++;
+                } else {
+                    console.error(`Erro ao salvar ${config.chave}:`, response.status);
+                }
+            }
+
+            if (sucessos === configsParaSalvar.length) {
+                alert('Configurações de IA salvas com sucesso!');
+            } else {
+                alert(`${sucessos}/${configsParaSalvar.length} configurações salvas. Verifique o console para erros.`);
+            }
+
+            // Recarregar configurações da tabela
+            carregarDadosConfiguracoes();
+
+            // Limpar cache de configurações de IA no frontend
+            if (typeof configuracoesIA !== 'undefined') {
+                window.configuracoesIA = null;
+            }
+
+        } catch (error) {
+            console.error('Erro ao salvar configurações de IA:', error);
+            alert('Erro ao salvar configurações de IA. Verifique o console.');
+        }
+    });
+}
+
+// Função para carregar configurações de IA do banco e preencher o formulário
+async function carregarConfiguracoesIA() {
+    try {
+        const configuracoes = await apiGet('/api/configuracoes/configuracoes/');
+
+        const getConfig = (chave, fallback = '') => {
+            const config = configuracoes.find(c => c.chave === chave);
+            return config?.valor || fallback;
+        };
+
+        // Preencher campos
+        const provider = getConfig('ia_provider', 'openrouter');
+        const providerSelect = document.getElementById('ia_provider');
+        if (providerSelect) providerSelect.value = provider;
+
+        const apikeyInput = document.getElementById('ia_apikey_openrouter');
+        if (apikeyInput) apikeyInput.value = getConfig('apikey_openrouter');
+
+        const modelInput = document.getElementById('ia_model_openrouter');
+        if (modelInput) modelInput.value = getConfig('model_openrouter', 'openai/gpt-oss-20b:free');
+
+        const ollamaUrlInput = document.getElementById('ia_ollama_url');
+        if (ollamaUrlInput) ollamaUrlInput.value = getConfig('ollama_url', 'http://localhost:11434');
+
+        const ollamaModelInput = document.getElementById('ia_ollama_model');
+        if (ollamaModelInput) ollamaModelInput.value = getConfig('ollama_model', 'llama3');
+
+        const ollamaApikeyInput = document.getElementById('ia_ollama_apikey');
+        if (ollamaApikeyInput) ollamaApikeyInput.value = getConfig('ollama_apikey');
+
+        const lmUrlInput = document.getElementById('ia_lmstudio_url');
+        if (lmUrlInput) lmUrlInput.value = getConfig('lmstudio_url', 'http://localhost:1234');
+
+        const lmModelInput = document.getElementById('ia_lmstudio_model');
+        if (lmModelInput) lmModelInput.value = getConfig('lmstudio_model', 'default');
+
+        const lmApikeyInput = document.getElementById('ia_lmstudio_apikey');
+        if (lmApikeyInput) lmApikeyInput.value = getConfig('lmstudio_apikey');
+
+        // Preencher campo think em ambos os providers (mesma chave no banco)
+        const thinkValue = getConfig('ia_think', 'on');
+        const ollamaThinkSelect = document.getElementById('ia_ollama_think');
+        if (ollamaThinkSelect) ollamaThinkSelect.value = thinkValue;
+        const lmThinkSelect = document.getElementById('ia_lmstudio_think');
+        if (lmThinkSelect) lmThinkSelect.value = thinkValue;
+
+        // Preencher budget de tokens
+        const thinkTokensInput = document.getElementById('ia_think_tokens');
+        if (thinkTokensInput) thinkTokensInput.value = getConfig('ia_think_tokens', '0');
+
+        // Mostrar campos do provider selecionado
+        alternarCamposProvider(provider);
+
+    } catch (error) {
+        // Suprimir erro 403 para não-admin
+        if (error.status !== 403) {
+            console.error('Erro ao carregar configurações de IA:', error);
+        }
+    }
+}
+
 // Funções para formulários
 function setupForms() {
     // Formulário de perfil
     const profileForm = document.getElementById('profileForm');
     if (profileForm) {
-        profileForm.addEventListener('submit', function(e) {
+        profileForm.addEventListener('submit', function (e) {
             e.preventDefault();
             salvarPerfil();
         });
     }
-    
+
     // Formulário de senha
     const passwordForm = document.getElementById('passwordForm');
     if (passwordForm) {
-        passwordForm.addEventListener('submit', function(e) {
+        passwordForm.addEventListener('submit', function (e) {
             e.preventDefault();
             alterarSenha();
         });
     }
-    
+
     // Formulário de preferências - Verificar se existe
     const preferencesForm = document.getElementById('preferencesForm');
     if (preferencesForm) {
-        preferencesForm.addEventListener('submit', function(e) {
+        preferencesForm.addEventListener('submit', function (e) {
             e.preventDefault();
             salvarPreferencias();
         });
     }
-    
+
     // Formulário de configurações
     const configuracoesForm = document.getElementById('configuracoesForm');
     if (configuracoesForm) {
-        configuracoesForm.addEventListener('submit', function(e) {
+        configuracoesForm.addEventListener('submit', function (e) {
             e.preventDefault();
             salvarConfiguracoes();
         });
@@ -726,10 +953,10 @@ async function salvarPerfil() {
             alert('Por favor, selecione um nível de acesso válido.');
             return;
         }
-        
+
         // Primeiro, obter o ID do usuário atual
         const currentUser = await apiGet('/api/usuarios/me');
-        
+
         // Proteção: Usuários admin não podem alterar seu próprio nível de acesso
         if (currentUser.nivel_acesso === 'admin' && nivelAcesso !== 'admin') {
             alert('Usuários administradores não podem alterar seu próprio nível de acesso para outro nível.');
@@ -737,16 +964,16 @@ async function salvarPerfil() {
             document.getElementById('cargo').value = 'admin';
             return;
         }
-        
+
         const perfilData = {
             nome: document.getElementById('nome').value,
             email: document.getElementById('email').value,
             nivel_acesso: nivelAcesso
         };
-        
+
         // Usa a API centralizada com o ID do usuário
         await apiPut(`/api/usuarios/${currentUser.id}`, perfilData);
-        
+
         alert('Perfil atualizado com sucesso!');
         // Atualizar nome na sidebar
         document.getElementById('userName').textContent = perfilData.nome;
@@ -763,11 +990,11 @@ async function salvarConfiguracoes() {
         fuso_horario: document.getElementById('fuso_horario').value,
         itens_por_pagina: document.getElementById('itens_por_pagina').value
     };
-    
+
     try {
         // Usa a API centralizada
         await apiPut('/api/configuracoes', configData);
-        
+
         alert('Configurações atualizadas com sucesso!');
     } catch (error) {
         console.error('Erro ao atualizar configurações:', error);
@@ -779,27 +1006,27 @@ async function alterarSenha() {
     const senhaAtual = document.getElementById('senha_atual').value;
     const novaSenha = document.getElementById('nova_senha').value;
     const confirmarSenha = document.getElementById('confirmar_senha').value;
-    
+
     // Validações básicas
     if (!senhaAtual || !novaSenha || !confirmarSenha) {
         alert('Por favor, preencha todos os campos.');
         return;
     }
-    
+
     if (novaSenha !== confirmarSenha) {
         alert('A nova senha e a confirmação não correspondem.');
         return;
     }
-    
+
     const senhaData = {
         senha_atual: senhaAtual,
         nova_senha: novaSenha
     };
-    
+
     try {
         // Usa a API centralizada com o endpoint correto
         await apiPut('/api/usuarios/me/senha', senhaData);
-        
+
         alert('Senha alterada com sucesso!');
         // Limpar campos
         document.getElementById('senha_atual').value = '';
@@ -821,7 +1048,7 @@ function salvarPreferencias() {
             estoque: document.getElementById('notif_estoque').checked
         }
     };
-    
+
     // Salvar preferências no localStorage
     localStorage.setItem('userPreferences', JSON.stringify(preferencesData));
     alert('Preferências salvas com sucesso!');
@@ -840,7 +1067,7 @@ async function salvarEmpresa() {
         estado: document.getElementById('estado').value,
         cep: document.getElementById('cep').value
     };
-    
+
     try {
         // Usa a API centralizada com o caminho correto
         await apiPut('/api/empresa', empresaData);
@@ -861,7 +1088,7 @@ function salvarSistema() {
         backup_automatico: document.getElementById('backup_automatico').checked,
         modo_manutencao: document.getElementById('modo_manutencao').checked
     };
-    
+
     // Salvar configurações do sistema no localStorage
     localStorage.setItem('systemSettings', JSON.stringify(sistemaData));
     alert('Configurações do sistema salvas com sucesso!');
@@ -874,7 +1101,7 @@ function salvarConfigBackup() {
         retencao: document.getElementById('retencao_backup').value,
         tipo: document.getElementById('tipo_backup').value
     };
-    
+
     // Salvar configurações de backup no localStorage
     localStorage.setItem('backupSettings', JSON.stringify(backupData));
     alert('Configurações de backup salvas com sucesso!');
@@ -896,7 +1123,7 @@ function restaurarBackup() {
 // Configurações de usuários
 async function carregarUsuarios() {
     try {
-        const apiBaseUrl = localStorage.getItem('api_base_url') || 'http://localhost:8000';
+        const apiBaseUrl = localStorage.getItem('api_base_url') || 'https://erp-api-call.autoservto.com.br';
         const response = await fetch(`${apiBaseUrl}/api/usuarios/`, {
             method: 'GET',
             headers: getAuthHeader()
@@ -924,12 +1151,12 @@ async function carregarUsuarios() {
 // Carregar lista de grupos
 async function carregarGrupos() {
     try {
-        const apiBaseUrl = localStorage.getItem('api_base_url') || 'http://localhost:8000';
+        const apiBaseUrl = localStorage.getItem('api_base_url') || 'https://erp-api-call.autoservto.com.br';
         const response = await fetch(`${apiBaseUrl}/api/configuracoes/grupo_usuario`, {
             method: 'GET',
             headers: getAuthHeader()
         });
-        
+
         if (!response.ok) {
             // Suprimir erro 403 (acesso negado) para usuários não-admin
             if (response.status !== 403) {
@@ -937,7 +1164,7 @@ async function carregarGrupos() {
             }
             return;
         }
-        
+
         const grupos = await response.json();
         preencherTabelaGrupos(grupos);
     } catch (error) {
@@ -951,7 +1178,7 @@ async function carregarGrupos() {
 function preencherTabelaGrupos(grupos) {
     const tbody = document.getElementById('gruposTableBody');
     tbody.innerHTML = '';
-    
+
     if (grupos.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -960,13 +1187,13 @@ function preencherTabelaGrupos(grupos) {
         `;
         return;
     }
-    
+
     grupos.forEach(grupo => {
         const tr = document.createElement('tr');
-        
+
         // Verificar se é o grupo Administrador (não pode ser editado ou excluído)
         const isAdmin = grupo.nome === 'Administrador';
-        
+
         tr.innerHTML = `
             <td>${grupo.id}</td>
             <td>${grupo.nome}</td>
@@ -981,18 +1208,18 @@ function preencherTabelaGrupos(grupos) {
                 </button>
             </td>
         `;
-        
+
         // Adicionar eventos aos botões
         const btnEdit = tr.querySelector('.btn-edit');
         if (!isAdmin) {
             btnEdit.addEventListener('click', () => editarGrupo(grupo.id));
         }
-        
+
         const btnDelete = tr.querySelector('.btn-delete');
         if (!isAdmin && !grupo.em_uso) {
             btnDelete.addEventListener('click', () => excluirGrupo(grupo.id));
         }
-        
+
         tbody.appendChild(tr);
     });
 }
@@ -1000,27 +1227,27 @@ function preencherTabelaGrupos(grupos) {
 // Abrir modal para editar grupo
 async function editarGrupo(id) {
     try {
-        const apiBaseUrl = localStorage.getItem('api_base_url') || 'http://localhost:8000';
+        const apiBaseUrl = localStorage.getItem('api_base_url') || 'https://erp-api-call.autoservto.com.br';
         const response = await fetch(`${apiBaseUrl}/api/configuracoes/grupo_usuario/${id}`, {
             method: 'GET',
             headers: getAuthHeader()
         });
-        
+
         if (!response.ok) {
             throw new Error(`Erro HTTP: ${response.status}`);
         }
-        
+
         const grupo = await response.json();
-        
+
         // Preencher formulário
         const form = document.getElementById('grupoForm');
         form.dataset.mode = 'edit';
         form.dataset.grupoId = id;
-        
+
         document.getElementById('grupoModalTitle').textContent = 'Editar Grupo de Usuários';
         document.getElementById('grupo_nome').value = grupo.nome;
         document.getElementById('grupo_descricao').value = grupo.descricao || '';
-        
+
         // Preencher checkboxes de permissões
         document.querySelector('input[name="dashboard_visualizar"]').checked = grupo.dashboard_visualizar;
         document.querySelector('input[name="dashboard_editar"]').checked = grupo.dashboard_editar;
@@ -1038,13 +1265,15 @@ async function editarGrupo(id) {
         document.querySelector('input[name="fornecedores_editar"]').checked = grupo.fornecedores_editar;
         document.querySelector('input[name="estoque_visualizar"]').checked = grupo.estoque_visualizar;
         document.querySelector('input[name="estoque_editar"]').checked = grupo.estoque_editar;
+        document.querySelector('input[name="depositos_visualizar"]').checked = grupo.depositos_visualizar;
+        document.querySelector('input[name="depositos_editar"]').checked = grupo.depositos_editar;
         document.querySelector('input[name="configuracoes_visualizar"]').checked = grupo.configuracoes_visualizar;
         document.querySelector('input[name="configuracoes_editar"]').checked = grupo.configuracoes_editar;
         document.querySelector('input[name="financeiro_visualizar"]').checked = grupo.financeiro_visualizar;
         document.querySelector('input[name="financeiro_editar"]').checked = grupo.financeiro_editar;
         document.querySelector('input[name="metas_visualizar"]').checked = grupo.metas_visualizar;
         document.querySelector('input[name="metas_editar"]').checked = grupo.metas_editar;
-        
+
         // Abrir modal
         const modal = document.getElementById('grupoModal');
         modal.classList.add('active');
@@ -1060,19 +1289,19 @@ async function excluirGrupo(id) {
     if (!confirm('Tem certeza que deseja excluir este grupo?')) {
         return;
     }
-    
+
     try {
-        const apiBaseUrl = localStorage.getItem('api_base_url') || 'http://localhost:8000';
+        const apiBaseUrl = localStorage.getItem('api_base_url') || 'https://erp-api-call.autoservto.com.br';
         const response = await fetch(`${apiBaseUrl}/api/configuracoes/grupo_usuario/${id}`, {
             method: 'DELETE',
             headers: getAuthHeader()
         });
-        
+
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
         }
-        
+
         alert('Grupo excluído com sucesso!');
         carregarGrupos();
     } catch (error) {
@@ -1087,9 +1316,9 @@ function abrirModalNovoGrupo() {
     form.reset();
     form.dataset.mode = 'create';
     delete form.dataset.grupoId;
-    
+
     document.getElementById('grupoModalTitle').textContent = 'Novo Grupo de Usuários';
-    
+
     // Abrir modal
     document.getElementById('grupoModal').classList.add('active');
     document.body.classList.add('modal-open');
@@ -1099,7 +1328,7 @@ function abrirModalNovoGrupo() {
 async function salvarGrupo() {
     const form = document.getElementById('grupoForm');
     const formData = new FormData(form);
-    
+
     const grupoData = {
         nome: formData.get('nome'),
         descricao: formData.get('descricao'),
@@ -1119,6 +1348,8 @@ async function salvarGrupo() {
         fornecedores_editar: formData.get('fornecedores_editar') === 'on',
         estoque_visualizar: formData.get('estoque_visualizar') === 'on',
         estoque_editar: formData.get('estoque_editar') === 'on',
+        depositos_visualizar: formData.get('depositos_visualizar') === 'on',
+        depositos_editar: formData.get('depositos_editar') === 'on',
         configuracoes_visualizar: formData.get('configuracoes_visualizar') === 'on',
         configuracoes_editar: formData.get('configuracoes_editar') === 'on',
         financeiro_visualizar: formData.get('financeiro_visualizar') === 'on',
@@ -1126,14 +1357,14 @@ async function salvarGrupo() {
         metas_visualizar: formData.get('metas_visualizar') === 'on',
         metas_editar: formData.get('metas_editar') === 'on'
     };
-    
+
     try {
-        const apiBaseUrl = localStorage.getItem('api_base_url') || 'http://localhost:8000';
+        const apiBaseUrl = localStorage.getItem('api_base_url') || 'https://erp-api-call.autoservto.com.br';
         const isEdit = form.dataset.mode === 'edit';
-        const url = isEdit 
+        const url = isEdit
             ? `${apiBaseUrl}/api/configuracoes/grupo_usuario/${form.dataset.grupoId}`
-        : `${apiBaseUrl}/api/configuracoes/grupo_usuario`;
-        
+            : `${apiBaseUrl}/api/configuracoes/grupo_usuario`;
+
         const response = await fetch(url, {
             method: isEdit ? 'PUT' : 'POST',
             headers: {
@@ -1142,16 +1373,16 @@ async function salvarGrupo() {
             },
             body: JSON.stringify(grupoData)
         });
-        
+
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
         }
-        
+
         // Fechar modal e recarregar lista
         closeModal('grupoModal');
         carregarGrupos();
-        
+
         alert(isEdit ? 'Grupo atualizado com sucesso!' : 'Grupo criado com sucesso!');
     } catch (error) {
         console.error('Erro ao salvar grupo:', error);
@@ -1195,37 +1426,37 @@ function preencherTabelaUsuarios(usuarios) {
 
 async function abrirModalEditarUsuario(userId) {
     document.getElementById('usuarioModalTitle').textContent = `Editar Usuário #${userId}`;
-    
+
     try {
         // Carregar a lista de grupos primeiro
         await carregarGruposSelect();
-        
+
         // Buscar dados do usuário atual e do usuário a ser editado
         const [currentUser, usuario] = await Promise.all([
             apiGet('/api/usuarios/me'),
             apiGet(`/api/usuarios/${userId}`)
         ]);
-        
+
         document.getElementById('usuario_nome').value = usuario.nome || '';
         document.getElementById('usuario_email').value = usuario.email || '';
         document.getElementById('usuario_senha').value = '';
         document.getElementById('usuario_nivel_acesso').value = usuario.nivel_acesso || 'usuario';
         document.getElementById('usuario_grupo_id').value = usuario.grupo_id || '';
-        
+
         // Armazenar o ID do usuário para atualização
         document.getElementById('usuarioForm').dataset.userId = userId;
-        
+
         // Verificar se admin está editando seu próprio usuário
         const nivelAcessoField = document.getElementById('usuario_nivel_acesso');
         const isEditingSelf = currentUser.nivel_acesso === 'admin' && parseInt(userId) === currentUser.id;
-        
+
         if (isEditingSelf) {
             // Desabilitar o campo de nível de acesso
             nivelAcessoField.disabled = true;
             nivelAcessoField.style.backgroundColor = '#f5f5f5';
             nivelAcessoField.style.cursor = 'not-allowed';
             nivelAcessoField.title = 'Administradores não podem alterar seu próprio nível de acesso';
-            
+
             // Adicionar mensagem explicativa se não existir
             let warningMessage = document.getElementById('admin-self-edit-warning');
             if (!warningMessage) {
@@ -1241,14 +1472,14 @@ async function abrirModalEditarUsuario(userId) {
             nivelAcessoField.style.backgroundColor = '';
             nivelAcessoField.style.cursor = '';
             nivelAcessoField.title = '';
-            
+
             // Remover mensagem de aviso se existir
             const warningMessage = document.getElementById('admin-self-edit-warning');
             if (warningMessage) {
                 warningMessage.remove();
             }
         }
-        
+
         document.getElementById('usuarioModal').style.display = 'flex';
     } catch (error) {
         console.error('Erro ao carregar dados do usuário:', error);
@@ -1282,7 +1513,7 @@ function confirmarExclusaoUsuario(userId) {
 
 async function excluirUsuario(userId) {
     try {
-        const apiBaseUrl = localStorage.getItem('api_base_url') || 'http://localhost:8000';
+        const apiBaseUrl = localStorage.getItem('api_base_url') || 'https://erp-api-call.autoservto.com.br';
         const response = await fetch(`${apiBaseUrl}/api/usuarios/${userId}`, {
             method: 'DELETE',
             headers: getAuthHeader()
@@ -1304,22 +1535,28 @@ async function excluirUsuario(userId) {
 // Funções para modal de usuário
 function setupUsuarioModal() {
     const modal = document.getElementById('usuarioModal');
-    const closeBtn = modal.querySelector('.close-modal');
+    const closeBtns = modal.querySelectorAll('.close-modal');
     const form = document.getElementById('usuarioForm');
-    
+
     // Abrir modal ao clicar no botão Novo Usuário
-    document.getElementById('btnNovoUsuario').addEventListener('click', function() {
+    document.getElementById('btnNovoUsuario').addEventListener('click', function () {
         abrirModalNovoUsuario();
         carregarGruposSelect(); // Carregar grupos no select
     });
-    
-    // Fechar modal
-    closeBtn.addEventListener('click', function() {
-        fecharModalUsuario();
+
+    // Fechar modal - todos os botões com classe close-modal
+    closeBtns.forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            fecharModalUsuario();
+        });
     });
-    
+
+    // REMOVIDO: Fechar modal ao clicar fora
+    // Modais agora só fecham ao clicar no X ou botão Cancelar/Fechar
+
     // Submeter formulário
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', function (e) {
         e.preventDefault();
         salvarUsuario();
     });
@@ -1330,22 +1567,22 @@ async function carregarGruposSelect() {
     try {
         // Obter a URL base da API de forma síncrona para evitar problemas com await
         const apiUrl = await getApiUrl(); // Usando getApiUrl de api_config.js em vez de getApiBaseUrl
-        
+
         const response = await fetch(`${apiUrl}/api/configuracoes/grupo_usuario`, {
             method: 'GET',
             headers: getAuthHeader()
         });
-        
+
         if (!response.ok) {
             throw new Error('Erro ao carregar grupos');
         }
-        
+
         const grupos = await response.json();
         const selectGrupo = document.getElementById('usuario_grupo_id');
-        
+
         // Limpar opções existentes
         selectGrupo.innerHTML = '<option value="">Selecione...</option>';
-        
+
         // Adicionar opções de grupos
         grupos.forEach(grupo => {
             const option = document.createElement('option');
@@ -1362,21 +1599,27 @@ async function carregarGruposSelect() {
 // Configurar modal de grupo
 function setupGrupoModal() {
     const modal = document.getElementById('grupoModal');
-    const closeBtn = modal.querySelector('.close-modal');
+    const closeBtns = modal.querySelectorAll('.close-modal');
     const form = document.getElementById('grupoForm');
-    
+
     // Abrir modal ao clicar no botão Novo Grupo
-    document.getElementById('btnNovoGrupo').addEventListener('click', function() {
+    document.getElementById('btnNovoGrupo').addEventListener('click', function () {
         abrirModalNovoGrupo();
     });
-    
-    // Fechar modal
-    closeBtn.addEventListener('click', function() {
-        fecharModalGrupo();
+
+    // Fechar modal - todos os botões com classe close-modal
+    closeBtns.forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            fecharModalGrupo();
+        });
     });
-    
+
+    // REMOVIDO: Fechar modal ao clicar fora
+    // Modais agora só fecham ao clicar no X ou botão Cancelar/Fechar
+
     // Submeter formulário
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', function (e) {
         e.preventDefault();
         salvarGrupo();
     });
@@ -1384,7 +1627,9 @@ function setupGrupoModal() {
 
 // Função para fechar o modal de grupo
 function fecharModalGrupo() {
-    document.getElementById('grupoModal').classList.remove('active');
+    const modal = document.getElementById('grupoModal');
+    modal.style.display = 'none';
+    modal.classList.remove('active');
     document.body.classList.remove('modal-open');
 }
 
@@ -1409,7 +1654,10 @@ function abrirModalNovoUsuario() {
 }
 
 function fecharModalUsuario() {
-    document.getElementById('usuarioModal').style.display = 'none';
+    const modal = document.getElementById('usuarioModal');
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+    document.body.classList.remove('modal-open');
 }
 
 async function salvarUsuario() {
@@ -1419,40 +1667,40 @@ async function salvarUsuario() {
         alert('Por favor, preencha todos os campos obrigatórios.');
         return;
     }
-    
+
     const senha = document.getElementById('usuario_senha').value;
     const userId = form.dataset.userId;
-    
+
     const usuarioData = {
         nome: document.getElementById('usuario_nome').value,
         email: document.getElementById('usuario_email').value,
         nivel_acesso: document.getElementById('usuario_nivel_acesso').value,
         grupo_id: document.getElementById('usuario_grupo_id').value
     };
-    
+
     // Adicionar senha apenas se foi preenchida
     if (senha) {
         usuarioData.senha = senha;
     }
-    
+
     try {
         // Verificar se é uma edição de usuário existente
         if (userId) {
             // Obter dados do usuário atual para verificar se é admin editando a si mesmo
             const currentUser = await apiGet('/api/usuarios/me');
-            
+
             // Verificar se o admin está tentando alterar seu próprio nível de acesso
-            if (currentUser.nivel_acesso === 'admin' && 
-                parseInt(userId) === currentUser.id && 
+            if (currentUser.nivel_acesso === 'admin' &&
+                parseInt(userId) === currentUser.id &&
                 usuarioData.nivel_acesso !== 'admin') {
-                
+
                 alert('Administradores não podem alterar seu próprio nível de acesso.');
-                
+
                 // Restaurar o valor original no campo
                 document.getElementById('usuario_nivel_acesso').value = 'admin';
                 return;
             }
-            
+
             // Atualizar usuário existente
             await atualizarUsuario(userId, usuarioData);
             alert('Usuário atualizado com sucesso!');
@@ -1465,7 +1713,7 @@ async function salvarUsuario() {
             await criarUsuario(usuarioData);
             alert('Usuário criado com sucesso!');
         }
-        
+
         fecharModalUsuario();
         carregarUsuarios(); // Recarregar lista de usuários
     } catch (error) {
@@ -1482,25 +1730,25 @@ async function salvarUsuario() {
 async function carregarConfiguracoesWebhook() {
     try {
         const configuracoes = await apiGet('/api/configuracoes/configuracoes/');
-        
+
         const webhookUrl = configuracoes.find(c => c.chave === 'webhook_url');
         const webhookAtivo = configuracoes.find(c => c.chave === 'webhook_ativo');
-        
+
         // Preenche os campos
         const urlInput = document.getElementById('webhook_url');
         const ativoCheckbox = document.getElementById('webhook_ativo');
         const statusLabel = document.getElementById('webhook_status_label');
-        
+
         if (urlInput) {
             urlInput.value = webhookUrl ? webhookUrl.valor : '';
         }
-        
+
         if (ativoCheckbox) {
             const isAtivo = webhookAtivo && webhookAtivo.valor === 'true';
             ativoCheckbox.checked = isAtivo;
             atualizarLabelWebhook(isAtivo);
         }
-        
+
         console.log('Configurações de webhook carregadas');
     } catch (error) {
         console.error('Erro ao carregar configurações de webhook:', error);
@@ -1524,10 +1772,10 @@ function atualizarLabelWebhook(ativo) {
 // Salva as configurações de webhook
 async function salvarConfiguracoesWebhook(event) {
     event.preventDefault();
-    
+
     const webhookUrl = document.getElementById('webhook_url').value;
     const webhookAtivo = document.getElementById('webhook_ativo').checked;
-    
+
     try {
         // Salva a URL do webhook
         await atualizarConfiguracao({
@@ -1535,16 +1783,16 @@ async function salvarConfiguracoesWebhook(event) {
             valor: webhookUrl,
             descricao: 'URL do webhook para notificação de movimentação de estoque'
         });
-        
+
         // Salva o status do webhook
         await atualizarConfiguracao({
             chave: 'webhook_ativo',
             valor: webhookAtivo ? 'true' : 'false',
             descricao: 'Ativa/desativa o envio de notificações via webhook (true/false)'
         });
-        
+
         alert('Configurações de webhook salvas com sucesso!');
-        
+
         // Recarrega as configurações do banco de dados na tabela
         carregarDadosConfiguracoes();
     } catch (error) {
@@ -1556,28 +1804,28 @@ async function salvarConfiguracoesWebhook(event) {
 // Testa o webhook enviando uma mensagem de teste
 async function testarWebhook() {
     const webhookUrl = document.getElementById('webhook_url').value;
-    
+
     if (!webhookUrl || webhookUrl.trim() === '') {
         alert('Por favor, preencha a URL do webhook antes de testar.');
         return;
     }
-    
+
     try {
         // Busca vendedores ativos com telefone
         const vendedores = await apiGet('/api/vendedores', { ativo: true });
         const vendedoresComTelefone = vendedores.filter(v => v.telefone && v.telefone.trim() !== '');
-        
+
         if (vendedoresComTelefone.length === 0) {
             alert('Nenhum vendedor ativo com telefone encontrado. Cadastre vendedores com telefone para testar o webhook.');
             return;
         }
-        
+
         // Monta mensagem de teste
         const mensagemTeste = `🔔 *TESTE DE WEBHOOK*\n\nEsta é uma mensagem de teste do sistema ERP Maneiro.\n\n✅ Se você recebeu esta mensagem, o webhook está funcionando corretamente!\n\n📅 Data/Hora: ${new Date().toLocaleString('pt-BR')}`;
-        
+
         let sucesso = 0;
         let falha = 0;
-        
+
         // Envia para cada vendedor
         for (const vendedor of vendedoresComTelefone) {
             try {
@@ -1592,7 +1840,7 @@ async function testarWebhook() {
                         timestamp: new Date().toISOString()
                     })
                 });
-                
+
                 if (response.ok) {
                     sucesso++;
                 } else {
@@ -1603,7 +1851,7 @@ async function testarWebhook() {
                 falha++;
             }
         }
-        
+
         alert(`Teste de webhook concluído!\n\n✅ Sucesso: ${sucesso}\n❌ Falha: ${falha}\n\nTotal de vendedores: ${vendedoresComTelefone.length}`);
     } catch (error) {
         console.error('Erro ao testar webhook:', error);
@@ -1618,27 +1866,27 @@ function setupWebhookEvents() {
     if (webhookForm) {
         webhookForm.addEventListener('submit', salvarConfiguracoesWebhook);
     }
-    
+
     // Botão de testar webhook
     const btnTestarWebhook = document.getElementById('btnTestarWebhook');
     if (btnTestarWebhook) {
         btnTestarWebhook.addEventListener('click', testarWebhook);
     }
-    
+
     // Checkbox de ativar/desativar
     const webhookAtivo = document.getElementById('webhook_ativo');
     if (webhookAtivo) {
-        webhookAtivo.addEventListener('change', function() {
+        webhookAtivo.addEventListener('change', function () {
             atualizarLabelWebhook(this.checked);
         });
     }
-    
+
     // Carrega as configurações de webhook
     carregarConfiguracoesWebhook();
 }
 
 // Adiciona a inicialização do webhook ao DOMContentLoaded
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Configura os eventos do webhook
     setupWebhookEvents();
 });

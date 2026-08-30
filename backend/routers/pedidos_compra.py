@@ -20,6 +20,7 @@ class ItemPedidoCompra(ItemPedidoCompraBase):
     id: int
     subtotal: float
     pedido_id: int
+    produto_nome: Optional[str] = None
 
 class PedidoCompraBase(BaseModel):
     fornecedor_id: int
@@ -111,9 +112,12 @@ async def obter_pedido_compra(
                 detail="Pedido de compra não encontrado"
             )
         
-        # Obtém os itens do pedido
+        # Obtém os itens do pedido com nome do produto
         cursor.execute(
-            "SELECT * FROM itens_pedido_compra WHERE pedido_id = %s",
+            """SELECT ipc.*, p.nome as produto_nome 
+               FROM itens_pedido_compra ipc 
+               LEFT JOIN produtos p ON ipc.produto_id = p.id 
+               WHERE ipc.pedido_id = %s""",
             (pedido_id,)
         )
         itens = cursor.fetchall()
@@ -246,9 +250,12 @@ async def criar_pedido_compra(
         )
         novo_pedido = cursor.fetchone()
         
-        # Obtém os itens do pedido criado
+        # Obtém os itens do pedido criado com nome do produto
         cursor.execute(
-            "SELECT * FROM itens_pedido_compra WHERE pedido_id = %s",
+            """SELECT ipc.*, p.nome as produto_nome 
+               FROM itens_pedido_compra ipc 
+               LEFT JOIN produtos p ON ipc.produto_id = p.id 
+               WHERE ipc.pedido_id = %s""",
             (pedido_id,)
         )
         itens = cursor.fetchall()
@@ -289,11 +296,25 @@ async def atualizar_pedido_compra(
             )
         
         # Verifica se o pedido pode ser alterado
+        # Permite apenas atualizar criado_tit_ap em pedidos com status 'recebido' ou 'cancelado'
         if pedido_atual["status"] in ["recebido", "cancelado"]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Não é possível alterar um pedido com status '{pedido_atual['status']}'"
-            )
+            # Verifica se está tentando alterar algo além de criado_tit_ap
+            campos_alterados = []
+            if pedido.fornecedor_id is not None:
+                campos_alterados.append("fornecedor_id")
+            if pedido.data_previsao is not None:
+                campos_alterados.append("data_previsao")
+            if pedido.status is not None:
+                campos_alterados.append("status")
+            if pedido.observacoes is not None:
+                campos_alterados.append("observacoes")
+            
+            # Se está alterando algo além de criado_tit_ap, bloqueia
+            if len(campos_alterados) > 0:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Não é possível alterar um pedido com status '{pedido_atual['status']}'. Apenas o campo 'criado_tit_ap' pode ser atualizado."
+                )
         
         # Verifica se o fornecedor existe (se fornecido)
         if pedido.fornecedor_id:

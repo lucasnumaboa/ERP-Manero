@@ -4,30 +4,53 @@
  * Verifica permissões do usuário antes de exibir cada grupo
  */
 
-(function() {
-    document.addEventListener('DOMContentLoaded', async function() {
+(function () {
+    document.addEventListener('DOMContentLoaded', async function () {
         // Injeta o theme switch se não existir
         injectThemeSwitch();
-        
+
+        // Injeta o widget de chat com IA sobre produtos (não roda na tela de login)
+        injectProdutoChatWidget();
+
         const sidebarNav = document.querySelector('.sidebar-nav');
         if (!sidebarNav) return;
-        
+
         // Verifica se já tem a nova estrutura de grupos
         if (sidebarNav.querySelector('.nav-group')) return;
-        
+
         // Obtém as permissões do usuário
         const permissions = await getPermissionsForSidebar();
-        
+
         // Substitui o conteúdo da sidebar pela nova estrutura baseada em permissões
         sidebarNav.innerHTML = getSidebarTemplate(permissions);
-        
+
         // Remove grupos vazios (sem itens visíveis)
         removeEmptyGroups();
-        
+
         // Inicializa os grupos colapsáveis
         initSidebarGroups();
+
+        // Configura o botão de logout após o template ser renderizado
+        setupLogoutButton();
     });
-    
+
+    function setupLogoutButton() {
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (typeof logout === 'function') {
+                    logout();
+                } else {
+                    // Fallback se a função logout não estiver disponível
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    window.location.href = 'index.html';
+                }
+            });
+        }
+    }
+
     // Obtém permissões do usuário para a sidebar
     async function getPermissionsForSidebar() {
         try {
@@ -39,29 +62,29 @@
                     return { isAdmin: true };
                 }
             }
-            
+
             // Busca permissões do cache ou da API
             const cachedPermissions = localStorage.getItem('erp_user_permissions');
             if (cachedPermissions) {
                 return JSON.parse(cachedPermissions);
             }
-            
+
             // Se não tiver cache, tenta buscar via função global
             if (typeof getUserPermissions === 'function') {
                 return await getUserPermissions();
             }
-            
+
             return {};
         } catch (error) {
             console.error('Erro ao obter permissões para sidebar:', error);
             return {};
         }
     }
-    
+
     // Verifica se tem permissão para uma página específica
     function hasPagePermission(permissions, page) {
         if (permissions.isAdmin) return true;
-        
+
         const permissionMap = {
             'dashboard.html': 'dashboard_visualizar',
             'relatorios.html': 'dashboard_visualizar',
@@ -74,20 +97,29 @@
             'fornecedores.html': 'fornecedores_visualizar',
             'produtos.html': 'produtos_visualizar',
             'categorias.html': 'categorias_visualizar',
+            'depositos.html': 'depositos_visualizar',
             'estoque.html': 'estoque_visualizar',
             'exportar_estoque.html': 'estoque_visualizar',
+
+            'controle_financeiro.html': 'financeiro_visualizar',
             'contas_pagar.html': 'financeiro_visualizar',
             'contas_receber.html': 'financeiro_visualizar',
             'condicoes_pagamento.html': 'financeiro_visualizar',
-            'configuracoes.html': 'configuracoes_visualizar'
+            'configuracoes.html': 'configuracoes_visualizar',
+
+            'produtos_3d.html': 'filamentos_3d_visualizar',
+            'filamentos_3d.html': 'filamentos_3d_visualizar',
+            'filamentos_3d.html?tab=compra': 'filamentos_3d_visualizar',
+            'filamentos_3d.html?tab=calculadora': 'filamentos_3d_visualizar',
+            'filamentos_3d.html?tab=estoque': 'filamentos_3d_visualizar'
         };
-        
+
         const requiredPermission = permissionMap[page];
         if (!requiredPermission) return true; // Páginas sem permissão específica são visíveis
-        
+
         return permissions[requiredPermission] === true || permissions[requiredPermission] === 1;
     }
-    
+
     // Remove grupos que não têm nenhum item visível
     function removeEmptyGroups() {
         const groups = document.querySelectorAll('.nav-group');
@@ -105,12 +137,12 @@
             if (!hasPagePermission(permissions, href)) return '';
             return `<a href="${href}"><i class="fas ${icon}"></i> <span>${label}</span></a>`;
         }
-        
+
         // Função auxiliar para criar grupo de menu
         function menuGroup(groupId, icon, label, items) {
             const visibleItems = items.filter(item => item !== '');
             if (visibleItems.length === 0) return '';
-            
+
             return `
                 <li class="nav-group">
                     <div class="nav-group-header" data-group="${groupId}">
@@ -123,7 +155,7 @@
                 </li>
             `;
         }
-        
+
         // Gera os grupos baseados em permissões
         const vendasGroup = menuGroup('vendas', 'fa-shopping-cart', 'Vendas', [
             menuItem('vendas.html', 'fa-shopping-cart', 'Vendas'),
@@ -132,42 +164,64 @@
             menuItem('plataformas_venda.html', 'fa-store', 'Plataformas'),
             menuItem('metas.html', 'fa-bullseye', 'Metas')
         ]);
-        
+
         const comprasGroup = menuGroup('compras', 'fa-truck', 'Compras', [
             menuItem('compras.html', 'fa-truck', 'Compras'),
             menuItem('fornecedores.html', 'fa-industry', 'Fornecedores')
         ]);
-        
+
         const produtosGroup = menuGroup('produtos', 'fa-box', 'Produtos', [
             menuItem('produtos.html', 'fa-box', 'Produtos'),
             menuItem('categorias.html', 'fa-tags', 'Categorias'),
+            menuItem('depositos.html', 'fa-warehouse', 'Depósitos'),
             menuItem('estoque.html', 'fa-warehouse', 'Estoque'),
             menuItem('exportar_estoque.html', 'fa-file-export', 'Exportar')
         ]);
-        
+
+        const produtos3DGroup = menuGroup('produtos3d', 'fa-cube', 'Produtos 3D', [
+            menuItem('produtos_3d.html', 'fa-cube', 'Produtos 3D'),
+            menuItem('filamentos_3d.html', 'fa-layer-group', 'Filamentos'),
+            menuItem('filamentos_3d.html?tab=compra', 'fa-shopping-cart', 'Compra'),
+            menuItem('filamentos_3d.html?tab=calculadora', 'fa-calculator', 'Calculadora'),
+            menuItem('filamentos_3d.html?tab=estoque', 'fa-boxes', 'Estoque')
+        ]);
+
         const financeiroGroup = menuGroup('financeiro', 'fa-dollar-sign', 'Financeiro', [
+            menuItem('controle_financeiro.html', 'fa-sliders-h', 'Controle Financeiro'),
             menuItem('contas_pagar.html', 'fa-money-bill-wave', 'Contas a Pagar'),
             menuItem('contas_receber.html', 'fa-hand-holding-usd', 'Contas a Receber'),
             menuItem('condicoes_pagamento.html', 'fa-percent', 'Condições Pgto')
         ]);
-        
+
         const relatoriosGroup = menuGroup('relatorios', 'fa-chart-bar', 'Relatórios', [
-            menuItem('relatorios.html', 'fa-chart-line', 'Relatórios')
+            menuItem('relatorios.html', 'fa-chart-line', 'Relatórios'),
+            menuItem('calendario.html', 'fa-calendar-alt', 'Calendário')
         ]);
-        
+
+        const olxFinderGroup = menuGroup('olxfinder', 'fa-search-dollar', 'OLX Finder', [
+            menuItem('olx_produtos.html', 'fa-box-open', 'Produtos'),
+            menuItem('olx_pesquisas.html', 'fa-search', 'Pesquisas'),
+            menuItem('olx_flags.html', 'fa-filter', 'Flags')
+        ]);
+
         const sistemaGroup = menuGroup('sistema', 'fa-cog', 'Sistema', [
             menuItem('configuracoes.html', 'fa-cog', 'Configurações')
         ]);
-        
+
+        // Softwares como item separado
+        const softwaresItem = hasPagePermission(permissions, 'softwares.html')
+            ? '<li><a href="softwares.html"><i class="fas fa-download"></i> <span>Softwares</span></a></li>'
+            : '';
+
         // Verifica se há grupos visíveis para adicionar separadores
-        const hasGroups = vendasGroup || comprasGroup || produtosGroup || financeiroGroup || relatoriosGroup;
+        const hasGroups = vendasGroup || comprasGroup || produtosGroup || produtos3DGroup || financeiroGroup || relatoriosGroup || olxFinderGroup;
         const hasSistema = sistemaGroup;
-        
+
         // Dashboard - verifica permissão
-        const dashboardItem = hasPagePermission(permissions, 'dashboard.html') 
+        const dashboardItem = hasPagePermission(permissions, 'dashboard.html')
             ? '<li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a></li>'
             : '';
-        
+
         return `
             <ul>
                 <!-- Links Diretos -->
@@ -181,12 +235,16 @@
                 ${vendasGroup}
                 ${comprasGroup}
                 ${produtosGroup}
+                ${produtos3DGroup}
                 ${financeiroGroup}
                 ${relatoriosGroup}
+                ${olxFinderGroup}
                 
                 ${hasSistema ? '<li class="nav-separator"></li>' : ''}
                 
                 ${sistemaGroup}
+                
+                ${softwaresItem}
                 
                 <li class="nav-separator"></li>
                 
@@ -199,9 +257,9 @@
 
     function initSidebarGroups() {
         const groupHeaders = document.querySelectorAll('.nav-group-header');
-        
+
         groupHeaders.forEach(header => {
-            header.addEventListener('click', function(e) {
+            header.addEventListener('click', function (e) {
                 e.preventDefault();
                 toggleGroup(this);
             });
@@ -214,7 +272,7 @@
     function toggleGroup(header) {
         const groupItems = header.nextElementSibling;
         const isExpanded = header.classList.contains('expanded');
-        
+
         if (isExpanded) {
             header.classList.remove('expanded');
             groupItems.classList.remove('expanded');
@@ -222,27 +280,27 @@
             header.classList.add('expanded');
             groupItems.classList.add('expanded');
         }
-        
+
         saveGroupStates();
     }
 
     function expandCurrentPageGroup() {
         const currentPage = window.location.pathname.split('/').pop() || 'homepage.html';
-        
+
         const activeLink = document.querySelector(`.nav-group-items a[href="${currentPage}"]`);
-        
+
         if (activeLink) {
             activeLink.classList.add('active');
-            
+
             const groupItems = activeLink.closest('.nav-group-items');
             const groupHeader = groupItems?.previousElementSibling;
-            
+
             if (groupItems && groupHeader) {
                 groupHeader.classList.add('expanded', 'active');
                 groupItems.classList.add('expanded');
             }
         }
-        
+
         const directLink = document.querySelector(`.sidebar-nav > ul > li > a[href="${currentPage}"]`);
         if (directLink) {
             directLink.classList.add('active');
@@ -253,31 +311,31 @@
     function saveGroupStates() {
         const groupHeaders = document.querySelectorAll('.nav-group-header');
         const states = {};
-        
+
         groupHeaders.forEach(header => {
             const groupName = header.dataset.group;
             if (groupName) {
                 states[groupName] = header.classList.contains('expanded');
             }
         });
-        
+
         localStorage.setItem('sidebarGroupStates', JSON.stringify(states));
     }
 
     function restoreGroupStates() {
         const savedStates = localStorage.getItem('sidebarGroupStates');
         if (!savedStates) return;
-        
+
         try {
             const states = JSON.parse(savedStates);
             const groupHeaders = document.querySelectorAll('.nav-group-header');
-            
+
             groupHeaders.forEach(header => {
                 const groupName = header.dataset.group;
                 const groupItems = header.nextElementSibling;
-                
+
                 if (header.classList.contains('active')) return;
-                
+
                 if (groupName && states[groupName]) {
                     header.classList.add('expanded');
                     groupItems?.classList.add('expanded');
@@ -287,18 +345,18 @@
             console.error('Erro ao restaurar estados dos grupos:', e);
         }
     }
-    
+
     // Injeta o theme switch na sidebar se não existir
     function injectThemeSwitch() {
         const sidebar = document.querySelector('.sidebar');
         if (!sidebar) return;
-        
+
         // Verifica se já existe o theme switch
         if (sidebar.querySelector('.theme-switch-wrapper')) return;
-        
+
         const sidebarHeader = sidebar.querySelector('.sidebar-header');
         if (!sidebarHeader) return;
-        
+
         // Cria o elemento do theme switch
         const themeSwitchWrapper = document.createElement('div');
         themeSwitchWrapper.className = 'theme-switch-wrapper';
@@ -310,32 +368,44 @@
             </label>
             <span class="switch-label"><i class="fas fa-sun"></i></span>
         `;
-        
+
         // Insere após o sidebar-header
         sidebarHeader.insertAdjacentElement('afterend', themeSwitchWrapper);
-        
+
         // Inicializa o estado do switch baseado no tema atual
         const themeSwitch = themeSwitchWrapper.querySelector('#themeSwitch');
         if (themeSwitch) {
             const isLight = document.body.classList.contains('theme-light');
             themeSwitch.checked = isLight;
-            
+
             // Chama o init do ThemeSwitcher se disponível
             if (typeof ThemeSwitcher !== 'undefined' && ThemeSwitcher.init) {
                 ThemeSwitcher.init();
             } else {
                 // Fallback: adiciona event listener diretamente
-                themeSwitch.addEventListener('change', function() {
+                themeSwitch.addEventListener('change', function () {
                     if (typeof ThemeSwitcher !== 'undefined') {
                         ThemeSwitcher.toggle();
                     } else {
                         document.body.classList.toggle('theme-light');
-                        localStorage.setItem('erp-maneiro-theme', 
+                        localStorage.setItem('erp-maneiro-theme',
                             document.body.classList.contains('theme-light') ? 'theme-light' : 'theme-dark'
                         );
                     }
                 });
             }
         }
+    }
+
+    // Injeta o script do widget de chat com IA sobre produtos, uma única vez por página.
+    // Fica de fora da tela de login (não há sessão/produtos pra consultar ali).
+    function injectProdutoChatWidget() {
+        if (window.location.pathname.includes('index.html')) return;
+        if (document.getElementById('produtoChatWidgetScript')) return;
+
+        const script = document.createElement('script');
+        script.id = 'produtoChatWidgetScript';
+        script.src = 'js/produto-chat-widget.js';
+        document.body.appendChild(script);
     }
 })();

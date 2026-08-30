@@ -28,23 +28,46 @@ Sistema ERP completo para pequenas e médias empresas, com cliente desktop para 
 |--------|-----------|
 | **Dashboard** | KPIs, gráficos de vendas, produtos mais vendidos |
 | **Clientes** | Cadastro PF/PJ, histórico de compras |
-| **Produtos** | Cadastro, categorias, controle de estoque |
+| **Produtos** | Cadastro, categorias, controle de estoque, até 5 imagens + 1 vídeo, miniaturas automáticas |
+| **Produtos 3D** | Catálogo de peças/modelos 3D com paginação |
+| **Filamentos 3D** | Controle de estoque de filamentos por cor/material |
+| **Depósitos** | Cadastro de locais de estoque, com depósito padrão e coluna de localização no estoque |
 | **Vendas** | Pedidos, múltiplos itens, formas de pagamento, comissões |
 | **Compras** | Pedidos para fornecedores, aprovação, recebimento |
-| **Estoque** | Movimentações, alertas de estoque mínimo |
+| **Estoque** | Movimentações, alertas de estoque mínimo, download de imagens/vídeo do produto |
 | **Financeiro** | Contas a pagar/receber, caixa, fluxo financeiro |
-| **Propostas** | Orçamentos com validade e conversão em pedidos |
+| **Controle Financeiro** | Visão consolidada de entradas e saídas |
+| **Propostas / Orçamentos** | Orçamentos com validade e conversão em pedidos |
 | **Postagens** | Rastreio de entregas por transportadora |
 | **Relatórios** | Vendas, estoque, financeiro (Excel/PDF) |
 | **Metas** | Definição e acompanhamento de metas de vendedores |
 | **Vendedores** | Cadastro, comissões, performance |
 | **Parceiros** | Gestão de fornecedores e parceiros |
+| **Calendário** | Agenda de compromissos e eventos |
+| **Chat IA por Produto** | Widget flutuante para vendedores tirarem dúvidas sobre um produto com IA, com ditado por voz offline |
+| **Busca OLX** | Localização e avaliação de anúncios/concorrentes na OLX |
+| **Softwares** | Catálogo de softwares/downloads internos |
 
 ### Autenticação
 
-- JWT Tokens com expiração configurável
+- JWT Tokens com expiração configurável, com contador de sessão exibido no topo do sistema
 - Senhas criptografadas com Bcrypt
 - Níveis: Admin, Vendedor, Comprador, Financeiro
+- Permissões granulares por grupo de usuário (visualizar/editar) para cada módulo, incluindo Depósitos
+
+---
+
+## Novidades
+
+- **Contador de sessão**: barra no topo do sistema mostra quanto tempo falta até o usuário ser desconectado por inatividade.
+- **Vídeo de produto**: além de até 5 imagens, cada produto pode ter 1 vídeo anexado, com download disponível em Estoque.
+- **Depósitos**: cadastro de locais físicos de estoque, com um depósito padrão (usado quando o produto não aponta nenhum) e edição rápida via modal na tela de Estoque (restrita ao dono do produto).
+- **Miniaturas automáticas**: imagens de produto geram thumbnails para carregamento mais rápido nas listagens.
+- **Paginação em Produtos 3D**: listagem paginada (20 itens por página).
+- **Instruções e Dúvidas + Chat IA**: campo de texto livre por produto usado como base de conhecimento para um widget de chat com IA, disponível em todas as telas, onde vendedores tiram dúvidas sobre um produto específico (com filtro "somente produto com estoque").
+- **Ditado por voz offline**: transcrição de áudio local (sem depender de serviços externos) via NVIDIA Parakeet/sherpa-onnx, usada no chat de IA e nos campos de Descrição e Instruções/Dúvidas do produto.
+- **Filtro "apenas com estoque"** na listagem de Produtos.
+- **Limpeza de sidebar**: simplificação dos scripts de menu lateral, mantendo apenas o necessário.
 
 ---
 
@@ -199,6 +222,7 @@ ERP-Maneiro/
 │   ├── gui.py            # Interface desktop
 │   └── helpers/          # Scraper Selenium
 ├── database/             # Scripts SQL
+├── spec.md               # Especificação das features implementadas
 ├── .env.example          # Template de configuração
 ├── init_db.py            # Setup do banco
 ├── requirements.txt      # Dependências Python

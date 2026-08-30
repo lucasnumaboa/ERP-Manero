@@ -34,7 +34,43 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Verifica se há parâmetros na URL para abrir o modal
     checkUrlParams();
+    
+    // Configura sistema de abas do modal
+    configurarAbasModalFornecedores();
 });
+
+// Função para configurar o sistema de abas do modal de fornecedores
+function configurarAbasModalFornecedores() {
+    const tabs = document.querySelectorAll('#fornecedorModal .modal-tab');
+    const contents = document.querySelectorAll('#fornecedorModal .modal-tab-content');
+    
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-tab');
+            
+            // Remover active de todas as abas
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+            
+            // Adicionar active na aba clicada
+            this.classList.add('active');
+            document.getElementById(targetId).classList.add('active');
+        });
+    });
+}
+
+// Função para resetar abas ao abrir modal de fornecedores
+function resetarAbasModalFornecedores() {
+    const tabs = document.querySelectorAll('#fornecedorModal .modal-tab');
+    const contents = document.querySelectorAll('#fornecedorModal .modal-tab-content');
+    
+    tabs.forEach(t => t.classList.remove('active'));
+    contents.forEach(c => c.classList.remove('active'));
+    
+    // Ativar primeira aba
+    if (tabs.length > 0) tabs[0].classList.add('active');
+    if (contents.length > 0) contents[0].classList.add('active');
+}
 
 // As funções de autenticação são importadas do arquivo auth.js
 // Apenas definindo funções auxiliares que não estão em auth.js
@@ -203,10 +239,11 @@ function openFornecedorModal(fornecedorId = null) {
         document.getElementById('ativo').value = 'true';
     }
     
+    // Resetar abas para a primeira
+    resetarAbasModalFornecedores();
+    
     // Exibe o modal
     document.getElementById('fornecedorModal').classList.add('active');
-    // Adiciona classe ao body para evitar rolagem
-    document.body.classList.add('modal-open');
 }
 
 // Carrega os dados de um fornecedor específico

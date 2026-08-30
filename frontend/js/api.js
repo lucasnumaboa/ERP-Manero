@@ -7,7 +7,7 @@
 
 // URL base da API - sempre obtida do banco de dados
 async function getApiBaseUrl() {
-    const defaultUrl = 'http://localhost:8000';
+    const defaultUrl = 'https://erp-api-call.autoservto.com.br';
     
     try {
         // Sempre busca a URL da API do endpoint configuracoes
@@ -78,8 +78,13 @@ async function apiGet(endpoint, queryParams = {}) {
         }
     });
     
-    if (!response || !response.ok) {
-        throw new Error(`Falha na requisição GET para ${endpoint}: ${response ? response.status : 'sem resposta'}`);
+    // Se response é null, significa que houve erro 401 e já estamos redirecionando
+    if (!response) {
+        return null;
+    }
+    
+    if (!response.ok) {
+        throw new Error(`Falha na requisição GET para ${endpoint}: ${response.status}`);
     }
     
     return await response.json();
@@ -100,8 +105,13 @@ async function apiPost(endpoint, data = {}) {
         body: JSON.stringify(data)
     });
     
-    if (!response || !response.ok) {
-        const errorText = response ? await response.text() : 'sem resposta';
+    // Se response é null, significa que houve erro 401 e já estamos redirecionando
+    if (!response) {
+        return null;
+    }
+    
+    if (!response.ok) {
+        const errorText = await response.text();
         let errorDetail;
         
         try {
@@ -130,8 +140,13 @@ async function apiPostFormData(endpoint, formData) {
         body: formData
     });
     
-    if (!response || !response.ok) {
-        const errorText = response ? await response.text() : 'sem resposta';
+    // Se response é null, significa que houve erro 401 e já estamos redirecionando
+    if (!response) {
+        return null;
+    }
+    
+    if (!response.ok) {
+        const errorText = await response.text();
         let errorDetail;
         
         try {
@@ -162,8 +177,13 @@ async function apiPut(endpoint, data = {}) {
         body: JSON.stringify(data)
     });
     
-    if (!response || !response.ok) {
-        const errorText = response ? await response.text() : 'sem resposta';
+    // Se response é null, significa que houve erro 401 e já estamos redirecionando
+    if (!response) {
+        return null;
+    }
+    
+    if (!response.ok) {
+        const errorText = await response.text();
         let errorDetail;
         
         try {
@@ -192,8 +212,9 @@ async function apiDelete(endpoint) {
         }
     });
     
+    // Se response é null, significa que houve erro 401 e já estamos redirecionando
     if (!response) {
-        throw new Error(`Falha na requisição DELETE para ${endpoint}: sem resposta`);
+        return null;
     }
     
     // Retorno 204 No Content é comum em operações DELETE bem sucedidas

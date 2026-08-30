@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,7 +22,7 @@
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
             max-width: 100%;
             backdrop-filter: blur(20px);
         }
@@ -80,12 +81,12 @@
             background: rgba(10, 25, 47, 0.8);
         }
 
-        .filter-checkbox:checked + .checkbox-label .checkbox-custom {
+        .filter-checkbox:checked+.checkbox-label .checkbox-custom {
             background: var(--accent-primary, #64ffda);
             border-color: var(--accent-primary, #64ffda);
         }
 
-        .filter-checkbox:checked + .checkbox-label .checkbox-custom::after {
+        .filter-checkbox:checked+.checkbox-label .checkbox-custom::after {
             content: '✓';
             color: white;
             font-size: 12px;
@@ -198,7 +199,8 @@
                 margin-right: 0;
             }
 
-            .filter-input, .filter-select {
+            .filter-input,
+            .filter-select {
                 width: 100%;
                 min-width: unset;
             }
@@ -207,6 +209,70 @@
                 margin-left: 0;
                 width: 100%;
             }
+        }
+
+        /* Estilos para o dropdown de status inline */
+        .status-select-inline {
+            padding: 6px 10px;
+            border-radius: 20px;
+            border: 1px solid transparent;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: capitalize;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23ccd6f6'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            padding-right: 28px;
+            min-width: 120px;
+        }
+
+        .status-select-inline:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(100, 255, 218, 0.3);
+        }
+
+        .status-select-inline:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Cores baseadas no status selecionado */
+        .status-select-inline option {
+            background: #0a192f;
+            color: #ccd6f6;
+        }
+
+        .status-select-inline[data-status-atual="pendente"] {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            border-color: rgba(255, 193, 7, 0.4);
+        }
+
+        .status-select-inline[data-status-atual="finalizada"] {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border-color: rgba(40, 167, 69, 0.4);
+        }
+
+        .status-select-inline[data-status-atual="cancelada"] {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border-color: rgba(220, 53, 69, 0.4);
+        }
+
+        .status-select-inline[data-status-atual="devolvido"] {
+            background: rgba(255, 140, 0, 0.2);
+            color: #ff8c00;
+            border-color: rgba(255, 140, 0, 0.4);
+        }
+
+        .status-select-inline:hover {
+            transform: scale(1.02);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         /* Estilos para coluna de produtos */
@@ -222,10 +288,18 @@
             gap: 8px;
             color: #007bff;
             font-weight: 500;
+            background: transparent;
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
 
         .produtos-preview:hover {
-            text-decoration: underline;
+            background: rgba(100, 255, 218, 0.1);
+            border-color: var(--accent-primary, #64ffda);
+            transform: scale(1.02);
         }
 
         .produtos-badge {
@@ -237,45 +311,8 @@
             font-weight: bold;
         }
 
-        .produtos-list {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: var(--gradient-card, rgba(17, 34, 64, 0.98));
-            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
-            border-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-            z-index: 100;
-            min-width: 300px;
-            padding: 10px;
-            margin-top: 5px;
-            backdrop-filter: blur(20px);
-        }
-
-        .produtos-list.show {
-            display: block;
-        }
-
-        .produto-item {
-            padding: 8px;
-            border-bottom: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
-            font-size: 13px;
-        }
-
-        .produto-item:last-child {
-            border-bottom: none;
-        }
-
-        .produto-nome {
-            font-weight: 500;
-            color: var(--text-primary, #e6f1ff);
-        }
-
-        .produto-detalhes {
-            color: var(--text-muted, #8892b0);
-            font-size: 12px;
-            margin-top: 2px;
+        .produtos-preview i {
+            color: var(--accent-primary, #64ffda);
         }
 
         /* Estilos para coluna de Contas a Receber */
@@ -408,12 +445,12 @@
             background: white;
         }
 
-        .modal-body input[type="checkbox"]:checked + .checkbox-label .checkbox-custom {
+        .modal-body input[type="checkbox"]:checked+.checkbox-label .checkbox-custom {
             background: #007bff;
             border-color: #007bff;
         }
 
-        .modal-body input[type="checkbox"]:checked + .checkbox-label .checkbox-custom::after {
+        .modal-body input[type="checkbox"]:checked+.checkbox-label .checkbox-custom::after {
             content: '✓';
             color: white;
             font-size: 12px;
@@ -520,9 +557,238 @@
             background-color: rgba(253, 126, 20, 0.15);
             color: #fd7e14;
         }
+
+        /* Loading Overlay Styles */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 25, 47, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 40px;
+            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.2));
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .loading-gif {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+        }
+
+        .loading-text {
+            color: var(--accent-primary, #64ffda);
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .loading-progress-container {
+            width: 280px;
+            background: rgba(100, 255, 218, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            height: 12px;
+            border: 1px solid rgba(100, 255, 218, 0.2);
+        }
+
+        .loading-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #64ffda, #00bcd4, #64ffda);
+            background-size: 200% 100%;
+            border-radius: 10px;
+            animation: progressAnimation 1.5s ease-in-out infinite, shimmer 2s linear infinite;
+            transition: width 0.3s ease;
+        }
+
+        @keyframes progressAnimation {
+            0% {
+                width: 0%;
+            }
+
+            50% {
+                width: 70%;
+            }
+
+            100% {
+                width: 100%;
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .loading-progress-text {
+            color: var(--text-secondary, #a8b2d1);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        /* Multi-Select Dropdown Styles */
+        .multi-select-dropdown {
+            position: relative;
+            min-width: 180px;
+        }
+
+        .multi-select-trigger {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
+            border-radius: 4px;
+            background: rgba(10, 25, 47, 0.8);
+            color: var(--text-primary, #e6f1ff);
+            cursor: pointer;
+            font-size: 14px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .multi-select-trigger:hover {
+            border-color: var(--accent-primary, #64ffda);
+        }
+
+        .multi-select-trigger i {
+            margin-left: 8px;
+            font-size: 12px;
+            transition: transform 0.2s;
+        }
+
+        .multi-select-dropdown.open .multi-select-trigger i {
+            transform: rotate(180deg);
+        }
+
+        .multi-select-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+
+        .multi-select-options {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--gradient-card, rgba(17, 34, 64, 0.98));
+            border: 1px solid var(--accent-primary, #64ffda);
+            border-radius: 4px;
+            margin-top: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .multi-select-dropdown.open .multi-select-options {
+            display: block;
+        }
+
+        .multi-select-option {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            color: var(--text-primary, #e6f1ff);
+            font-size: 14px;
+        }
+
+        .multi-select-option:hover {
+            background: rgba(100, 255, 218, 0.1);
+        }
+
+        .multi-select-option input[type="checkbox"] {
+            display: none;
+        }
+
+        .checkmark-multi {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--text-muted, #8892b0);
+            border-radius: 3px;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            background: rgba(10, 25, 47, 0.8);
+            flex-shrink: 0;
+        }
+
+        .multi-select-option input[type="checkbox"]:checked+.checkmark-multi {
+            background: var(--accent-primary, #64ffda);
+            border-color: var(--accent-primary, #64ffda);
+        }
+
+        .multi-select-option input[type="checkbox"]:checked+.checkmark-multi::after {
+            content: '✓';
+            color: #0a192f;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .multi-select-option:hover .checkmark-multi {
+            border-color: var(--accent-primary, #64ffda);
+        }
+
+        /* Scrollbar for multi-select */
+        .multi-select-options::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .multi-select-options::-webkit-scrollbar-track {
+            background: rgba(10, 25, 47, 0.5);
+        }
+
+        .multi-select-options::-webkit-scrollbar-thumb {
+            background: var(--accent-primary, #64ffda);
+            border-radius: 3px;
+        }
     </style>
 </head>
+
 <body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <img src="img/loading.gif" alt="Carregando..." class="loading-gif">
+            <span class="loading-text" id="loadingText">Carregando vendas...</span>
+            <div class="loading-progress-container">
+                <div class="loading-progress-bar" id="loadingProgressBar"></div>
+            </div>
+            <span class="loading-progress-text" id="loadingProgressText">Aguarde...</span>
+        </div>
+    </div>
+
     <div class="app-container">
         <!-- Sidebar / Menu Lateral -->
         <aside class="sidebar">
@@ -559,7 +825,7 @@
                         <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     </li>
                 </ul>
-                
+
                 <!-- Menu Principal -->
                 <ul>
                     <li>
@@ -608,6 +874,9 @@
                         <a href="relatorios.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
                     </li>
                     <li>
+                        <a href="softwares.html"><i class="fas fa-download"></i> Softwares</a>
+                    </li>
+                    <li>
                         <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
                     </li>
                     <li class="logout">
@@ -640,47 +909,94 @@
                             <p style="margin-bottom: 15px; color: #6c757d; font-size: 14px;">
                                 Configure os filtros para visualizar as vendas
                             </p>
-                            
+
                             <!-- Linha 1: ID Pedido, Cliente, Vendedor -->
                             <div class="filter-row">
                                 <div class="filter-control">
                                     <label for="filtroIdPedido" class="control-label">ID Pedido:</label>
-                                    <input type="text" id="filtroIdPedido" class="filter-input" placeholder="Ex: PV202401">
+                                    <input type="text" id="filtroIdPedido" class="filter-input"
+                                        placeholder="Ex: PV202401">
                                 </div>
-                                
+
                                 <div class="filter-control">
                                     <label for="filtroCliente" class="control-label">Cliente:</label>
-                                    <input type="text" id="filtroCliente" class="filter-input" placeholder="Digite o nome do cliente">
+                                    <input type="text" id="filtroCliente" class="filter-input"
+                                        placeholder="Digite o nome do cliente">
                                 </div>
-                                
+
                                 <div class="filter-control">
-                                    <label for="filtroVendedor" class="control-label">Vendedor:</label>
-                                    <select id="filtroVendedor" class="filter-select">
-                                        <option value="">Todos os vendedores</option>
-                                    </select>
+                                    <label class="control-label">Vendedor:</label>
+                                    <div class="multi-select-dropdown" id="filtroVendedorContainer">
+                                        <div class="multi-select-trigger"
+                                            onclick="toggleMultiSelect('filtroVendedorDropdown')">
+                                            <span class="multi-select-text">Todos os vendedores</span>
+                                            <i class="fas fa-chevron-down"></i>
+                                        </div>
+                                        <div class="multi-select-options" id="filtroVendedorDropdown">
+                                            <!-- Será preenchido via JavaScript -->
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            
-                            <!-- Linha 2: Condição Pagamento, Data Inicial, Data Final -->
+
+                            <!-- Linha 2: Condição Pagamento, Situação, Data Inicial, Data Final -->
                             <div class="filter-row">
                                 <div class="filter-control">
-                                    <label for="filtroCondicaoPagamento" class="control-label">Condição Pagamento:</label>
+                                    <label for="filtroCondicaoPagamento" class="control-label">Condição
+                                        Pagamento:</label>
                                     <select id="filtroCondicaoPagamento" class="filter-select">
                                         <option value="">Todas as condições</option>
                                     </select>
                                 </div>
-                                
+
+                                <div class="filter-control">
+                                    <label class="control-label">Situação:</label>
+                                    <div class="multi-select-dropdown" id="filtroSituacaoContainer">
+                                        <div class="multi-select-trigger"
+                                            onclick="toggleMultiSelect('filtroSituacaoDropdown')">
+                                            <span class="multi-select-text">Todas as situações</span>
+                                            <i class="fas fa-chevron-down"></i>
+                                        </div>
+                                        <div class="multi-select-options" id="filtroSituacaoDropdown">
+                                            <label class="multi-select-option">
+                                                <input type="checkbox" value="finalizada"
+                                                    onchange="atualizarTextoMultiSelect('situacao')">
+                                                <span class="checkmark-multi"></span>
+                                                Finalizada
+                                            </label>
+                                            <label class="multi-select-option">
+                                                <input type="checkbox" value="pendente"
+                                                    onchange="atualizarTextoMultiSelect('situacao')">
+                                                <span class="checkmark-multi"></span>
+                                                Pendente
+                                            </label>
+                                            <label class="multi-select-option">
+                                                <input type="checkbox" value="cancelada"
+                                                    onchange="atualizarTextoMultiSelect('situacao')">
+                                                <span class="checkmark-multi"></span>
+                                                Cancelada
+                                            </label>
+                                            <label class="multi-select-option">
+                                                <input type="checkbox" value="devolvido"
+                                                    onchange="atualizarTextoMultiSelect('situacao')">
+                                                <span class="checkmark-multi"></span>
+                                                Devolvido
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="filter-control">
                                     <label for="filtroDataInicial" class="control-label">Data Inicial:</label>
                                     <input type="date" id="filtroDataInicial" class="filter-input">
                                 </div>
-                                
+
                                 <div class="filter-control">
                                     <label for="filtroDataFinal" class="control-label">Data Final:</label>
                                     <input type="date" id="filtroDataFinal" class="filter-input">
                                 </div>
                             </div>
-                            
+
                             <!-- Linha 3: Checkboxes - Pendente CR, Pendente AP -->
                             <div class="filter-row checkboxes-row">
                                 <div class="checkbox-item">
@@ -690,7 +1006,7 @@
                                         Pendente CR
                                     </label>
                                 </div>
-                                
+
                                 <div class="checkbox-item">
                                     <input type="checkbox" id="filtroPendenteAP" class="filter-checkbox">
                                     <label for="filtroPendenteAP" class="checkbox-label">
@@ -698,18 +1014,19 @@
                                         Pendente AP
                                     </label>
                                 </div>
-                                
+
                                 <button class="btn-clear-filters" id="btnLimparFiltros" style="margin-left: auto;">
                                     <i class="fas fa-eraser"></i>
                                     Limpar Filtros
                                 </button>
-                                
+
                                 <button class="search-btn" id="btnAplicarFiltros" style="margin-left: 10px;">
                                     <i class="fas fa-search"></i>
                                     Aplicar Filtros
                                 </button>
-                                
-                                <button class="search-btn" id="btnExportarDados" style="margin-left: 10px; background-color: #28a745;">
+
+                                <button class="search-btn" id="btnExportarDados"
+                                    style="margin-left: 10px; background-color: #28a745;">
                                     <i class="fas fa-download"></i>
                                     Exportar CSV
                                 </button>
@@ -760,151 +1077,144 @@
 
     <!-- Modal de Nova/Editar Venda -->
     <div class="modal" id="vendaModal">
-        <div class="modal-content modal-lg">
+        <div class="modal-content modal-lg modal-vendas">
             <div class="modal-header">
                 <h2 id="modalTitle">Nova Venda</h2>
                 <button class="close-modal">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="vendaForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="cliente_id">Cliente</label>
-                            <div class="select-with-button">
-                                <select id="cliente_id" name="cliente_id" required>
-                                    <option value="">Selecione...</option>
-                                    <option value="1">Cliente A</option>
-                                    <option value="2">Cliente B</option>
-                                    <option value="3">Cliente C</option>
+                    <!-- Sistema de Abas -->
+                    <div class="modal-tabs">
+                        <button type="button" class="modal-tab active" data-tab="tab-dados">
+                            <i class="fas fa-user"></i> Dados
+                        </button>
+                        <button type="button" class="modal-tab" data-tab="tab-itens">
+                            <i class="fas fa-box"></i> Itens
+                        </button>
+                        <button type="button" class="modal-tab" data-tab="tab-pagamento">
+                            <i class="fas fa-credit-card"></i> Pagamento
+                        </button>
+                    </div>
+
+                    <!-- Aba 1: Dados do Pedido -->
+                    <div class="modal-tab-content active" id="tab-dados">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cliente_id">Cliente</label>
+                                <div class="select-with-button">
+                                    <select id="cliente_id" name="cliente_id" required>
+                                        <option value="">Selecione...</option>
+                                    </select>
+                                    <button type="button" class="btn-outline btn-sm" id="btnNovoClienteModal">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="vendedor_id">Vendedor</label>
+                                <select id="vendedor_id" name="vendedor_id">
+                                    <option value="0">Selecione...</option>
                                 </select>
-                                <button type="button" class="btn-outline btn-sm" id="btnNovoClienteModal">
-                                    <i class="fas fa-plus"></i> Novo
-                                </button>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="data_entrega">Data de Entrega</label>
+                                <input type="date" id="data_entrega" name="data_entrega" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="plataforma_id">Método de Venda <span style="color: red;">*</span></label>
+                                <select id="plataforma_id" name="plataforma_id" required>
+                                    <option value="">Selecione...</option>
+                                </select>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="data_entrega">Data de Entrega</label>
-                            <input type="date" id="data_entrega" name="data_entrega" required>
+                            <label for="observacoes">Observações</label>
+                            <textarea id="observacoes" name="observacoes" rows="2"
+                                placeholder="Observações do pedido..."></textarea>
                         </div>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="vendedor_id">Vendedor</label>
-                            <select id="vendedor_id" name="vendedor_id">
-                                <option value="0">Selecione...</option>
-                            </select>
+
+                    <!-- Aba 2: Itens da Venda -->
+                    <div class="modal-tab-content" id="tab-itens">
+                        <div class="itens-header">
+                            <button type="button" class="btn-outline btn-sm" id="btnAdicionarItem">
+                                <i class="fas fa-plus"></i> Adicionar Item
+                            </button>
+                            <div class="totais-inline">
+                                <span><strong>Total:</strong> <span id="valorTotal">R$ 0,00</span></span>
+                                <span><strong>Comissão:</strong> <span id="comissaoTotal">R$ 0,00</span></span>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="condicao_pagamento_id">Condição de Pagamento</label>
-                            <select id="condicao_pagamento_id" name="condicao_pagamento_id">
-                                <option value="">Selecione...</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="plataforma_id">Método de Venda <span style="color: red;">*</span></label>
-                            <select id="plataforma_id" name="plataforma_id" required>
-                                <option value="">Selecione...</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <h3 class="section-title">Itens da Venda</h3>
-                    <div class="actions-inline">
-                        <button type="button" class="btn-outline" id="btnAdicionarItem">
-                            <i class="fas fa-plus"></i> Adicionar Item
-                        </button>
-                    </div>
-                    <div class="table-container">
-                        <table class="data-table" id="itensVendaTable">
-                            <thead>
-                                <tr>
-                                    <th>Produto</th>
-                                    <th>Quantidade</th>
-                                    <th>Preço Unit.</th>
-                                    <th>Comissão</th>
-                                    <th>Subtotal</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="itensVendaTableBody">
-                                <tr>
-                                    <td colspan="6" class="text-center">Nenhum item adicionado</td>
-                                </tr>
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colspan="6" class="text-right">
-                                        <!-- Removed duplicate button -->
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                    
-                    <div class="form-row total-row">
-                        <div class="form-group total-label">
-                            <label>Valor Total:</label>
-                        </div>
-                        <div class="form-group total-value">
-                            <span id="valorTotal">R$ 0,00</span>
+                        <div class="table-container-compact">
+                            <table class="data-table" id="itensVendaTable">
+                                <thead>
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th>Qtd</th>
+                                        <th>Preço</th>
+                                        <th>Comissão</th>
+                                        <th>Subtotal</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itensVendaTableBody">
+                                    <tr>
+                                        <td colspan="6" class="text-center">Nenhum item adicionado</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    
-                    <div class="form-row total-row">
-                        <div class="form-group total-label">
-                            <label>Comissão Total:</label>
+
+                    <!-- Aba 3: Pagamento e Status -->
+                    <div class="modal-tab-content" id="tab-pagamento">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="condicao_pagamento_id">Condição de Pagamento</label>
+                                <select id="condicao_pagamento_id" name="condicao_pagamento_id">
+                                    <option value="">Selecione...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="forma_pagamento">Forma de Pagamento</label>
+                                <select id="forma_pagamento" name="forma_pagamento" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="dinheiro">Dinheiro</option>
+                                    <option value="cartao_credito">Cartão de Crédito</option>
+                                    <option value="cartao_debito">Cartão de Débito</option>
+                                    <option value="pix">PIX</option>
+                                    <option value="boleto">Boleto</option>
+                                    <option value="transferencia">Transferência</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="form-group total-value">
-                            <span id="comissaoTotal">R$ 0,00</span>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="forma_pagamento">Forma de Pagamento</label>
-                            <select id="forma_pagamento" name="forma_pagamento" required>
-                                <option value="">Selecione...</option>
-                                <option value="dinheiro">Dinheiro</option>
-                                <option value="cartao_credito">Cartão de Crédito</option>
-                                <option value="cartao_debito">Cartão de Débito</option>
-                                <option value="pix">PIX</option>
-                                <option value="boleto">Boleto</option>
-                                <option value="transferencia">Transferência</option>
-                            </select>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="status">Status</label>
+                                <select id="status" name="status" required>
+                                    <option value="pendente">Pendente</option>
+                                    <option value="finalizada">Finalizada</option>
+                                    <option value="cancelada">Cancelada</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label for="status">Status</label>
-                            <select id="status" name="status" required>
-                                <option value="pendente">Pendente</option>
-                                <option value="finalizada">Finalizada</option>
-                                <option value="cancelada">Cancelada</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="observacoes">Observações</label>
-                        <textarea id="observacoes" name="observacoes" rows="3"></textarea>
-                    </div>
-                    
-                    <h3 class="section-title">Atualizar Contas Automaticamente</h3>
-                    <div class="form-row">
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="atualizarContasAPagar" name="atualizarContasAPagar" checked>
-                            <label for="atualizarContasAPagar" class="checkbox-label">
-                                <span class="checkbox-custom"></span>
-                                Atualizar Contas a Pagar para Pago
-                            </label>
-                        </div>
-                        
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="atualizarContasAReceber" name="atualizarContasAReceber" checked>
-                            <label for="atualizarContasAReceber" class="checkbox-label">
-                                <span class="checkbox-custom"></span>
-                                Atualizar Contas a Receber para Pago
-                            </label>
+                            <label>Atualizar Contas Automaticamente</label>
+                            <div class="checkbox-row">
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" id="atualizarContasAPagar" name="atualizarContasAPagar"
+                                        checked>
+                                    Contas a Pagar
+                                </label>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" id="atualizarContasAReceber" name="atualizarContasAReceber"
+                                        checked>
+                                    Contas a Receber
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -979,7 +1289,7 @@
                     <p><strong>Valor Total:</strong> <span id="devolucaoValor">-</span></p>
                     <p><strong>Vendedor:</strong> <span id="devolucaoVendedor">-</span></p>
                 </div>
-                
+
                 <div class="devolucao-aviso">
                     <i class="fas fa-exclamation-triangle"></i>
                     <div>
@@ -987,17 +1297,19 @@
                         <ul>
                             <li>Retornar os produtos ao estoque</li>
                             <li>Cancelar os títulos de contas a receber</li>
-                            <li>Se houver comissão, cancelar o título de contas a pagar e criar um título de devolução</li>
+                            <li>Se houver comissão, cancelar o título de contas a pagar e criar um título de devolução
+                            </li>
                             <li>Notificar o vendedor via webhook (se configurado)</li>
                         </ul>
                     </div>
                 </div>
-                
+
                 <form id="devolucaoForm">
                     <input type="hidden" id="devolucaoVendaId">
                     <div class="form-group">
-                        <label for="devolucaoJustificativa">Justificativa da Devolução <span style="color: red;">*</span></label>
-                        <textarea id="devolucaoJustificativa" name="justificativa" rows="4" required 
+                        <label for="devolucaoJustificativa">Justificativa da Devolução <span
+                                style="color: red;">*</span></label>
+                        <textarea id="devolucaoJustificativa" name="justificativa" rows="4" required
                             placeholder="Descreva o motivo da devolução..."></textarea>
                     </div>
                 </form>
@@ -1020,25 +1332,88 @@
             </div>
             <div class="modal-body">
                 <form id="clienteForm">
-                    <div class="form-group">
-                        <label for="cliente_nome">Nome *</label>
-                        <input type="text" id="cliente_nome" name="nome" required>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cliente_nome">Nome/Razão Social *</label>
+                            <input type="text" id="cliente_nome" name="nome" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cliente_tipo">Tipo</label>
+                            <select id="cliente_tipo" name="tipo">
+                                <option value="pessoa_fisica">Pessoa Física</option>
+                                <option value="pessoa_juridica">Pessoa Jurídica</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="cliente_cpf">CPF/CNPJ</label>
-                        <input type="text" id="cliente_cpf" name="cpf_cnpj">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cliente_cpf">CPF/CNPJ</label>
+                            <input type="text" id="cliente_cpf" name="cpf_cnpj">
+                        </div>
+                        <div class="form-group">
+                            <label for="cliente_email">Email</label>
+                            <input type="email" id="cliente_email" name="email">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="cliente_email">Email</label>
-                        <input type="email" id="cliente_email" name="email">
-                    </div>
-                    <div class="form-group">
-                        <label for="cliente_telefone">Telefone</label>
-                        <input type="tel" id="cliente_telefone" name="telefone">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cliente_telefone">Telefone</label>
+                            <input type="tel" id="cliente_telefone" name="telefone">
+                        </div>
+                        <div class="form-group">
+                            <label for="cliente_cep">CEP</label>
+                            <input type="text" id="cliente_cep" name="cep" placeholder="00000-000">
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="cliente_endereco">Endereço</label>
                         <input type="text" id="cliente_endereco" name="endereco">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cliente_cidade">Cidade</label>
+                            <input type="text" id="cliente_cidade" name="cidade">
+                        </div>
+                        <div class="form-group">
+                            <label for="cliente_estado">Estado</label>
+                            <select id="cliente_estado" name="estado">
+                                <option value="">Selecione...</option>
+                                <option value="AC">AC</option>
+                                <option value="AL">AL</option>
+                                <option value="AP">AP</option>
+                                <option value="AM">AM</option>
+                                <option value="BA">BA</option>
+                                <option value="CE">CE</option>
+                                <option value="DF">DF</option>
+                                <option value="ES">ES</option>
+                                <option value="GO">GO</option>
+                                <option value="MA">MA</option>
+                                <option value="MT">MT</option>
+                                <option value="MS">MS</option>
+                                <option value="MG">MG</option>
+                                <option value="PA">PA</option>
+                                <option value="PB">PB</option>
+                                <option value="PR">PR</option>
+                                <option value="PE">PE</option>
+                                <option value="PI">PI</option>
+                                <option value="RJ">RJ</option>
+                                <option value="RN">RN</option>
+                                <option value="RS">RS</option>
+                                <option value="RO">RO</option>
+                                <option value="RR">RR</option>
+                                <option value="SC">SC</option>
+                                <option value="SP">SP</option>
+                                <option value="SE">SE</option>
+                                <option value="TO">TO</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="cliente_ativo" name="ativo" checked>
+                            <span class="checkmark"></span>
+                            Cliente Ativo
+                        </label>
                     </div>
                 </form>
             </div>
@@ -1048,6 +1423,115 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal para Visualizar Produtos -->
+    <div class="modal" id="produtosModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="produtosModalTitle"><i class="fas fa-box"></i> Produtos da Venda</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <table class="data-table" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Quantidade</th>
+                            <th>Custo Unit.</th>
+                            <th>Preço Unit.</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="produtosModalBody">
+                    </tbody>
+                </table>
+                <div
+                    style="margin-top: 15px; text-align: right; font-size: 16px; font-weight: bold; color: var(--accent-primary, #64ffda);">
+                    Total: <span id="produtosModalTotal">R$ 0,00</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnFecharProdutos">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para PIX QR Code da Comissão -->
+    <div class="modal" id="pixQrcodeModal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #00b894, #00cec9);">
+                <h2><i class="fas fa-qrcode"></i> PIX Comissão</h2>
+                <button class="close-modal" onclick="fecharModalPixQrcode()">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 30px;">
+                <div id="pixVendedorInfo" style="margin-bottom: 20px;">
+                    <p style="font-size: 16px; color: var(--text-secondary, #666); margin-bottom: 5px;">Vendedor:</p>
+                    <p id="pixVendedorNome"
+                        style="font-size: 20px; font-weight: 700; color: var(--text-primary, #333);"></p>
+                </div>
+                <div id="pixValorInfo" style="margin-bottom: 25px;">
+                    <p style="font-size: 14px; color: var(--text-secondary, #666); margin-bottom: 5px;">Valor da
+                        Comissão:</p>
+                    <p id="pixValorComissao" style="font-size: 28px; font-weight: 700; color: #00b894;"></p>
+                </div>
+                <div id="pixQrcodeContainer"
+                    style="background: white; padding: 20px; border-radius: 12px; display: inline-block; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <div id="pixQrcode"></div>
+                </div>
+                <div id="pixChaveInfo" style="margin-top: 15px;">
+                    <p style="font-size: 12px; color: var(--text-muted, #888); margin-bottom: 5px;">Chave PIX:</p>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        <code id="pixChave"
+                            style="font-size: 14px; background: rgba(0,0,0,0.1); padding: 8px 15px; border-radius: 6px; word-break: break-all;"></code>
+                        <button onclick="copiarChavePix()" class="btn-icon" title="Copiar"
+                            style="padding: 8px; background: #00b894; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button class="btn-outline" onclick="fecharModalPixQrcode()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para vendedor sem PIX cadastrado -->
+    <style>
+        .btn-comis {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-comis:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0, 184, 148, 0.4);
+        }
+
+        .btn-comis:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        #pixQrcodeModal .modal-content {
+            background: var(--gradient-card, #fff);
+        }
+    </style>
+
+    <!-- QRCode.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 
     <script src="js/auth.js"></script>
     <script src="js/api.js"></script>
@@ -1062,4 +1546,5 @@
     <script src="js/internal-animation.js"></script>
     <script src="js/theme-switcher.js"></script>
 </body>
+
 </html>

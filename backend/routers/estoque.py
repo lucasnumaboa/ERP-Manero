@@ -14,6 +14,7 @@ class MovimentacaoEstoqueBase(BaseModel):
     quantidade: int
     motivo: Optional[str] = None
     documento_referencia: Optional[str] = None
+    valor_unitario: Optional[float] = None  # Valor unitário para cálculo de preço médio (apenas para entrada)
 
 class MovimentacaoEstoqueCreate(MovimentacaoEstoqueBase):
     pass
@@ -145,9 +146,10 @@ async def listar_produtos_estoque(
     Inclui o campo usuario_id para controle de permissões no frontend.
     """
     query = """
-        SELECT p.*, c.nome as categoria_nome
+        SELECT p.*, c.nome as categoria_nome, d.nome as deposito_nome
         FROM produtos p
         LEFT JOIN categorias_produtos c ON p.categoria_id = c.id
+        LEFT JOIN depositos d ON p.deposito_id = d.id
         WHERE 1=1
     """
     params = []
@@ -219,10 +221,10 @@ async def criar_movimentacao_estoque(
             detail="A quantidade deve ser maior que zero"
         )
     
-    # Verifica se o produto existe e obtém seu estoque atual
+    # Verifica se o produto existe e obtém seu estoque atual e preço de custo
     with get_db_cursor() as cursor:
         cursor.execute(
-            "SELECT id, nome, estoque_atual FROM produtos WHERE id = %s",
+            "SELECT id, nome, estoque_atual, preco_custo FROM produtos WHERE id = %s",
             (movimentacao.produto_id,)
         )
         produto = cursor.fetchone()
@@ -242,8 +244,19 @@ async def criar_movimentacao_estoque(
     
     # Calcula o novo estoque
     estoque_atual = produto["estoque_atual"]
+    preco_custo_atual = float(produto["preco_custo"])
+    novo_preco_custo = preco_custo_atual  # Mantém o preço atual por padrão
+    
     if movimentacao.tipo == "entrada":
         novo_estoque = estoque_atual + movimentacao.quantidade
+        
+        # Calcula preço médio ponderado se valor_unitario foi informado
+        if movimentacao.valor_unitario is not None and movimentacao.valor_unitario > 0:
+            # Fórmula: ((estoque_atual * preco_custo_atual) + (quantidade_entrada * valor_unitario)) / (estoque_atual + quantidade_entrada)
+            valor_estoque_atual = estoque_atual * preco_custo_atual
+            valor_entrada = movimentacao.quantidade * movimentacao.valor_unitario
+            novo_preco_custo = (valor_estoque_atual + valor_entrada) / novo_estoque if novo_estoque > 0 else movimentacao.valor_unitario
+            
     elif movimentacao.tipo == "saida":
         novo_estoque = estoque_atual - movimentacao.quantidade
     else:  # ajuste
@@ -256,14 +269,15 @@ async def criar_movimentacao_estoque(
             """
             INSERT INTO movimentacao_estoque (
                 produto_id, tipo, quantidade, motivo,
-                documento_referencia, usuario_id
+                documento_referencia, usuario_id, valor_unitario
             )
-            VALUES (%s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 movimentacao.produto_id, movimentacao.tipo,
                 movimentacao.quantidade, movimentacao.motivo,
-                movimentacao.documento_referencia, current_user.id
+                movimentacao.documento_referencia, current_user.id,
+                movimentacao.valor_unitario
             )
         )
         
@@ -271,11 +285,17 @@ async def criar_movimentacao_estoque(
         cursor.execute("SELECT LAST_INSERT_ID()")
         movimentacao_id = cursor.fetchone()["LAST_INSERT_ID()"]
         
-        # Atualiza o estoque do produto
-        cursor.execute(
-            "UPDATE produtos SET estoque_atual = %s WHERE id = %s",
-            (novo_estoque, movimentacao.produto_id)
-        )
+        # Atualiza o estoque do produto e o preço de custo (se houver mudança)
+        if novo_preco_custo != preco_custo_atual:
+            cursor.execute(
+                "UPDATE produtos SET estoque_atual = %s, preco_custo = %s WHERE id = %s",
+                (novo_estoque, novo_preco_custo, movimentacao.produto_id)
+            )
+        else:
+            cursor.execute(
+                "UPDATE produtos SET estoque_atual = %s WHERE id = %s",
+                (novo_estoque, movimentacao.produto_id)
+            )
         
         # Obtém os dados da movimentação criada
         cursor.execute(
