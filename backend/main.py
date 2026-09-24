@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
@@ -12,6 +12,7 @@ from models import Token
 
 # Importa o módulo de autenticação
 from auth import create_access_token, verify_password, get_current_user
+import limite_login
 
 # Importa os módulos de rotas
 import routers.usuarios as usuarios
@@ -138,9 +139,19 @@ app.add_middleware(
 
 # Rotas de autenticação
 @app.post("/token", response_model=Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
     from database import get_db_cursor
-    
+
+    ip = limite_login.ip_do_cliente(request)
+    espera = limite_login.segundos_bloqueado(ip, form_data.username)
+    if espera:
+        minutos = max(1, round(espera / 60))
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Muitas tentativas de login erradas. Tente de novo em {minutos} minuto(s).",
+            headers={"Retry-After": str(espera)},
+        )
+
     with get_db_cursor() as cursor:
         cursor.execute(
             "SELECT id, nome, email, senha, nivel_acesso FROM usuarios WHERE email = %s",
@@ -149,12 +160,15 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         user = cursor.fetchone()
     
     if not user or not verify_password(form_data.password, user["senha"]):
+        limite_login.registrar_falha(ip, form_data.username)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email ou senha incorretos",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    limite_login.registrar_sucesso(ip, form_data.username)
+
     # Atualiza o último acesso, last_access e connected
     with get_db_cursor(commit=True) as cursor:
         cursor.execute(

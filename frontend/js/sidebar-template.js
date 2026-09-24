@@ -46,6 +46,24 @@
         // Os dados podem ter chegado junto com as permissões; se não, busca na API
         const usuario = lerJson('erp_user_data') || (typeof getCurrentUser === 'function' ? await getCurrentUser() : null);
         preencherUsuario(usuario);
+        avisarDiscoCheio(usuario);
+    }
+
+    // Admin: confere uma vez por sessão se o disco do servidor está quase cheio (banco, fotos e backups param).
+    async function avisarDiscoCheio(usuario) {
+        if (!usuario || usuario.nivel_acesso !== 'admin' || typeof fetchWithAuth !== 'function') return;
+        try {
+            if (sessionStorage.getItem('erp_disco_conferido')) return;
+            sessionStorage.setItem('erp_disco_conferido', '1');
+            const resp = await fetchWithAuth(`${await getApiUrl()}/api/configuracoes/saude-sistema`);
+            if (!resp || !resp.ok) return;
+            const { disco } = await resp.json();
+            if (disco && disco.alerta && typeof mostrarAviso === 'function') {
+                mostrarAviso(`Disco do servidor com ${disco.usado_pct}% em uso (restam ${disco.livre_gb} GB). Libere espaço para o banco e os backups não pararem.`, 'aviso');
+            }
+        } catch (error) {
+            console.error('Erro ao conferir o disco do servidor:', error);
+        }
     }
 
     function renderizarMenu(sidebarNav, permissions) {

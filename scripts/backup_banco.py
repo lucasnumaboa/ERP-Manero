@@ -1,10 +1,13 @@
 """
-Backup do banco do ERP com mysqldump, compactado em .sql.gz.
+Backup do banco do ERP com mysqldump, compactado em .sql.gz, e cópia das fotos/vídeos (frontend/uploads).
 
 Uso: python scripts/backup_banco.py
 Variáveis opcionais (em backend/.env):
   BACKUP_COPIA_DIR  pasta extra para uma cópia (ex.: uma pasta sincronizada com Google Drive/OneDrive)
   BACKUP_RETENCAO_DIAS  quantos dias manter (padrão 30)
+
+Fotos e vídeos vão para backup/uploads (e BACKUP_COPIA_DIR/uploads) como espelho: só copia o que é novo
+ou mudou, e nunca apaga de lá o que foi apagado do ERP, para dar para recuperar.
 """
 import gzip
 import logging
@@ -24,6 +27,7 @@ MYSQLDUMP = os.getenv("MYSQLDUMP_PATH", r"C:\Program Files\MySQL\MySQL Server 9.
 PASTA_BACKUP = RAIZ / "backup" / "automatico"
 RETENCAO_DIAS = int(os.getenv("BACKUP_RETENCAO_DIAS", "30"))
 PREFIXO = "erp_maneiro_"
+PASTA_UPLOADS = RAIZ / "frontend" / "uploads"
 
 (RAIZ / "log").mkdir(exist_ok=True)
 logging.basicConfig(
@@ -73,6 +77,35 @@ def copiar_para_fora(arquivo: Path):
     limpar_antigos(Path(pasta))
 
 
+def espelhar_uploads(destino: Path) -> tuple[int, int]:
+    """Copia para `destino` o que é novo ou mudou em frontend/uploads. Devolve (copiados, total)."""
+    copiados = total = 0
+    for origem in PASTA_UPLOADS.rglob("*"):
+        if not origem.is_file():
+            continue
+        total += 1
+        alvo = destino / origem.relative_to(PASTA_UPLOADS)
+        info = origem.stat()
+        if alvo.exists():
+            atual = alvo.stat()
+            if atual.st_size == info.st_size and int(atual.st_mtime) == int(info.st_mtime):
+                continue
+        alvo.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(origem, alvo)
+        copiados += 1
+    return copiados, total
+
+
+def backup_uploads():
+    destinos = [RAIZ / "backup" / "uploads"]
+    if os.getenv("BACKUP_COPIA_DIR"):
+        destinos.append(Path(os.getenv("BACKUP_COPIA_DIR")) / "uploads")
+    for destino in destinos:
+        copiados, total = espelhar_uploads(destino)
+        logging.info("Fotos/vídeos: %d novo(s) ou alterado(s) de %d copiado(s) para %s", copiados, total, destino)
+        print(f"Fotos/vídeos: {copiados} de {total} arquivo(s) copiado(s) para {destino}")
+
+
 def limpar_antigos(pasta: Path):
     limite = datetime.now() - timedelta(days=RETENCAO_DIAS)
     for arquivo in pasta.glob(f"{PREFIXO}*.sql.gz"):
@@ -89,6 +122,7 @@ if __name__ == "__main__":
         print(f"Backup criado: {arquivo} ({tamanho_kb:.0f} KB)")
         copiar_para_fora(arquivo)
         limpar_antigos(PASTA_BACKUP)
+        backup_uploads()
     except Exception as e:
         logging.error("Falha no backup: %s", e)
         print(f"Falha no backup: {e}", file=sys.stderr)

@@ -1718,6 +1718,9 @@ async function carregarConfiguracoesWebhook() {
 
         const webhookUrl = configuracoes.find(c => c.chave === 'webhook_url');
         const webhookAtivo = configuracoes.find(c => c.chave === 'webhook_ativo');
+        const alertaTelefones = configuracoes.find(c => c.chave === 'alerta_telefones');
+        const telefonesInput = document.getElementById('alerta_telefones');
+        if (telefonesInput) telefonesInput.value = alertaTelefones ? alertaTelefones.valor : '';
 
         // Preenche os campos
         const urlInput = document.getElementById('webhook_url');
@@ -1774,6 +1777,12 @@ async function salvarConfiguracoesWebhook(event) {
             chave: 'webhook_ativo',
             valor: webhookAtivo ? 'true' : 'false',
             descricao: 'Ativa/desativa o envio de notificações via webhook (true/false)'
+        });
+
+        await atualizarConfiguracao({
+            chave: 'alerta_telefones',
+            valor: (document.getElementById('alerta_telefones')?.value || '').trim(),
+            descricao: 'Telefones (separados por vírgula) que recebem alertas do sistema: ERP fora do ar, disco cheio'
         });
 
         alert('Configurações de webhook salvas com sucesso!');
@@ -1858,6 +1867,11 @@ function setupWebhookEvents() {
         btnTestarWebhook.addEventListener('click', testarWebhook);
     }
 
+    const btnTestarAlerta = document.getElementById('btnTestarAlerta');
+    if (btnTestarAlerta) {
+        btnTestarAlerta.addEventListener('click', testarAlertaSistema);
+    }
+
     // Checkbox de ativar/desativar
     const webhookAtivo = document.getElementById('webhook_ativo');
     if (webhookAtivo) {
@@ -1882,4 +1896,14 @@ function mostrarChaveSalva(input, mascarada) {
     if (!input) return;
     input.value = '';
     input.placeholder = mascarada ? `Chave salva: ${mascarada} (deixe vazio para manter)` : 'Nenhuma chave salva';
+}
+
+// Envia uma mensagem de teste para os telefones de alerta (usa o que já está salvo)
+async function testarAlertaSistema() {
+    try {
+        const r = await apiPost('/api/configuracoes/testar-alerta');
+        mostrarAviso(`Alerta de teste enviado para ${r.enviados} telefone(s).`, 'sucesso');
+    } catch (error) {
+        mostrarAviso((error.message || '').replace(/^Falha na requisição POST para [^:]+: /, '') || 'Não foi possível enviar o alerta de teste.', 'erro');
+    }
 }

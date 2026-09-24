@@ -83,6 +83,8 @@ Sistema ERP completo para pequenas e médias empresas, com cliente desktop para 
 - **Códigos sem repetição**: pedidos, compras, contas e orçamentos usam o maior número + 1 com trava, e o banco recusa código repetido.
 - **IA pelo servidor**: descrição de produto, Produtos 3D e demais telas pedem o texto ao backend (`/api/ia/gerar`); a chave do provedor não vai mais para o navegador, e em Configurações ela aparece mascarada (deixar o campo vazio mantém a salva).
 - **Sessão renovada enquanto o usuário usa o sistema**: o token é trocado por um novo (`/token/renovar`) quando faltam menos de 10 minutos; a desconexão por inatividade continua valendo.
+- **Limite de tentativas no login**: 5 senhas erradas para o mesmo e-mail (ou 20 de um mesmo IP) em 15 minutos bloqueiam novas tentativas por 15 minutos (`backend/limite_login.py`).
+- **Senhas com `bcrypt` direto**: saiu a `passlib`, que não é mais mantida e escrevia erro no log a cada login; as senhas já cadastradas continuam valendo.
 - **Início automático**: o ERP volta sozinho quando o PC reinicia ou quando um processo cai (veja *Início automático* abaixo).
 
 ### Desempenho
@@ -246,6 +248,12 @@ Cria a tarefa agendada **ERP Maneiro - Vigia** (a cada 5 minutos) e um atalho na
 
 Funciona com o usuário logado no Windows. Para subir antes do login, use `instalar_servico.py` como administrador, com o NSSM instalado.
 
+O vigia também:
+- **avisa por WhatsApp** quando precisou religar algo, quando não conseguiu religar (uma vez, até voltar) e quando o disco passa de 95% (uma vez por dia). Usa o mesmo webhook das notificações de estoque; os números ficam em Configurações › Notificações › *Telefone(s) para alertas do sistema* (botão **Testar alerta**). Se o banco ou o webhook estiverem fora logo após o PC ligar, o aviso é tentado de novo nas rodadas seguintes;
+- **apaga os logs com mais de 30 dias** (`log/*_AAAA-MM-DD.log`), uma vez por dia.
+
+O administrador também vê um aviso ao entrar no ERP quando o disco do servidor passa de 95%.
+
 ---
 
 ## Endereço da API no frontend
@@ -273,7 +281,7 @@ git config core.hooksPath .githooks
 
 ## Backup do banco
 
-`scripts/backup_banco.py` gera um dump compactado (`mysqldump`) em `backup/automatico/` e apaga os com mais de 30 dias.
+`scripts/backup_banco.py` gera um dump compactado (`mysqldump`) em `backup/automatico/` e apaga os com mais de 30 dias. Em seguida copia as fotos e vídeos dos produtos (`frontend/uploads`) para `backup/uploads/`: só o que é novo ou mudou, e nada é apagado de lá quando some do ERP (dá para recuperar foto apagada por engano).
 
 ```bash
 python scripts/backup_banco.py

@@ -76,11 +76,11 @@ def cliente_api(banco_de_teste):
 
 
 def _criar_usuario(cliente_api, nome, nivel, grupo_id):
-    from passlib.context import CryptContext
+    from auth import get_password_hash
     senha = secrets.token_urlsafe(12)
     email = f"{nome.lower().replace(' ', '.')}@teste.local"
     sql("INSERT INTO usuarios (nome, email, senha, nivel_acesso, grupo_id, connected) VALUES (%s,%s,%s,%s,%s,1)",
-        (nome, email, CryptContext(schemes=["bcrypt"]).hash(senha), nivel, grupo_id))
+        (nome, email, get_password_hash(senha), nivel, grupo_id))
     resposta = cliente_api.post("/token", data={"username": email, "password": senha})
     assert resposta.status_code == 200, resposta.text
     usuario_id = sql("SELECT id FROM usuarios WHERE email=%s", (email,))[0]["id"]

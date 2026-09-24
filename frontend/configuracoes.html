@@ -25,7 +25,8 @@
             color: var(--text-secondary, #a8b2d1);
         }
 
-        .webhook-form-group input[type="url"] {
+        .webhook-form-group input[type="url"],
+        .webhook-form-group input[type="text"] {
             width: 100%;
             padding: 10px 12px;
             border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
@@ -306,6 +307,16 @@
                                     </div>
                                     <span class="help-text">Ativa/desativa o envio de notificações para
                                         vendedores</span>
+                                </div>
+                                <div class="webhook-form-group">
+                                    <label for="alerta_telefones"><i class="fas fa-exclamation-triangle"></i> Telefone(s) para alertas do sistema</label>
+                                    <input type="text" id="alerta_telefones" name="alerta_telefones"
+                                        placeholder="5511999999999, 5511888888888">
+                                    <span class="help-text">Recebem aviso pelo mesmo webhook quando o ERP cai e volta sozinho,
+                                        quando não consegue voltar ou quando o disco passa de 95%. Separe vários por vírgula.</span>
+                                    <button type="button" class="btn-outline" id="btnTestarAlerta" style="margin-top: 8px;">
+                                        <i class="fas fa-bell"></i> Testar alerta
+                                    </button>
                                 </div>
                                 <div class="webhook-form-group">
                                     <button type="submit" class="btn-primary">

@@ -82,3 +82,47 @@ def test_quem_foi_desconectado_por_inatividade_nao_renova(cliente_api, grupo_ven
     usuario = _criar_usuario(cliente_api, "Teste Inativo", "usuario", grupo_vendedores)
     sql("UPDATE usuarios SET connected=0 WHERE id=%s", (usuario["id"],))  # o que o timeout_manager faz
     assert cliente_api.post("/token/renovar", headers=usuario["headers"]).status_code == 401
+
+
+def test_login_bloqueia_depois_de_5_senhas_erradas(cliente_api, grupo_vendedores):
+    import limite_login
+    from conftest import _criar_usuario
+    limite_login.limpar()
+    try:
+        usuario = _criar_usuario(cliente_api, "Teste Forca Bruta", "usuario", grupo_vendedores)
+        errada = {"username": usuario["email"], "password": "senha-errada"}
+        for _ in range(5):
+            assert cliente_api.post("/token", data=errada).status_code == 401
+        r = cliente_api.post("/token", data=errada)
+        assert r.status_code == 429 and "minuto" in r.json()["detail"] and int(r.headers["retry-after"]) > 0
+        # bloqueado vale até para a senha certa; outro e-mail do mesmo IP continua entrando
+        assert cliente_api.post("/token", data={"username": usuario["email"], "password": "x"}).status_code == 429
+        outro = _criar_usuario(cliente_api, "Teste Outro Email", "usuario", grupo_vendedores)
+        assert cliente_api.post("/token/renovar", headers=outro["headers"]).status_code == 200
+    finally:
+        limite_login.limpar()
+
+
+def test_login_certo_zera_as_falhas(cliente_api, grupo_vendedores):
+    import limite_login
+    from conftest import _criar_usuario
+    limite_login.limpar()
+    try:
+        usuario = _criar_usuario(cliente_api, "Teste Erra Pouco", "usuario", grupo_vendedores)
+        for _ in range(4):
+            cliente_api.post("/token", data={"username": usuario["email"], "password": "errada"})
+        limite_login.registrar_sucesso("testclient", usuario["email"])
+        for _ in range(4):
+            assert cliente_api.post("/token", data={"username": usuario["email"], "password": "errada"}).status_code == 401
+    finally:
+        limite_login.limpar()
+
+
+def test_saude_do_sistema_e_alerta_so_para_admin(cliente_api, admin, vendedor):
+    assert cliente_api.get("/api/configuracoes/saude-sistema", headers=vendedor["headers"]).status_code == 403
+    assert cliente_api.post("/api/configuracoes/testar-alerta", headers=vendedor["headers"]).status_code == 403
+    disco = cliente_api.get("/api/configuracoes/saude-sistema", headers=admin["headers"]).json()["disco"]
+    assert 0 < disco["usado_pct"] <= 100 and disco["alerta"] == (disco["usado_pct"] >= disco["limite_pct"])
+    sql("DELETE FROM configuracoes WHERE chave='alerta_telefones'")
+    r = cliente_api.post("/api/configuracoes/testar-alerta", headers=admin["headers"])
+    assert r.status_code == 400 and "telefone" in r.json()["detail"]

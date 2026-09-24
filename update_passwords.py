@@ -1,17 +1,14 @@
 import os
 import mysql.connector
 from dotenv import load_dotenv
-from passlib.context import CryptContext
-
-# Configuração do contexto de senha para bcrypt
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+import bcrypt
 
 # Carrega as variáveis do arquivo .env
 load_dotenv()
 
 def hash_password(password):
     """Cria um hash bcrypt para a senha fornecida"""
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode("utf-8")[:72], bcrypt.gensalt()).decode("utf-8")
 
 def update_passwords():
     print("Atualizando senhas no banco de dados...")

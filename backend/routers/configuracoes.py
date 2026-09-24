@@ -574,3 +574,31 @@ async def delete_config(
             "valor_anterior": config["valor"],
             "descricao_anterior": config["descricao"]
         }
+
+
+def _so_admin(current_user):
+    if current_user.nivel_acesso != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Apenas administradores.")
+
+
+@router.get("/saude-sistema")
+async def saude_sistema(current_user=Depends(get_current_user)):
+    """Espaço em disco do servidor, para a tela avisar o admin antes de o disco encher."""
+    import alertas
+    _so_admin(current_user)
+    return {"disco": alertas.uso_disco(os.path.dirname(os.path.abspath(__file__)))}
+
+
+@router.post("/testar-alerta")
+async def testar_alerta(current_user=Depends(get_current_user)):
+    """Manda uma mensagem de teste para os telefones de alerta do sistema."""
+    import alertas
+    _so_admin(current_user)
+    try:
+        enviados = alertas.enviar_alerta("✅ ERP Maneiro: teste de alerta do sistema. Se chegou, os avisos de queda estão funcionando.")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY, detail=f"Falha ao enviar pelo webhook: {e}")
+    if not enviados:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Preencha a URL do webhook, ative-o e informe ao menos um telefone para alertas.")
+    return {"enviados": enviados}

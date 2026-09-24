@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 from datetime import datetime, timedelta
 from typing import Optional
 from database import get_db_cursor
@@ -9,15 +9,24 @@ from config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 from models import Token, TokenData, UserInDB
 
 # Utilitários de segurança
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # Funções de autenticação
+# bcrypt direto (a passlib parou de ser mantida e quebra com o bcrypt 4.1+). Os hashes $2b$ já salvos
+# continuam valendo. O bcrypt só considera os primeiros 72 bytes da senha; o corte é explícito.
+def _bytes_senha(senha: str) -> bytes:
+    return senha.encode("utf-8")[:72]
+
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+    if not plain_password or not hashed_password:
+        return False
+    try:
+        return bcrypt.checkpw(_bytes_senha(plain_password), hashed_password.encode("utf-8"))
+    except ValueError:  # hash em formato desconhecido
+        return False
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(_bytes_senha(password), bcrypt.gensalt()).decode("utf-8")
 
 # Funções de token
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):

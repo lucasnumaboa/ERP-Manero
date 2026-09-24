@@ -7,7 +7,7 @@ cd backend
 
 :: Usa o Python instalado no sistema. As dependencias ficam em requirements.txt (raiz do projeto);
 :: so instala se faltar alguma, para nao baixar nada a cada inicializacao.
-python -c "import fastapi, uvicorn, mysql.connector, jose, passlib, dotenv, multipart, PIL, httpx" >nul 2>&1
+python -c "import fastapi, uvicorn, mysql.connector, jose, bcrypt, dotenv, multipart, PIL, httpx" >nul 2>&1
 if %errorlevel% neq 0 (
     echo Instalando dependencias...
     python -m pip install -r ..\requirements.txt
