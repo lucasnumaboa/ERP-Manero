@@ -1,8 +1,11 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
 from datetime import timedelta
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # Importa as configurações centralizadas
 from config import APP_NAME, APP_VERSION, APP_DESCRIPTION, ACCESS_TOKEN_EXPIRE_MINUTES
@@ -57,6 +60,11 @@ app = FastAPI(
     description=APP_DESCRIPTION,
     version=APP_VERSION
 )
+
+# Configuração do rate limiting para proteger rotas sensíveis (ex.: /token)
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 @app.on_event("startup")
 async def startup_event():
@@ -138,7 +146,8 @@ app.add_middleware(
 
 # Rotas de autenticação
 @app.post("/token", response_model=Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+@limiter.limit("5/minute")
+async def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
     from database import get_db_cursor
     
     with get_db_cursor() as cursor:
