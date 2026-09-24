@@ -82,9 +82,21 @@ async function loadDepositosCache() {
     }
 }
 
+// Formata a taxa de armazenagem do produto para exibição na coluna do estoque
+function formatarTaxaArmazenagem(produto) {
+    if (!produto.taxa_armazenagem_tipo) return '-';
+    const valor = produto.taxa_armazenagem_valor || 0;
+    if (produto.taxa_armazenagem_tipo === 'percentual') {
+        const precoVenda = produto.preco_venda || 0;
+        const estimado = precoVenda * (valor / 100);
+        return `${valor.toString().replace('.', ',')}% (≈ ${formatNumber(estimado)})`;
+    }
+    return formatNumber(valor);
+}
+
 // Monta o HTML da célula de Depósito: texto + botão de editar (abre modal) se for o dono, só texto caso contrário
 function montarCelulaDeposito(produto, isOwner) {
-    const texto = `<span>${produto.deposito_nome || '-'}</span>`;
+    const texto = `<span>${escapeHtml(produto.deposito_nome || '-')}</span>`;
 
     if (!isOwner) {
         return texto;
@@ -111,7 +123,7 @@ function abrirModalTrocarDeposito(produtoId) {
     const select = document.getElementById('trocarDepositoSelect');
     select.innerHTML = depositosCache.map(dep => {
         const selected = dep.id === produto.deposito_id ? 'selected' : '';
-        return `<option value="${dep.id}" ${selected}>${dep.nome}${dep.padrao ? ' (padrão)' : ''}</option>`;
+        return `<option value="${dep.id}" ${selected}>${escapeHtml(dep.nome)}${dep.padrao ? ' (padrão)' : ''}</option>`;
     }).join('');
 
     document.getElementById('trocarDepositoModal').style.display = 'flex';
@@ -377,7 +389,7 @@ async function displayEstoque(produtos) {
     const tableBody = document.getElementById('estoqueTableBody');
 
     if (!produtos || produtos.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="10" class="text-center">Nenhum produto encontrado</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="12" class="text-center">Nenhum produto encontrado</td></tr>';
         return;
     }
 
@@ -430,7 +442,7 @@ async function displayEstoque(produtos) {
             const primeiraImagem = produto.caminho_imagem.split(',')[0].trim();
             if (primeiraImagem) {
                 const urls = montarUrlsImagem(primeiraImagem);
-                imagemHtml = `<img src="${urls.thumb}" onerror="this.onerror=null;this.src='${urls.original}';" alt="${produto.nome}" class="produto-thumbnail" style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">`;
+                imagemHtml = `<img src="${urls.thumb}" onerror="this.onerror=null;this.src='${urls.original}';" alt="${escapeHtml(produto.nome)}" class="produto-thumbnail" style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">`;
             } else {
                 imagemHtml = `<div style="width: 40px; height: 40px; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center; border-radius: 4px;"><i class="fas fa-image" style="color: #ccc;"></i></div>`;
             }
@@ -440,15 +452,16 @@ async function displayEstoque(produtos) {
 
         row.innerHTML = `
             <td>${imagemHtml}</td>
-            <td>${produto.codigo || '-'}</td>
-            <td>${produto.nome}</td>
-            <td>${produto.categoria_nome || '-'}</td>
+            <td>${escapeHtml(produto.codigo || '-')}</td>
+            <td>${escapeHtml(produto.nome)}</td>
+            <td>${escapeHtml(produto.categoria_nome || '-')}</td>
             <td>${montarCelulaDeposito(produto, isOwner)}</td>
             <td class="text-center">${produto.estoque_atual}</td>
             <td class="text-center">${produto.estoque_minimo}</td>
             <td class="text-right" style="white-space: nowrap;">${formatNumber(produto.preco_venda)}</td>
             <td class="text-right" style="white-space: nowrap;">${isOwner && produto.preco_custo ? formatNumber(produto.preco_custo) : '-'}</td>
             <td class="text-right" style="white-space: nowrap;">${formatNumber(comissaoReais)}</td>
+            <td class="text-right" style="white-space: nowrap;">${formatarTaxaArmazenagem(produto)}</td>
             <td class="actions">
                 ${actionButtons}
             </td>
@@ -494,7 +507,7 @@ async function displayEstoqueGrid(produtos) {
             const primeiraImagem = produto.caminho_imagem.split(',')[0].trim();
             if (primeiraImagem) {
                 const urls = montarUrlsImagem(primeiraImagem);
-                imagemHtml = `<img src="${urls.thumb}" onerror="this.onerror=null;this.src='${urls.original}';" alt="${produto.nome}" class="grid-item-image">`;
+                imagemHtml = `<img src="${urls.thumb}" onerror="this.onerror=null;this.src='${urls.original}';" alt="${escapeHtml(produto.nome)}" class="grid-item-image">`;
             } else {
                 imagemHtml = `<div class="grid-item-image-placeholder"><i class="fas fa-image"></i></div>`;
             }
@@ -529,9 +542,9 @@ async function displayEstoqueGrid(produtos) {
             <div class="grid-item-header">
                 ${imagemHtml}
                 <div class="grid-item-info">
-                    <div class="grid-item-name" title="${produto.nome}">${produto.nome}</div>
-                    <div class="grid-item-code">Cód: ${produto.codigo || '-'}</div>
-                    <span class="grid-item-category">${produto.categoria_nome || 'Sem categoria'}</span>
+                    <div class="grid-item-name" title="${escapeHtml(produto.nome)}">${escapeHtml(produto.nome)}</div>
+                    <div class="grid-item-code">Cód: ${escapeHtml(produto.codigo || '-')}</div>
+                    <span class="grid-item-category">${escapeHtml(produto.categoria_nome || 'Sem categoria')}</span>
                 </div>
             </div>
             <div class="grid-item-body">
@@ -606,9 +619,9 @@ async function displayEstoqueCompact(produtos) {
         }
 
         row.innerHTML = `
-            <td>${produto.codigo || '-'}</td>
-            <td>${produto.nome}</td>
-            <td>${produto.categoria_nome || '-'}</td>
+            <td>${escapeHtml(produto.codigo || '-')}</td>
+            <td>${escapeHtml(produto.nome)}</td>
+            <td>${escapeHtml(produto.categoria_nome || '-')}</td>
             <td class="text-center">${produto.estoque_atual}</td>
             <td class="text-center">${produto.estoque_minimo}</td>
             <td class="text-right" style="white-space: nowrap;">${formatNumber(produto.preco_venda)}</td>
@@ -775,6 +788,7 @@ async function viewDetalhes(produtoId) {
         // Preenche as informações financeiras
         document.getElementById('detalhe-preco-venda').textContent = formatNumber(produto.preco_venda || 0);
         document.getElementById('detalhe-comissao').textContent = produto.comissao ? formatNumber(produto.comissao) : 'R$ 0,00';
+        document.getElementById('detalhe-taxa-armazenagem').textContent = formatarTaxaArmazenagem(produto);
 
         // Preenche as informações de estoque
         document.getElementById('detalhe-deposito').textContent = produto.deposito_nome || '-';
@@ -965,7 +979,7 @@ function displayHistorico(movimentacoes) {
             <td>${formatDate(mov.data_movimentacao)}</td>
             <td>${getTipoMovimentoBadge(mov.tipo)}</td>
             <td class="text-center">${mov.quantidade}</td>
-            <td>${mov.motivo || '-'}</td>
+            <td>${escapeHtml(mov.motivo || '-')}</td>
             <td>${mov.documento_referencia || '-'}</td>
         `;
 

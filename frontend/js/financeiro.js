@@ -114,8 +114,8 @@ function displayContasReceber(contas) {
 
         row.innerHTML = `
             <td>${conta.id}</td>
-            <td>${conta.cliente_nome}</td>
-            <td>${conta.descricao}</td>
+            <td>${escapeHtml(conta.cliente_nome)}</td>
+            <td>${escapeHtml(conta.descricao)}</td>
             <td>${formatarData(conta.data_vencimento)}</td>
             <td>${formatarMoeda(conta.valor)}</td>
             <td><span class="status-badge ${conta.status}">${conta.status}</span></td>
@@ -181,8 +181,8 @@ function displayContasPagar(contas) {
 
         row.innerHTML = `
             <td>${conta.id}</td>
-            <td>${conta.fornecedor_nome}</td>
-            <td>${conta.descricao}</td>
+            <td>${escapeHtml(conta.fornecedor_nome)}</td>
+            <td>${escapeHtml(conta.descricao)}</td>
             <td>${formatarData(conta.data_vencimento)}</td>
             <td>${formatarMoeda(conta.valor)}</td>
             <td><span class="status-badge ${conta.status}">${conta.status}</span></td>
@@ -249,7 +249,7 @@ function displayLancamentos(lancamentos) {
         row.innerHTML = `
             <td>${lancamento.id}</td>
             <td>${formatarData(lancamento.data)}</td>
-            <td>${lancamento.descricao}</td>
+            <td>${escapeHtml(lancamento.descricao)}</td>
             <td><span class="badge ${lancamento.tipo}">${lancamento.tipo}</span></td>
             <td>${lancamento.categoria}</td>
             <td>${formatarMoeda(lancamento.valor)}</td>

@@ -168,8 +168,8 @@ function displayFornecedores(fornecedores) {
         
         row.innerHTML = `
             <td>${fornecedor.id}</td>
-            <td>${fornecedor.nome}</td>
-            <td>${fornecedor.documento || '-'}</td>
+            <td>${escapeHtml(fornecedor.nome)}</td>
+            <td>${escapeHtml(fornecedor.documento || '-')}</td>
             <td>${contato}</td>
             <td>${cidadeUf}</td>
             <td><span class="status-badge ${statusClass}">${statusText}</span></td>

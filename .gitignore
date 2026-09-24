@@ -84,3 +84,25 @@ settings.local.py
 # Arquivos de backup
 *.bak
 *.backup
+
+# ---- Pastas e arquivos locais desta máquina (não fazem parte do repositório) ----
+# Backups do banco (contêm dados reais) e arquivos arquivados
+backup/
+# Logs de execução
+log/
+# Fotos e vídeos enviados pelos usuários (dados reais, ~1 GB)
+frontend/uploads/
+# Projetos separados que ficam na mesma pasta
+Softwares/
+screvo/
+olx-porta3306/
+autopost marketplace/
+comprime-imagem-filme/
+# Configuração local do editor/ferramentas
+.claude/
+# Estado local gerado em execução
+last_api_url.json
+# Credenciais: só o modelo .env.example vai para o repositório
+backend/.env
+.env.exemple
+backend/frontend/

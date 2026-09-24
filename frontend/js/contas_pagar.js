@@ -233,8 +233,8 @@ async function displayContasPagar(contas) {
         }
         
         row.innerHTML = `
-            <td>${conta.codigo}</td>
-            <td>${conta.descricao}</td>
+            <td>${escapeHtml(conta.codigo)}</td>
+            <td>${escapeHtml(conta.descricao)}</td>
             <td>${nomeCredor}</td>
             <td>${formatarMoeda(conta.valor)}</td>
             <td>${formatarData(conta.data_vencimento)}</td>

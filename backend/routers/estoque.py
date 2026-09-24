@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List, Optional, Any
 from datetime import datetime
 from database import get_db_cursor
+from estoque_util import baixar_estoque, somar_estoque
 from auth import get_current_user, UserInDB
 
 router = APIRouter()
@@ -224,17 +225,23 @@ async def criar_movimentacao_estoque(
     # Verifica se o produto existe e obtém seu estoque atual e preço de custo
     with get_db_cursor() as cursor:
         cursor.execute(
-            "SELECT id, nome, estoque_atual, preco_custo FROM produtos WHERE id = %s",
+            "SELECT id, nome, estoque_atual, preco_custo, usuario_id FROM produtos WHERE id = %s",
             (movimentacao.produto_id,)
         )
         produto = cursor.fetchone()
-        
+
         if not produto:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Produto não encontrado"
             )
-        
+
+        if current_user.nivel_acesso != "admin" and produto["usuario_id"] != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Apenas o dono do produto pode movimentar o estoque dele"
+            )
+
         # Verifica se há estoque suficiente para saída
         if movimentacao.tipo == "saida" and produto["estoque_atual"] < movimentacao.quantidade:
             raise HTTPException(
@@ -286,15 +293,19 @@ async def criar_movimentacao_estoque(
         movimentacao_id = cursor.fetchone()["LAST_INSERT_ID()"]
         
         # Atualiza o estoque do produto e o preço de custo (se houver mudança)
-        if novo_preco_custo != preco_custo_atual:
-            cursor.execute(
-                "UPDATE produtos SET estoque_atual = %s, preco_custo = %s WHERE id = %s",
-                (novo_estoque, novo_preco_custo, movimentacao.produto_id)
-            )
+        if movimentacao.tipo == "saida":
+            baixar_estoque(cursor, movimentacao.produto_id, movimentacao.quantidade)
+        elif movimentacao.tipo == "entrada":
+            somar_estoque(cursor, movimentacao.produto_id, movimentacao.quantidade)
         else:
             cursor.execute(
                 "UPDATE produtos SET estoque_atual = %s WHERE id = %s",
                 (novo_estoque, movimentacao.produto_id)
+            )
+        if novo_preco_custo != preco_custo_atual:
+            cursor.execute(
+                "UPDATE produtos SET preco_custo = %s WHERE id = %s",
+                (novo_preco_custo, movimentacao.produto_id)
             )
         
         # Obtém os dados da movimentação criada
@@ -386,19 +397,7 @@ async def receber_pedido_compra(
         
         # Processa cada item do pedido
         for item in itens:
-            # Obtém o estoque atual do produto
-            cursor.execute(
-                "SELECT estoque_atual FROM produtos WHERE id = %s",
-                (item["produto_id"],)
-            )
-            produto = cursor.fetchone()
-            novo_estoque = produto["estoque_atual"] + item["quantidade"]
-            
-            # Atualiza o estoque do produto
-            cursor.execute(
-                "UPDATE produtos SET estoque_atual = %s WHERE id = %s",
-                (novo_estoque, item["produto_id"])
-            )
+            somar_estoque(cursor, item["produto_id"], item["quantidade"])
             
             # Registra a movimentação de estoque
             cursor.execute(

@@ -104,7 +104,7 @@ function preencherMultiSelectVendedores(vendedores) {
             label.innerHTML = `
                 <input type="checkbox" value="${vendedor.id}" onchange="atualizarTextoMultiSelect('vendedor')">
                 <span class="checkmark-multi"></span>
-                ${vendedor.nome}
+                ${escapeHtml(vendedor.nome)}
             `;
             container.appendChild(label);
         });
@@ -211,6 +211,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Configurar eventos para cálculo de subtotal
     document.getElementById('quantidade').addEventListener('input', calcularSubtotal);
     document.getElementById('preco_unitario').addEventListener('input', calcularSubtotal);
+    document.getElementById('preco_unitario').addEventListener('input', atualizarGrupoTaxaArmazenagemItem);
     document.getElementById('produto_id').addEventListener('change', atualizarPrecoUnitario);
 
     // Configurar filtros
@@ -292,7 +293,7 @@ function abrirModalProdutos(itens, vendaId) {
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${item.produto_nome || 'Produto desconhecido'}</td>
+            <td>${escapeHtml(item.produto_nome || 'Produto desconhecido')}</td>
             <td style="text-align: center;">${item.quantidade}</td>
             <td style="text-align: right;">${custoUnitario}</td>
             <td style="text-align: right;">${formatarMoeda(item.preco_unitario)}</td>
@@ -866,7 +867,7 @@ async function renderizarVendas(vendas) {
             contasReceberHTML = '<td><span class="cr-badge cr-criado"><i class="fas fa-check"></i> Criado</span></td>';
         } else if (temPermissaoFinanceiro) {
             // Só mostra botão se tiver permissão de financeiro
-            contasReceberHTML = `<td><div class="cr-status"><span class="cr-badge cr-nao-criado"><i class="fas fa-times"></i> Não criado</span><button class="btn-criar-cr" data-venda-id="${venda.id}" data-venda-codigo="${venda.codigo}"><i class="fas fa-plus"></i> Criar CR</button></div></td>`;
+            contasReceberHTML = `<td><div class="cr-status"><span class="cr-badge cr-nao-criado"><i class="fas fa-times"></i> Não criado</span><button class="btn-criar-cr" data-venda-id="${venda.id}" data-venda-codigo="${escapeHtml(venda.codigo)}"><i class="fas fa-plus"></i> Criar CR</button></div></td>`;
         }
 
         // Verifica se existe contas a pagar para esta venda usando documento_referencia (código do pedido) - apenas se houver vendedor
@@ -877,7 +878,7 @@ async function renderizarVendas(vendas) {
                 contasPagarHTML = '<td><span class="cp-badge cp-criado"><i class="fas fa-check"></i> Criado</span></td>';
             } else if (temPermissaoFinanceiro) {
                 // Só mostra botão se tiver permissão de financeiro
-                contasPagarHTML = `<td><div class="cp-status"><span class="cp-badge cp-nao-criado"><i class="fas fa-times"></i> Não criado</span><button class="btn-criar-cp" data-venda-id="${venda.id}" data-venda-codigo="${venda.codigo}" data-vendedor-id="${venda.vendedor_id}"><i class="fas fa-plus"></i> Criar CP</button></div></td>`;
+                contasPagarHTML = `<td><div class="cp-status"><span class="cp-badge cp-nao-criado"><i class="fas fa-times"></i> Não criado</span><button class="btn-criar-cp" data-venda-id="${venda.id}" data-venda-codigo="${escapeHtml(venda.codigo)}" data-vendedor-id="${venda.vendedor_id}"><i class="fas fa-plus"></i> Criar CP</button></div></td>`;
             }
         } else {
             contasPagarHTML = '<td><span class="cp-badge cp-sem-vendedor"><i class="fas fa-ban"></i> Sem vendedor</span></td>';
@@ -888,7 +889,7 @@ async function renderizarVendas(vendas) {
 
         tr.innerHTML = `
             <td>${venda.id}</td>
-            <td>${venda.cliente_nome} <span title="Total de pedidos deste cliente" style="font-size: 0.85em; color: #6c757d; margin-left: 5px;">(${venda.total_pedidos_cliente || 0})</span></td>
+            <td>${escapeHtml(venda.cliente_nome)} <span title="Total de pedidos deste cliente" style="font-size: 0.85em; color: #6c757d; margin-left: 5px;">(${venda.total_pedidos_cliente || 0})</span></td>
             <td>${formatarData(venda.data_pedido)}</td>
             <td>${formatarMoeda(venda.valor_total)}</td>
             ${produtosHTML}
@@ -1230,6 +1231,8 @@ function preencherSelectProdutos(produtos) {
         option.dataset.custo = produto.preco_custo;
         option.dataset.estoque = estoque;
         option.dataset.comissao = produto.comissao || 0;
+        option.dataset.taxaTipo = produto.taxa_armazenagem_tipo || '';
+        option.dataset.taxaValor = produto.taxa_armazenagem_valor || 0;
         selectProduto.appendChild(option);
     });
 
@@ -1667,7 +1670,8 @@ async function salvarVenda() {
 
     // Calcular o custo total dos produtos
     const custoTotal = itensVenda.reduce((total, item) => {
-        return total + (item.preco_custo * item.quantidade);
+        const custoUnitario = item.preco_custo + calcularTaxaArmazenagemItem(item);
+        return total + (custoUnitario * item.quantidade);
     }, 0);
 
     // Calcular a comissão total
@@ -1700,7 +1704,8 @@ async function salvarVenda() {
             quantidade: item.quantidade,
             preco_unitario: item.preco_unitario,
             comissao_item: item.comissao_item || 0, // Adicionando comissão por item
-            desconto: 0 // Adicionando campo obrigatório do modelo ItemPedidoVendaBase
+            desconto: 0, // Adicionando campo obrigatório do modelo ItemPedidoVendaBase
+            aplicar_taxa_armazenagem: item.aplicar_taxa_armazenagem || false
         }))
     };
 
@@ -1900,6 +1905,7 @@ function abrirModalItem() {
     editingItemIndex = null;
     document.getElementById('itemForm').reset();
     document.getElementById('subtotal').value = 'R$ 0,00';
+    atualizarGrupoTaxaArmazenagemItem();
     // Ajustar título e texto do botão para modo adicionar
     const itemModalTitle = document.querySelector('#itemModal .modal-header h2');
     if (itemModalTitle) itemModalTitle.textContent = 'Adicionar Item';
@@ -1941,6 +1947,9 @@ function adicionarItemVenda() {
     const comissaoItem = comissaoUnitaria * quantidade; // Multiplicar comissão pela quantidade
     const precoCusto = parseFloat(produtoSelect.options[produtoSelect.selectedIndex].dataset.custo || 0);
     const precoOriginal = parseFloat(produtoSelect.options[produtoSelect.selectedIndex].dataset.preco || 0);
+    const taxaArmazenagemTipo = produtoSelect.options[produtoSelect.selectedIndex].dataset.taxaTipo || '';
+    const taxaArmazenagemValor = parseFloat(produtoSelect.options[produtoSelect.selectedIndex].dataset.taxaValor || 0);
+    const aplicarTaxaArmazenagem = taxaArmazenagemTipo ? (document.getElementById('aplicar_taxa_armazenagem')?.checked || false) : false;
     const subtotal = quantidade * precoUnitario;
 
     // Adicionar item à lista
@@ -1952,6 +1961,9 @@ function adicionarItemVenda() {
         comissao_item: comissaoItem,
         preco_custo: precoCusto,
         preco_original: precoOriginal,
+        taxa_armazenagem_tipo: taxaArmazenagemTipo,
+        taxa_armazenagem_valor: taxaArmazenagemValor,
+        aplicar_taxa_armazenagem: aplicarTaxaArmazenagem,
         subtotal: subtotal
     };
 
@@ -1966,12 +1978,22 @@ function adicionarItemVenda() {
     fecharModalItem();
 }
 
+// Calcula, por unidade, o valor da taxa de armazenagem de um item da venda (se marcada)
+function calcularTaxaArmazenagemItem(item) {
+    if (!item.aplicar_taxa_armazenagem || !item.taxa_armazenagem_tipo) return 0;
+    const taxaValor = item.taxa_armazenagem_valor || 0;
+    if (item.taxa_armazenagem_tipo === 'percentual') {
+        return item.preco_unitario * (taxaValor / 100);
+    }
+    return taxaValor;
+}
+
 function renderizarItensVenda() {
     const tbody = document.getElementById('itensVendaTableBody');
     tbody.innerHTML = '';
 
     if (itensVenda.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum item adicionado</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum item adicionado</td></tr>';
         return;
     }
 
@@ -1988,10 +2010,11 @@ function renderizarItensVenda() {
                 </button>
             ` : '';
         tr.innerHTML = `
-            <td>${item.produto_nome}</td>
+            <td>${escapeHtml(item.produto_nome)}</td>
             <td>${item.quantidade}</td>
             <td>${formatarMoeda(item.preco_unitario)}</td>
             <td>${formatarMoeda(item.comissao_item || 0)}</td>
+            <td>${item.aplicar_taxa_armazenagem ? formatarMoeda(calcularTaxaArmazenagemItem(item)) : '-'}</td>
             <td>${formatarMoeda(item.subtotal)}</td>
             <td class="actions">${acoesHTML}</td>
         `;
@@ -2083,6 +2106,11 @@ function editarItemVenda(index) {
     // Atualizar subtotal
     calcularSubtotal();
 
+    // Restaurar o estado do checkbox de taxa de armazenagem (grupo é exibido/ocultado conforme o produto)
+    atualizarGrupoTaxaArmazenagemItem();
+    const checkboxTaxaArmazenagem = document.getElementById('aplicar_taxa_armazenagem');
+    if (checkboxTaxaArmazenagem) checkboxTaxaArmazenagem.checked = item.aplicar_taxa_armazenagem || false;
+
     // Exibir modal
     itemModal.style.display = 'flex';
 }
@@ -2117,6 +2145,9 @@ function salvarItemModal() {
         const comissaoItem = comissaoUnitaria * quantidade; // Multiplicar comissão pela quantidade
         const precoCusto = parseFloat(produtoSelect.options[produtoSelect.selectedIndex].dataset.custo || 0);
         const precoOriginal = parseFloat(produtoSelect.options[produtoSelect.selectedIndex].dataset.preco || 0);
+        const taxaArmazenagemTipo = produtoSelect.options[produtoSelect.selectedIndex].dataset.taxaTipo || '';
+        const taxaArmazenagemValor = parseFloat(produtoSelect.options[produtoSelect.selectedIndex].dataset.taxaValor || 0);
+        const aplicarTaxaArmazenagem = taxaArmazenagemTipo ? (document.getElementById('aplicar_taxa_armazenagem')?.checked || false) : false;
         const subtotal = quantidade * precoUnitario;
 
         itensVenda[editingItemIndex] = {
@@ -2127,6 +2158,9 @@ function salvarItemModal() {
             comissao_item: comissaoItem,
             preco_custo: precoCusto,
             preco_original: precoOriginal,
+            taxa_armazenagem_tipo: taxaArmazenagemTipo,
+            taxa_armazenagem_valor: taxaArmazenagemValor,
+            aplicar_taxa_armazenagem: aplicarTaxaArmazenagem,
             subtotal
         };
 
@@ -2196,6 +2230,38 @@ function atualizarPrecoUnitario() {
         const comissaoItem = document.getElementById('comissao_item');
         if (comissaoItem) {
             comissaoItem.value = '0';
+        }
+    }
+
+    atualizarGrupoTaxaArmazenagemItem();
+}
+
+// Mostra/oculta o checkbox de taxa de armazenagem no modal de item conforme o produto selecionado,
+// e exibe uma prévia do valor que será somado ao custo se marcado.
+function atualizarGrupoTaxaArmazenagemItem() {
+    const produtoSelect = document.getElementById('produto_id');
+    const option = produtoSelect.options[produtoSelect.selectedIndex];
+    const grupo = document.getElementById('grupoTaxaArmazenagemItem');
+    const checkbox = document.getElementById('aplicar_taxa_armazenagem');
+    const preview = document.getElementById('previewTaxaArmazenagemItem');
+    if (!grupo) return;
+
+    const taxaTipo = option ? option.dataset.taxaTipo : '';
+    if (!taxaTipo) {
+        grupo.style.display = 'none';
+        if (checkbox) checkbox.checked = false;
+        return;
+    }
+
+    grupo.style.display = '';
+    const taxaValor = parseFloat(option.dataset.taxaValor || 0);
+    const precoUnitario = parseFloat(document.getElementById('preco_unitario').value) || 0;
+    if (preview) {
+        if (taxaTipo === 'percentual') {
+            const estimado = precoUnitario * (taxaValor / 100);
+            preview.textContent = `${taxaValor}% sobre o preço unitário ≈ ${formatarMoeda(estimado)} por unidade`;
+        } else {
+            preview.textContent = `${formatarMoeda(taxaValor)} por unidade`;
         }
     }
 }

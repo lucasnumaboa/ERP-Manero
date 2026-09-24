@@ -212,7 +212,7 @@ function renderizarLinhaData(item) {
     return `
         <tr>
             <td>${dataFormatada}</td>
-            <td>${item.descricao}</td>
+            <td>${escapeHtml(item.descricao)}</td>
             <td><span class="badge ${badgeClass}">${badgeText}</span></td>
             ${acoes}
         </tr>

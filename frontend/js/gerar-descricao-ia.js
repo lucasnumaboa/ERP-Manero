@@ -456,8 +456,8 @@ function renderizarTabelaDescBulk(produtos) {
                     style="cursor:pointer;width:16px;height:16px;" checked>
             </td>
             <td>${produto.codigo || produto.id}</td>
-            <td>${produto.nome}</td>
-            <td>${produto.categoria_nome || '-'}</td>
+            <td>${escapeHtml(produto.nome)}</td>
+            <td>${escapeHtml(produto.categoria_nome || '-')}</td>
             <td style="text-align:center;">
                 <span style="color:${temDescricao ? '#38ef7d' : '#f5576c'};">
                     <i class="fas fa-${temDescricao ? 'check' : 'times'}"></i>
@@ -677,7 +677,7 @@ function renderizarResultadosDescBulk(resultados) {
         const div = document.createElement('div');
         div.style.cssText = 'border:1px solid rgba(100,255,218,0.15);border-radius:8px;padding:15px;background:rgba(17,34,64,0.5);';
         div.innerHTML = `
-            <div style="margin-bottom:8px;font-weight:600;color:#ccd6f6;">${item.produto_nome}</div>
+            <div style="margin-bottom:8px;font-weight:600;color:#ccd6f6;">${escapeHtml(item.produto_nome)}</div>
             ${item.erro ? `<p style="color:#f5576c;font-size:13px;margin-bottom:6px;">Erro: ${item.erro}</p>` : ''}
             <textarea data-produto-id="${item.produto_id}" class="desc-bulk-resultado" rows="4"
                 style="width:100%;box-sizing:border-box;background:rgba(10,25,47,0.8);color:#a8b2d1;border:1px solid rgba(100,255,218,0.2);border-radius:6px;padding:8px;font-size:13px;resize:vertical;"

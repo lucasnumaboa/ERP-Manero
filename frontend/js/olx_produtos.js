@@ -65,7 +65,7 @@ async function carregarCategorias() {
         select.innerHTML = '<option value="">Selecione...</option>';
 
         categorias.forEach(cat => {
-            select.innerHTML += `<option value="${cat.id}">${cat.nome}</option>`;
+            select.innerHTML += `<option value="${cat.id}">${escapeHtml(cat.nome)}</option>`;
         });
     } catch (error) {
         console.error('Erro ao carregar categorias:', error);
@@ -88,7 +88,7 @@ async function carregarSubcategorias() {
 
         subcategoriaSelect.disabled = false;
         (response || []).forEach(sub => {
-            subcategoriaSelect.innerHTML += `<option value="${sub.id}">${sub.nome}</option>`;
+            subcategoriaSelect.innerHTML += `<option value="${sub.id}">${escapeHtml(sub.nome)}</option>`;
         });
     } catch (error) {
         console.error('Erro ao carregar subcategorias:', error);
@@ -117,7 +117,7 @@ async function carregarFlags() {
             container.innerHTML += `
                 <label class="flag-checkbox ${typeClass}">
                     <input type="checkbox" name="flag_${flag.id}" value="${flag.id}">
-                    ${flag.nome}
+                    ${escapeHtml(flag.nome)}
                     <span class="${badgeClass}">${badgeText}</span>
                 </label>
             `;
@@ -153,7 +153,7 @@ function renderizarTabela() {
             <td>${p.id}</td>
             <td>${p.nome_produto}</td>
             <td>R$ ${parseFloat(p.preco_maximo).toFixed(2).replace('.', ',')}</td>
-            <td>${p.categoria_nome || '-'} ${p.subcategoria_nome ? '/ ' + p.subcategoria_nome : ''}</td>
+            <td>${escapeHtml(p.categoria_nome || '-')} ${p.subcategoria_nome ? '/ ' + p.subcategoria_nome : ''}</td>
             <td><span class="product-count">${p.produtos_count || 0}</span></td>
             <td>
                 ${p.ativo

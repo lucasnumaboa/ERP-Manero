@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date, datetime
 from database import get_db_cursor
+from codigos import proximo_codigo
 from auth import get_current_user, UserInDB
 
 router = APIRouter()
@@ -187,16 +188,7 @@ async def criar_conta_receber(
     with get_db_cursor(commit=True) as cursor:
         for parcela_num in range(1, numero_parcelas + 1):
             # Gera o código da conta (formato: CR + ano + sequencial)
-            cursor.execute("SELECT YEAR(NOW()) as ano")
-            ano = cursor.fetchone()["ano"]
-            
-            cursor.execute(
-                "SELECT COUNT(*) + 1 as seq FROM contas_receber WHERE YEAR(data_emissao) = %s",
-                (ano,)
-            )
-            seq = cursor.fetchone()["seq"]
-            
-            codigo = f"CR{ano}{seq:04d}"
+            codigo = proximo_codigo(cursor, "contas_receber", "CR")
             
             # Calcula data de vencimento para esta parcela
             data_vencimento = conta.data_vencimento + timedelta(days=dias_por_parcela * (parcela_num - 1))

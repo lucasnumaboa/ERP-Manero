@@ -3,6 +3,8 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date
 from database import get_db_cursor
+from estoque_util import baixar_estoque, somar_estoque
+from codigos import proximo_codigo
 from auth import get_current_user, UserInDB
 
 router = APIRouter()
@@ -194,16 +196,7 @@ async def criar_proposta(
     # Cria a proposta e seus itens
     with get_db_cursor(commit=True) as cursor:
         # Gera o código da proposta (formato: PC + ano + sequencial)
-        cursor.execute("SELECT YEAR(NOW()) as ano")
-        ano = cursor.fetchone()["ano"]
-        
-        cursor.execute(
-            "SELECT COUNT(*) + 1 as seq FROM propostas_comerciais WHERE YEAR(data_proposta) = %s",
-            (ano,)
-        )
-        seq = cursor.fetchone()["seq"]
-        
-        codigo = f"PC{ano}{seq:04d}"
+        codigo = proximo_codigo(cursor, "propostas_comerciais", "PC")
         
         # Calcula o valor total da proposta
         valor_total = sum((item.preco_unitario - item.desconto) * item.quantidade for item in proposta.itens)
@@ -483,16 +476,7 @@ async def converter_proposta_em_pedido(
     # Converte a proposta em pedido
     with get_db_cursor(commit=True) as cursor:
         # Gera o código do pedido (formato: PV + ano + sequencial)
-        cursor.execute("SELECT YEAR(NOW()) as ano")
-        ano = cursor.fetchone()["ano"]
-        
-        cursor.execute(
-            "SELECT COUNT(*) + 1 as seq FROM pedidos_venda WHERE YEAR(data_pedido) = %s",
-            (ano,)
-        )
-        seq = cursor.fetchone()["seq"]
-        
-        codigo = f"PV{ano}{seq:04d}"
+        codigo = proximo_codigo(cursor, "pedidos_venda", "PV")
         
         # Insere o pedido
         cursor.execute(
@@ -532,10 +516,7 @@ async def converter_proposta_em_pedido(
             )
             
             # Atualiza o estoque do produto
-            cursor.execute(
-                "UPDATE produtos SET estoque_atual = estoque_atual - %s WHERE id = %s",
-                (item["quantidade"], item["produto_id"])
-            )
+            baixar_estoque(cursor, item["produto_id"], item["quantidade"])
             
             # Registra a movimentação de estoque
             cursor.execute(

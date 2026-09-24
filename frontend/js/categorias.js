@@ -118,8 +118,8 @@ function displayCategorias(categorias) {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${categoria.id}</td>
-            <td>${categoria.nome}</td>
-            <td>${categoria.descricao || '-'}</td>
+            <td>${escapeHtml(categoria.nome)}</td>
+            <td>${escapeHtml(categoria.descricao || '-')}</td>
             <td>
                 <span class="status-badge ${categoria.ativo ? 'status-active' : 'status-inactive'}">
                     ${categoria.ativo ? 'Ativo' : 'Inativo'}

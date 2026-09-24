@@ -348,14 +348,14 @@ function preencherDadosConfiguracoes(configuracoes) {
                         <span id="olx_ativo_label" class="webhook-status-text ${isAtivo ? 'ativo' : 'inativo'}">${isAtivo ? 'Ativado' : 'Desativado'}</span>
                     </div>
                 </td>
-                <td>${config.descricao || ''}</td>
+                <td>${escapeHtml(config.descricao || '')}</td>
                 <td>-</td>
             `;
         } else {
             tr.innerHTML = `
                 <td>${config.chave}</td>
                 <td>${config.valor}</td>
-                <td>${config.descricao || ''}</td>
+                <td>${escapeHtml(config.descricao || '')}</td>
                 <td>
                     <button class="btn btn-sm btn-primary editar-config" data-id="${config.chave}">Editar</button>
                 </td>
@@ -562,7 +562,7 @@ async function abrirModalEditarConfiguracao(chave) {
                             </div>
                             <div class="form-group">
                                 <label for="descricao"><i class="fas fa-info-circle"></i> Descrição</label>
-                                <textarea id="descricao" name="descricao" class="form-control" rows="3" placeholder="Digite uma descrição para a configuração (opcional)">${config.descricao || ''}</textarea>
+                                <textarea id="descricao" name="descricao" class="form-control" rows="3" placeholder="Digite uma descrição para a configuração (opcional)">${escapeHtml(config.descricao || '')}</textarea>
                             </div>
                         </form>
                     </div>
@@ -1196,8 +1196,8 @@ function preencherTabelaGrupos(grupos) {
 
         tr.innerHTML = `
             <td>${grupo.id}</td>
-            <td>${grupo.nome}</td>
-            <td>${grupo.descricao || '-'}</td>
+            <td>${escapeHtml(grupo.nome)}</td>
+            <td>${escapeHtml(grupo.descricao || '-')}</td>
             <td>${grupo.em_uso ? 'Sim' : 'Não'}</td>
             <td class="actions">
                 <button class="btn-icon btn-edit" ${isAdmin ? 'disabled' : ''} data-id="${grupo.id}" title="Editar">
@@ -1408,8 +1408,8 @@ function preencherTabelaUsuarios(usuarios) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${usuario.id || ''}</td>
-            <td>${usuario.nome || ''}</td>
-            <td>${usuario.email || ''}</td>
+            <td>${escapeHtml(usuario.nome || '')}</td>
+            <td>${escapeHtml(usuario.email || '')}</td>
             <td>${usuario.nivel_acesso || ''}</td>
             <td>
                 <button class="btn-action btn-edit" onclick="abrirModalEditarUsuario(${usuario.id})" title="Editar">

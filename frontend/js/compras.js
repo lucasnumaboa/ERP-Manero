@@ -345,7 +345,7 @@ async function displayCompras(compras) {
             <td>R$ ${formatNumber(compra.valor_total)}</td>
             ${produtosHTML}
             <td>${statusSelectHtml}</td>
-            <td>${compra.usuario_nome || '-'}</td>
+            <td>${escapeHtml(compra.usuario_nome || '-')}</td>
             <td class="actions">
                 <button class="btn-icon btn-view" data-id="${compra.id}" title="Visualizar Compra">
                     <i class="fas fa-eye"></i>
@@ -570,7 +570,7 @@ function abrirModalProdutosCompra(itens, compraId) {
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${item.produto_nome || 'Produto desconhecido'}</td>
+            <td>${escapeHtml(item.produto_nome || 'Produto desconhecido')}</td>
             <td style="text-align: center;">${item.quantidade}</td>
             <td style="text-align: right;">R$ ${formatNumber(item.preco_unitario)}</td>
             <td style="text-align: right;">R$ ${formatNumber(subtotal)}</td>
@@ -1865,8 +1865,8 @@ async function verificarEstoqueFabricacao() {
                 : '<span style="color: red;"><i class="fas fa-times-circle"></i> Insuficiente</span>';
 
             row.innerHTML = `
-                <td>${comp.codigo || '-'}</td>
-                <td>${comp.nome || '-'}</td>
+                <td>${escapeHtml(comp.codigo || '-')}</td>
+                <td>${escapeHtml(comp.nome || '-')}</td>
                 <td>${comp.quantidade_necessaria}</td>
                 <td>${comp.estoque_atual}</td>
                 <td>${statusIcon}</td>

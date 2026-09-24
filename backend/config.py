@@ -12,7 +12,13 @@ DB_NAME = os.getenv("DB_NAME", "erp_maneiro")
 DB_PORT = int(os.getenv("DB_PORT", "3306"))
 
 # Configurações de segurança
-SECRET_KEY = os.getenv("SECRET_KEY", "chave_secreta_temporaria")
+SECRET_KEY = os.getenv("SECRET_KEY")
+# A chave antiga foi publicada no GitHub; com ela qualquer um forja tokens válidos.
+if not SECRET_KEY or SECRET_KEY == "chave_secreta_temporaria" or len(SECRET_KEY) < 32:
+    raise RuntimeError(
+        "SECRET_KEY ausente ou insegura no backend/.env. "
+        "Gere uma com: python -c \"import secrets; print(secrets.token_hex(32))\""
+    )
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

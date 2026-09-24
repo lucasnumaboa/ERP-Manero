@@ -419,7 +419,7 @@ function renderizarHistorico(historico) {
     lista.innerHTML = historico.map(item => `
         <li class="history-item">
             <div>
-                <span class="version">Versão ${item.versao}</span>
+                <span class="version">Versão ${escapeHtml(item.versao)}</span>
                 <span class="date"> - ${formatarData(item.data_alteracao)}</span>
                 ${item.usuario_nome ? `<span class="date"> por ${escapeHtml(item.usuario_nome)}</span>` : ''}
             </div>
@@ -505,9 +505,3 @@ function formatarData(dataStr) {
     }
 }
 
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}

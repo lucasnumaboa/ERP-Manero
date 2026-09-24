@@ -1156,13 +1156,14 @@
                                         <th>Qtd</th>
                                         <th>Preço</th>
                                         <th>Comissão</th>
+                                        <th>Taxa Armaz.</th>
                                         <th>Subtotal</th>
                                         <th></th>
                                     </tr>
                                 </thead>
                                 <tbody id="itensVendaTableBody">
                                     <tr>
-                                        <td colspan="6" class="text-center">Nenhum item adicionado</td>
+                                        <td colspan="7" class="text-center">Nenhum item adicionado</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1264,6 +1265,16 @@
                         <div class="form-group">
                             <label>Subtotal</label>
                             <input type="text" id="subtotal" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row" id="grupoTaxaArmazenagemItem" style="display:none;">
+                        <div class="form-group">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="aplicar_taxa_armazenagem">
+                                <span class="checkmark"></span>
+                                Cobrar taxa de armazenagem deste produto?
+                            </label>
+                            <small id="previewTaxaArmazenagemItem" style="color: #666;"></small>
                         </div>
                     </div>
                 </form>

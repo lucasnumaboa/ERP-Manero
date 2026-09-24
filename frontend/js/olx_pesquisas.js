@@ -154,7 +154,7 @@ function renderizarProdutos() {
         }
             </div>
             <div class="product-body">
-                <div class="product-title" title="${p.titulo}">${p.titulo}</div>
+                <div class="product-title" title="${escapeHtml(p.titulo)}">${escapeHtml(p.titulo)}</div>
                 <div class="product-price">${p.preco ? 'R$ ' + parseFloat(p.preco).toFixed(2).replace('.', ',') : 'Preço não informado'}</div>
                 ${p.pesquisa_nome ? `<span class="product-search-tag">${p.pesquisa_nome}</span>` : ''}
                 <div class="product-actions">

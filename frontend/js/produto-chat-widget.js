@@ -140,7 +140,7 @@
                 style="padding:6px 8px; cursor:pointer; border-radius:4px; font-size:13px;"
                 onmouseover="this.style.background='rgba(255,255,255,0.08)'"
                 onmouseout="this.style.background='transparent'">
-                <strong>${p.codigo || '-'}</strong> — ${p.nome}
+                <strong>${escapeHtml(p.codigo || '-')}</strong> — ${escapeHtml(p.nome)}
             </div>
         `).join('');
 

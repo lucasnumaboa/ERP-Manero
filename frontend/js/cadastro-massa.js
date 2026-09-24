@@ -182,7 +182,7 @@ function renderizarListaProdutosMassa() {
     // Gerar opções de categorias HTML
     let categoriasOptions = '<option value="">Selecione...</option>';
     categoriasMassa.forEach(cat => {
-        categoriasOptions += `<option value="${cat.id}">${cat.nome}</option>`;
+        categoriasOptions += `<option value="${cat.id}">${escapeHtml(cat.nome)}</option>`;
     });
 
     produtosMassa.forEach((produto, idx) => {

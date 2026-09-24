@@ -260,8 +260,8 @@ function renderizarControle(lancamentos, ajusteTotal) {
                 <tr>
                     <td>${dataFmt}</td>
                     <td><span class="badge ${badgeCls}" style="font-size:11px;">${l.tipo === 'lucro' ? 'Lucro' : 'Desconto'}</span></td>
-                    <td>${l.categoria_nome || '<span style="color:#8892b0">—</span>'}</td>
-                    <td>${l.descricao}</td>
+                    <td>${escapeHtml(l.categoria_nome || '<span style="color:#8892b0">—</span>')}</td>
+                    <td>${escapeHtml(l.descricao)}</td>
                     <td style="text-align:right;font-weight:700;color:${cor};">${sinal} ${formatarMoeda(l.valor)}</td>
                 </tr>
             `;
@@ -335,7 +335,7 @@ function renderizarProdutosVendidos(produtos) {
             <tr class="categoria-row" style="background: rgba(52, 152, 219, 0.15); cursor: pointer;" onclick="toggleCategoriaVendidos(${cat.id})">
                 <td colspan="3" style="font-weight: 700; color: var(--accent-primary, #64ffda);">
                     <i id="icon-vendidos-${cat.id}" class="fas fa-chevron-right" style="margin-right: 8px; font-size: 12px;"></i>
-                    ${cat.nome} (${cat.produtos.length} produtos)
+                    ${escapeHtml(cat.nome)} (${cat.produtos.length} produtos)
                 </td>
                 <td style="text-align: right; font-weight: 600;">${formatarNumero(cat.totais.quantidade)}</td>
                 <td style="text-align: right;">-</td>
@@ -354,9 +354,9 @@ function renderizarProdutosVendidos(produtos) {
         cat.produtos.forEach(produto => {
             html += `
                 <tr class="produto-row-vendidos-${cat.id}" style="display: none; background: rgba(10, 25, 47, 0.5);">
-                    <td style="padding-left: 30px;">${produto.codigo}</td>
-                    <td style="font-style: italic;">${produto.nome}</td>
-                    <td>${produto.plataforma_nome || 'N/A'}</td>
+                    <td style="padding-left: 30px;">${escapeHtml(produto.codigo)}</td>
+                    <td style="font-style: italic;">${escapeHtml(produto.nome)}</td>
+                    <td>${escapeHtml(produto.plataforma_nome || 'N/A')}</td>
                     <td style="text-align: right;">${formatarNumero(produto.quantidade)}</td>
                     <td style="text-align: right;">${formatarMoeda(produto.preco_custo)}</td>
                     <td style="text-align: right;">${formatarMoeda(produto.preco_venda)}</td>
@@ -518,8 +518,8 @@ function renderizarProdutosComprados(produtos) {
         grupo.produtos.forEach(produto => {
             html += `
                 <tr class="produto-row-comprados-${grupo.tipo}" style="display: none; background: rgba(10, 25, 47, 0.5);">
-                    <td style="padding-left: 30px;">${produto.codigo}</td>
-                    <td style="font-style: italic;">${produto.nome}</td>
+                    <td style="padding-left: 30px;">${escapeHtml(produto.codigo)}</td>
+                    <td style="font-style: italic;">${escapeHtml(produto.nome)}</td>
                     <td>${produto.fornecedor}</td>
                     <td style="text-align: right;">${formatarNumero(produto.quantidade)}</td>
                     <td style="text-align: right;">${formatarMoeda(produto.preco_compra)}</td>
@@ -659,9 +659,9 @@ function renderizarTabelaEstoque(produtos) {
 
         return `
             <tr>
-                <td>${produto.codigo}</td>
-                <td>${produto.nome}</td>
-                <td>${produto.categoria_nome || 'N/A'}</td>
+                <td>${escapeHtml(produto.codigo)}</td>
+                <td>${escapeHtml(produto.nome)}</td>
+                <td>${escapeHtml(produto.categoria_nome || 'N/A')}</td>
                 <td style="text-align: right; font-weight: 600;">${formatarNumero(produto.estoque_atual)}</td>
                 <td style="text-align: right;">${formatarMoeda(produto.preco_custo)}</td>
                 <td style="text-align: right; color: #e74c3c;">${formatarMoeda(produto.custo_total)}</td>
@@ -1258,7 +1258,7 @@ function renderizarTabelaQuantidade(produtos, mostrarDetalhado = false) {
             const qtd = produto.quantidade_mensal;
             return `
                 <tr>
-                    <td>${produto.nome}</td>
+                    <td>${escapeHtml(produto.nome)}</td>
                     ${qtd.map((v, i) => `<td style="text-align: center; color: ${v > 0 ? 'var(--text-primary, #e6f1ff)' : 'var(--text-muted, #8892b0)'};">${formatarNumero(v)}</td>`).join('')}
                     <td style="text-align: center; font-weight: 700; color: #3498db;">${formatarNumero(produto.quantidade_total)}</td>
                 </tr>
@@ -1274,7 +1274,7 @@ function renderizarTabelaQuantidade(produtos, mostrarDetalhado = false) {
                 <tr class="categoria-row" style="background: rgba(52, 152, 219, 0.15); cursor: pointer;" onclick="toggleCategoria(${cat.id}, 'qtd')">
                     <td style="font-weight: 700; color: var(--accent-primary, #64ffda);">
                         <i id="icon-qtd-${cat.id}" class="fas fa-chevron-right" style="margin-right: 8px; font-size: 12px;"></i>
-                        ${cat.nome} (${cat.produtos.length})
+                        ${escapeHtml(cat.nome)} (${cat.produtos.length})
                     </td>
                     ${cat.totais_mensais.map(v => `<td style="text-align: center; font-weight: 600; color: ${v > 0 ? 'var(--text-primary, #e6f1ff)' : 'var(--text-muted, #8892b0)'};">${formatarNumero(v)}</td>`).join('')}
                     <td style="text-align: center; font-weight: 700; color: #3498db;">${formatarNumero(cat.total_geral)}</td>
@@ -1286,7 +1286,7 @@ function renderizarTabelaQuantidade(produtos, mostrarDetalhado = false) {
                 const qtd = produto.quantidade_mensal;
                 html += `
                     <tr class="produto-row-qtd-${cat.id}" style="display: none; background: rgba(10, 25, 47, 0.5);">
-                        <td style="padding-left: 30px; font-style: italic;">${produto.nome}</td>
+                        <td style="padding-left: 30px; font-style: italic;">${escapeHtml(produto.nome)}</td>
                         ${qtd.map((v, i) => `<td style="text-align: center; color: ${v > 0 ? 'var(--text-primary, #e6f1ff)' : 'var(--text-muted, #8892b0)'};">${formatarNumero(v)}</td>`).join('')}
                         <td style="text-align: center; color: #3498db;">${formatarNumero(produto.quantidade_total)}</td>
                     </tr>
@@ -1340,7 +1340,7 @@ function renderizarTabelaFaturamento(produtos, mostrarDetalhado = false) {
             const fat = produto.faturamento_mensal;
             return `
                 <tr>
-                    <td>${produto.nome}</td>
+                    <td>${escapeHtml(produto.nome)}</td>
                     ${fat.map((v, i) => `<td style="text-align: right; color: ${v > 0 ? '#27ae60' : 'var(--text-muted, #8892b0)'};">${v > 0 ? formatarMoeda(v) : '-'}</td>`).join('')}
                     <td style="text-align: right; font-weight: 700; color: #27ae60;">${formatarMoeda(produto.faturamento_total)}</td>
                 </tr>
@@ -1354,7 +1354,7 @@ function renderizarTabelaFaturamento(produtos, mostrarDetalhado = false) {
                 <tr class="categoria-row" style="background: rgba(39, 174, 96, 0.15); cursor: pointer;" onclick="toggleCategoria(${cat.id}, 'fat')">
                     <td style="font-weight: 700; color: var(--accent-primary, #64ffda);">
                         <i id="icon-fat-${cat.id}" class="fas fa-chevron-right" style="margin-right: 8px; font-size: 12px;"></i>
-                        ${cat.nome} (${cat.produtos.length})
+                        ${escapeHtml(cat.nome)} (${cat.produtos.length})
                     </td>
                     ${cat.totais_mensais.map(v => `<td style="text-align: right; font-weight: 600; color: ${v > 0 ? '#27ae60' : 'var(--text-muted, #8892b0)'};">${v > 0 ? formatarMoeda(v) : '-'}</td>`).join('')}
                     <td style="text-align: right; font-weight: 700; color: #27ae60;">${formatarMoeda(cat.total_geral)}</td>
@@ -1365,7 +1365,7 @@ function renderizarTabelaFaturamento(produtos, mostrarDetalhado = false) {
                 const fat = produto.faturamento_mensal;
                 html += `
                     <tr class="produto-row-fat-${cat.id}" style="display: none; background: rgba(10, 25, 47, 0.5);">
-                        <td style="padding-left: 30px; font-style: italic;">${produto.nome}</td>
+                        <td style="padding-left: 30px; font-style: italic;">${escapeHtml(produto.nome)}</td>
                         ${fat.map((v, i) => `<td style="text-align: right; color: ${v > 0 ? '#27ae60' : 'var(--text-muted, #8892b0)'};">${v > 0 ? formatarMoeda(v) : '-'}</td>`).join('')}
                         <td style="text-align: right; color: #27ae60;">${formatarMoeda(produto.faturamento_total)}</td>
                     </tr>
@@ -1418,7 +1418,7 @@ function renderizarTabelaLucro(produtos, mostrarDetalhado = false) {
             const lucro = produto.lucro_mensal;
             return `
                 <tr>
-                    <td>${produto.nome}</td>
+                    <td>${escapeHtml(produto.nome)}</td>
                     ${lucro.map((v, i) => {
                 const cor = v > 0 ? '#27ae60' : (v < 0 ? '#e74c3c' : 'var(--text-muted, #8892b0)');
                 return `<td style="text-align: right; color: ${cor};">${v !== 0 ? formatarMoeda(v) : '-'}</td>`;
@@ -1436,7 +1436,7 @@ function renderizarTabelaLucro(produtos, mostrarDetalhado = false) {
                 <tr class="categoria-row" style="background: rgba(39, 174, 96, 0.15); cursor: pointer;" onclick="toggleCategoria(${cat.id}, 'lucro')">
                     <td style="font-weight: 700; color: var(--accent-primary, #64ffda);">
                         <i id="icon-lucro-${cat.id}" class="fas fa-chevron-right" style="margin-right: 8px; font-size: 12px;"></i>
-                        ${cat.nome} (${cat.produtos.length})
+                        ${escapeHtml(cat.nome)} (${cat.produtos.length})
                     </td>
                     ${cat.totais_mensais.map(v => {
                 const cor = v >= 0 ? '#27ae60' : '#e74c3c';
@@ -1450,7 +1450,7 @@ function renderizarTabelaLucro(produtos, mostrarDetalhado = false) {
                 const lucro = produto.lucro_mensal;
                 html += `
                     <tr class="produto-row-lucro-${cat.id}" style="display: none; background: rgba(10, 25, 47, 0.5);">
-                        <td style="padding-left: 30px; font-style: italic;">${produto.nome}</td>
+                        <td style="padding-left: 30px; font-style: italic;">${escapeHtml(produto.nome)}</td>
                         ${lucro.map((v, i) => {
                     const cor = v > 0 ? '#27ae60' : (v < 0 ? '#e74c3c' : 'var(--text-muted, #8892b0)');
                     return `<td style="text-align: right; color: ${cor};">${v !== 0 ? formatarMoeda(v) : '-'}</td>`;

@@ -17,14 +17,20 @@ let apiUrl = '';
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', async () => {
+    if (!isAuthenticated()) {
+        window.location.href = 'index.html';
+        return;
+    }
     try {
         // Obtém URL da API
-        apiUrl = await getApiUrl();
+        apiUrl = await getApiBaseUrl();
 
-        // Verifica nível de acesso via dados em cache
-        const user = getUserData();
-        if (user && user.nivel_acesso === 'admin') {
-            isAdmin = true;
+        // Dados do usuário: usa o cache e, se ainda não houver, busca na API
+        const user = getUserData() || await getCurrentUser();
+        if (user) {
+            document.getElementById('userName').textContent = user.nome || 'Usuário';
+            document.getElementById('userRole').textContent = user.nivel_acesso === 'admin' ? 'Administrador' : (user.nivel_acesso || 'Usuário');
+            isAdmin = user.nivel_acesso === 'admin';
         }
 
         // Mostra aba de configurações apenas para admin
@@ -172,7 +178,7 @@ function renderPeriodosTable() {
     }
     tbody.innerHTML = regras.periodos.map(p => `
         <tr>
-            <td>${p.nome}</td>
+            <td>${escapeHtml(p.nome)}</td>
             <td>${formatDate(p.data_inicio)}</td>
             <td>${formatDate(p.data_fim)}</td>
             <td>${String(p.hora_inicio).substring(0, 5)} – ${String(p.hora_fim).substring(0, 5)}</td>
@@ -227,7 +233,7 @@ function renderConfigProdutosTable() {
     }
     tbody.innerHTML = regras.produtos_config.map(p => `
         <tr>
-            <td>${p.nome}</td>
+            <td>${escapeHtml(p.nome)}</td>
             <td><strong style="color:var(--accent-primary,#64ffda);">R$ ${parseFloat(p.valor).toFixed(2)}</strong></td>
             <td><span class="badge-status ${p.ativo ? 'badge-aberto' : 'badge-recusado'}">${p.ativo ? 'Ativo' : 'Inativo'}</span></td>
             <td>
@@ -290,9 +296,9 @@ function renderCamposTable() {
     }
     tbody.innerHTML = regras.campos.map(c => `
         <tr>
-            <td>${c.rotulo}${c.obrigatorio ? ' <span style="color:#ff6b6b;">*</span>' : ''}</td>
-            <td>${c.tipo}</td>
-            <td>${c.opcoes || '-'}</td>
+            <td>${escapeHtml(c.rotulo)}${c.obrigatorio ? ' <span style="color:#ff6b6b;">*</span>' : ''}</td>
+            <td>${escapeHtml(c.tipo)}</td>
+            <td>${escapeHtml(c.opcoes || '-')}</td>
             <td>${c.ordem}</td>
             <td>
                 <button class="btn-danger btn-sm" onclick="excluirCampo(${c.id})" title="Excluir">
@@ -315,16 +321,16 @@ function renderCamposLivresDinamicos() {
         const id = `campo_livre_${c.id}`;
         let input = '';
         if (c.tipo === 'texto') {
-            input = `<input type="text" id="${id}" class="campo-livre" placeholder="${c.rotulo}">`;
+            input = `<input type="text" id="${id}" class="campo-livre" placeholder="${escapeHtml(c.rotulo)}">`;
         } else if (c.tipo === 'numero') {
             input = `<input type="number" id="${id}" step="0.01" class="campo-livre" placeholder="0">`;
         } else if (c.tipo === 'opcoes') {
             const opts = (c.opcoes || '').split(',').map(o =>
-                `<option value="${o.trim()}">${o.trim()}</option>`).join('');
+                `<option value="${escapeHtml(o.trim())}">${escapeHtml(o.trim())}</option>`).join('');
             input = `<select id="${id}" class="campo-livre"><option value="">Selecione...</option>${opts}</select>`;
         }
         return `<div class="form-group">
-            <label>${c.rotulo}${c.obrigatorio ? ' <span style="color:#ff6b6b;">*</span>' : ''}</label>
+            <label for="${id}">${escapeHtml(c.rotulo)}${c.obrigatorio ? ' <span style="color:#ff6b6b;">*</span>' : ''}</label>
             ${input}
         </div>`;
     }).join('');
@@ -379,7 +385,7 @@ function renderDescontosTable() {
         <tr>
             <td>${d.quantidade_minima} un.</td>
             <td><strong style="color:var(--accent-primary,#64ffda);">${parseFloat(d.percentual_desconto).toFixed(2)}%</strong></td>
-            <td>${d.descricao || '-'}</td>
+            <td>${escapeHtml(d.descricao || '-')}</td>
             <td>
                 <button class="btn-danger btn-sm" onclick="excluirDesconto(${d.id})" title="Excluir">
                     <i class="fas fa-trash"></i>
@@ -417,9 +423,10 @@ async function abrirModalProdutos() {
             produtosDisponiveis = await orcFetch('/api/orcamentos/produtos-disponiveis');
         }
         renderTabelaProdutos(produtosDisponiveis);
+        renderItensConfigModal();
     } catch (e) {
         document.getElementById('tabelaProdutosBody').innerHTML =
-            `<tr><td colspan="5" class="text-center">Erro: ${e.message}</td></tr>`;
+            `<tr><td colspan="5" class="text-center">Erro: ${escapeHtml(e.message)}</td></tr>`;
     }
 }
 
@@ -450,8 +457,8 @@ function renderTabelaProdutos(lista) {
                 ? '<i class="fas fa-check-circle" style="color:var(--accent-primary,#64ffda);"></i>'
                 : '<i class="far fa-circle" style="color:var(--text-muted,#8892b0);"></i>'}
             </td>
-            <td><strong>${p.nome}</strong></td>
-            <td><span style="color:var(--text-secondary,#a8b2d1);">${p.codigo || '-'}</span></td>
+            <td><strong>${escapeHtml(p.nome)}</strong></td>
+            <td><span style="color:var(--text-secondary,#a8b2d1);">${escapeHtml(p.codigo || '-')}</span></td>
             <td><strong style="color:var(--accent-primary,#64ffda);">R$ ${parseFloat(p.preco_venda).toFixed(2)}</strong></td>
             <td>
                 <span class="badge-status ${p.estoque_atual > 0 ? 'badge-aberto' : 'badge-recusado'}">
@@ -460,6 +467,40 @@ function renderTabelaProdutos(lista) {
             </td>
         </tr>`;
     }).join('');
+}
+
+function renderItensConfigModal() {
+    const secao = document.getElementById('itensConfigSection');
+    const lista = document.getElementById('itensConfigList');
+    const itens = (regras.produtos_config || []).filter(p => p.ativo);
+    if (!secao || !lista) return;
+    if (itens.length === 0) { secao.style.display = 'none'; return; }
+    secao.style.display = 'block';
+    lista.innerHTML = itens.map(p => {
+        const selecionado = produtosSelecionados.some(s => s.produto.config_id === p.id);
+        return `<button type="button" class="item-config-chip ${selecionado ? 'selecionado' : ''}" onclick="selecionarItemConfig(${p.id})">
+            <i class="${selecionado ? 'fas fa-check-circle' : 'far fa-circle'}"></i>
+            ${escapeHtml(p.nome)} <strong>R$ ${parseFloat(p.valor).toFixed(2)}</strong>
+        </button>`;
+    }).join('');
+}
+
+function selecionarItemConfig(configId) {
+    const item = (regras.produtos_config || []).find(p => p.id === configId);
+    if (!item) return;
+    const jaSelecionado = produtosSelecionados.some(s => s.produto.config_id === configId);
+    if (jaSelecionado) {
+        produtosSelecionados = produtosSelecionados.filter(s => s.produto.config_id !== configId);
+    } else {
+        produtosSelecionados.push({
+            produto: { id: `cfg-${item.id}`, config_id: item.id, nome: item.nome, preco_venda: item.valor, estoque_atual: null },
+            quantidade: 1
+        });
+    }
+    renderItensConfigModal();
+    renderProdutosSelecionados();
+    document.getElementById('calcuoResultado').classList.remove('visible');
+    ultimoCalculo = null;
 }
 
 function selecionarProdutoModal(id) {
@@ -498,7 +539,7 @@ function renderProdutosSelecionados() {
     container.innerHTML = produtosSelecionados.map((sel, idx) => `
         <div class="produto-selecionado-item">
             <div class="nome">
-                <strong>${sel.produto.nome}</strong>
+                <strong>${escapeHtml(sel.produto.nome)}</strong>
                 <span style="color:var(--text-muted,#8892b0);font-size:12px;margin-left:8px;">
                     R$ ${parseFloat(sel.produto.preco_venda).toFixed(2)}/un.
                 </span>
@@ -506,7 +547,7 @@ function renderProdutosSelecionados() {
             <div style="display:flex;align-items:center;gap:8px;">
                 <label style="font-size:12px;color:var(--text-secondary,#a8b2d1);">Qtd:</label>
                 <input type="number" class="qtd-input" value="${sel.quantidade}" min="1"
-                       max="${sel.produto.estoque_atual}"
+                       ${sel.produto.estoque_atual != null ? `max="${sel.produto.estoque_atual}"` : ''}
                        onchange="atualizarQtdSelecionado(${idx}, this.value)"
                        oninput="atualizarQtdSelecionado(${idx}, this.value)">
             </div>
@@ -532,6 +573,7 @@ function removerSelecionado(idx) {
     // Atualiza modal se estiver aberto
     if (document.getElementById('modalProdutos').style.display === 'flex') {
         filtrarProdutosModal();
+        renderItensConfigModal();
     }
     document.getElementById('calcuoResultado').classList.remove('visible');
     ultimoCalculo = null;
@@ -622,7 +664,7 @@ function calcularOrcamento() {
     if (valorAdicionalPeriodo > 0) {
         linhasHTML += `
         <div class="calculo-linha adicional">
-            <span><i class="fas fa-calendar-alt"></i> Adicional – Período "${periodoAtivo.nome}"</span>
+            <span><i class="fas fa-calendar-alt"></i> Adicional – Período "${escapeHtml(periodoAtivo.nome)}"</span>
             <span>+ R$ ${valorAdicionalPeriodo.toFixed(2)}</span>
         </div>`;
     }
@@ -666,7 +708,8 @@ async function salvarOrcamento() {
         });
 
         const itens = produtosSelecionados.map(sel => ({
-            produto_id: sel.produto.id,
+            produto_id: sel.produto.config_id ? null : sel.produto.id,
+            config_produto_id: sel.produto.config_id || null,
             nome_produto: sel.produto.nome,
             quantidade: sel.quantidade,
             preco_unitario: parseFloat(sel.produto.preco_venda)
@@ -724,14 +767,14 @@ async function carregarHistorico() {
         }
         tbody.innerHTML = lista.map(o => `
             <tr>
-                <td><strong style="color:var(--accent-primary,#64ffda);">${o.codigo}</strong></td>
-                <td>${o.vendedor_nome || '-'}</td>
+                <td><strong style="color:var(--accent-primary,#64ffda);">${escapeHtml(o.codigo)}</strong></td>
+                <td>${escapeHtml(o.vendedor_nome || '-')}</td>
                 <td>${o.tipo_entrega === 'entrega'
                 ? `<i class="fas fa-truck"></i> Entrega (${o.km_entrega} km)`
                 : '<i class="fas fa-store"></i> Retira'}</td>
-                <td>–</td>
+                <td>${o.total_itens ? `${o.total_itens} un.` : '–'}</td>
                 <td><strong>R$ ${parseFloat(o.valor_total).toFixed(2)}</strong></td>
-                <td><span class="badge-status badge-${o.status}">${o.status}</span></td>
+                <td><span class="badge-status badge-${escapeHtml(o.status)}">${escapeHtml(o.status)}</span></td>
                 <td>${formatDateTime(o.criado_em)}</td>
                 <td>
                     <button class="btn-outline btn-sm" onclick="verDetalheOrcamento(${o.id})" title="Ver detalhe">
@@ -744,7 +787,7 @@ async function carregarHistorico() {
             </tr>
         `).join('');
     } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center">Erro: ${e.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center">Erro: ${escapeHtml(e.message)}</td></tr>`;
     }
 }
 
@@ -752,11 +795,11 @@ async function verDetalheOrcamento(id) {
     try {
         const o = await orcFetch(`/api/orcamentos/${id}`);
         document.getElementById('detalheTitle').innerHTML =
-            `<i class="fas fa-file-invoice-dollar"></i> ${o.codigo}`;
+            `<i class="fas fa-file-invoice-dollar"></i> ${escapeHtml(o.codigo)}`;
 
         const itensHtml = (o.itens || []).map(i => `
             <tr>
-                <td>${i.nome_produto}</td>
+                <td>${escapeHtml(i.nome_produto)}</td>
                 <td>${i.quantidade}</td>
                 <td>R$ ${parseFloat(i.preco_unitario).toFixed(2)}</td>
                 <td><strong>R$ ${parseFloat(i.subtotal).toFixed(2)}</strong></td>
@@ -766,9 +809,9 @@ async function verDetalheOrcamento(id) {
         document.getElementById('detalheBody').innerHTML = `
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
                 <p><strong>Tipo:</strong> ${o.tipo_entrega === 'entrega' ? `Entrega (${o.km_entrega} km)` : 'Retira'}</p>
-                <p><strong>Status:</strong> <span class="badge-status badge-${o.status}">${o.status}</span></p>
+                <p><strong>Status:</strong> <span class="badge-status badge-${escapeHtml(o.status)}">${escapeHtml(o.status)}</span></p>
                 <p><strong>Data:</strong> ${formatDateTime(o.criado_em)}</p>
-                <p><strong>Vendedor:</strong> ${o.vendedor_nome || '-'}</p>
+                <p><strong>Vendedor:</strong> ${escapeHtml(o.vendedor_nome || '-')}</p>
             </div>
             <div class="table-container" style="margin-bottom:16px;">
                 <table class="data-table">
@@ -778,18 +821,28 @@ async function verDetalheOrcamento(id) {
             </div>
             <div class="calculo-box">
                 <div class="calculo-title"><i class="fas fa-receipt"></i> Detalhamento do Cálculo</div>
-                <pre style="white-space:pre-wrap;color:var(--text-secondary,#a8b2d1);font-family:inherit;font-size:14px;line-height:1.6;">${o.calculo_detalhado || 'N/A'}</pre>
+                <pre style="white-space:pre-wrap;color:var(--text-secondary,#a8b2d1);font-family:inherit;font-size:14px;line-height:1.6;">${escapeHtml(o.calculo_detalhado || 'N/A')}</pre>
                 <div class="calculo-total">
                     <span>TOTAL</span>
                     <span>R$ ${parseFloat(o.valor_total).toFixed(2)}</span>
                 </div>
             </div>
-            ${o.observacoes ? `<p style="margin-top:12px;color:var(--text-secondary,#a8b2d1);"><strong>Obs:</strong> ${o.observacoes}</p>` : ''}
+            ${renderCamposLivresDetalhe(o.campos_livres)}
+            ${o.observacoes ? `<p style="margin-top:12px;color:var(--text-secondary,#a8b2d1);"><strong>Obs:</strong> ${escapeHtml(o.observacoes)}</p>` : ''}
         `;
         document.getElementById('modalDetalhe').style.display = 'flex';
     } catch (e) {
         alert('Erro ao carregar detalhe: ' + e.message);
     }
+}
+
+function renderCamposLivresDetalhe(camposJson) {
+    let campos = null;
+    try { campos = camposJson ? JSON.parse(camposJson) : null; } catch (e) { campos = null; }
+    if (!campos || Object.keys(campos).length === 0) return '';
+    const linhas = Object.entries(campos).map(([rotulo, valor]) =>
+        `<p><strong>${escapeHtml(rotulo)}:</strong> ${escapeHtml(valor)}</p>`).join('');
+    return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-top:12px;">${linhas}</div>`;
 }
 
 function fecharModalDetalhe() {

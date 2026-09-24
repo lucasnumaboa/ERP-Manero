@@ -85,7 +85,7 @@
         }
         tbody.innerHTML = _categorias.map(cat => `
             <tr>
-                <td>${cat.nome}</td>
+                <td>${escapeHtml(cat.nome)}</td>
                 <td>${badgeTipo(cat.tipo)}</td>
                 <td>
                     <button class="btn-del-controle" title="Excluir" data-id="${cat.id}" data-target="categoria">
@@ -103,7 +103,7 @@
         const tipoAtual = document.getElementById('cl_tipo')?.value || 'lucro';
         const filtradas = _categorias.filter(c => c.tipo === tipoAtual);
         sel.innerHTML = '<option value="">Sem categoria</option>' +
-            filtradas.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+            filtradas.map(c => `<option value="${c.id}">${escapeHtml(c.nome)}</option>`).join('');
     }
 
     async function criarCategoria() {
@@ -177,8 +177,8 @@
                 <tr data-tipo="${l.tipo}" data-valor="${l.valor}">
                     <td>${formatDate(l.data)}</td>
                     <td>${badgeTipo(l.tipo)}</td>
-                    <td>${l.categoria_nome || '<span style="color:#8892b0">—</span>'}</td>
-                    <td>${l.descricao}</td>
+                    <td>${escapeHtml(l.categoria_nome || '<span style="color:#8892b0">—</span>')}</td>
+                    <td>${escapeHtml(l.descricao)}</td>
                     <td style="text-align:right;font-weight:700;color:${valorCor};">${sinal} ${formatMoney(l.valor)}</td>
                     <td>
                         <button class="btn-del-controle" title="Excluir" data-id="${l.id}" data-target="lancamento">

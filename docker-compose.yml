@@ -35,7 +35,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-erp_password}
       DB_NAME: ${DB_NAME:-erp_maneiro}
       DB_PORT: 3306
-      SECRET_KEY: ${SECRET_KEY:-chave_secreta_docker}
+      SECRET_KEY: ${SECRET_KEY:?Defina SECRET_KEY no arquivo .env (veja .env.docker)}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:

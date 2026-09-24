@@ -129,8 +129,8 @@ function updateHomepageRecentActivities(vendasRecentes) {
         
         return `
             <tr>
-                <td>#${venda.codigo}</td>
-                <td>${venda.cliente_nome}</td>
+                <td>#${escapeHtml(venda.codigo)}</td>
+                <td>${escapeHtml(venda.cliente_nome)}</td>
                 <td title="${produtosVendidos}">${produtosDisplay}</td>
                 <td>${quantidadeTotal}</td>
                 <td>R$ ${parseFloat(venda.valor_total).toFixed(2)}</td>
@@ -236,7 +236,7 @@ async function carregarNotificacoesSoftware() {
                     </div>
                     <div class="notif-content">
                         <div class="notif-title">
-                            <i class="fas fa-bell"></i> Software Atualizado: ${sw.nome_arquivo} - Versão ${sw.versao}
+                            <i class="fas fa-bell"></i> Software Atualizado: ${escapeHtml(sw.nome_arquivo)} - Versão ${escapeHtml(sw.versao)}
                         </div>
                         <div class="notif-desc">${alteracoes}</div>
                     </div>

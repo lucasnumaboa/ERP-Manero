@@ -434,8 +434,8 @@ function updateRecentActivities(vendasRecentes) {
         const quantidadeTotal = venda.quantidade_total || 0;
         
         row.innerHTML = `
-            <td>#${venda.codigo}</td>
-            <td>${venda.cliente_nome}</td>
+            <td>#${escapeHtml(venda.codigo)}</td>
+            <td>${escapeHtml(venda.cliente_nome)}</td>
             <td title="${produtosVendidos}">${produtosVendidos.length > 50 ? produtosVendidos.substring(0, 50) + '...' : produtosVendidos}</td>
             <td>${quantidadeTotal}</td>
             <td>${formatarMoeda(custo)}</td>

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Maneiro - Orçamentos</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/permissions.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/produtos.css">
+    <link rel="stylesheet" href="css/modulos.css">
+    <link rel="stylesheet" href="css/submenu.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/theme-dark.css">
+    <link rel="stylesheet" href="css/theme-light.css">
+    <style>
+        .orc-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border-color, #233554); margin-bottom: 20px; flex-wrap: wrap; }
+        .orc-tab { display: flex; align-items: center; gap: 8px; padding: 10px 18px; background: none; border: none;
+            border-bottom: 2px solid transparent; color: var(--text-secondary, #a8b2d1); cursor: pointer; font-size: 14px; font-weight: 600; }
+        .orc-tab:hover { color: var(--text-primary, #e6f1ff); }
+        .orc-tab.active { color: var(--accent-primary, #64ffda); border-bottom-color: var(--accent-primary, #64ffda); }
+        .orc-tab-pane { display: none; }
+        .orc-tab-pane.active { display: block; }
+
+        .orc-card { background: var(--bg-card, #112240); border: 1px solid var(--border-color, #233554); border-radius: 10px;
+            padding: 20px; margin-bottom: 16px; }
+        .orc-card h3 { margin: 0 0 14px; font-size: 16px; color: var(--text-primary, #e6f1ff); display: flex; align-items: center; gap: 8px; }
+        .orc-card h3 i { color: var(--accent-primary, #64ffda); }
+        .orc-card textarea { width: 100%; box-sizing: border-box; }
+        .orc-card .dica { margin: -8px 0 14px; font-size: 13px; color: var(--text-muted, #8892b0); }
+
+        .orc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: end; }
+        .orc-grid .form-group { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+        .orc-grid label { font-size: 13px; color: var(--text-secondary, #a8b2d1); }
+
+        .tipo-entrega { display: flex; gap: 12px; flex-wrap: wrap; }
+        .tipo-entrega-opcao { flex: 1 1 160px; display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer;
+            border: 1px solid var(--border-color, #233554); border-radius: 8px; color: var(--text-secondary, #a8b2d1); }
+        .tipo-entrega-opcao input { accent-color: var(--accent-primary, #64ffda); }
+        .tipo-entrega-opcao.selected { border-color: var(--accent-primary, #64ffda); color: var(--text-primary, #e6f1ff); }
+        #kmGroup { display: none; margin-top: 12px; max-width: 240px; }
+
+        .produto-selecionado-item { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 12px; margin-top: 8px;
+            border: 1px solid var(--border-color, #233554); border-radius: 8px; }
+        .produto-selecionado-item .nome { flex: 1 1 200px; }
+        .produto-selecionado-item .preco { font-weight: 700; color: var(--accent-primary, #64ffda); min-width: 90px; text-align: right;
+            font-variant-numeric: tabular-nums; }
+        .qtd-input { width: 70px; }
+        .btn-remover-item { background: none; border: none; color: var(--danger-color, #ff6b6b); cursor: pointer; font-size: 16px; padding: 4px 8px; }
+
+        #calcuoResultado { display: none; }
+        #calcuoResultado.visible { display: block; }
+        .calculo-box { border: 1px solid var(--accent-primary, #64ffda); border-radius: 10px; padding: 16px 18px; margin-top: 16px; }
+        .calculo-title { font-weight: 700; margin-bottom: 10px; color: var(--text-primary, #e6f1ff); }
+        .calculo-linha { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; font-size: 14px;
+            color: var(--text-secondary, #a8b2d1); font-variant-numeric: tabular-nums; }
+        .calculo-linha.desconto span:last-child { color: var(--success-color, #64ffda); }
+        .calculo-linha.adicional span:last-child, .calculo-linha.entrega span:last-child { color: var(--warning-color, #ffd166); }
+        .calculo-total { display: flex; justify-content: space-between; border-top: 1px dashed var(--border-color, #233554);
+            margin-top: 8px; padding-top: 10px; font-size: 18px; font-weight: 800; color: var(--accent-primary, #64ffda);
+            font-variant-numeric: tabular-nums; }
+        .acoes-orcamento { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+
+        .badge-status { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+            background: var(--bg-tertiary, #233554); color: var(--text-secondary, #a8b2d1); }
+        .badge-status.badge-aberto { background: rgba(100, 255, 218, 0.12); color: var(--success-color, #64ffda); }
+        .badge-status.badge-recusado { background: rgba(255, 107, 107, 0.12); color: var(--danger-color, #ff6b6b); }
+        .btn-danger { background: var(--danger-color, #ff6b6b); color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+        .btn-danger.btn-sm, .btn-outline.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+        .orc-modal-content { max-width: 820px; width: 94%; max-height: 88vh; overflow-y: auto; }
+        #itensConfigSection { display: none; margin-bottom: 16px; }
+        #itensConfigList { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .item-config-chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; cursor: pointer;
+            background: none; border: 1px solid var(--border-color, #233554); color: var(--text-secondary, #a8b2d1); font-size: 13px; }
+        .item-config-chip.selecionado { border-color: var(--accent-primary, #64ffda); color: var(--text-primary, #e6f1ff); }
+        .item-config-chip.selecionado i { color: var(--accent-primary, #64ffda); }
+        .produto-ja-selecionado td { background: rgba(100, 255, 218, 0.06); }
+        .rotulo-secao { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted, #8892b0); }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Menu Lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="img/icon.png" alt="ERP Maneiro" class="logo-img">
+                <button id="toggleSidebar" class="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="userName">Carregando...</h3>
+                    <p id="userRole">Carregando...</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav"></nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <div class="content">
+                <div class="page-header">
+                    <h1>Orçamentos</h1>
+                    <p>Monte orçamentos com desconto por quantidade, adicional de período e custo de entrega por km</p>
+                </div>
+
+                <div class="orc-tabs" role="tablist">
+                    <button class="orc-tab active" id="tabNovoBtn" onclick="switchTab('novo')">
+                        <i class="fas fa-plus-circle"></i> Novo orçamento
+                    </button>
+                    <button class="orc-tab" id="tabHistoricoBtn" onclick="switchTab('historico')">
+                        <i class="fas fa-history"></i> Histórico
+                    </button>
+                    <button class="orc-tab" id="tabConfigBtn" onclick="switchTab('config')" style="display:none;">
+                        <i class="fas fa-sliders-h"></i> Configurações
+                    </button>
+                </div>
+
+                <!-- ABA: NOVO ORÇAMENTO -->
+                <section class="orc-tab-pane active" id="tabNovo">
+                    <div class="orc-card">
+                        <h3><i class="fas fa-box"></i> Produtos</h3>
+                        <button type="button" class="btn-outline" onclick="abrirModalProdutos()">
+                            <i class="fas fa-search"></i> Selecionar Produto
+                        </button>
+                        <div id="produtosSelecionadosList">
+                            <p style="color:var(--text-muted,#8892b0);margin-top:12px;font-size:14px;">
+                                <i class="fas fa-info-circle"></i> Nenhum produto selecionado. Clique em "Selecionar Produto" para adicionar.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="orc-card">
+                        <h3><i class="fas fa-truck"></i> Entrega</h3>
+                        <div class="tipo-entrega">
+                            <label class="tipo-entrega-opcao selected" id="radioRetira">
+                                <input type="radio" name="tipoEntrega" value="retira" checked onchange="onChangeTipoEntrega('retira')">
+                                <i class="fas fa-store"></i> Cliente retira
+                            </label>
+                            <label class="tipo-entrega-opcao" id="radioEntrega">
+                                <input type="radio" name="tipoEntrega" value="entrega" onchange="onChangeTipoEntrega('entrega')">
+                                <i class="fas fa-truck"></i> Entrega
+                            </label>
+                        </div>
+                        <div class="form-group" id="kmGroup">
+                            <label for="kmEntrega">Distância da entrega (km)</label>
+                            <input type="number" id="kmEntrega" min="0" step="0.1" placeholder="Ex.: 12,5">
+                        </div>
+                    </div>
+
+                    <div class="orc-card" id="camposLivresSection" style="display:none;">
+                        <h3><i class="fas fa-list-ul"></i> Informações adicionais</h3>
+                        <div class="orc-grid" id="camposLivresDinamicos"></div>
+                    </div>
+
+                    <div class="orc-card">
+                        <h3><i class="fas fa-sticky-note"></i> Observações</h3>
+                        <textarea id="orcObservacoes" rows="3" placeholder="Condições, prazo, detalhes combinados com o cliente..."></textarea>
+
+                        <div class="acoes-orcamento">
+                            <button type="button" class="btn-outline" onclick="calcularOrcamento()">
+                                <i class="fas fa-calculator"></i> Calcular
+                            </button>
+                        </div>
+
+                        <div id="calcuoResultado" class="calculo-box" aria-live="polite">
+                            <div class="calculo-title"><i class="fas fa-receipt"></i> Resumo do cálculo</div>
+                            <div id="calcuoLinhas"></div>
+                            <div class="calculo-total">
+                                <span>TOTAL</span>
+                                <span id="calcuoTotalVal">R$ 0,00</span>
+                            </div>
+                            <div class="acoes-orcamento">
+                                <button type="button" class="btn-primary" id="btnSalvarOrcamento" onclick="salvarOrcamento()">
+                                    <i class="fas fa-save"></i> Salvar Orçamento
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ABA: HISTÓRICO -->
+                <section class="orc-tab-pane" id="tabHistorico">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Vendedor</th>
+                                    <th>Entrega</th>
+                                    <th>Itens</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Data</th>
+                                    <th class="actions-column">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historicoTableBody">
+                                <tr><td colspan="8" class="text-center">Abra esta aba para carregar o histórico</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- ABA: CONFIGURAÇÕES (somente admin) -->
+                <section class="orc-tab-pane" id="tabConfig">
+                    <div class="orc-card">
+                        <h3><i class="fas fa-road"></i> Preço por km de entrega</h3>
+                        <div class="orc-grid">
+                            <div class="form-group">
+                                <label for="precoPorKm">Valor por km (R$)</label>
+                                <input type="number" id="precoPorKm" min="0" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <button type="button" class="btn-primary" onclick="salvarPrecoPorKm()"><i class="fas fa-save"></i> Salvar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="orc-card">
+                        <h3><i class="fas fa-calendar-alt"></i> Períodos com adicional</h3>
+                        <p class="dica">Valor somado ao orçamento feito dentro do período e horário (ex.: datas festivas, fim de semana).</p>
+                        <div class="orc-grid">
+                            <div class="form-group"><label for="periodoNome">Nome</label><input type="text" id="periodoNome" placeholder="Ex.: Natal"></div>
+                            <div class="form-group"><label for="periodoDataInicio">Data início</label><input type="date" id="periodoDataInicio"></div>
+                            <div class="form-group"><label for="periodoDataFim">Data fim</label><input type="date" id="periodoDataFim"></div>
+                            <div class="form-group"><label for="periodoHoraInicio">Hora início</label><input type="time" id="periodoHoraInicio" value="00:00"></div>
+                            <div class="form-group"><label for="periodoHoraFim">Hora fim</label><input type="time" id="periodoHoraFim" value="23:59"></div>
+                            <div class="form-group"><label for="periodoValor">Adicional (R$)</label><input type="number" id="periodoValor" min="0" step="0.01"></div>
+                            <div class="form-group"><button type="button" class="btn-primary" onclick="adicionarPeriodo()"><i class="fas fa-plus"></i> Adicionar</button></div>
+                        </div>
+                        <div class="table-container" style="margin-top:14px;">
+                            <table class="data-table">
+                                <thead><tr><th>Nome</th><th>Início</th><th>Fim</th><th>Horário</th><th>Adicional</th><th>Status</th><th></th></tr></thead>
+                                <tbody id="periodosTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="orc-card">
+                        <h3><i class="fas fa-palette"></i> Itens avulsos / estilos</h3>
+                        <p class="dica">Itens de preço fixo que não vêm do estoque (ex.: pintura, montagem, embalagem). Aparecem para escolher no orçamento.</p>
+                        <div class="orc-grid">
+                            <div class="form-group"><label for="cpNome">Nome</label><input type="text" id="cpNome" placeholder="Ex.: Pintura personalizada"></div>
+                            <div class="form-group"><label for="cpValor">Valor (R$)</label><input type="number" id="cpValor" min="0" step="0.01"></div>
+                            <div class="form-group"><button type="button" class="btn-primary" onclick="adicionarConfigProduto()"><i class="fas fa-plus"></i> Adicionar</button></div>
+                        </div>
+                        <div class="table-container" style="margin-top:14px;">
+                            <table class="data-table">
+                                <thead><tr><th>Nome</th><th>Valor</th><th>Status</th><th></th></tr></thead>
+                                <tbody id="configProdutosTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="orc-card">
+                        <h3><i class="fas fa-list-ul"></i> Campos livres do orçamento</h3>
+                        <p class="dica">Perguntas extras que aparecem no formulário (ex.: cor desejada, prazo, nome do cliente).</p>
+                        <div class="orc-grid">
+                            <div class="form-group"><label for="campoRotulo">Rótulo</label><input type="text" id="campoRotulo" placeholder="Ex.: Cor desejada"></div>
+                            <div class="form-group">
+                                <label for="campoTipo">Tipo</label>
+                                <select id="campoTipo" onchange="toggleOpcoesCampo()">
+                                    <option value="texto">Texto</option>
+                                    <option value="numero">Número</option>
+                                    <option value="opcoes">Lista de opções</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="campoOpcoesGroup" style="display:none;">
+                                <label for="campoOpcoes">Opções (separadas por vírgula)</label>
+                                <input type="text" id="campoOpcoes" placeholder="Azul, Vermelho, Preto">
+                            </div>
+                            <div class="form-group"><label for="campoOrdem">Ordem</label><input type="number" id="campoOrdem" value="0" min="0"></div>
+                            <div class="form-group">
+                                <label class="checkbox-container" for="campoObrigatorio">
+                                    <input type="checkbox" id="campoObrigatorio">
+                                    <span class="checkmark"></span> Obrigatório
+                                </label>
+                            </div>
+                            <div class="form-group"><button type="button" class="btn-primary" onclick="adicionarCampo()"><i class="fas fa-plus"></i> Adicionar</button></div>
+                        </div>
+                        <div class="table-container" style="margin-top:14px;">
+                            <table class="data-table">
+                                <thead><tr><th>Rótulo</th><th>Tipo</th><th>Opções</th><th>Ordem</th><th></th></tr></thead>
+                                <tbody id="camposTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="orc-card">
+                        <h3><i class="fas fa-percent"></i> Desconto por quantidade</h3>
+                        <p class="dica">Vale a maior faixa atingida pela soma das unidades do orçamento.</p>
+                        <div class="orc-grid">
+                            <div class="form-group"><label for="descontoQtd">A partir de (un.)</label><input type="number" id="descontoQtd" min="1"></div>
+                            <div class="form-group"><label for="descontoPct">Desconto (%)</label><input type="number" id="descontoPct" min="0" max="100" step="0.01"></div>
+                            <div class="form-group"><label for="descontoDesc">Descrição</label><input type="text" id="descontoDesc" placeholder="Opcional"></div>
+                            <div class="form-group"><button type="button" class="btn-primary" onclick="adicionarDesconto()"><i class="fas fa-plus"></i> Adicionar</button></div>
+                        </div>
+                        <div class="table-container" style="margin-top:14px;">
+                            <table class="data-table">
+                                <thead><tr><th>Quantidade mínima</th><th>Desconto</th><th>Descrição</th><th></th></tr></thead>
+                                <tbody id="descontosTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal: seleção de produtos -->
+    <div class="modal" id="modalProdutos">
+        <div class="modal-content orc-modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-box"></i> Selecionar produtos</h2>
+                <button class="close-modal" type="button" onclick="fecharModalProdutos()" aria-label="Fechar">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="itensConfigSection">
+                    <span class="rotulo-secao">Itens avulsos / estilos</span>
+                    <div id="itensConfigList"></div>
+                </div>
+                <span class="rotulo-secao">Produtos em estoque</span>
+                <div class="form-group" style="margin:8px 0 12px;">
+                    <input type="text" id="searchProdutosInput" placeholder="Buscar por nome ou código..." oninput="filtrarProdutosModal()">
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead><tr><th></th><th>Produto</th><th>Código</th><th>Preço</th><th>Estoque</th></tr></thead>
+                        <tbody id="tabelaProdutosBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" type="button" onclick="fecharModalProdutos()">Concluir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: detalhe do orçamento -->
+    <div class="modal" id="modalDetalhe">
+        <div class="modal-content orc-modal-content">
+            <div class="modal-header">
+                <h2 id="detalheTitle">Orçamento</h2>
+                <button class="close-modal" type="button" onclick="fecharModalDetalhe()" aria-label="Fechar">&times;</button>
+            </div>
+            <div class="modal-body" id="detalheBody"></div>
+            <div class="modal-footer">
+                <button class="btn-outline" type="button" onclick="fecharModalDetalhe()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/sidebar-template.js"></script>
+    <script src="js/permissions.js"></script>
+    <script src="js/setupModals.js"></script>
+    <script src="js/orcamentos.js"></script>
+    <script src="js/internal-animation.js"></script>
+    <script src="js/theme-switcher.js"></script>
+</body>
+
+</html>

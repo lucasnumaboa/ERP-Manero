@@ -3,6 +3,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import List, Optional
 from database import get_db_cursor
+from estoque_util import baixar_estoque, somar_estoque
 from auth import get_current_user
 from models import UserInDB
 from datetime import datetime
@@ -14,6 +15,41 @@ import shutil
 router = APIRouter()
 
 THUMBNAIL_MAX_SIZE = (300, 300)
+
+def _normalizar_taxa_armazenagem(tipo: Optional[str], valor: Optional[float]):
+    """
+    Normaliza tipo/valor da taxa de armazenagem do produto.
+    tipo vazio/None => sem taxa (None, None). Caso contrário deve ser 'valor' ou 'percentual'.
+    """
+    if not tipo:
+        return None, None
+    if tipo not in ("valor", "percentual"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tipo de taxa de armazenagem deve ser 'valor' ou 'percentual'"
+        )
+    valor = valor or 0
+    if valor < 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Valor da taxa de armazenagem não pode ser negativo"
+        )
+    if tipo == "percentual" and valor > 100:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Percentual da taxa de armazenagem não pode ser maior que 100"
+        )
+    return tipo, valor
+
+def _exigir_dono_para_trocar_deposito(produto_existente: dict, novo_deposito_id: Optional[int], current_user):
+    """Só o dono do produto (ou admin) muda o depósito; reenviar o mesmo depósito é permitido."""
+    if novo_deposito_id is None or novo_deposito_id == produto_existente.get("deposito_id"):
+        return
+    if current_user.nivel_acesso != "admin" and produto_existente.get("usuario_id") != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Apenas o dono do produto pode alterar o depósito"
+        )
 
 def _obter_deposito_padrao_id(cursor) -> Optional[int]:
     """Retorna o id do depósito marcado como padrão, se existir."""
@@ -113,6 +149,8 @@ class ProdutoUpdate(BaseModel):
     ativo: Optional[bool] = None
     deposito_id: Optional[int] = None
     instrucoes_duvidas: Optional[str] = None
+    taxa_armazenagem_tipo: Optional[str] = None
+    taxa_armazenagem_valor: Optional[float] = None
 
 class Produto(ProdutoBase):
     id: int
@@ -128,6 +166,8 @@ class Produto(ProdutoBase):
     deposito_id: Optional[int] = None
     deposito_nome: Optional[str] = None
     instrucoes_duvidas: Optional[str] = None
+    taxa_armazenagem_tipo: Optional[str] = None
+    taxa_armazenagem_valor: Optional[float] = None
 
 # Rotas
 @router.get("/", response_model=List[Produto])
@@ -419,6 +459,8 @@ async def criar_produto(
     post_facebook: bool = Form(False),
     ativo: bool = Form(True),
     deposito_id: Optional[int] = Form(None),
+    taxa_armazenagem_tipo: Optional[str] = Form(None),
+    taxa_armazenagem_valor: Optional[float] = Form(None),
     imagens: List[UploadFile] = File(None),
     video: UploadFile = File(None),
     current_user: UserInDB = Depends(get_current_user)
@@ -426,6 +468,9 @@ async def criar_produto(
     """
     Cria um novo produto no sistema com upload de imagens e vídeo.
     """
+    taxa_armazenagem_tipo, taxa_armazenagem_valor = _normalizar_taxa_armazenagem(
+        taxa_armazenagem_tipo, taxa_armazenagem_valor
+    )
     # Verifica se o código já está em uso
     with get_db_cursor() as cursor:
         cursor.execute(
@@ -535,15 +580,15 @@ async def criar_produto(
                 codigo, nome, descricao, instrucoes_duvidas, preco_custo, preco_venda,
                 estoque_atual, estoque_minimo, categoria_id, tipo_produto,
                 comissao, caminho_imagem, caminho_video, faturavel, post_olx, post_facebook, ativo,
-                usuario_id, deposito_id
+                usuario_id, deposito_id, taxa_armazenagem_tipo, taxa_armazenagem_valor
             )
-            VALUES (%s, %s, %s, %s, %s, %s, 0, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, 0, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 codigo, nome, descricao, instrucoes_duvidas, preco_custo, preco_venda,
                 estoque_minimo, categoria_id, tipo_produto, comissao,
                 caminho_imagem, caminho_video, faturavel, post_olx, post_facebook, ativo,
-                current_user.id, deposito_id
+                current_user.id, deposito_id, taxa_armazenagem_tipo, taxa_armazenagem_valor
             )
         )
 
@@ -572,15 +617,17 @@ async def atualizar_produto(
     # Verifica se o produto existe
     with get_db_cursor() as cursor:
         cursor.execute(
-            "SELECT id FROM produtos WHERE id = %s",
+            "SELECT id, usuario_id, deposito_id FROM produtos WHERE id = %s",
             (produto_id,)
         )
-        if not cursor.fetchone():
+        produto_existente = cursor.fetchone()
+        if not produto_existente:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Produto não encontrado"
             )
-        
+        _exigir_dono_para_trocar_deposito(produto_existente, produto.deposito_id, current_user)
+
         # Verifica se o código já está em uso por outro produto
         if produto.codigo:
             cursor.execute(
@@ -654,6 +701,12 @@ async def atualizar_produto(
         update_data["deposito_id"] = produto.deposito_id
     if produto.instrucoes_duvidas is not None:
         update_data["instrucoes_duvidas"] = produto.instrucoes_duvidas
+    if produto.taxa_armazenagem_tipo is not None:
+        tipo_normalizado, valor_normalizado = _normalizar_taxa_armazenagem(
+            produto.taxa_armazenagem_tipo, produto.taxa_armazenagem_valor
+        )
+        update_data["taxa_armazenagem_tipo"] = tipo_normalizado
+        update_data["taxa_armazenagem_valor"] = valor_normalizado
 
     if not update_data:
         raise HTTPException(
@@ -705,6 +758,8 @@ async def upload_imagens_produto(
     post_facebook: bool = Form(False),
     ativo: bool = Form(True),
     deposito_id: Optional[int] = Form(None),
+    taxa_armazenagem_tipo: Optional[str] = Form(None),
+    taxa_armazenagem_valor: Optional[float] = Form(None),
     imagens: List[UploadFile] = File(None),
     video: UploadFile = File(None),
     current_user: UserInDB = Depends(get_current_user)
@@ -712,10 +767,13 @@ async def upload_imagens_produto(
     """
     Atualiza um produto existente com upload de novas imagens e vídeo.
     """
+    taxa_armazenagem_tipo, taxa_armazenagem_valor = _normalizar_taxa_armazenagem(
+        taxa_armazenagem_tipo, taxa_armazenagem_valor
+    )
     # Verifica se o produto existe
     with get_db_cursor() as cursor:
         cursor.execute(
-            "SELECT id, caminho_imagem, caminho_video, deposito_id FROM produtos WHERE id = %s",
+            "SELECT id, caminho_imagem, caminho_video, deposito_id, usuario_id FROM produtos WHERE id = %s",
             (produto_id,)
         )
         produto_existente = cursor.fetchone()
@@ -725,6 +783,7 @@ async def upload_imagens_produto(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Produto não encontrado"
             )
+        _exigir_dono_para_trocar_deposito(produto_existente, deposito_id, current_user)
 
         # Verifica se o código já está em uso por outro produto
         cursor.execute(
@@ -847,14 +906,16 @@ async def upload_imagens_produto(
                 post_olx = %s,
                 post_facebook = %s,
                 ativo = %s,
-                deposito_id = %s
+                deposito_id = %s,
+                taxa_armazenagem_tipo = %s,
+                taxa_armazenagem_valor = %s
             WHERE id = %s
             """,
             (
                 codigo, nome, descricao, instrucoes_duvidas, preco_custo, preco_venda,
                 estoque_minimo, categoria_id, tipo_produto, comissao,
                 caminho_imagem, caminho_video, faturavel, post_olx, post_facebook, ativo,
-                deposito_id, produto_id
+                deposito_id, taxa_armazenagem_tipo, taxa_armazenagem_valor, produto_id
             )
         )
 
@@ -1358,14 +1419,7 @@ async def fabricar_produto(
             )
             
             # Atualiza estoque do componente
-            cursor.execute(
-                """
-                UPDATE produtos 
-                SET estoque_atual = estoque_atual - %s 
-                WHERE id = %s
-                """,
-                (quantidade_consumir, comp["consumo_produto_id"])
-            )
+            baixar_estoque(cursor, comp["consumo_produto_id"], quantidade_consumir)
         
         # 2. Cria movimentação de entrada para o produto fabricado com o custo calculado
         cursor.execute(

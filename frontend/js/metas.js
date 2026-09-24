@@ -188,7 +188,7 @@ function renderizarVendedores() {
         
         return `
             <tr data-vendedor-id="${v.vendedor_id}">
-                <td><strong>${v.vendedor_nome}</strong></td>
+                <td><strong>${escapeHtml(v.vendedor_nome)}</strong></td>
                 <td>${formatarMoeda(v.meta_valor)}</td>
                 <td>${formatarMoeda(v.valor_vendido)}</td>
                 <td class="progress-cell">
@@ -357,7 +357,7 @@ function renderizarFaixas() {
         return `
             <tr>
                 <td>${f.ordem}</td>
-                <td><strong>${f.nome}</strong></td>
+                <td><strong>${escapeHtml(f.nome)}</strong></td>
                 <td>${tipoLabel[f.tipo_meta] || f.tipo_meta}</td>
                 <td>${f.tipo_meta === 'valor' ? formatarMoeda(f.valor_minimo) : f.valor_minimo}</td>
                 <td>${f.valor_maximo ? (f.tipo_meta === 'valor' ? formatarMoeda(f.valor_maximo) : f.valor_maximo) : 'Sem limite'}</td>
@@ -522,7 +522,7 @@ function renderizarPremiacoes() {
         
         return `
             <tr>
-                <td><strong>${p.vendedor_nome}</strong></td>
+                <td><strong>${escapeHtml(p.vendedor_nome)}</strong></td>
                 <td>${meses[p.mes]}/${p.ano}</td>
                 <td>${p.faixa_nome}</td>
                 <td>${formatarMoeda(p.valor_vendido)}</td>

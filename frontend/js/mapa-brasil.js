@@ -294,8 +294,8 @@ function renderizarPainelEstado(dados) {
         produtosHTML = dados.produtos.map((prod, index) => `
             <tr>
                 <td>${index + 1}</td>
-                <td>${prod.codigo}</td>
-                <td>${prod.nome}</td>
+                <td>${escapeHtml(prod.codigo)}</td>
+                <td>${escapeHtml(prod.nome)}</td>
                 <td class="text-right">${prod.quantidade}</td>
                 <td class="text-right">${formatarMoedaRegiao(prod.valor_total)}</td>
             </tr>

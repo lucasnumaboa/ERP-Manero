@@ -132,6 +132,7 @@ tables = {
         codigo VARCHAR(50) NOT NULL UNIQUE,
         nome VARCHAR(100) NOT NULL,
         descricao TEXT,
+        instrucoes_duvidas TEXT,
         preco_custo DECIMAL(10, 2) NOT NULL,
         preco_venda DECIMAL(10, 2) NOT NULL,
         estoque_atual INT DEFAULT 0,
@@ -147,6 +148,8 @@ tables = {
         ativo BOOLEAN DEFAULT TRUE,
         usuario_id INT,
         deposito_id INT,
+        taxa_armazenagem_tipo ENUM('valor', 'percentual'),
+        taxa_armazenagem_valor DECIMAL(10, 2),
         data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (categoria_id) REFERENCES categorias_produtos(id),
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
@@ -212,7 +215,7 @@ tables = {
     "pedidos_compra": """
         CREATE TABLE IF NOT EXISTS pedidos_compra (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            codigo VARCHAR(20) NOT NULL,
+            codigo VARCHAR(20) NOT NULL UNIQUE,
             fornecedor_id INT NOT NULL,
             data_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             data_previsao DATE,
@@ -286,7 +289,7 @@ tables = {
     "pedidos_venda": """
         CREATE TABLE IF NOT EXISTS pedidos_venda (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            codigo VARCHAR(20) NOT NULL,
+            codigo VARCHAR(20) NOT NULL UNIQUE,
             cliente_id INT NOT NULL,
             vendedor_id INT,
             condicao_pagamento_id INT,
@@ -346,7 +349,7 @@ tables = {
     "propostas_comerciais": """
         CREATE TABLE IF NOT EXISTS propostas_comerciais (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            codigo VARCHAR(20) NOT NULL,
+            codigo VARCHAR(20) NOT NULL UNIQUE,
             cliente_id INT NOT NULL,
             vendedor_id INT,
             data_proposta TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -398,7 +401,7 @@ tables = {
     "contas_pagar": """
         CREATE TABLE IF NOT EXISTS contas_pagar (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            codigo VARCHAR(20),
+            codigo VARCHAR(20) UNIQUE,
             descricao VARCHAR(255) NOT NULL,
             fornecedor_id INT,
             vendedor_id INT,
@@ -425,7 +428,7 @@ tables = {
     "contas_receber": """
         CREATE TABLE IF NOT EXISTS contas_receber (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            codigo VARCHAR(20),
+            codigo VARCHAR(20) UNIQUE,
             descricao VARCHAR(255) NOT NULL,
             cliente_id INT,
             valor DECIMAL(10, 2) NOT NULL,
@@ -859,7 +862,108 @@ tables = {
             data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
         )
-    """
+    """,
+
+    # Módulo de Orçamentos
+    "orcamento_config": """
+        CREATE TABLE IF NOT EXISTS orcamento_config (
+            id INT PRIMARY KEY,
+            preco_por_km DECIMAL(10, 2) NOT NULL DEFAULT 0
+        )
+    """,
+
+    "orcamento_config_periodos": """
+        CREATE TABLE IF NOT EXISTS orcamento_config_periodos (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nome VARCHAR(100) NOT NULL,
+            data_inicio DATE NOT NULL,
+            data_fim DATE NOT NULL,
+            hora_inicio VARCHAR(8) NOT NULL DEFAULT '00:00:00',
+            hora_fim VARCHAR(8) NOT NULL DEFAULT '23:59:59',
+            valor_adicional DECIMAL(10, 2) NOT NULL DEFAULT 0,
+            ativo BOOLEAN DEFAULT TRUE,
+            usuario_id INT,
+            criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """,
+
+    "orcamento_config_produtos": """
+        CREATE TABLE IF NOT EXISTS orcamento_config_produtos (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nome VARCHAR(100) NOT NULL,
+            valor DECIMAL(10, 2) NOT NULL DEFAULT 0,
+            ativo BOOLEAN DEFAULT TRUE,
+            usuario_id INT,
+            criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """,
+
+    "orcamento_config_campos": """
+        CREATE TABLE IF NOT EXISTS orcamento_config_campos (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            rotulo VARCHAR(100) NOT NULL,
+            tipo ENUM('texto', 'numero', 'opcoes') NOT NULL DEFAULT 'texto',
+            opcoes TEXT,
+            obrigatorio BOOLEAN DEFAULT FALSE,
+            ordem INT DEFAULT 0,
+            ativo BOOLEAN DEFAULT TRUE,
+            usuario_id INT,
+            criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """,
+
+    "orcamento_config_descontos": """
+        CREATE TABLE IF NOT EXISTS orcamento_config_descontos (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            quantidade_minima INT NOT NULL,
+            percentual_desconto DECIMAL(5, 2) NOT NULL,
+            descricao VARCHAR(255),
+            ativo BOOLEAN DEFAULT TRUE,
+            usuario_id INT,
+            criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """,
+
+    "orcamentos": """
+        CREATE TABLE IF NOT EXISTS orcamentos (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            codigo VARCHAR(20) NOT NULL UNIQUE,
+            vendedor_id INT NULL,
+            tipo_entrega ENUM('retira', 'entrega') NOT NULL DEFAULT 'retira',
+            km_entrega DECIMAL(10, 2) DEFAULT 0,
+            periodo_id INT NULL,
+            valor_adicional_periodo DECIMAL(10, 2) DEFAULT 0,
+            preco_por_km_usado DECIMAL(10, 2) DEFAULT 0,
+            valor_km DECIMAL(10, 2) DEFAULT 0,
+            valor_produtos DECIMAL(12, 2) DEFAULT 0,
+            desconto_percentual DECIMAL(5, 2) DEFAULT 0,
+            desconto_aplicado DECIMAL(12, 2) DEFAULT 0,
+            campos_livres TEXT,
+            valor_total DECIMAL(12, 2) NOT NULL DEFAULT 0,
+            calculo_detalhado TEXT,
+            observacoes TEXT,
+            status VARCHAR(20) NOT NULL DEFAULT 'aberto',
+            usuario_id INT,
+            criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_orcamentos_vendedor (vendedor_id),
+            INDEX idx_orcamentos_usuario (usuario_id)
+        )
+    """,
+
+    "orcamento_itens": """
+        CREATE TABLE IF NOT EXISTS orcamento_itens (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            orcamento_id INT NOT NULL,
+            produto_id INT NULL,
+            config_produto_id INT NULL,
+            nome_produto VARCHAR(150) NOT NULL,
+            quantidade INT NOT NULL DEFAULT 1,
+            preco_unitario DECIMAL(10, 2) NOT NULL,
+            subtotal DECIMAL(12, 2) NOT NULL,
+            FOREIGN KEY (orcamento_id) REFERENCES orcamentos(id) ON DELETE CASCADE
+        )
+    """,
+
 }
 
 # Cria todas as tabelas
@@ -942,7 +1046,7 @@ try:
         ('api_port', '8000', 'Porta da API'),
         ('environment', 'production', 'Ambiente de execução da aplicação'),
         ('allowed_origins', 'https://erpmaneiro.com,https://www.erpmaneiro.com', 'Origens permitidas para CORS em produção'),
-        ('apikey_openrouter', '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', 'Chave de API do OpenRouter'),
+        ('apikey_openrouter', '', 'Chave de API do OpenRouter (preencha em Configurações)'),
         ('model_openrouter', 'openai/gpt-oss-20b:free', 'Modelo de IA do OpenRouter para gerar relatórios'),
         ('descricao_produto_dados_fixos', '- 30 dias de garantia\n- Entrego em Salto SP\n- Somente venda', 'Dados fixos obrigatórios incluídos nas descrições geradas por IA')
     ]

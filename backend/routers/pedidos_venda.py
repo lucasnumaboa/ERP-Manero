@@ -3,9 +3,25 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date, datetime, timedelta
 from database import get_db_cursor
+from estoque_util import baixar_estoque, somar_estoque
+from codigos import proximo_codigo
 from auth import get_current_user, UserInDB
 
 router = APIRouter()
+
+def _calcular_custo_item(preco_custo, preco_unitario: float, aplicar_taxa_armazenagem: bool, taxa_tipo, taxa_valor) -> float:
+    """
+    Calcula o custo do item de venda: custo do produto + taxa de armazenagem (se marcada e o produto tiver taxa cadastrada).
+    Taxa percentual incide sobre o preço unitário praticado na venda; taxa em valor fixo é por unidade.
+    """
+    custo = float(preco_custo or 0)
+    if aplicar_taxa_armazenagem and taxa_tipo:
+        taxa_valor = float(taxa_valor or 0)
+        if taxa_tipo == "percentual":
+            custo += preco_unitario * (taxa_valor / 100)
+        else:
+            custo += taxa_valor
+    return custo
 
 # Modelos Pydantic
 class ItemPedidoVendaBase(BaseModel):
@@ -14,6 +30,7 @@ class ItemPedidoVendaBase(BaseModel):
     preco_unitario: float
     desconto: float = 0
     comissao_item: float = 0
+    aplicar_taxa_armazenagem: bool = False
 
 class ItemPedidoVendaCreate(ItemPedidoVendaBase):
     pass
@@ -204,7 +221,9 @@ async def criar_pedido_venda(
         produto_ids = [item.produto_id for item in pedido.itens]
         placeholders = ", ".join(["%s"] * len(produto_ids))
         cursor.execute(
-            f"SELECT id, nome, preco_venda, estoque_atual FROM produtos WHERE id IN ({placeholders})",
+            f"""SELECT id, nome, preco_venda, estoque_atual, preco_custo,
+                       taxa_armazenagem_tipo, taxa_armazenagem_valor
+                FROM produtos WHERE id IN ({placeholders})""",
             produto_ids
         )
         produtos = {produto["id"]: produto for produto in cursor.fetchall()}
@@ -239,23 +258,24 @@ async def criar_pedido_venda(
     # Cria o pedido e seus itens
     with get_db_cursor(commit=True) as cursor:
         # Gera o código do pedido (formato: PV + ano + sequencial)
-        cursor.execute("SELECT YEAR(NOW()) as ano")
-        ano = cursor.fetchone()["ano"]
-        
-        cursor.execute(
-            "SELECT COUNT(*) + 1 as seq FROM pedidos_venda WHERE YEAR(data_pedido) = %s",
-            (ano,)
-        )
-        seq = cursor.fetchone()["seq"]
-        
-        codigo = f"PV{ano}{seq:04d}"
+        codigo = proximo_codigo(cursor, "pedidos_venda", "PV")
         
         # Calcula o valor dos produtos
         valor_produtos = sum((item.preco_unitario - item.desconto) * item.quantidade for item in pedido.itens)
-        
+
         # Calcula o valor total do pedido
         valor_total = valor_produtos + pedido.valor_frete - pedido.valor_desconto
-        
+
+        # Calcula o custo dos produtos (incluindo taxa de armazenagem quando marcada no item),
+        # de forma autoritativa a partir dos dados atuais do produto, para alimentar o lucro nos relatórios/dashboard.
+        custo_produto = sum(
+            _calcular_custo_item(
+                produtos[item.produto_id]["preco_custo"], item.preco_unitario, item.aplicar_taxa_armazenagem,
+                produtos[item.produto_id]["taxa_armazenagem_tipo"], produtos[item.produto_id]["taxa_armazenagem_valor"]
+            ) * item.quantidade
+            for item in pedido.itens
+        )
+
         # Tratar vendedor_id=0 como None para evitar erro de foreign key
         if pedido.vendedor_id == 0:
             pedido.vendedor_id = None
@@ -273,7 +293,7 @@ async def criar_pedido_venda(
             (
                 codigo, cliente["id"], pedido.vendedor_id, pedido.condicao_pagamento_id, pedido.plataforma_id, pedido.data_entrega,
                 valor_produtos, pedido.valor_frete, pedido.valor_desconto, valor_total,
-                pedido.custo_produto, pedido.forma_pagamento, pedido.observacoes, 
+                custo_produto, pedido.forma_pagamento, pedido.observacoes,
                 pedido.comissao_total, current_user.id
             )
         )
@@ -285,15 +305,14 @@ async def criar_pedido_venda(
         # Insere os itens do pedido
         for item in pedido.itens:
             subtotal = (item.preco_unitario - item.desconto) * item.quantidade
-            
-            # Busca o custo atual do produto para armazenar no histórico
-            cursor.execute(
-                "SELECT preco_custo FROM produtos WHERE id = %s",
-                (item.produto_id,)
+
+            # Custo do item no momento da venda (produto + taxa de armazenagem, se marcada), para histórico
+            produto_item = produtos[item.produto_id]
+            custo_item = _calcular_custo_item(
+                produto_item["preco_custo"], item.preco_unitario, item.aplicar_taxa_armazenagem,
+                produto_item["taxa_armazenagem_tipo"], produto_item["taxa_armazenagem_valor"]
             )
-            produto_custo = cursor.fetchone()
-            custo_item = float(produto_custo["preco_custo"]) if produto_custo else 0
-            
+
             cursor.execute(
                 """
                 INSERT INTO itens_pedido_venda (
@@ -309,10 +328,7 @@ async def criar_pedido_venda(
             )
             
             # Atualiza o estoque do produto
-            cursor.execute(
-                "UPDATE produtos SET estoque_atual = estoque_atual - %s WHERE id = %s",
-                (item.quantidade, item.produto_id)
-            )
+            baixar_estoque(cursor, item.produto_id, item.quantidade)
             
             # Registra a movimentação de estoque
             cursor.execute(
@@ -366,16 +382,7 @@ async def criar_pedido_venda(
         # Cria uma conta a receber para cada parcela
         for parcela_num in range(1, numero_parcelas + 1):
             # Gera o código da conta (formato: CR + ano + sequencial)
-            cursor.execute("SELECT YEAR(NOW()) as ano")
-            ano_cr = cursor.fetchone()["ano"]
-            
-            cursor.execute(
-                "SELECT COUNT(*) + 1 as seq FROM contas_receber WHERE YEAR(data_emissao) = %s",
-                (ano_cr,)
-            )
-            seq_cr = cursor.fetchone()["seq"]
-            
-            codigo_cr = f"CR{ano_cr}{seq_cr:04d}"
+            codigo_cr = proximo_codigo(cursor, "contas_receber", "CR")
             
             # Calcula data de vencimento para esta parcela
             data_vencimento_cr = date.today() + timedelta(days=dias_por_parcela * parcela_num)
@@ -404,16 +411,7 @@ async def criar_pedido_venda(
         # Se houver vendedor, cria automaticamente uma conta a pagar para o vendedor
         if pedido.vendedor_id:
             # Gera o código da conta (formato: CP + ano + sequencial)
-            cursor.execute("SELECT YEAR(NOW()) as ano")
-            ano_cp = cursor.fetchone()["ano"]
-            
-            cursor.execute(
-                "SELECT COUNT(*) + 1 as seq FROM contas_pagar WHERE YEAR(data_emissao) = %s",
-                (ano_cp,)
-            )
-            seq_cp = cursor.fetchone()["seq"]
-            
-            codigo_cp = f"CP{ano_cp}{seq_cp:04d}"
+            codigo_cp = proximo_codigo(cursor, "contas_pagar", "CP")
             
             # Usa a data da última parcela como data de vencimento do contas a pagar
             data_vencimento_cp = data_ultima_parcela
@@ -669,7 +667,8 @@ async def atualizar_pedido_venda(
                     
                     # Verifica se há estoque suficiente
                     cursor.execute(
-                        "SELECT nome, estoque_atual FROM produtos WHERE id = %s",
+                        """SELECT nome, estoque_atual, preco_custo, taxa_armazenagem_tipo, taxa_armazenagem_valor
+                           FROM produtos WHERE id = %s""",
                         (produto_id,)
                     )
                     produto = cursor.fetchone()
@@ -687,10 +686,7 @@ async def atualizar_pedido_venda(
                         )
                     
                     # Atualiza o estoque do produto (saída)
-                    cursor.execute(
-                        "UPDATE produtos SET estoque_atual = estoque_atual - %s WHERE id = %s",
-                        (quantidade, produto_id)
-                    )
+                    baixar_estoque(cursor, produto_id, quantidade)
                     
                     # Registra a movimentação de estoque
                     cursor.execute(
@@ -705,15 +701,13 @@ async def atualizar_pedido_venda(
                     
                     # Insere o novo item
                     subtotal = (novo_item.preco_unitario - novo_item.desconto) * quantidade
-                    
-                    # Busca o custo atual do produto para armazenar no histórico
-                    cursor.execute(
-                        "SELECT preco_custo FROM produtos WHERE id = %s",
-                        (produto_id,)
+
+                    # Custo do item no momento da venda (produto + taxa de armazenagem, se marcada), para histórico
+                    custo_item = _calcular_custo_item(
+                        produto["preco_custo"], novo_item.preco_unitario, novo_item.aplicar_taxa_armazenagem,
+                        produto["taxa_armazenagem_tipo"], produto["taxa_armazenagem_valor"]
                     )
-                    produto_custo = cursor.fetchone()
-                    custo_item = float(produto_custo["preco_custo"]) if produto_custo else 0
-                    
+
                     cursor.execute(
                         """INSERT INTO itens_pedido_venda (
                             pedido_id, produto_id, quantidade, preco_unitario,
@@ -756,10 +750,7 @@ async def atualizar_pedido_venda(
                                 )
                             
                             # Atualiza o estoque do produto (saída)
-                            cursor.execute(
-                                "UPDATE produtos SET estoque_atual = estoque_atual - %s WHERE id = %s",
-                                (diferenca, produto_id)
-                            )
+                            baixar_estoque(cursor, produto_id, diferenca)
                             
                             # Registra a movimentação de estoque
                             cursor.execute(
@@ -842,7 +833,16 @@ async def atualizar_pedido_venda(
             
             update_data["valor_produtos"] = valor_produtos
             update_data["valor_total"] = valor_total
-        
+
+            # Recalcula o custo dos produtos a partir dos itens já persistidos (cada um já reflete
+            # a taxa de armazenagem quando marcada), de forma autoritativa para o lucro nos relatórios/dashboard.
+            cursor.execute(
+                "SELECT SUM(custo_item * quantidade) as total FROM itens_pedido_venda WHERE pedido_id = %s",
+                (pedido_id,)
+            )
+            resultado_custo = cursor.fetchone()
+            update_data["custo_produto"] = float(resultado_custo["total"]) if resultado_custo["total"] else 0
+
         # Se o valor do frete ou desconto for alterado (sem itens), recalcula o valor total
         elif "valor_frete" in update_data or "valor_desconto" in update_data:
             valor_frete = update_data.get("valor_frete", pedido_atual["valor_frete"])
@@ -1180,16 +1180,7 @@ async def devolver_pedido_venda(
                 print(f"[DEVOLUÇÃO] Criando título de devolução de comissão. Valor: {valor_comissao_total}")
                 
                 # Gera o código da conta (formato: CR + ano + sequencial)
-                cursor.execute("SELECT YEAR(NOW()) as ano")
-                ano_cr = cursor.fetchone()["ano"]
-                
-                cursor.execute(
-                    "SELECT COUNT(*) + 1 as seq FROM contas_receber WHERE YEAR(data_emissao) = %s",
-                    (ano_cr,)
-                )
-                seq_cr = cursor.fetchone()["seq"]
-                
-                titulo_devolucao_codigo = f"CR{ano_cr}{seq_cr:04d}"
+                titulo_devolucao_codigo = proximo_codigo(cursor, "contas_receber", "CR")
                 titulo_devolucao_valor = valor_comissao_total
                 
                 # Data de vencimento: hoje + 30 dias

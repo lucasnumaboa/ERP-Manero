@@ -191,10 +191,10 @@ function displayClientes(clientes) {
         const statusText = cliente.ativo ? 'Ativo' : 'Inativo';
 
         row.innerHTML = `
-            <td>${cliente.nome}</td>
-            <td>${cliente.cpf_cnpj || '-'}</td>
-            <td>${cliente.email || '-'}</td>
-            <td>${cliente.telefone || '-'}</td>
+            <td>${escapeHtml(cliente.nome)}</td>
+            <td>${escapeHtml(cliente.cpf_cnpj || '-')}</td>
+            <td>${escapeHtml(cliente.email || '-')}</td>
+            <td>${escapeHtml(cliente.telefone || '-')}</td>
             <td>${cliente.cidade ? cliente.cidade + '/' + cliente.estado : '-'}</td>
             <td><span class="status-badge ${statusClass}">${statusText}</span></td>
             <td class="actions">

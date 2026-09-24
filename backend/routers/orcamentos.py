@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List, Optional, Any, Dict
 from datetime import date, datetime
 from database import get_db_cursor
+from codigos import proximo_codigo
 from auth import get_current_user, UserInDB
 
 router = APIRouter()
@@ -104,7 +105,7 @@ class OrcamentoCreate(BaseModel):
 @router.get("/config")
 async def get_config(current_user: UserInDB = Depends(get_current_user)):
     """Retorna a configuração geral do módulo de orçamentos (preço/km)."""
-    with get_db_cursor() as cursor:
+    with get_db_cursor(commit=True) as cursor:
         cursor.execute("SELECT * FROM orcamento_config WHERE id = 1")
         config = cursor.fetchone()
         if not config:
@@ -438,7 +439,8 @@ async def listar_orcamentos(current_user: UserInDB = Depends(get_current_user)):
     with get_db_cursor() as cursor:
         if current_user.nivel_acesso == "admin":
             cursor.execute(
-                """SELECT o.*, v.nome as vendedor_nome
+                """SELECT o.*, v.nome as vendedor_nome,
+                          (SELECT SUM(quantidade) FROM orcamento_itens i WHERE i.orcamento_id = o.id) AS total_itens
                    FROM orcamentos o
                    LEFT JOIN vendedores v ON o.vendedor_id = v.id
                    ORDER BY o.criado_em DESC"""
@@ -451,7 +453,8 @@ async def listar_orcamentos(current_user: UserInDB = Depends(get_current_user)):
             vendedor = cursor.fetchone()
             vendedor_id = vendedor["id"] if vendedor else -1
             cursor.execute(
-                """SELECT o.*, v.nome as vendedor_nome
+                """SELECT o.*, v.nome as vendedor_nome,
+                          (SELECT SUM(quantidade) FROM orcamento_itens i WHERE i.orcamento_id = o.id) AS total_itens
                    FROM orcamentos o
                    LEFT JOIN vendedores v ON o.vendedor_id = v.id
                    WHERE o.vendedor_id = %s OR o.usuario_id = %s
@@ -576,11 +579,7 @@ async def criar_orcamento(
 
     with get_db_cursor(commit=True) as cursor:
         # Gera código único
-        cursor.execute("SELECT YEAR(NOW()) as ano")
-        ano = cursor.fetchone()["ano"]
-        cursor.execute("SELECT COUNT(*) + 1 as seq FROM orcamentos WHERE YEAR(criado_em) = %s", (ano,))
-        seq = cursor.fetchone()["seq"]
-        codigo = f"ORC{ano}{seq:04d}"
+        codigo = proximo_codigo(cursor, "orcamentos", "ORC")
 
         cursor.execute(
             """INSERT INTO orcamentos

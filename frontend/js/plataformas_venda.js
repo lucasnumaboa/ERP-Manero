@@ -145,8 +145,8 @@ async function renderizarPlataformas(plataformas) {
         
         tr.innerHTML = `
             <td>${plataforma.id}</td>
-            <td>${plataforma.nome}</td>
-            <td>${plataforma.descricao || '-'}</td>
+            <td>${escapeHtml(plataforma.nome)}</td>
+            <td>${escapeHtml(plataforma.descricao || '-')}</td>
             <td>${plataforma.url ? `<a href="${plataforma.url}" target="_blank">${plataforma.url}</a>` : '-'}</td>
             <td>${plataforma.taxa_percentual ? plataforma.taxa_percentual.toFixed(2) + '%' : '0.00%'}</td>
             <td><span class="status-badge ${statusClass}">${statusText}</span></td>

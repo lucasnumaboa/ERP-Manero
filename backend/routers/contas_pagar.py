@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date, datetime
 from database import get_db_cursor
+from codigos import proximo_codigo
 from auth import get_current_user, UserInDB
 
 router = APIRouter()
@@ -179,16 +180,7 @@ async def criar_conta_pagar(
     # Cria a conta a pagar
     with get_db_cursor(commit=True) as cursor:
         # Gera o código da conta (formato: CP + ano + sequencial)
-        cursor.execute("SELECT YEAR(NOW()) as ano")
-        ano = cursor.fetchone()["ano"]
-        
-        cursor.execute(
-            "SELECT COUNT(*) + 1 as seq FROM contas_pagar WHERE YEAR(data_emissao) = %s",
-            (ano,)
-        )
-        seq = cursor.fetchone()["seq"]
-        
-        codigo = f"CP{ano}{seq:04d}"
+        codigo = proximo_codigo(cursor, "contas_pagar", "CP")
         
         # Insere a conta a pagar
         cursor.execute(

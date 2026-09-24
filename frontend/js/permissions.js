@@ -85,6 +85,11 @@ async function checkPagePermissions() {
                 view: 'depositos_visualizar',
                 edit: 'depositos_editar'
             },
+            // Orçamento é feito pelos próprios vendedores
+            'orcamentos.html': {
+                view: 'vendas_visualizar',
+                edit: 'vendas_visualizar'
+            },
             // OLX - vinculado à permissão de produtos
             'olx_flags.html': {
                 view: 'produtos_visualizar',

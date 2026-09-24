@@ -28,16 +28,17 @@ Sistema ERP completo para pequenas e médias empresas, com cliente desktop para 
 |--------|-----------|
 | **Dashboard** | KPIs, gráficos de vendas, produtos mais vendidos |
 | **Clientes** | Cadastro PF/PJ, histórico de compras |
-| **Produtos** | Cadastro, categorias, controle de estoque, até 5 imagens + 1 vídeo, miniaturas automáticas |
+| **Produtos** | Cadastro, categorias, controle de estoque, até 5 imagens + 1 vídeo, miniaturas automáticas, taxa de armazenagem |
 | **Produtos 3D** | Catálogo de peças/modelos 3D com paginação |
 | **Filamentos 3D** | Controle de estoque de filamentos por cor/material |
 | **Depósitos** | Cadastro de locais de estoque, com depósito padrão e coluna de localização no estoque |
-| **Vendas** | Pedidos, múltiplos itens, formas de pagamento, comissões |
+| **Vendas** | Pedidos, múltiplos itens, formas de pagamento, comissões, cobrança opcional da taxa de armazenagem por item |
 | **Compras** | Pedidos para fornecedores, aprovação, recebimento |
 | **Estoque** | Movimentações, alertas de estoque mínimo, download de imagens/vídeo do produto |
 | **Financeiro** | Contas a pagar/receber, caixa, fluxo financeiro |
 | **Controle Financeiro** | Visão consolidada de entradas e saídas |
-| **Propostas / Orçamentos** | Orçamentos com validade e conversão em pedidos |
+| **Orçamentos** | Orçamentos com desconto por quantidade, adicional por período, custo de entrega por km, itens avulsos e campos livres configuráveis |
+| **Propostas** | Propostas comerciais com validade e conversão em pedidos |
 | **Postagens** | Rastreio de entregas por transportadora |
 | **Relatórios** | Vendas, estoque, financeiro (Excel/PDF) |
 | **Metas** | Definição e acompanhamento de metas de vendedores |
@@ -53,7 +54,8 @@ Sistema ERP completo para pequenas e médias empresas, com cliente desktop para 
 - JWT Tokens com expiração configurável, com contador de sessão exibido no topo do sistema
 - Senhas criptografadas com Bcrypt
 - Níveis: Admin, Vendedor, Comprador, Financeiro
-- Permissões granulares por grupo de usuário (visualizar/editar) para cada módulo, incluindo Depósitos
+- Permissões granulares por grupo de usuário (visualizar/editar) para cada módulo, aplicadas também na API (não só nas telas)
+- Regras de dono do produto (movimentar estoque, trocar depósito) validadas no servidor
 
 ---
 
@@ -68,6 +70,22 @@ Sistema ERP completo para pequenas e médias empresas, com cliente desktop para 
 - **Ditado por voz offline**: transcrição de áudio local (sem depender de serviços externos) via NVIDIA Parakeet/sherpa-onnx, usada no chat de IA e nos campos de Descrição e Instruções/Dúvidas do produto.
 - **Filtro "apenas com estoque"** na listagem de Produtos.
 - **Limpeza de sidebar**: simplificação dos scripts de menu lateral, mantendo apenas o necessário.
+- **Taxa de armazenagem**: cada produto pode ter uma taxa (valor fixo por unidade ou % sobre o preço da venda), exibida em Estoque; na venda, marcando "cobrar taxa de armazenagem" no item, o valor entra no custo e já desconta do lucro nos relatórios.
+- **Orçamentos**: nova tela em Vendas › Orçamentos para vendedores montarem orçamentos; configurações (preço/km, períodos, itens avulsos, campos, descontos) ficam com o admin.
+
+### Segurança e confiabilidade
+
+- **Permissões na API**: as permissões dos grupos passaram a ser verificadas pelo servidor em cada módulo (`backend/permissoes.py`).
+- **Chave de assinatura obrigatória**: o backend não inicia sem uma `SECRET_KEY` própria (mínimo 32 caracteres).
+- **Proteção contra XSS**: textos vindos de usuários são escapados antes de ir para a tela (`escapeHtml` em `frontend/js/auth.js`).
+- **"Lembrar e-mail"**: o login não guarda mais a senha no navegador.
+- **Estoque sem venda dupla**: a baixa só acontece se houver saldo no momento da gravação, mesmo com vendas simultâneas.
+- **Códigos sem repetição**: pedidos, compras, contas e orçamentos usam o maior número + 1 com trava, e o banco recusa código repetido.
+
+### Desempenho
+
+- **Pool de conexões MySQL**: respostas até 3,6× mais rápidas.
+- **Logo do login em WebP animado**: 1,2 MB em vez de 7 MB.
 
 ---
 
@@ -120,6 +138,8 @@ cd ERP-Maneiro
 
 ```bash
 cp .env.docker .env
+# Preencha SECRET_KEY no .env (obrigatório):
+python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
 ### 3. Inicie os containers
@@ -173,9 +193,12 @@ pip install -r requirements.txt
 ### 2. Configure o ambiente
 
 ```bash
-cp .env.example .env
-# Edite o .env com suas credenciais do MySQL
+cp .env.example backend/.env
+# Edite com suas credenciais do MySQL e gere a SECRET_KEY:
+python -c "import secrets; print(secrets.token_hex(32))"
 ```
+
+> O backend não inicia sem uma `SECRET_KEY` própria.
 
 ### 3. Inicialize o banco de dados
 
@@ -204,6 +227,18 @@ start_erp.bat
 
 ---
 
+## Backup do banco
+
+`scripts/backup_banco.py` gera um dump compactado (`mysqldump`) em `backup/automatico/` e apaga os com mais de 30 dias.
+
+```bash
+python scripts/backup_banco.py
+```
+
+Para rodar todo dia no Windows, agende esse comando no Agendador de Tarefas. Para ter uma cópia fora da máquina, defina `BACKUP_COPIA_DIR` no `backend/.env` apontando para uma pasta sincronizada (Google Drive, OneDrive etc.).
+
+---
+
 ## Estrutura do Projeto
 
 ```
@@ -211,6 +246,7 @@ ERP-Maneiro/
 ├── backend/
 │   ├── routers/          # Endpoints da API
 │   ├── main.py           # App FastAPI
+│   ├── permissoes.py     # Permissões dos grupos aplicadas na API
 │   ├── auth.py           # Autenticação JWT
 │   ├── database.py       # Conexão MySQL
 │   └── config.py         # Configurações
@@ -221,7 +257,8 @@ ERP-Maneiro/
 ├── cliente_autopost_facebook/
 │   ├── gui.py            # Interface desktop
 │   └── helpers/          # Scraper Selenium
-├── database/             # Scripts SQL
+├── database/             # Scripts SQL (inclui tabelas de Orçamentos)
+├── scripts/              # Rotinas de manutenção (backup do banco)
 ├── spec.md               # Especificação das features implementadas
 ├── .env.example          # Template de configuração
 ├── init_db.py            # Setup do banco

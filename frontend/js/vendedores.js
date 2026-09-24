@@ -195,9 +195,9 @@ async function displayVendedores(vendedores) {
         
         row.innerHTML = `
             <td>${vendedor.id}</td>
-            <td>${vendedor.nome}</td>
-            <td>${vendedor.email || '-'}</td>
-            <td>${vendedor.telefone || '-'}</td>
+            <td>${escapeHtml(vendedor.nome)}</td>
+            <td>${escapeHtml(vendedor.email || '-')}</td>
+            <td>${escapeHtml(vendedor.telefone || '-')}</td>
             <td>${vendedor.comissao_percentual}%</td>
             <td><span class="status-badge ${statusClass}">${statusText}</span></td>
             <td class="actions">

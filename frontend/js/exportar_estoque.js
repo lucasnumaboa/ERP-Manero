@@ -152,7 +152,7 @@ function displayProdutos(produtos) {
             const primeiraImagem = produto.caminho_imagem.split(',')[0].trim();
             if (primeiraImagem) {
                 const imagemUrl = getImageUrl(primeiraImagem);
-                imagemHtml = `<img src="${imagemUrl}" alt="${produto.nome}" class="produto-thumbnail" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                imagemHtml = `<img src="${imagemUrl}" alt="${escapeHtml(produto.nome)}" class="produto-thumbnail" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                               <div class="produto-thumbnail-placeholder" style="display:none;"><i class="fas fa-image"></i></div>`;
             } else {
                 imagemHtml = `<div class="produto-thumbnail-placeholder"><i class="fas fa-image"></i></div>`;
@@ -168,9 +168,9 @@ function displayProdutos(produtos) {
                 <input type="checkbox" class="produto-checkbox produto-select" data-id="${produto.id}" ${isSelected ? 'checked' : ''}>
             </td>
             <td>${imagemHtml}</td>
-            <td>${produto.codigo || '-'}</td>
-            <td>${produto.nome}</td>
-            <td>${produto.categoria_nome || '-'}</td>
+            <td>${escapeHtml(produto.codigo || '-')}</td>
+            <td>${escapeHtml(produto.nome)}</td>
+            <td>${escapeHtml(produto.categoria_nome || '-')}</td>
             <td class="text-center">${produto.estoque_atual}</td>
             <td class="text-right">${formatNumber(produto.preco_venda)}</td>
         `;
@@ -347,7 +347,7 @@ function abrirModalEdicao() {
             const primeiraImagem = produto.caminho_imagem.split(',')[0].trim();
             if (primeiraImagem) {
                 const imagemUrl = getImageUrl(primeiraImagem);
-                imagemHtml = `<img src="${imagemUrl}" alt="${produto.nome}" class="produto-edicao-imagem" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                imagemHtml = `<img src="${imagemUrl}" alt="${escapeHtml(produto.nome)}" class="produto-edicao-imagem" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                               <div class="produto-edicao-imagem-placeholder" style="display:none;"><i class="fas fa-image"></i></div>`;
             } else {
                 imagemHtml = `<div class="produto-edicao-imagem-placeholder"><i class="fas fa-image"></i></div>`;
@@ -361,8 +361,8 @@ function abrirModalEdicao() {
                 ${imagemHtml}
                 <div class="produto-edicao-campos">
                     <div class="produto-edicao-info">
-                        <strong>Código:</strong> ${produto.codigo || '-'} | 
-                        <strong>Categoria:</strong> ${produto.categoria_nome || '-'} | 
+                        <strong>Código:</strong> ${escapeHtml(produto.codigo || '-')} | 
+                        <strong>Categoria:</strong> ${escapeHtml(produto.categoria_nome || '-')} | 
                         <strong>Preço Original:</strong> ${formatNumber(produto.preco_venda)}
                     </div>
                     <div class="campo-edicao">
@@ -423,12 +423,6 @@ function validarPreco(produtoId, input) {
 }
 
 // Escapa HTML para evitar XSS
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
 
 // Exporta os produtos selecionados - Agrupados por categoria
 async function exportarProdutos(usarAlteracoes = false) {

@@ -259,7 +259,7 @@ function atualizarFiltroSubcategorias() {
         const subcategoriasFiltradas = subcategorias3D.filter(sub => sub.categoria_id == categoriaId);
 
         subcategoriasFiltradas.forEach(sub => {
-            subcategoriaSelect.innerHTML += `<option value="${sub.id}">${sub.nome}</option>`;
+            subcategoriaSelect.innerHTML += `<option value="${sub.id}">${escapeHtml(sub.nome)}</option>`;
         });
     }
 
@@ -733,8 +733,8 @@ async function carregarCategorias() {
         categoriaId.innerHTML = '<option value="">Selecione uma categoria</option>';
 
         categorias3D.forEach(cat => {
-            filtroCategoria.innerHTML += `<option value="${cat.id}">${cat.nome}</option>`;
-            categoriaId.innerHTML += `<option value="${cat.id}">${cat.nome}</option>`;
+            filtroCategoria.innerHTML += `<option value="${cat.id}">${escapeHtml(cat.nome)}</option>`;
+            categoriaId.innerHTML += `<option value="${cat.id}">${escapeHtml(cat.nome)}</option>`;
         });
     } catch (error) {
         console.error('Erro ao carregar categorias:', error);
@@ -780,7 +780,7 @@ function preencherSelectCategoriasAdicionais() {
         // Não mostra a categoria principal nem as já adicionadas
         const jaAdicionada = categoriasAdicionais.some(c => c.id == cat.id);
         if (cat.id != categoriaPrincipalId && !jaAdicionada) {
-            selectAdicional.innerHTML += `<option value="${cat.id}">${cat.nome}</option>`;
+            selectAdicional.innerHTML += `<option value="${cat.id}">${escapeHtml(cat.nome)}</option>`;
         }
     });
 }
@@ -831,7 +831,7 @@ function renderizarCategoriasAdicionais() {
     container.innerHTML = categoriasAdicionais.map(cat => `
         <span class="categoria-tag" data-id="${cat.id}">
             <i class="fas fa-tag"></i>
-            ${cat.nome}
+            ${escapeHtml(cat.nome)}
             <span class="remove-tag" onclick="removerCategoriaAdicional(${cat.id})">&times;</span>
         </span>
     `).join('');
@@ -877,7 +877,7 @@ function atualizarSubcategoriasDoSelect() {
     const subcategoriasFiltradas = subcategorias3D.filter(sub => sub.categoria_id == categoriaId);
 
     subcategoriasFiltradas.forEach(sub => {
-        subcategoriaSelect.innerHTML += `<option value="${sub.id}">${sub.nome}</option>`;
+        subcategoriaSelect.innerHTML += `<option value="${sub.id}">${escapeHtml(sub.nome)}</option>`;
     });
 }
 
@@ -1028,7 +1028,7 @@ function renderizarProdutos(produtosPagina) {
         if (produto.categorias && produto.categorias.length > 0) {
             // Primeira categoria sempre visível
             const primeiraCat = produto.categorias[0];
-            categoriasHtml = `<span class="card-category">${primeiraCat.nome}</span>`;
+            categoriasHtml = `<span class="card-category">${escapeHtml(primeiraCat.nome)}</span>`;
 
             // Se tem mais de uma categoria, mostra contador com tooltip listando todas
             if (produto.categorias.length > 1) {
@@ -1040,7 +1040,7 @@ function renderizarProdutos(produtosPagina) {
                 categoriasHtml += `<span class="card-category card-category-extra" title="${outrasCategoriasNomes}">+${extras}</span>`;
             }
         } else {
-            categoriasHtml = `<span class="card-category">${produto.categoria_nome || 'Sem categoria'}</span>`;
+            categoriasHtml = `<span class="card-category">${escapeHtml(produto.categoria_nome || 'Sem categoria')}</span>`;
         }
 
         return `
@@ -1053,7 +1053,7 @@ function renderizarProdutos(produtosPagina) {
                 </div>
                 <div class="card-body">
                     <div class="card-categories">${categoriasHtml}</div>
-                    <h3 class="card-title">${produto.titulo}</h3>
+                    <h3 class="card-title">${escapeHtml(produto.titulo)}</h3>
 
                     <div class="card-meta">
                         <span><i class="fas fa-image"></i> ${qtdImagens}</span>
@@ -1476,7 +1476,7 @@ async function verDetalhes(id) {
             window.imagensDoDetalhe = imagens.map(img => img.caminho);
 
             imagensDiv.innerHTML = imagens.map((img, index) => `
-                <img src="${img.caminho}" alt="${img.nome_arquivo}" onclick="ampliarImagemComNavegacao(${index})">
+                <img src="${img.caminho}" alt="${escapeHtml(img.nome_arquivo)}" onclick="ampliarImagemComNavegacao(${index})">
             `).join('');
         } else {
             imagensDiv.innerHTML = '<p style="color: #8892b0;">Nenhuma imagem</p>';
@@ -1503,11 +1503,11 @@ async function verDetalhes(id) {
             stlLista.innerHTML = stls.map(stl => `
                 <div class="arquivo-stl-item">
                     <span onclick="carregarSTL('${stl.caminho}', this.parentElement)">
-                        <i class="fas fa-cube"></i> ${stl.nome_arquivo}
+                        <i class="fas fa-cube"></i> ${escapeHtml(stl.nome_arquivo)}
                     </span>
                     <div class="arquivo-acoes">
                         <i class="fas fa-eye" onclick="carregarSTL('${stl.caminho}', this.closest('.arquivo-stl-item'))" title="Visualizar"></i>
-                        <i class="fas fa-download" onclick="downloadArquivoIndividual('${stl.caminho}', '${stl.nome_arquivo}')" title="Download direto"></i>
+                        <i class="fas fa-download" onclick="downloadArquivoIndividual(${escapeHtml(JSON.stringify(stl.caminho))}, ${escapeHtml(JSON.stringify(stl.nome_arquivo))})" title="Download direto"></i>
                     </div>
                 </div>
             `).join('');
@@ -1925,9 +1925,9 @@ async function carregarListaCategorias() {
 
         lista.innerHTML = categorias.map(cat => `
             <div class="categoria-item">
-                <span class="nome">${cat.nome}</span>
+                <span class="nome">${escapeHtml(cat.nome)}</span>
                 <div class="acoes">
-                    <button style="background: #ffc107; color: #000;" onclick="editarCategoria(${cat.id}, '${cat.nome}')">
+                    <button style="background: #ffc107; color: #000;" onclick="editarCategoria(${cat.id}, ${escapeHtml(JSON.stringify(cat.nome))})">
                         <i class="fas fa-edit"></i>
                     </button>
                     <button style="background: #e74c3c; color: #fff;" onclick="excluirCategoria(${cat.id})">

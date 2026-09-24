@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date
 from database import get_db_cursor
+from codigos import proximo_codigo
 from auth import get_current_user, UserInDB
 
 router = APIRouter()
@@ -193,16 +194,7 @@ async def criar_pedido_compra(
     # Cria o pedido e seus itens
     with get_db_cursor(commit=True) as cursor:
         # Gera o código do pedido (formato: PC + ano + sequencial)
-        cursor.execute("SELECT YEAR(NOW()) as ano")
-        ano = cursor.fetchone()["ano"]
-        
-        cursor.execute(
-            "SELECT COUNT(*) + 1 as seq FROM pedidos_compra WHERE YEAR(data_pedido) = %s",
-            (ano,)
-        )
-        seq = cursor.fetchone()["seq"]
-        
-        codigo = f"PC{ano}{seq:04d}"
+        codigo = proximo_codigo(cursor, "pedidos_compra", "PC")
         
         # Calcula o valor total do pedido
         valor_total = sum(item.quantidade * item.preco_unitario for item in pedido.itens)

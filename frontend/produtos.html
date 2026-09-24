@@ -679,6 +679,23 @@
                         </div>
                         <div class="form-row">
                             <div class="form-group">
+                                <label for="taxa_armazenagem_tipo">Taxa de Armazenagem</label>
+                                <select id="taxa_armazenagem_tipo" name="taxa_armazenagem_tipo">
+                                    <option value="">Nenhuma</option>
+                                    <option value="valor">Valor Fixo (R$)</option>
+                                    <option value="percentual">Percentual (%)</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="grupoTaxaArmazenagemValor" style="display:none;">
+                                <label for="taxa_armazenagem_valor" id="labelTaxaArmazenagemValor">Valor</label>
+                                <input type="text" id="taxa_armazenagem_valor" name="taxa_armazenagem_valor"
+                                    inputmode="decimal" pattern="[0-9,]*">
+                                <small style="color: #666;">Se percentual, é calculado sobre o valor de venda na
+                                    hora da venda.</small>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
                                 <label for="estoque_minimo">Estoque Mínimo</label>
                                 <input type="number" id="estoque_minimo" name="estoque_minimo" value="5">
                             </div>

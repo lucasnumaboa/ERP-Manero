@@ -26,27 +26,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Função para carregar credenciais salvas
     function loadSavedCredentials() {
+        // Versões antigas guardavam a senha em base64 (texto praticamente aberto); remove o que sobrou.
+        localStorage.removeItem('erp_remember_password');
+
         const savedEmail = localStorage.getItem('erp_remember_email');
-        const savedPassword = localStorage.getItem('erp_remember_password');
         const savedRemember = localStorage.getItem('erp_remember_me');
 
-        if (savedRemember === 'true' && savedEmail && savedPassword) {
+        if (savedRemember === 'true' && savedEmail) {
             if (emailInput) emailInput.value = savedEmail;
-            if (passwordInput) passwordInput.value = atob(savedPassword); // Decodifica base64
             if (rememberMe) rememberMe.checked = true;
+            if (passwordInput) passwordInput.focus();
         }
     }
 
-    // Função para salvar credenciais
-    function saveCredentials(email, password) {
+    // Salva apenas o e-mail; a senha fica a cargo do gerenciador de senhas do navegador
+    function saveCredentials(email) {
         if (rememberMe && rememberMe.checked) {
             localStorage.setItem('erp_remember_email', email);
-            localStorage.setItem('erp_remember_password', btoa(password)); // Codifica em base64
             localStorage.setItem('erp_remember_me', 'true');
         } else {
-            // Limpar credenciais salvas se "lembrar" não estiver marcado
             localStorage.removeItem('erp_remember_email');
-            localStorage.removeItem('erp_remember_password');
             localStorage.setItem('erp_remember_me', 'false');
         }
     }

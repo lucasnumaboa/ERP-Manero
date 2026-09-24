@@ -1436,14 +1436,14 @@ async function exportarRelatorioIAPDF(dataInicio, dataFim) {
             elemento.style.fontSize = '12px';
             elemento.style.lineHeight = '1.6';
             elemento.innerHTML = `
-                        < h1 style = "text-align: center; color: #2c3e50; margin-bottom: 10px;" > ${pdf.titulo}</h1 >
+                        < h1 style = "text-align: center; color: #2c3e50; margin-bottom: 10px;" > ${escapeHtml(pdf.titulo)}</h1 >
                 <p style="text-align: center; color: #7f8c8d; margin-bottom: 20px;">
                     Período: ${dataInicio} a ${dataFim}<br>
                     Gerado em: ${new Date().toLocaleString('pt-BR')}
                 </p>
                 <hr style="border: 1px solid #e9ecef; margin: 20px 0;">
                 <div style="white-space: pre-wrap; word-wrap: break-word; color: #2c3e50;">
-                    ${pdf.conteudo}
+                    ${escapeHtml(pdf.conteudo)}
                 </div>
             `;
 

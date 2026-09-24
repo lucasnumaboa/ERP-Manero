@@ -199,14 +199,14 @@ function displayProdutos(produtos) {
             // Pega apenas a primeira imagem se houver múltiplas (separadas por vírgula)
             const primeiraImagem = produto.caminho_imagem.split(',')[0].trim();
             if (primeiraImagem) {
-                imagemHtml = `<img src="https://erp-api-call.autoservto.com.br/uploads/${primeiraImagem.replace('uploads/', '')}" alt="${produto.nome}" class="produto-thumbnail" style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">`;
+                imagemHtml = `<img src="https://erp-api-call.autoservto.com.br/uploads/${primeiraImagem.replace('uploads/', '')}" alt="${escapeHtml(produto.nome)}" class="produto-thumbnail" style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">`;
             }
         }
 
         row.innerHTML = `
             <td>${produto.codigo || produto.id}</td>
-            <td>${imagemHtml}${produto.nome}</td>
-            <td>${produto.categoria_nome || 'Não categorizado'}</td>
+            <td>${imagemHtml}${escapeHtml(produto.nome)}</td>
+            <td>${escapeHtml(produto.categoria_nome || 'Não categorizado')}</td>
             <td>R$ ${formatNumber(produto.preco_custo || 0)}</td>
             <td>R$ ${formatNumber(produto.preco_venda)}</td>
             <td>R$ ${formatNumber(produto.comissao || 0)}</td>
@@ -545,6 +545,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const btnNovoDeposito = document.getElementById('btnNovoDepositoModal');
     if (btnNovoDeposito) {
         btnNovoDeposito.addEventListener('click', openDepositoModal);
+        btnNovoDeposito.style.display = 'none';
+        hasPermission('depositos_editar').then(pode => { btnNovoDeposito.style.display = pode ? '' : 'none'; });
     }
 
     const btnCancelarDeposito = document.getElementById('btnCancelarDeposito');
@@ -661,7 +663,13 @@ function setupActionButtons() {
     console.log('Configuração de botões concluída!');
 
     // Bloquear pontos em preços: somente números e vírgula, um único separador e até 2 casas decimais
-    ['preco_custo', 'preco_venda', 'comissao'].forEach(id => {
+    // Mostra/oculta e ajusta o rótulo do campo de valor da taxa de armazenagem conforme o tipo escolhido
+    const selectTaxaArmazenagemTipo = document.getElementById('taxa_armazenagem_tipo');
+    if (selectTaxaArmazenagemTipo) {
+        selectTaxaArmazenagemTipo.addEventListener('change', atualizarVisibilidadeTaxaArmazenagem);
+    }
+
+    ['preco_custo', 'preco_venda', 'comissao', 'taxa_armazenagem_valor'].forEach(id => {
         const input = document.getElementById(id);
         if (input) {
             input.addEventListener('input', function () {
@@ -858,6 +866,7 @@ function openProdutoModal(produtoId = null) {
             return;
         }
         form.reset();
+        atualizarVisibilidadeTaxaArmazenagem();
         console.log('Formulário resetado');
 
         // Define o título do modal
@@ -977,6 +986,15 @@ async function loadProdutoData(produtoId) {
 }
 
 // Função auxiliar para preencher o formulário com os dados do produto
+function atualizarVisibilidadeTaxaArmazenagem() {
+    const tipo = document.getElementById('taxa_armazenagem_tipo')?.value || '';
+    const grupo = document.getElementById('grupoTaxaArmazenagemValor');
+    const label = document.getElementById('labelTaxaArmazenagemValor');
+    if (!grupo) return;
+    grupo.style.display = tipo ? '' : 'none';
+    if (label) label.textContent = tipo === 'percentual' ? 'Percentual (%)' : 'Valor (R$)';
+}
+
 function preencherFormularioProduto(produto, produtoId) {
     console.log('Preenchendo formulário com dados do produto');
 
@@ -1011,6 +1029,12 @@ function preencherFormularioProduto(produto, produtoId) {
 
         const depositoInput = document.getElementById('deposito_id');
         if (depositoInput) depositoInput.value = produto.deposito_id || '';
+
+        const taxaArmazenagemTipoInput = document.getElementById('taxa_armazenagem_tipo');
+        if (taxaArmazenagemTipoInput) taxaArmazenagemTipoInput.value = produto.taxa_armazenagem_tipo || '';
+        const taxaArmazenagemValorInput = document.getElementById('taxa_armazenagem_valor');
+        if (taxaArmazenagemValorInput) taxaArmazenagemValorInput.value = produto.taxa_armazenagem_valor ? String(produto.taxa_armazenagem_valor).replace('.', ',') : '';
+        atualizarVisibilidadeTaxaArmazenagem();
 
         const faturavelInput = document.getElementById('faturavel');
         if (faturavelInput) faturavelInput.checked = produto.faturavel !== false;
@@ -1130,9 +1154,19 @@ async function saveProduto() {
             return;
         }
 
+        const taxa_armazenagem_tipo = document.getElementById('taxa_armazenagem_tipo')?.value || '';
+        const taxa_armazenagem_valor_value = document.getElementById('taxa_armazenagem_valor')?.value || '';
+        if (taxa_armazenagem_tipo && taxa_armazenagem_valor_value && !priceRegex.test(taxa_armazenagem_valor_value)) {
+            console.error('Formato de valor da Taxa de Armazenagem inválido:', taxa_armazenagem_valor_value);
+            alert('Formato inválido para o valor da Taxa de Armazenagem. Use apenas números e até 2 casas decimais separadas por vírgula.');
+            esconderLoadingProduto();
+            return;
+        }
+
         const preco_custo = preco_custo_value ? parseFloat(preco_custo_value.replace(',', '.')) : 0; // custo opcional, default 0
         const preco_venda = preco_venda_value ? parseFloat(preco_venda_value.replace(',', '.')) : 0; // converte vírgula para ponto
         const comissao = comissao_value ? parseFloat(comissao_value.replace(',', '.')) : 0; // converte vírgula para ponto
+        const taxa_armazenagem_valor = taxa_armazenagem_valor_value ? parseFloat(taxa_armazenagem_valor_value.replace(',', '.')) : 0;
         const estoque_minimo = parseInt(document.getElementById('estoque_minimo')?.value || 0);
         const categoria_id = document.getElementById('categoria_id')?.value || '';
         const deposito_id = document.getElementById('deposito_id')?.value || '';
@@ -1208,6 +1242,8 @@ async function saveProduto() {
         if (deposito_id) {
             formData.append('deposito_id', deposito_id);
         }
+        formData.append('taxa_armazenagem_tipo', taxa_armazenagem_tipo);
+        formData.append('taxa_armazenagem_valor', taxa_armazenagem_valor);
 
         // Adiciona as imagens ao FormData
         for (let i = 0; i < imagens.length; i++) {
@@ -1269,7 +1305,8 @@ async function saveProduto() {
                 console.log(`Atualizando produto ID: ${produtoId} sem imagens/vídeo`);
                 const jsonData = {
                     codigo, nome, descricao, instrucoes_duvidas, preco_custo, preco_venda,
-                    estoque_minimo, categoria_id, tipo_produto, comissao, faturavel, post_olx, post_facebook, ativo, usuario_id
+                    estoque_minimo, categoria_id, tipo_produto, comissao, faturavel, post_olx, post_facebook, ativo, usuario_id,
+                    taxa_armazenagem_tipo, taxa_armazenagem_valor
                 };
                 if (deposito_id) {
                     jsonData.deposito_id = parseInt(deposito_id, 10);
@@ -2003,7 +2040,7 @@ function renderizarTabelaRecalculo(dados) {
                 <input type="checkbox" class="custo-checkbox" data-produto-id="${item.produto_id}" data-index="${index}" style="cursor:pointer;width:16px;height:16px;" checked>
             </td>
             <td>${item.produto_codigo || '-'}</td>
-            <td>${item.produto_nome}</td>
+            <td>${escapeHtml(item.produto_nome)}</td>
             <td style="text-align: center;">${item.estoque_atual}</td>
             <td style="text-align: right;">R$ ${item.custo_atual.toFixed(2).replace('.', ',')}</td>
             <td style="text-align: right;">
@@ -2188,7 +2225,7 @@ async function aplicarCustoRecalculado() {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${item.produto_codigo}</td>
-                <td>${item.produto_nome}</td>
+                <td>${escapeHtml(item.produto_nome)}</td>
                 <td style="text-align:right;">R$ ${item.custo_atual.toFixed(2).replace('.', ',')}</td>
                 <td style="text-align:right;">R$ ${item.novo_custo.toFixed(2).replace('.', ',')}</td>
                 <td style="text-align:right;" class="${diffClass}">${diffText}</td>

@@ -227,15 +227,16 @@ async def atualizar_usuario(
     # Verifica se o usuário existe
     with get_db_cursor() as cursor:
         cursor.execute(
-            "SELECT id FROM usuarios WHERE id = %s",
+            "SELECT id, grupo_id FROM usuarios WHERE id = %s",
             (usuario_id,)
         )
-        if not cursor.fetchone():
+        usuario_atual = cursor.fetchone()
+        if not usuario_atual:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Usuário não encontrado"
             )
-    
+
     # Prepara os dados para atualização
     update_data = {}
     if usuario.nome:
@@ -246,7 +247,12 @@ async def atualizar_usuario(
         update_data["nivel_acesso"] = usuario.nivel_acesso
     if usuario.senha:
         update_data["senha"] = get_password_hash(usuario.senha)
-    if usuario.grupo_id is not None:
+    if usuario.grupo_id is not None and usuario.grupo_id != usuario_atual["grupo_id"]:
+        if current_user.nivel_acesso != "admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Apenas administradores podem alterar o grupo de um usuário"
+            )
         update_data["grupo_id"] = usuario.grupo_id
     
     if not update_data:

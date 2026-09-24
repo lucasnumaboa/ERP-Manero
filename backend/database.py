@@ -1,4 +1,6 @@
+import threading
 import mysql.connector
+from mysql.connector import pooling
 from contextlib import contextmanager
 from config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT
 
@@ -11,19 +13,50 @@ db_config = {
     'port': DB_PORT
 }
 
+# Conexões reaproveitadas entre requisições (abrir uma conexão nova custa mais que a consulta típica).
+TAMANHO_POOL = 20
+_pool = None
+_pool_lock = threading.Lock()
+
+
+def _obter_pool():
+    global _pool
+    if _pool is None:
+        with _pool_lock:
+            if _pool is None:
+                _pool = pooling.MySQLConnectionPool(
+                    pool_name="erp", pool_size=TAMANHO_POOL, pool_reset_session=True, **db_config
+                )
+    return _pool
+
+
+def _abrir_conexao():
+    try:
+        conn = _obter_pool().get_connection()
+    except pooling.errors.PoolError:
+        # Pool esgotado num pico: abre uma conexão avulsa em vez de falhar a requisição.
+        return mysql.connector.connect(**db_config)
+    # Conexão parada no pool pode ter caído (wait_timeout do MySQL); reconecta se preciso.
+    conn.ping(reconnect=True, attempts=2, delay=0)
+    return conn
+
+
 @contextmanager
 def get_db_connection():
     """
     Gerenciador de contexto para conexões com o banco de dados.
-    Garante que a conexão seja fechada após o uso.
+    Ao sair, a conexão volta para o pool (ou é fechada, se for avulsa).
     """
     conn = None
     try:
-        conn = mysql.connector.connect(**db_config)
+        conn = _abrir_conexao()
         yield conn
     finally:
-        if conn is not None and conn.is_connected():
-            conn.close()
+        if conn is not None:
+            try:
+                conn.close()
+            except mysql.connector.Error:
+                pass
 
 @contextmanager
 def get_db_cursor(commit=False):

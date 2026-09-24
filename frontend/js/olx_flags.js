@@ -35,7 +35,7 @@ function renderizarTabela() {
     tbody.innerHTML = flags.map(f => `
         <tr>
             <td>${f.id}</td>
-            <td>${f.nome}</td>
+            <td>${escapeHtml(f.nome)}</td>
             <td>
                 ${f.incluir
             ? '<span class="badge-include">Incluir</span>'

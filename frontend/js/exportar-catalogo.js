@@ -35,11 +35,11 @@ async function carregarVendedorLogado() {
                 <div class="vendedor-info-display">
                     <div class="vendedor-info-item">
                         <i class="fas fa-user"></i>
-                        <span><strong>Vendedor:</strong> ${vendedor.nome}</span>
+                        <span><strong>Vendedor:</strong> ${escapeHtml(vendedor.nome)}</span>
                     </div>
                     <div class="vendedor-info-item">
                         <i class="fas fa-phone"></i>
-                        <span><strong>Celular:</strong> ${vendedor.telefone || 'Não informado'}</span>
+                        <span><strong>Celular:</strong> ${escapeHtml(vendedor.telefone || 'Não informado')}</span>
                     </div>
                 </div>
             `;
@@ -113,7 +113,7 @@ function renderizarCategoriasCatalogo() {
             <div class="catalogo-checkbox-item">
                 <input type="checkbox" id="cat_${cat.id}" class="catalogo-categoria-checkbox" 
                        data-categoria-id="${cat.id}" onchange="filtrarProdutosPorCategoria()">
-                <label for="cat_${cat.id}">${cat.nome} (${qtdProdutos})</label>
+                <label for="cat_${cat.id}">${escapeHtml(cat.nome)} (${qtdProdutos})</label>
             </div>
         `;
     });
@@ -159,7 +159,7 @@ async function renderizarProdutosCatalogo(produtosFiltrados = null) {
                     ${imagemUrl ? `<img src="${imagemUrl}" alt="${prod.nome}" class="catalogo-produto-thumb">` :
                 `<div class="catalogo-produto-thumb-placeholder"><i class="fas fa-image"></i></div>`}
                     <div class="catalogo-produto-info">
-                        <span class="catalogo-produto-nome">${prod.nome}</span>
+                        <span class="catalogo-produto-nome">${escapeHtml(prod.nome)}</span>
                         <span class="catalogo-produto-preco">${formatarMoedaCatalogo(prod.preco_venda)}</span>
                     </div>
                 </label>
@@ -317,7 +317,7 @@ function abrirAlterarPrecosModal() {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>
-                ${produto.nome}
+                ${escapeHtml(produto.nome)}
                 ${produtoProprio ? '<span style="color: #28a745; font-size: 11px;"> (Seu)</span>' : '<span style="color: #6c757d; font-size: 11px;"> (Terceiro)</span>'}
             </td>
             <td style="text-align: right;">${formatarMoedaCatalogo(precoOriginal)}</td>

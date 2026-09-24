@@ -136,8 +136,8 @@ async function renderizarCondicoes(condicoes) {
         
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${condicao.codigo}</td>
-            <td>${condicao.nome}</td>
+            <td>${escapeHtml(condicao.codigo)}</td>
+            <td>${escapeHtml(condicao.nome)}</td>
             <td>${condicao.prazo_dias} dias</td>
             <td>${condicao.numero_parcelas}x</td>
             <td>${statusBadge}</td>

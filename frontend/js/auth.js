@@ -1,5 +1,11 @@
 // Funções de autenticação e gerenciamento de token
 
+// Escapa texto vindo de usuários/API antes de inseri-lo em HTML (evita XSS). Global: carregado em todas as páginas.
+function escapeHtml(valor) {
+    if (valor === null || valor === undefined) return '';
+    return String(valor).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
 // URL da API de backend - sempre busca do banco de dados
 async function getApiUrl() {
     try {
@@ -52,16 +58,14 @@ function logout() {
     
     // Salvar credenciais "lembrar senha" antes de limpar
     const rememberEmail = localStorage.getItem('erp_remember_email');
-    const rememberPassword = localStorage.getItem('erp_remember_password');
     const rememberMe = localStorage.getItem('erp_remember_me');
     
     // Limpa todo o localStorage
     localStorage.clear();
     
     // Restaurar credenciais "lembrar senha" se existirem
-    if (rememberMe === 'true' && rememberEmail && rememberPassword) {
+    if (rememberMe === 'true' && rememberEmail) {
         localStorage.setItem('erp_remember_email', rememberEmail);
-        localStorage.setItem('erp_remember_password', rememberPassword);
         localStorage.setItem('erp_remember_me', rememberMe);
     }
     
@@ -81,7 +85,6 @@ function showSessionExpiredModal() {
     
     // Salvar credenciais "lembrar senha" antes de limpar
     const rememberEmail = localStorage.getItem('erp_remember_email');
-    const rememberPassword = localStorage.getItem('erp_remember_password');
     const rememberMe = localStorage.getItem('erp_remember_me');
     
     // Limpa todo o cache imediatamente
@@ -89,9 +92,8 @@ function showSessionExpiredModal() {
     sessionStorage.clear();
     
     // Restaurar credenciais "lembrar senha" se existirem
-    if (rememberMe === 'true' && rememberEmail && rememberPassword) {
+    if (rememberMe === 'true' && rememberEmail) {
         localStorage.setItem('erp_remember_email', rememberEmail);
-        localStorage.setItem('erp_remember_password', rememberPassword);
         localStorage.setItem('erp_remember_me', rememberMe);
     }
     

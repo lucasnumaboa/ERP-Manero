@@ -44,6 +44,9 @@ import routers.filamentos_3d as filamentos_3d
 import routers.depositos as depositos
 import routers.produto_chat_ia as produto_chat_ia
 import routers.transcricao as transcricao
+import routers.orcamentos as orcamentos
+
+from permissoes import permissao_modulo
 
 # Importa o gerenciador de timeout
 from timeout_manager import start_timeout_manager
@@ -170,35 +173,36 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 
 # Incluir as rotas dos módulos
 app.include_router(usuarios.router, prefix="/api/usuarios", tags=["Usuários"])
-app.include_router(produtos.router, prefix="/api/produtos", tags=["Produtos"])
-app.include_router(categorias.router, prefix="/api/categorias", tags=["Categorias"])
-app.include_router(parceiros.router, prefix="/api/parceiros", tags=["Parceiros"])
-app.include_router(vendedores.router, prefix="/api/vendedores", tags=["Vendedores"])
-app.include_router(pedidos_compra.router, prefix="/api/compras", tags=["Compras"])
-app.include_router(estoque.router, prefix="/api/estoque", tags=["Estoque"])
-app.include_router(pedidos_venda.router, prefix="/api/vendas", tags=["Vendas"])
-app.include_router(objetos_postagem.router, prefix="/api/postagens", tags=["Postagens"])
-app.include_router(propostas.router, prefix="/api/propostas", tags=["Propostas"])
-app.include_router(contas_pagar.router, prefix="/api/contas-pagar", tags=["Contas a Pagar"])
-app.include_router(contas_receber.router, prefix="/api/contas-receber", tags=["Contas a Receber"])
-app.include_router(caixa.router, prefix="/api/caixa", tags=["Caixa"])
-app.include_router(relatorios.router, prefix="/api/relatorios", tags=["Relatórios"])
-app.include_router(clientes.router, prefix="/api/clientes", tags=["Clientes"])
-app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
+app.include_router(produtos.router, prefix="/api/produtos", tags=["Produtos"], dependencies=permissao_modulo("produtos"))
+app.include_router(categorias.router, prefix="/api/categorias", tags=["Categorias"], dependencies=permissao_modulo("categorias"))
+app.include_router(parceiros.router, prefix="/api/parceiros", tags=["Parceiros"], dependencies=permissao_modulo("parceiros"))
+app.include_router(vendedores.router, prefix="/api/vendedores", tags=["Vendedores"], dependencies=permissao_modulo("vendedores"))
+app.include_router(pedidos_compra.router, prefix="/api/compras", tags=["Compras"], dependencies=permissao_modulo("compras"))
+app.include_router(estoque.router, prefix="/api/estoque", tags=["Estoque"], dependencies=permissao_modulo("estoque"))
+app.include_router(pedidos_venda.router, prefix="/api/vendas", tags=["Vendas"], dependencies=permissao_modulo("vendas"))
+app.include_router(objetos_postagem.router, prefix="/api/postagens", tags=["Postagens"], dependencies=permissao_modulo("postagens"))
+app.include_router(propostas.router, prefix="/api/propostas", tags=["Propostas"], dependencies=permissao_modulo("propostas"))
+app.include_router(contas_pagar.router, prefix="/api/contas-pagar", tags=["Contas a Pagar"], dependencies=permissao_modulo("contas_pagar"))
+app.include_router(contas_receber.router, prefix="/api/contas-receber", tags=["Contas a Receber"], dependencies=permissao_modulo("contas_receber"))
+app.include_router(caixa.router, prefix="/api/caixa", tags=["Caixa"], dependencies=permissao_modulo("caixa"))
+app.include_router(relatorios.router, prefix="/api/relatorios", tags=["Relatórios"], dependencies=permissao_modulo("relatorios"))
+app.include_router(clientes.router, prefix="/api/clientes", tags=["Clientes"], dependencies=permissao_modulo("clientes"))
+app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"], dependencies=permissao_modulo("dashboard"))
 app.include_router(configuracoes.router, prefix="/api/configuracoes", tags=["Configurações"])
-app.include_router(condicoes_pagamento.router, prefix="/api/condicoes-pagamento", tags=["Condições de Pagamento"])
-app.include_router(metas.router, prefix="/api/metas", tags=["Metas e Premiações"])
-app.include_router(plataformas_venda.router, prefix="/api/plataformas-venda", tags=["Plataformas de Venda"])
+app.include_router(condicoes_pagamento.router, prefix="/api/condicoes-pagamento", tags=["Condições de Pagamento"], dependencies=permissao_modulo("condicoes_pagamento"))
+app.include_router(metas.router, prefix="/api/metas", tags=["Metas e Premiações"], dependencies=permissao_modulo("metas"))
+app.include_router(plataformas_venda.router, prefix="/api/plataformas-venda", tags=["Plataformas de Venda"], dependencies=permissao_modulo("plataformas_venda"))
 app.include_router(analise_precos.router, prefix="/api/analise-precos", tags=["Análise de Preços"])
-app.include_router(olx_finder.router, prefix="/api/olx", tags=["OLX Finder"])
+app.include_router(olx_finder.router, prefix="/api/olx", tags=["OLX Finder"], dependencies=permissao_modulo("olx"))
 app.include_router(softwares.router, prefix="/api/softwares", tags=["Softwares"])
 app.include_router(produtos_3d.router, prefix="/api/produtos-3d", tags=["Produtos 3D"])
 app.include_router(calendario.router, prefix="/api", tags=["Calendário"])
-app.include_router(controle_financeiro.router, prefix="/api/controle-financeiro", tags=["Controle Financeiro"])
-app.include_router(filamentos_3d.router, prefix="/api/filamentos-3d", tags=["Filamentos 3D"])
-app.include_router(depositos.router, prefix="/api/depositos", tags=["Depósitos"])
+app.include_router(controle_financeiro.router, prefix="/api/controle-financeiro", tags=["Controle Financeiro"], dependencies=permissao_modulo("controle_financeiro"))
+app.include_router(filamentos_3d.router, prefix="/api/filamentos-3d", tags=["Filamentos 3D"], dependencies=permissao_modulo("filamentos_3d"))
+app.include_router(depositos.router, prefix="/api/depositos", tags=["Depósitos"], dependencies=permissao_modulo("depositos"))
 app.include_router(produto_chat_ia.router, prefix="/api/produto-chat", tags=["Chat IA do Produto"])
 app.include_router(transcricao.router, prefix="/api/transcricao", tags=["Transcrição de Áudio"])
+app.include_router(orcamentos.router, prefix="/api/orcamentos", tags=["Orçamentos"], dependencies=permissao_modulo("orcamentos"))
 
 # Configuração para servir arquivos estáticos (uploads)
 import os

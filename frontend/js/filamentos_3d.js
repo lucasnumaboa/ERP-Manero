@@ -91,7 +91,7 @@
             fornecedores = [...d1, ...d2];
             const sel = document.getElementById('compraFornecedor');
             sel.innerHTML = '<option value="">Selecione...</option>';
-            fornecedores.forEach(f => { sel.innerHTML += `<option value="${f.id}">${f.nome}</option>`; });
+            fornecedores.forEach(f => { sel.innerHTML += `<option value="${f.id}">${escapeHtml(f.nome)}</option>`; });
         } catch (e) { console.error('Erro fornecedores:', e); }
     }
 
@@ -128,7 +128,7 @@
         const val = sel.value;
         sel.innerHTML = '<option value="">Selecione...</option>';
         filamentos.filter(f => f.ativo).forEach(f => {
-            sel.innerHTML += `<option value="${f.id}">${f.material} - ${f.cor} (${f.peso_gramas}g)</option>`;
+            sel.innerHTML += `<option value="${f.id}">${escapeHtml(f.material)} - ${escapeHtml(f.cor)} (${f.peso_gramas}g)</option>`;
         });
         sel.value = val;
     }
@@ -140,8 +140,8 @@
         tbody.innerHTML = filamentos.map(f => `
             <tr>
                 <td>${f.id}</td>
-                <td><span style="background:rgba(100,255,218,0.1);color:#64ffda;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600">${f.material}</span></td>
-                <td>${f.cor}</td>
+                <td><span style="background:rgba(100,255,218,0.1);color:#64ffda;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600">${escapeHtml(f.material)}</span></td>
+                <td>${escapeHtml(f.cor)}</td>
                 <td>${Number(f.peso_gramas).toLocaleString('pt-BR')}</td>
                 <td>${Number(f.estoque_gramas).toLocaleString('pt-BR')}</td>
                 <td>R$ ${Number(f.preco_referencia).toFixed(2)}</td>
@@ -162,7 +162,7 @@
             <tr>
                 <td>${new Date(c.data_compra).toLocaleDateString('pt-BR')}</td>
                 <td>${c.filamento_material || ''} - ${c.filamento_cor || ''}</td>
-                <td>${c.fornecedor_nome || '-'}</td>
+                <td>${escapeHtml(c.fornecedor_nome || '-')}</td>
                 <td>${c.quantidade}</td>
                 <td>R$ ${Number(c.valor_unitario).toFixed(2)}</td>
                 <td>R$ ${Number(c.valor_total).toFixed(2)}</td>
@@ -183,8 +183,8 @@
             const isLow = pct < 20;
             return `
                 <div class="estoque-card ${isLow ? 'estoque-low' : ''}" id="estoque-card-${e.id}">
-                    <span class="material-badge">${e.material}</span>
-                    <div class="cor-label">${e.cor}</div>
+                    <span class="material-badge">${escapeHtml(e.material)}</span>
+                    <div class="cor-label">${escapeHtml(e.cor)}</div>
                     <div class="estoque-bar-container">
                         <div class="estoque-bar" style="width:${pct}%"></div>
                     </div>
@@ -245,8 +245,8 @@
             const alreadyAdded = calcItens.find(i => i.filamento_id === f.id);
             return `
                 <div class="calc-dropdown-item ${alreadyAdded ? 'disabled' : ''}" data-id="${f.id}">
-                    <span class="dd-badge">${f.material}</span>
-                    <span class="dd-name">${f.cor}</span>
+                    <span class="dd-badge">${escapeHtml(f.material)}</span>
+                    <span class="dd-name">${escapeHtml(f.cor)}</span>
                     <span class="dd-stock">${Number(f.estoque_gramas).toLocaleString('pt-BR')}g</span>
                     ${alreadyAdded ? '<i class="fas fa-check" style="color:#64ffda;font-size:12px"></i>' : '<i class="fas fa-plus" style="color:#64ffda;font-size:12px"></i>'}
                 </div>
@@ -287,7 +287,7 @@
             <div class="calc-item">
                 <div class="item-num">${i + 1}</div>
                 <div class="item-info">
-                    <div class="name">${item.material} - ${item.cor}</div>
+                    <div class="name">${escapeHtml(item.material)} - ${escapeHtml(item.cor)}</div>
                     <div class="detail"><i class="fas fa-boxes" style="margin-right:4px"></i>Estoque: ${Number(item.estoque).toLocaleString('pt-BR')}g</div>
                 </div>
                 <div class="item-gramas">
@@ -400,7 +400,7 @@
         const div = document.getElementById('calcResult');
         div.style.display = 'block';
         let detailsHtml = r.detalhes?.map(d => `
-            <div class="result-row"><span>${d.material} ${d.cor} (${d.gramas_utilizadas}g × R$ ${d.preco_por_grama.toFixed(4)}/g)</span><span>R$ ${d.custo_item.toFixed(2)}</span></div>
+            <div class="result-row"><span>${escapeHtml(d.material)} ${escapeHtml(d.cor)} (${d.gramas_utilizadas}g × R$ ${d.preco_por_grama.toFixed(4)}/g)</span><span>R$ ${d.custo_item.toFixed(2)}</span></div>
         `).join('') || '';
         div.innerHTML = `
             <h4 style="color:#64ffda;margin:0 0 12px;font-size:15px"><i class="fas fa-receipt"></i> Resultado do Cálculo</h4>

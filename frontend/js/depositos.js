@@ -69,8 +69,8 @@ function displayDepositos(depositos) {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${deposito.id}</td>
-            <td>${deposito.nome}</td>
-            <td>${deposito.descricao || '-'}</td>
+            <td>${escapeHtml(deposito.nome)}</td>
+            <td>${escapeHtml(deposito.descricao || '-')}</td>
             <td class="text-center">
                 ${deposito.padrao
                     ? '<span class="status-badge status-active">Padrão</span>'
