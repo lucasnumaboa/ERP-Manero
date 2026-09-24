@@ -51,6 +51,8 @@ MODULOS = {
     # Orçamento é feito pelos próprios vendedores (o backend já limita cada um aos seus).
     "orcamentos": {"leitura": ["vendas_visualizar"], "escrita": ["vendas_visualizar"]},
     "filamentos_3d": {"leitura": None, "escrita": SOMENTE_ADMIN},
+    # Geração de texto por IA: descrição/cadastro em massa (Produtos) e relatórios com IA
+    "ia": {"leitura": None, "escrita": ["produtos_editar", "dashboard_visualizar"]},
 }
 
 METODOS_LEITURA = {"GET", "HEAD", "OPTIONS"}

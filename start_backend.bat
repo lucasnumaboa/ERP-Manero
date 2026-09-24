@@ -4,22 +4,15 @@ echo Iniciando o Backend do ERP Maneiro
 echo ===================================
 
 cd backend
-echo Ativando o ambiente virtual...
 
-:: Verifica se o ambiente virtual existe, se não, cria
-if not exist venv (
-    echo Criando ambiente virtual...
-    python -m venv venv
-    call venv\Scripts\activate
+:: Usa o Python instalado no sistema. As dependencias ficam em requirements.txt (raiz do projeto);
+:: so instala se faltar alguma, para nao baixar nada a cada inicializacao.
+python -c "import fastapi, uvicorn, mysql.connector, jose, passlib, dotenv, multipart, PIL, httpx" >nul 2>&1
+if %errorlevel% neq 0 (
     echo Instalando dependencias...
-    pip install fastapi uvicorn python-jose[cryptography] passlib[bcrypt] python-multipart python-dotenv mysql-connector-python
-) else (
-    call venv\Scripts\activate
+    python -m pip install -r ..equirements.txt
 )
 
 :: Inicia o servidor usando o script start.py
 echo Iniciando o servidor FastAPI...
 python start.py
-
-:: Se o servidor for encerrado, desativa o ambiente virtual
-call venv\Scripts\deactivate

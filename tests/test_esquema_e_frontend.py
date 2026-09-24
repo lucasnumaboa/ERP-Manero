@@ -96,3 +96,20 @@ def test_sem_css_repetido_na_mesma_pagina():
         if len(links) != len(set(links)):
             repetidos.append(p.name)
     assert not repetidos, f"CSS carregado mais de uma vez: {repetidos}"
+
+
+def test_chave_de_ia_nao_vai_para_telas_de_vendedor():
+    # Só as telas de admin (Configurações e Produtos 3D) ainda falam direto com o provedor.
+    permitidos = {"configuracoes.js", "produtos_3d.js"}
+    problemas = [js.name for js in SCRIPTS if js.name not in permitidos
+                 and re.search(r"openrouter\.ai|apikey_openrouter", js.read_text(encoding="utf-8"))]
+    assert not problemas, f"chave/provedor de IA no navegador: {problemas}"
+
+
+def test_sem_script_repetido_na_mesma_pagina():
+    repetidos = []
+    for p in PAGINAS:
+        scripts = re.findall(r'<script src="(js/[^"]+)"', p.read_text(encoding="utf-8"))
+        if len(scripts) != len(set(scripts)):
+            repetidos.append(p.name)
+    assert not repetidos, f"script carregado mais de uma vez: {repetidos}"

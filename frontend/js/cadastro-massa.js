@@ -340,26 +340,6 @@ async function gerarDescricoesMassaIA() {
 
     try {
         // Carregar configurações de IA
-        if (typeof configuracoesIA === 'undefined' || !configuracoesIA) {
-            if (typeof carregarConfiguracoeIA === 'function') {
-                await carregarConfiguracoeIA();
-            } else {
-                const configuracoes = await apiGet('/api/configuracoes/configuracoes/');
-                window.configuracoesIA = {
-                    provider: configuracoes.find(c => c.chave === 'ia_provider')?.valor || 'openrouter',
-                    apikey: configuracoes.find(c => c.chave === 'apikey_openrouter')?.valor || '',
-                    model: configuracoes.find(c => c.chave === 'model_openrouter')?.valor || 'openai/gpt-4o-mini',
-                    ollama_model: configuracoes.find(c => c.chave === 'ollama_model')?.valor || 'llama3',
-                    ollama_url: configuracoes.find(c => c.chave === 'ollama_url')?.valor || 'http://localhost:11434',
-                    ollama_apikey: configuracoes.find(c => c.chave === 'ollama_apikey')?.valor || '',
-                    lmstudio_model: configuracoes.find(c => c.chave === 'lmstudio_model')?.valor || 'default',
-                    lmstudio_url: configuracoes.find(c => c.chave === 'lmstudio_url')?.valor || 'http://localhost:1234',
-                    lmstudio_apikey: configuracoes.find(c => c.chave === 'lmstudio_apikey')?.valor || '',
-                    ia_think: configuracoes.find(c => c.chave === 'ia_think')?.valor || 'on',
-                    ia_think_tokens: parseInt(configuracoes.find(c => c.chave === 'ia_think_tokens')?.valor || '0', 10)
-                };
-            }
-        }
 
         // Carregar dados fixos
         if (typeof carregarDadosFixosDescricao === 'function') {
@@ -397,55 +377,8 @@ Retorne APENAS um JSON válido no formato abaixo, sem texto adicional:
 
             let resposta;
 
-            if (typeof chamarIA === 'function') {
-                resposta = await chamarIA(prompt, 4000, 2);
-            } else {
-                const provider = configuracoesIA?.provider || 'openrouter';
-                let response, data;
-
-                if (provider === 'openrouter') {
-                    response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${configuracoesIA.apikey}`,
-                            'HTTP-Referer': window.location.origin,
-                            'X-Title': 'ERP Maneiro - Cadastro em Massa'
-                        },
-                        body: JSON.stringify({ model: configuracoesIA.model, messages: [{ role: 'user', content: prompt }], stream: false, temperature: 0.7, max_tokens: 4000 })
-                    });
-                    if (!response.ok) { const err = await response.json(); throw new Error(`Erro OpenRouter: ${err.error?.message || response.statusText}`); }
-                    data = await response.json();
-                    resposta = data.choices[0]?.message?.content?.trim();
-
-                } else if (provider === 'ollama') {
-                    const ollamaUrl = configuracoesIA.ollama_url || 'http://localhost:11434';
-                    const ollamaHeaders = { 'Content-Type': 'application/json' };
-                    if (configuracoesIA.ollama_apikey) ollamaHeaders['Authorization'] = `Bearer ${configuracoesIA.ollama_apikey}`;
-                    response = await fetch(`${ollamaUrl}/api/chat`, {
-                        method: 'POST', headers: ollamaHeaders,
-                        body: JSON.stringify({ model: configuracoesIA.ollama_model || 'llama3', messages: [{ role: 'user', content: prompt }], stream: false })
-                    });
-                    if (!response.ok) throw new Error(`Erro Ollama: ${response.statusText}`);
-                    data = await response.json();
-                    resposta = (data.message?.content || '').trim();
-
-                } else if (provider === 'lmstudio') {
-                    const lmUrl = configuracoesIA.lmstudio_url || 'http://localhost:1234';
-                    const lmHeaders = { 'Content-Type': 'application/json' };
-                    if (configuracoesIA.lmstudio_apikey) lmHeaders['Authorization'] = `Bearer ${configuracoesIA.lmstudio_apikey}`;
-                    response = await fetch(`${lmUrl}/v1/chat/completions`, {
-                        method: 'POST', headers: lmHeaders,
-                        body: JSON.stringify({ model: configuracoesIA.lmstudio_model || 'default', messages: [{ role: 'user', content: prompt }], stream: false, temperature: 0.7, max_tokens: 4000 })
-                    });
-                    if (!response.ok) throw new Error(`Erro LM Studio: ${response.statusText}`);
-                    data = await response.json();
-                    resposta = data.choices[0]?.message?.content?.trim();
-
-                } else {
-                    throw new Error(`Provider de IA desconhecido: ${provider}`);
-                }
-            }
+            resposta = await chamarIA(prompt, 4000, 2);
+            
 
             // Extrair JSON da resposta
             const jsonMatch = resposta.match(/\{[\s\S]*\}/);
@@ -817,26 +750,6 @@ async function categorizarPorIAMassa() {
 
     try {
         // Carregar configurações de IA
-        if (typeof configuracoesIA === 'undefined' || !configuracoesIA) {
-            if (typeof carregarConfiguracoeIA === 'function') {
-                await carregarConfiguracoeIA();
-            } else {
-                const configuracoes = await apiGet('/api/configuracoes/configuracoes/');
-                window.configuracoesIA = {
-                    provider: configuracoes.find(c => c.chave === 'ia_provider')?.valor || 'openrouter',
-                    apikey: configuracoes.find(c => c.chave === 'apikey_openrouter')?.valor || '',
-                    model: configuracoes.find(c => c.chave === 'model_openrouter')?.valor || 'openai/gpt-4o-mini',
-                    ollama_model: configuracoes.find(c => c.chave === 'ollama_model')?.valor || 'llama3',
-                    ollama_url: configuracoes.find(c => c.chave === 'ollama_url')?.valor || 'http://localhost:11434',
-                    ollama_apikey: configuracoes.find(c => c.chave === 'ollama_apikey')?.valor || '',
-                    lmstudio_model: configuracoes.find(c => c.chave === 'lmstudio_model')?.valor || 'default',
-                    lmstudio_url: configuracoes.find(c => c.chave === 'lmstudio_url')?.valor || 'http://localhost:1234',
-                    lmstudio_apikey: configuracoes.find(c => c.chave === 'lmstudio_apikey')?.valor || '',
-                    ia_think: configuracoes.find(c => c.chave === 'ia_think')?.valor || 'on',
-                    ia_think_tokens: parseInt(configuracoes.find(c => c.chave === 'ia_think_tokens')?.valor || '0', 10)
-                };
-            }
-        }
 
         // Montar mapa de categorias
         const categoriasMap = {};
@@ -891,55 +804,8 @@ Use SOMENTE IDs que existam na lista de categorias acima.`;
 
             let resposta;
 
-            if (typeof chamarIA === 'function') {
-                resposta = await chamarIA(prompt, 2000, 2);
-            } else {
-                const provider = configuracoesIA?.provider || 'openrouter';
-                let response, data;
-
-                if (provider === 'openrouter') {
-                    response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${configuracoesIA.apikey}`,
-                            'HTTP-Referer': window.location.origin,
-                            'X-Title': 'ERP Maneiro - Categorizar em Massa'
-                        },
-                        body: JSON.stringify({ model: configuracoesIA.model, messages: [{ role: 'user', content: prompt }], stream: false, temperature: 0.3, max_tokens: 2000 })
-                    });
-                    if (!response.ok) { const err = await response.json(); throw new Error(`Erro OpenRouter: ${err.error?.message || response.statusText}`); }
-                    data = await response.json();
-                    resposta = data.choices[0]?.message?.content?.trim();
-
-                } else if (provider === 'ollama') {
-                    const ollamaUrl = configuracoesIA.ollama_url || 'http://localhost:11434';
-                    const ollamaHeaders = { 'Content-Type': 'application/json' };
-                    if (configuracoesIA.ollama_apikey) ollamaHeaders['Authorization'] = `Bearer ${configuracoesIA.ollama_apikey}`;
-                    response = await fetch(`${ollamaUrl}/api/chat`, {
-                        method: 'POST', headers: ollamaHeaders,
-                        body: JSON.stringify({ model: configuracoesIA.ollama_model || 'llama3', messages: [{ role: 'user', content: prompt }], stream: false })
-                    });
-                    if (!response.ok) throw new Error(`Erro Ollama: ${response.statusText}`);
-                    data = await response.json();
-                    resposta = (data.message?.content || '').trim();
-
-                } else if (provider === 'lmstudio') {
-                    const lmUrl = configuracoesIA.lmstudio_url || 'http://localhost:1234';
-                    const lmHeaders = { 'Content-Type': 'application/json' };
-                    if (configuracoesIA.lmstudio_apikey) lmHeaders['Authorization'] = `Bearer ${configuracoesIA.lmstudio_apikey}`;
-                    response = await fetch(`${lmUrl}/v1/chat/completions`, {
-                        method: 'POST', headers: lmHeaders,
-                        body: JSON.stringify({ model: configuracoesIA.lmstudio_model || 'default', messages: [{ role: 'user', content: prompt }], stream: false, temperature: 0.3, max_tokens: 2000 })
-                    });
-                    if (!response.ok) throw new Error(`Erro LM Studio: ${response.statusText}`);
-                    data = await response.json();
-                    resposta = data.choices[0]?.message?.content?.trim();
-
-                } else {
-                    throw new Error(`Provider de IA desconhecido: ${provider}`);
-                }
-            }
+            resposta = await chamarIA(prompt, 2000, 2);
+            
 
             // Extrair JSON da resposta
             const jsonMatch = resposta.match(/\{[\s\S]*\}/);
