@@ -109,6 +109,99 @@ async def gerar_texto(prompt: str, max_tokens: int = 4000, temperatura: float = 
     raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Provedor de IA desconhecido: {provedor}")
 
 
+MAX_RODADAS_FERRAMENTAS = 6
+
+
+async def conversar_com_ferramentas(mensagens: list, ferramentas: list, executar, max_tokens: int = 2000) -> str:
+    """
+    Conversa em que o modelo pode chamar ferramentas (function calling, o mesmo conceito das ferramentas MCP):
+    ele pede, por exemplo, buscar_produtos({"termo": "rx580"}), o servidor executa `executar(nome, argumentos)`
+    no banco e devolve o resultado, e o modelo segue até ter a resposta. `ferramentas` no formato OpenAI
+    ([{"type": "function", "function": {name, description, parameters}}]). Devolve o texto final.
+    """
+    cfg = _configuracoes(CHAVES_IA)
+    provedor = cfg.get("ia_provider") or "openrouter"
+    pensar = (cfg.get("ia_think") or "on").lower()
+    tokens_pensar = int(cfg.get("ia_think_tokens") or 0)
+    mensagens = list(mensagens)
+
+    if provedor == "openrouter":
+        chave = cfg.get("apikey_openrouter")
+        if not chave:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "API Key do OpenRouter não configurada. Peça ao administrador para configurar.")
+        url = "https://openrouter.ai/api/v1/chat/completions"
+        cabecalhos = {"Authorization": f"Bearer {chave}", "Content-Type": "application/json; charset=utf-8", "X-Title": "ERP Maneiro"}
+        base = {"model": cfg.get("model_openrouter") or "openai/gpt-4o-mini"}
+        if pensar in ("off", "no"):
+            base["reasoning"] = {"effort": "low"}
+        elif pensar in ("low", "medium", "high"):
+            base["reasoning"] = {"effort": pensar, **({"max_tokens": tokens_pensar} if tokens_pensar > 0 else {})}
+        elif tokens_pensar > 0:
+            base["reasoning"] = {"max_tokens": tokens_pensar}
+        nome_provedor = "OpenRouter"
+    elif provedor == "lmstudio":
+        url = f"{cfg.get('lmstudio_url') or 'http://localhost:1234'}/v1/chat/completions"
+        cabecalhos = {"Content-Type": "application/json; charset=utf-8"}
+        if cfg.get("lmstudio_apikey"):
+            cabecalhos["Authorization"] = f"Bearer {cfg['lmstudio_apikey']}"
+        base = {"model": cfg.get("lmstudio_model") or "default"}
+        nome_provedor = "LM Studio"
+    elif provedor == "ollama":
+        url = f"{cfg.get('ollama_url') or 'http://localhost:11434'}/api/chat"
+        cabecalhos = {"Content-Type": "application/json; charset=utf-8"}
+        if cfg.get("ollama_apikey"):
+            cabecalhos["Authorization"] = f"Bearer {cfg['ollama_apikey']}"
+        base = {"model": cfg.get("ollama_model") or "llama3"}
+        if pensar in ("off", "no"):
+            base["think"] = False
+        nome_provedor = "Ollama"
+    else:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Provedor de IA desconhecido: {provedor}")
+
+    async with httpx.AsyncClient(timeout=180.0) as cliente:
+        for rodada in range(MAX_RODADAS_FERRAMENTAS + 1):
+            ultima = rodada == MAX_RODADAS_FERRAMENTAS  # na última rodada não oferece ferramenta: tem que responder
+            corpo = {**base, "messages": mensagens, "stream": False}
+            if not ultima:
+                corpo["tools"] = ferramentas
+            if provedor != "ollama":
+                corpo.update({"temperature": 0.3, "max_tokens": max_tokens})
+            r = await cliente.post(url, headers=cabecalhos, content=json.dumps(corpo, ensure_ascii=False).encode("utf-8"))
+            if r.status_code != 200:
+                _falha(nome_provedor, r)
+            dados = r.json()
+            msg = dados.get("message", {}) if provedor == "ollama" else dados["choices"][0]["message"]
+            chamadas = msg.get("tool_calls") or []
+            if not chamadas:
+                return (msg.get("content") or "").strip()
+
+            # devolve ao modelo o próprio pedido (com o raciocínio, se veio) e o resultado de cada ferramenta
+            pedido = {"role": "assistant", "content": msg.get("content") or "", "tool_calls": chamadas}
+            if msg.get("reasoning_details"):
+                pedido["reasoning_details"] = msg["reasoning_details"]
+            mensagens.append(pedido)
+            for chamada in chamadas:
+                funcao = chamada.get("function", {})
+                argumentos = funcao.get("arguments") or {}
+                if isinstance(argumentos, str):
+                    try:
+                        argumentos = json.loads(argumentos or "{}")
+                    except ValueError:
+                        argumentos = {}
+                try:
+                    resultado = executar(funcao.get("name"), argumentos)
+                except Exception as e:  # erro numa ferramenta vira resposta para o modelo, não derruba a conversa
+                    print(f"[IA] Erro na ferramenta {funcao.get('name')}: {e!r}")
+                    resultado = {"erro": "não foi possível consultar agora"}
+                resposta = {"role": "tool", "content": json.dumps(resultado, ensure_ascii=False, default=str)}
+                if provedor == "ollama":
+                    resposta["tool_name"] = funcao.get("name")
+                else:
+                    resposta["tool_call_id"] = chamada.get("id")
+                mensagens.append(resposta)
+    return ""
+
+
 @router.get("/dados-descricao")
 async def dados_fixos_descricao(current_user: UserInDB = Depends(get_current_user)):
     """Texto fixo (garantia, entrega...) que abre toda descrição de produto gerada por IA."""

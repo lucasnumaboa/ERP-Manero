@@ -865,7 +865,7 @@ tables = {
     "chat_produto_mensagens": """
         CREATE TABLE IF NOT EXISTS chat_produto_mensagens (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            produto_id INT NOT NULL,
+            produto_id INT NULL,  -- NULL = conversa geral com o assistente
             usuario_id INT NOT NULL,
             role ENUM('user', 'assistant') NOT NULL,
             conteudo TEXT NOT NULL,

@@ -67,6 +67,7 @@ Sistema ERP completo para pequenas e médias empresas, com cliente desktop para 
 - **Miniaturas automáticas**: imagens de produto geram thumbnails para carregamento mais rápido nas listagens.
 - **Paginação em Produtos 3D**: listagem paginada (20 itens por página).
 - **Instruções e Dúvidas + Chat IA**: campo de texto livre por produto usado como base de conhecimento para um widget de chat com IA, disponível em todas as telas, onde vendedores tiram dúvidas sobre um produto específico (com filtro "somente produto com estoque").
+- **Assistente de produtos (IA com acesso ao banco)**: o chat flutuante já abre pronto para perguntar, por texto ou áudio (a pergunta gravada é enviada sozinha) — ex.: "tem placa rx580 disponível?". A IA usa ferramentas de consulta (`backend/ferramentas_ia.py`: buscar produtos, detalhes do produto, categorias — só leitura, sem preço de custo), no mesmo conceito das ferramentas MCP, via function calling do provedor (`conversar_com_ferramentas` em `routers/ia.py`, OpenRouter/LM Studio/Ollama). Os produtos consultados aparecem como atalhos para focar a conversa em um deles.
 - **Ditado por voz offline**: transcrição de áudio local (sem depender de serviços externos) via NVIDIA Parakeet/sherpa-onnx, usada no chat de IA e nos campos de Descrição e Instruções/Dúvidas do produto.
 - **Filtro "apenas com estoque"** na listagem de Produtos.
 - **Limpeza de sidebar**: simplificação dos scripts de menu lateral, mantendo apenas o necessário.
@@ -93,6 +94,7 @@ Sistema ERP completo para pequenas e médias empresas, com cliente desktop para 
 - **Logo do login em WebP animado**: 1,2 MB em vez de 7 MB.
 - **Cache no frontend**: o servidor (`start_frontend.bat`, `-c0`) faz o navegador conferir cada arquivo e baixar só o que mudou; trocar de tela caiu de ~470 KB para ~7 KB.
 - **Endereço da API consultado uma vez por sessão**, em vez de antes de cada requisição.
+- **Versão nos endereços de CSS/JS** (`versionar_frontend.py`, roda no fim do `change_api_link.py`): a Cloudflare manda o navegador guardar CSS/JS por 4 horas; com `?v=<impressão do conteúdo>` nos HTML, o que mudou é baixado na hora. Depois de editar CSS/JS com o ERP no ar: `python versionar_frontend.py`.
 - **Dashboard**: 8 pedidos ao servidor, todos ao mesmo tempo (antes 15, um depois do outro): carrega em ~0,5 s em vez de ~1,6 s.
 - **Miniaturas em Produtos 3D**: o card mostra um JPEG leve (primeiro quadro, no caso do GIF) e a animação só é baixada ao passar o mouse; uma página caiu de ~7,7 MB para ~0,45 MB. `python scripts/gerar_miniaturas_3d.py` cria as que faltarem.
 
