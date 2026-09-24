@@ -404,7 +404,6 @@ async function exportarProdutos(usarAlteracoes = false) {
     
     // Inicializa o cache da URL da API antes de começar
     await getApiBaseUrlCached();
-    console.log('URL da API para imagens:', apiBaseUrlCache);
     
     // Se usar alterações, coleta os valores atuais dos campos
     if (usarAlteracoes) {
@@ -455,8 +454,6 @@ async function exportarProdutos(usarAlteracoes = false) {
         let processados = 0;
         let zipsGerados = 0;
         
-        console.log(`Exportando ${total} produtos em ${totalCategorias} categoria(s):`, categorias);
-        
         // Processa cada categoria e gera um ZIP separado
         for (const categoria of categorias) {
             const produtosCategoria = produtosPorCategoria[categoria];
@@ -499,21 +496,17 @@ async function exportarProdutos(usarAlteracoes = false) {
                     // Remove duplicatas (usando Set)
                     imagens = [...new Set(imagens)];
                     
-                    console.log(`Produto ${produto.nome}: ${imagens.length} imagem(ns) encontrada(s):`, imagens);
-                    
                     let imagemIndex = 1; // Contador para nomear as imagens exportadas
                     
                     for (let i = 0; i < imagens.length; i++) {
                         try {
                             // Tenta primeiro a URL de exibição, depois a de download
                             let imagemUrl = getImageUrl(imagens[i]);
-                            console.log(`[${i+1}/${imagens.length}] Tentando baixar: ${imagemUrl}`);
                             let imagemBlob = await fetchImageAsBlob(imagemUrl);
                             
                             // Se não conseguiu, tenta a URL alternativa
                             if (!imagemBlob || imagemBlob.size === 0) {
                                 imagemUrl = getImageDownloadUrl(imagens[i]);
-                                console.log(`[${i+1}/${imagens.length}] Tentando URL alternativa: ${imagemUrl}`);
                                 imagemBlob = await fetchImageAsBlob(imagemUrl);
                             }
                             
@@ -522,7 +515,6 @@ async function exportarProdutos(usarAlteracoes = false) {
                                 const extensao = getFileExtension(imagens[i]);
                                 const nomeImagem = `imagem_${imagemIndex}${extensao}`;
                                 pasta.file(nomeImagem, imagemBlob);
-                                console.log(`✓ Imagem adicionada: ${nomeImagem} (${imagemBlob.size} bytes)`);
                                 imagemIndex++;
                             } else {
                                 console.warn(`✗ Imagem não encontrada ou vazia: ${imagens[i]}`);
@@ -532,7 +524,6 @@ async function exportarProdutos(usarAlteracoes = false) {
                         }
                     }
                     
-                    console.log(`Produto ${produto.nome}: ${imagemIndex - 1} imagem(ns) exportada(s) de ${imagens.length} encontrada(s)`);
                 }
             }
             
@@ -551,8 +542,6 @@ async function exportarProdutos(usarAlteracoes = false) {
             
             downloadBlob(zipBlob, nomeArquivo);
             zipsGerados++;
-            
-            console.log(`✓ ZIP gerado: ${nomeArquivo} (${produtosCategoria.length} produtos)`);
             
             // Pequeno delay entre downloads para evitar problemas no navegador
             if (zipsGerados < totalCategorias) {

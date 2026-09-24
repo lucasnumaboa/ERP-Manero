@@ -20,57 +20,22 @@ document.addEventListener('DOMContentLoaded', function() {
     setupDateFilter();
 });
 
-// Inicializa o dashboard com dados
+// Inicializa o dashboard: tudo é pedido ao mesmo tempo (antes ia um pedido depois do outro)
 async function initDashboard(monthYear = null) {
-    try {
-        // Carrega dados reais da API
-        console.log('Iniciando inicialização do dashboard...');
-        console.log('Mês/Ano selecionado:', monthYear);
-        
-        // Busca os dados do dashboard da API
-        console.log('Chamando fetchDashboardData...');
-        const dashboardData = await fetchDashboardData(monthYear);
-        console.log('Dados recebidos do dashboard:', dashboardData);
-        
-        // Verifica se os dados foram recebidos corretamente
-        if (!dashboardData) {
-            console.error('Não foi possível obter dados do dashboard');
-            return;
-        }
-        
-        // Verifica a estrutura dos dados recebidos
-        console.log('Estrutura dos dados recebidos:', {
-            'vendas': dashboardData.vendas ? 'presente' : 'ausente',
-            'vendas_recentes': dashboardData.vendas_recentes ? `${dashboardData.vendas_recentes.length} itens` : 'ausente',
-            'produtos_mais_vendidos': dashboardData.produtos_mais_vendidos ? `${dashboardData.produtos_mais_vendidos.length} itens` : 'ausente',
-            'vendas_por_periodo': dashboardData.vendas_por_periodo ? `${dashboardData.vendas_por_periodo.length} itens` : 'ausente'
-        });
-        
-        // Atualiza os cards e gráficos com os dados reais
-        console.log('Atualizando cards do dashboard...');
-        updateDashboardCards(dashboardData);
-        
-        console.log('Atualizando atividades recentes...');
-        updateRecentActivities(dashboardData.vendas_recentes);
-        
-        // Busca e atualiza dados de valorização do estoque
-        console.log('Buscando valorização do estoque...');
-        await updateValorizacaoEstoque();
-        
-        // Busca e atualiza dados de custo total do estoque
-        console.log('Buscando custo total do estoque...');
-        await updateCustoTotalEstoque();
-        
-        // Carrega dados de contas a pagar e receber
-        console.log('Carregando contas financeiras...');
-        await carregarContasFinanceiras();
-        
-        // Gráficos removidos conforme solicitado
-        
-        console.log('Dashboard inicializado com sucesso!');
-    } catch (error) {
-        console.error('Erro ao inicializar dashboard:', error);
-    }
+    await Promise.all([
+        carregarPeriodo(monthYear),
+        updateValorizacaoEstoque(),
+        updateCustoTotalEstoque(),
+        carregarContasFinanceiras()
+    ]);
+}
+
+// Cards e vendas recentes do mês escolhido (o resto do painel não depende do mês)
+async function carregarPeriodo(monthYear = null) {
+    const dashboardData = await fetchDashboardData(monthYear);
+    if (!dashboardData) return;
+    updateDashboardCards(dashboardData);
+    updateRecentActivities(dashboardData.vendas_recentes);
 }
 
 // Verifica permissões do dashboard e mostra/oculta conteúdo
@@ -83,10 +48,6 @@ async function checkDashboardPermissions() {
             return;
         }
         
-        console.log('Verificando permissões do dashboard para o usuário:', user);
-        console.log('Valor de dashboard_visualizar:', user.dashboard_visualizar, 'Tipo:', typeof user.dashboard_visualizar);
-        console.log('Valor de dashboard_editar:', user.dashboard_editar, 'Tipo:', typeof user.dashboard_editar);
-        
         // SOLUÇÃO TEMPORÁRIA: Se o usuário for admin, conceder acesso independentemente das permissões específicas
         const isAdmin = user.nivel_acesso === 'admin' || user.nivel_acesso === 'Admin' || user.nivel_acesso === 'ADMIN';
         
@@ -95,10 +56,6 @@ async function checkDashboardPermissions() {
         const canView = Boolean(user.dashboard_visualizar) || isAdmin;
         const canEdit = Boolean(user.dashboard_editar) || isAdmin;
         
-        console.log('É admin:', isAdmin);
-        console.log('Permissão para visualizar dashboard:', canView);
-        console.log('Permissão para editar dashboard:', canEdit);
-        
         // Remove a tela de carregamento
         const loadingScreen = document.getElementById('permission-loading');
         if (loadingScreen) {
@@ -106,9 +63,9 @@ async function checkDashboardPermissions() {
         }
         
         if (canView || canEdit) {
-            // Se tem permissão, inicializa o dashboard normalmente
+            // Se tem permissão, inicializa o dashboard normalmente (já no mês do filtro)
             document.querySelector('.app-container').style.display = 'flex';
-            initDashboard();
+            initDashboard(document.getElementById('month-year-filter')?.value || null);
             document.querySelector('.content').style.display = 'block';
         } else {
             // Se não tem permissão, exibe a app-container mas com mensagem de acesso negado
@@ -171,7 +128,6 @@ async function checkDashboardPermissions() {
 // Função para buscar dados do dashboard da API
 async function fetchDashboardData(monthYear = null) {
     try {
-        console.log('Iniciando fetchDashboardData, mês/ano:', monthYear);
         
         // Usa a nova API centralizada
         let url = '/api/dashboard';
@@ -181,15 +137,10 @@ async function fetchDashboardData(monthYear = null) {
             url += `?month_year=${monthYear}`;
         }
         
-        console.log('Buscando dados do dashboard na URL:', url);
-        
         const data = await apiGet(url);
-        console.log('Dados recebidos do dashboard:', data);
         
         // Verificar especificamente os dados de vendas por período
         if (data && data.vendas_por_periodo) {
-            console.log('Dados de vendas por período:', data.vendas_por_periodo);
-            console.log('Quantidade de períodos:', data.vendas_por_periodo.length);
         } else {
             console.warn('Dados de vendas por período não encontrados ou vazios');
         }
@@ -445,22 +396,11 @@ function setupDateFilter() {
     const currentYear = currentDate.getFullYear();
     const currentMonth = (currentDate.getMonth() + 1).toString().padStart(2, '0');
     filterInput.value = `${currentYear}-${currentMonth}`;
-    
-    // Aplica o filtro automaticamente ao carregar a página
-    const monthYear = filterInput.value;
-    if (monthYear) {
-        // Recarrega o dashboard com o filtro selecionado
-        initDashboard(monthYear);
-    }
-    
-    // Adiciona evento de clique ao botão de aplicar filtro
+    // A primeira carga é feita por checkDashboardPermissions (só para quem pode ver o painel)
+
     if (applyFilterBtn) {
         applyFilterBtn.addEventListener('click', function() {
-            const monthYear = filterInput.value;
-            if (monthYear) {
-                // Recarrega o dashboard com o filtro selecionado
-                initDashboard(monthYear);
-            }
+            if (filterInput.value) carregarPeriodo(filterInput.value);
         });
     }
 }
@@ -478,31 +418,15 @@ async function carregarContasFinanceiras() {
         const dataProximoDiaStr = dataProximoDia.toISOString().split('T')[0];
         const dataFimMes = ultimoDiaDoMes.toISOString().split('T')[0];
         
-        // Carrega contas a pagar
-        const contasPagarHoje = await apiGet('/api/contas-pagar', {
-            vencimento_inicio: dataHoje,
-            vencimento_fim: dataHoje,
-            status: 'pendente'
-        });
-        
-        const contasPagarMes = await apiGet('/api/contas-pagar', {
-            vencimento_inicio: dataProximoDiaStr,
-            vencimento_fim: dataFimMes,
-            status: 'pendente'
-        });
-        
-        // Carrega contas a receber
-        const contasReceberHoje = await apiGet('/api/contas-receber', {
-            vencimento_inicio: dataHoje,
-            vencimento_fim: dataHoje,
-            status: 'pendente'
-        });
-        
-        const contasReceberMes = await apiGet('/api/contas-receber', {
-            vencimento_inicio: dataProximoDiaStr,
-            vencimento_fim: dataFimMes,
-            status: 'pendente'
-        });
+        // Contas a pagar e a receber de hoje e do resto do mês, pedidas ao mesmo tempo
+        const hojeFiltro = { vencimento_inicio: dataHoje, vencimento_fim: dataHoje, status: 'pendente' };
+        const mesFiltro = { vencimento_inicio: dataProximoDiaStr, vencimento_fim: dataFimMes, status: 'pendente' };
+        const [contasPagarHoje, contasPagarMes, contasReceberHoje, contasReceberMes] = await Promise.all([
+            apiGet('/api/contas-pagar', hojeFiltro),
+            apiGet('/api/contas-pagar', mesFiltro),
+            apiGet('/api/contas-receber', hojeFiltro),
+            apiGet('/api/contas-receber', mesFiltro)
+        ]);
         
         // Calcula totais
         const totalPagarHoje = Array.isArray(contasPagarHoje) 

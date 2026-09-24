@@ -258,7 +258,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Verificar se a URL da API no servidor é diferente da armazenada localmente
                     return response.json().then(data => {
                         if (data && data.config && data.config.api_url && data.config.api_url !== apiUrl) {
-                            console.log(`A URL da API no servidor (${data.config.api_url}) é diferente da URL local (${apiUrl}).`);
                             // Não salva mais no localStorage - sempre busca do banco
                         }
                     }).catch(() => {
@@ -301,7 +300,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Verificar se a URL da API no banco é diferente da armazenada localmente
                     return response.json().then(data => {
                         if (data && data.valor && data.valor !== apiUrl) {
-                            console.log(`A URL da API no servidor (${data.valor}) é diferente da URL local (${apiUrl}).`);
                             // Não salva mais no localStorage - sempre busca do banco
                         }
                     }).catch(() => {

@@ -132,7 +132,6 @@ function limparMultiSelect(containerId, tipo) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('DOM carregado - iniciando configuração da página de vendas');
     // Verificar autenticação
     checkAuth();
 
@@ -153,12 +152,9 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('filtroDataInicial').valueAsDate = primeiroDiaDoMes;
     document.getElementById('filtroDataFinal').valueAsDate = hoje;
 
-    console.log('Configurando botão Nova Venda');
     const btnNovaVenda = document.getElementById('btnNovaVenda');
-    console.log('Botão Nova Venda encontrado:', btnNovaVenda);
     if (btnNovaVenda) {
         btnNovaVenda.addEventListener('click', function () {
-            console.log('Botão Nova Venda clicado');
             abrirModalNovaVenda();
         });
     } else {
@@ -338,7 +334,6 @@ async function carregarVendas() {
             tbody.innerHTML = '<tr><td colspan="13" class="text-center">Use os filtros acima para visualizar as vendas</td></tr>';
         }
 
-        console.log('Página de vendas carregada - aguardando aplicação de filtros');
     } catch (error) {
         console.error('Erro ao carregar vendas:', error);
         // Exibir mensagem de erro
@@ -353,14 +348,12 @@ async function carregarClientes() {
     try {
         // Usa a API centralizada
         const clientes = await apiGet('/api/parceiros', { tipo: 'cliente' });
-        console.log('Clientes carregados da API:', clientes);
 
         // Armazena todos os clientes para pesquisa
         todosClientesVendas = clientes;
 
         // Ordena por ID decrescente (últimos cadastrados primeiro) e pega os últimos 10
         const ultimosClientes = [...clientes].sort((a, b) => b.id - a.id).slice(0, 10);
-        console.log('Últimos 10 clientes:', ultimosClientes);
 
         preencherSelectClientes(ultimosClientes);
     } catch (error) {
@@ -402,7 +395,6 @@ async function carregarCondicoesPagamento() {
 // Função para aplicar filtros
 async function aplicarFiltros() {
     try {
-        console.log('Aplicando filtros...');
 
         // Mostra o loading overlay
         mostrarLoading('Carregando vendas...', 'Buscando dados do servidor...');
@@ -449,18 +441,6 @@ async function aplicarFiltros() {
         const filtroPendenteCR = document.getElementById('filtroPendenteCR').checked;
         const filtroPendenteAP = document.getElementById('filtroPendenteAP').checked;
 
-        console.log('Valores dos filtros:');
-        console.log('  ID Pedido:', filtroIdPedido);
-        console.log('  Cliente:', filtroCliente);
-        console.log('  Vendedores:', filtroVendedores);
-        console.log('  Condição Pagamento:', filtroCondicaoPagamento);
-        console.log('  Situações:', filtroSituacoes);
-        console.log('  Data Inicial:', filtroDataInicial);
-        console.log('  Data Final:', filtroDataFinal);
-        console.log('  Pendente CR:', filtroPendenteCR);
-        console.log('  Pendente AP:', filtroPendenteAP);
-        console.log('Total de vendas carregadas:', todasVendas.length);
-
         // Busca contas a receber e a pagar para filtros
         let contasReceber = [];
         let contasPagar = [];
@@ -477,7 +457,6 @@ async function aplicarFiltros() {
         let vendasFiltradas = todasVendas.filter(venda => {
             // Filtro ID Pedido
             if (filtroIdPedido && !venda.codigo.toLowerCase().includes(filtroIdPedido)) {
-                console.log(`Venda ${venda.codigo} excluída: ID Pedido não corresponde`);
                 return false;
             }
 
@@ -485,7 +464,6 @@ async function aplicarFiltros() {
             if (filtroCliente) {
                 const nomeCliente = (venda.cliente_nome || '').toLowerCase();
                 if (!nomeCliente.includes(filtroCliente)) {
-                    console.log(`Venda ${venda.codigo} excluída: Cliente não corresponde (${nomeCliente} não contém ${filtroCliente})`);
                     return false;
                 }
             }
@@ -494,14 +472,12 @@ async function aplicarFiltros() {
             if (filtroVendedores.length > 0) {
                 const vendedorVenda = venda.vendedor_id ? venda.vendedor_id.toString() : '';
                 if (!filtroVendedores.includes(vendedorVenda)) {
-                    console.log(`Venda ${venda.codigo} excluída: Vendedor ${vendedorVenda} não está na lista ${filtroVendedores}`);
                     return false;
                 }
             }
 
             // Filtro Condição de Pagamento - Converter para número para comparação correta
             if (filtroCondicaoPagamento && parseInt(venda.condicao_pagamento_id) !== parseInt(filtroCondicaoPagamento)) {
-                console.log(`Venda ${venda.codigo} excluída: Condição de Pagamento não corresponde`);
                 return false;
             }
 
@@ -509,7 +485,6 @@ async function aplicarFiltros() {
             if (filtroSituacoes.length > 0) {
                 const statusVenda = (venda.status || '').toLowerCase();
                 if (!filtroSituacoes.includes(statusVenda)) {
-                    console.log(`Venda ${venda.codigo} excluída: Situação ${statusVenda} não está na lista ${filtroSituacoes}`);
                     return false;
                 }
             }
@@ -519,7 +494,6 @@ async function aplicarFiltros() {
                 const dataVenda = new Date(venda.data_pedido);
                 const dataInicial = new Date(filtroDataInicial);
                 if (dataVenda < dataInicial) {
-                    console.log(`Venda ${venda.codigo} excluída: Data anterior ao filtro`);
                     return false;
                 }
             }
@@ -531,7 +505,6 @@ async function aplicarFiltros() {
                 // Adiciona 1 dia para incluir todo o dia final
                 dataFinal.setDate(dataFinal.getDate() + 1);
                 if (dataVenda >= dataFinal) {
-                    console.log(`Venda ${venda.codigo} excluída: Data posterior ao filtro`);
                     return false;
                 }
             }
@@ -540,7 +513,6 @@ async function aplicarFiltros() {
             if (filtroPendenteCR) {
                 const temContasReceber = contasReceber.some(cr => cr.documento_referencia === venda.codigo);
                 if (temContasReceber) {
-                    console.log(`Venda ${venda.codigo} excluída: Já tem CR criado`);
                     return false; // Exclui vendas que já têm CR criado
                 }
             }
@@ -549,16 +521,12 @@ async function aplicarFiltros() {
             if (filtroPendenteAP) {
                 const temContasPagar = contasPagar.some(cp => cp.documento_referencia === venda.codigo);
                 if (temContasPagar || !venda.vendedor_id) {
-                    console.log(`Venda ${venda.codigo} excluída: Já tem AP criado ou sem vendedor`);
                     return false; // Exclui vendas que já têm AP criado ou sem vendedor
                 }
             }
 
-            console.log(`Venda ${venda.codigo} INCLUÍDA nos resultados`);
             return true;
         });
-
-        console.log(`✓ Filtros aplicados: ${vendasFiltradas.length} vendas encontradas de ${todasVendas.length}`);
 
         // Busca os itens (produtos) de cada venda para exportação
         // Mostra o loading se houver muitas vendas para processar
@@ -619,7 +587,6 @@ function limparFiltros() {
         tbody.innerHTML = '<tr><td colspan="13" class="text-center">Use os filtros acima para visualizar as vendas</td></tr>';
     }
 
-    console.log('Filtros limpos');
 }
 
 // Função para exportar dados em CSV
@@ -732,7 +699,6 @@ async function exportarDadosCSV() {
         link.click();
         document.body.removeChild(link);
 
-        console.log(`Arquivo exportado com sucesso: ${linhasCSV.length} vendas`);
         alert(`Arquivo exportado com sucesso! (${linhasCSV.length} vendas)`);
     } catch (error) {
         console.error('Erro ao exportar dados:', error);
@@ -782,7 +748,6 @@ async function renderizarVendas(vendas) {
     try {
         contasReceber = await apiGet('/api/contas-receber') || [];
         contasPagar = await apiGet('/api/contas-pagar') || [];
-        console.log(`Contas carregadas: ${contasReceber.length} a receber, ${contasPagar.length} a pagar`);
     } catch (error) {
         console.warn('Erro ao buscar contas:', error);
     }
@@ -985,13 +950,10 @@ async function renderizarVendas(vendas) {
 
                 if (precisaDevolucao) {
                     // Chama a API de devolução que já faz o retorno de estoque
-                    console.log(`[Vendas] Processando devolução/cancelamento para venda #${vendaId}`);
 
                     const response = await apiPost(`/api/vendas/${vendaId}/devolucao`, {
                         justificativa: `Alteração de status para ${novoStatus} via página de vendas`
                     });
-
-                    console.log('Resposta da devolução:', response);
 
                     // Notifica via webhook sobre o retorno de produtos
                     if (window.webhookEstoque) {
@@ -999,7 +961,6 @@ async function renderizarVendas(vendas) {
                         try {
                             const vendaDetalhada = await apiGet(`/api/vendas/${vendaId}`);
                             if (vendaDetalhada.itens && vendaDetalhada.itens.length > 0) {
-                                console.log('[Vendas] Notificando retorno de produtos ao estoque via webhook...');
                                 window.webhookEstoque.notificarEntradaProdutos(vendaDetalhada.itens);
                             }
                         } catch (webhookError) {
@@ -1019,8 +980,6 @@ async function renderizarVendas(vendas) {
                 if (row) {
                     row.className = `status-${novoStatus}`;
                 }
-
-                console.log(`Status da venda #${vendaId} alterado de "${statusAtual}" para "${novoStatus}"`);
 
                 // Re-habilita o select
                 this.disabled = false;
@@ -1162,7 +1121,6 @@ function preencherSelectProdutos(produtos) {
 
     // Verificar se produtos foram carregados
     if (!produtos || produtos.length === 0) {
-        console.log('Nenhum produto carregado da API');
         return;
     }
 
@@ -1173,7 +1131,6 @@ function preencherSelectProdutos(produtos) {
     });
 
     if (produtosComEstoque.length === 0) {
-        console.log('Nenhum produto com estoque disponível');
         return;
     }
 
@@ -1257,7 +1214,6 @@ function preencherSelectVendedores(vendedores) {
             }
         });
     } else {
-        console.log('Nenhum vendedor encontrado na API');
     }
 }
 
@@ -1288,7 +1244,6 @@ function preencherSelectCondicoesPagamento(condicoes) {
             }
         });
     } else {
-        console.log('Nenhuma condição de pagamento encontrada na API');
     }
 }
 
@@ -1297,7 +1252,6 @@ async function carregarPlataformas() {
     try {
         // Usa a API centralizada para buscar plataformas de venda
         const plataformas = await apiGet('/api/plataformas-venda', { ativo: true });
-        console.log('Plataformas de venda carregadas da API:', plataformas);
         preencherSelectPlataformas(plataformas);
     } catch (error) {
         console.error('Erro ao carregar plataformas:', error);
@@ -1325,23 +1279,19 @@ function preencherSelectPlataformas(plataformas) {
             selectPlataforma.appendChild(option);
         });
     } else {
-        console.log('Nenhuma plataforma de venda encontrada na API');
     }
 }
 
 // Funções para manipulação de vendas
 async function abrirModalNovaVenda() {
-    console.log('Função abrirModalNovaVenda iniciada');
     editandoVenda = false;
     vendaAtual = null;
     itensVenda = [];
 
     // Recarrega produtos com estoque atualizado antes de abrir o modal
     await carregarProdutos();
-    console.log('Produtos recarregados com estoque atualizado');
 
     // Resetar formulário
-    console.log('Resetando formulário');
     const vendaForm = document.getElementById('vendaForm');
     if (!vendaForm) {
         console.error('Formulário vendaForm não encontrado');
@@ -1388,16 +1338,13 @@ async function abrirModalNovaVenda() {
     resetarAbasModal();
 
     // Exibir modal
-    console.log('Tentando exibir o modal');
     const vendaModal = document.getElementById('vendaModal');
     if (!vendaModal) {
         console.error('Modal vendaModal não encontrado');
     } else {
-        console.log('Modal encontrado, adicionando classe active');
         // Remover o estilo inline e usar apenas a classe active
         vendaModal.style.display = '';
         vendaModal.classList.add('active');
-        console.log('Estado atual do modal: classe active =', vendaModal.classList.contains('active'));
     }
 }
 
@@ -1532,13 +1479,11 @@ async function excluirVendaAPI(id) {
 }
 
 function fecharModalVenda() {
-    console.log('Fechando modal de venda');
     const vendaModal = document.getElementById('vendaModal');
     if (vendaModal) {
         // Remover a classe active E definir display como none para garantir que o modal seja fechado
         vendaModal.classList.remove('active');
         vendaModal.style.display = 'none';
-        console.log('Modal fechado com sucesso (classe active removida e display none aplicado)');
     } else {
         console.error('Modal vendaModal não encontrado ao tentar fechar');
     }
@@ -1614,16 +1559,11 @@ async function salvarVenda() {
     const clienteOption = clienteSelect.options[clienteSelect.selectedIndex];
     const clienteNome = clienteOption ? clienteOption.textContent : '';
 
-    console.log('Usando cliente ID selecionado:', clienteId);
-    console.log('Nome do cliente selecionado:', clienteNome);
-
     // Validar se um cliente foi selecionado
     if (!clienteId) {
         alert('Por favor, selecione um cliente.');
         return;
     }
-
-    console.log('ID do cliente a ser usado:', clienteId);
 
     // Calcular o custo total dos produtos
     const custoTotal = itensVenda.reduce((total, item) => {
@@ -1682,7 +1622,6 @@ async function salvarVenda() {
         vendaData.condicao_pagamento_id = parseInt(condicaoSelect.value);
     }
 
-    console.log('Dados da venda a serem enviados:', vendaData); // Log para debug
 
     // Ativar estado de loading no botão
     const btnSalvar = document.getElementById('btnSalvar');
@@ -1696,7 +1635,6 @@ async function salvarVenda() {
         if (editandoVenda && vendaAtual) {
             // Adicionar status apenas para atualizações
             vendaData.status = document.getElementById('status').value;
-            console.log('Atualizando venda com status:', vendaData.status);
             await atualizarVenda(vendaAtual.id, vendaData);
         } else {
             await criarVenda(vendaData);
@@ -1713,14 +1651,12 @@ async function salvarVenda() {
 async function criarVenda(vendaData) {
     try {
         // Adicionar logs para debug
-        console.log('Dados da venda a serem enviados:', vendaData);
 
         // Usa a API centralizada
         await apiPost('/api/vendas', vendaData);
 
         // Notifica via webhook sobre a saída de produtos
         if (vendaData.itens && vendaData.itens.length > 0 && window.webhookEstoque) {
-            console.log('[Vendas] Notificando saída de produtos via webhook...');
 
             // Obter nome do vendedor selecionado
             const vendedorSelect = document.getElementById('vendedor_id');
@@ -1774,12 +1710,6 @@ async function atualizarVenda(id, vendaData) {
         // Normalizar status (remover espaços e converter para minúsculas)
         statusNovo = statusNovo ? String(statusNovo).trim().toLowerCase() : null;
 
-        console.log('=== ATUALIZANDO VENDA ===');
-        console.log('Status anterior (raw):', vendaAtual ? vendaAtual.status : null);
-        console.log('Status anterior (normalizado):', statusAnterior ? String(statusAnterior).trim().toLowerCase() : null);
-        console.log('Status novo (raw):', vendaData.status);
-        console.log('Status novo (normalizado):', statusNovo);
-
         // Usa a API centralizada
         await apiPut(`/api/vendas/${id}`, vendaData);
 
@@ -1790,44 +1720,29 @@ async function atualizarVenda(id, vendaData) {
         // Obter o código da venda (documento_referencia)
         const codigoVenda = vendaAtual ? vendaAtual.codigo : null;
 
-        console.log('Atualizar AP:', atualizarAP, 'Atualizar AR:', atualizarAR);
-        console.log('Código da venda:', codigoVenda);
-
         // Normalizar status anterior também
         const statusAnteriorNormalizado = statusAnterior ? String(statusAnterior).trim().toLowerCase() : null;
 
         // Se o status mudou para "finalizada" e as flags estão marcadas
         if (statusNovo === 'finalizada' && statusAnteriorNormalizado !== 'finalizada') {
-            console.log('>>> Acionando atualização para FINALIZADA');
             if (atualizarAP) {
-                console.log('Atualizando contas a pagar...');
                 await atualizarContasAPagar(codigoVenda, 'pago');
             }
             if (atualizarAR) {
-                console.log('Atualizando contas a receber...');
                 await atualizarContasAReceber(codigoVenda, 'recebido');
             }
         } else {
-            console.log('Condição de finalizada NÃO foi atendida');
-            console.log('statusNovo === "finalizada"?', statusNovo === 'finalizada');
-            console.log('statusAnteriorNormalizado !== "finalizada"?', statusAnteriorNormalizado !== 'finalizada');
         }
 
         // Se o status mudou para "cancelada" e as flags estão marcadas
         if (statusNovo === 'cancelada' && statusAnteriorNormalizado !== 'cancelada') {
-            console.log('>>> Acionando atualização para CANCELADA');
             if (atualizarAP) {
-                console.log('Atualizando contas a pagar...');
                 await atualizarContasAPagar(codigoVenda, 'cancelado');
             }
             if (atualizarAR) {
-                console.log('Atualizando contas a receber...');
                 await atualizarContasAReceber(codigoVenda, 'cancelado');
             }
         } else {
-            console.log('Condição de cancelada NÃO foi atendida');
-            console.log('statusNovo === "cancelada"?', statusNovo === 'cancelada');
-            console.log('statusAnteriorNormalizado !== "cancelada"?', statusAnteriorNormalizado !== 'cancelada');
         }
 
         alert('Venda atualizada com sucesso!');
@@ -2370,7 +2285,6 @@ async function saveCliente() {
     if (clienteExistente) {
         if (await confirmarAcao(`Já existe um cliente com o nome "${clienteExistente.nome}". Deseja selecioná-lo?`)) {
             closeClienteModal();
-            console.log('Selecionando cliente existente:', clienteExistente);
 
             const selectCliente = document.getElementById('cliente_id');
             if (selectCliente) {
@@ -2406,11 +2320,9 @@ async function saveCliente() {
             ativo: ativo
         };
 
-        console.log('Criando cliente:', clienteData);
         // Cria o cliente na tabela 'clientes' (e backend sincroniza com 'parceiros')
         // O retorno contém o ID da tabela 'clientes', que pode ser diferente do ID da tabela 'parceiros'
         const novoCliente = await apiPost('/api/clientes', clienteData);
-        console.log('Cliente criado com sucesso (ID Cliente):', novoCliente);
 
         // Fecha o modal de cliente
         closeClienteModal();
@@ -2441,7 +2353,6 @@ async function saveCliente() {
         }
 
         if (parceiroEncontrado) {
-            console.log('Parceiro correspondente encontrado:', parceiroEncontrado);
 
             // Seleciona o novo cliente no select
             const selectCliente = document.getElementById('cliente_id');
@@ -2586,27 +2497,19 @@ async function criarContasPagar(vendaId, vendaCodigo, vendedorId) {
 // Função para atualizar contas a pagar
 async function atualizarContasAPagar(codigoVenda, novoStatus) {
     try {
-        console.log(`>>> INICIANDO atualizarContasAPagar - Status: ${novoStatus}, Código: ${codigoVenda}`);
 
         // Buscar todas as contas a pagar com o documento_referencia igual ao código da venda
-        console.log('Buscando contas a pagar com documento_referencia:', codigoVenda);
         const contas = await apiGet('/api/contas-pagar', {
             documento_referencia: codigoVenda
         });
 
-        console.log('Resposta da API:', contas);
-
         if (!contas || contas.length === 0) {
-            console.log('❌ Nenhuma conta a pagar encontrada para este pedido');
             return;
         }
-
-        console.log(`✓ Encontradas ${contas.length} contas a pagar para atualizar`);
 
         // Atualizar cada conta
         for (const conta of contas) {
             try {
-                console.log(`Atualizando conta a pagar ${conta.id} (${conta.codigo})...`);
                 const updateData = {
                     status: novoStatus
                 };
@@ -2614,12 +2517,9 @@ async function atualizarContasAPagar(codigoVenda, novoStatus) {
                 // Se o status for "pago", adicionar data de pagamento
                 if (novoStatus === 'pago') {
                     updateData.data_pagamento = new Date().toISOString().split('T')[0];
-                    console.log('Data de pagamento adicionada:', updateData.data_pagamento);
                 }
 
-                console.log('Enviando para API:', updateData);
                 await apiPut(`/api/contas-pagar/${conta.id}`, updateData);
-                console.log(`✓ Conta a pagar ${conta.codigo} atualizada para ${novoStatus}`);
             } catch (error) {
                 console.error(`❌ Erro ao atualizar conta a pagar ${conta.id}:`, error);
             }
@@ -2627,12 +2527,10 @@ async function atualizarContasAPagar(codigoVenda, novoStatus) {
 
         // Recarregar dados na página de contas a pagar se estiver aberta
         if (window.location.pathname.includes('contas_pagar.html')) {
-            console.log('Recarregando dados de contas a pagar...');
             if (typeof carregarTodasAsContas === 'function') {
                 await carregarTodasAsContas();
             }
         }
-        console.log('>>> FIM atualizarContasAPagar');
     } catch (error) {
         console.error('❌ Erro ao buscar contas a pagar:', error);
     }
@@ -2641,27 +2539,19 @@ async function atualizarContasAPagar(codigoVenda, novoStatus) {
 // Função para atualizar contas a receber
 async function atualizarContasAReceber(codigoVenda, novoStatus) {
     try {
-        console.log(`>>> INICIANDO atualizarContasAReceber - Status: ${novoStatus}, Código: ${codigoVenda}`);
 
         // Buscar todas as contas a receber com o documento_referencia igual ao código da venda
-        console.log('Buscando contas a receber com documento_referencia:', codigoVenda);
         const contas = await apiGet('/api/contas-receber', {
             documento_referencia: codigoVenda
         });
 
-        console.log('Resposta da API:', contas);
-
         if (!contas || contas.length === 0) {
-            console.log('❌ Nenhuma conta a receber encontrada para este pedido');
             return;
         }
-
-        console.log(`✓ Encontradas ${contas.length} contas a receber para atualizar`);
 
         // Atualizar cada conta
         for (const conta of contas) {
             try {
-                console.log(`Atualizando conta a receber ${conta.id} (${conta.codigo})...`);
                 const updateData = {
                     status: novoStatus
                 };
@@ -2669,12 +2559,9 @@ async function atualizarContasAReceber(codigoVenda, novoStatus) {
                 // Se o status for "recebido", adicionar data de recebimento
                 if (novoStatus === 'recebido') {
                     updateData.data_recebimento = new Date().toISOString().split('T')[0];
-                    console.log('Data de recebimento adicionada:', updateData.data_recebimento);
                 }
 
-                console.log('Enviando para API:', updateData);
                 await apiPut(`/api/contas-receber/${conta.id}`, updateData);
-                console.log(`✓ Conta a receber ${conta.codigo} atualizada para ${novoStatus}`);
             } catch (error) {
                 console.error(`❌ Erro ao atualizar conta a receber ${conta.id}:`, error);
             }
@@ -2682,12 +2569,10 @@ async function atualizarContasAReceber(codigoVenda, novoStatus) {
 
         // Recarregar dados na página de contas a receber se estiver aberta
         if (window.location.pathname.includes('contas_receber.html')) {
-            console.log('Recarregando dados de contas a receber...');
             if (typeof carregarTodasAsContas === 'function') {
                 await carregarTodasAsContas();
             }
         }
-        console.log('>>> FIM atualizarContasAReceber');
     } catch (error) {
         console.error('❌ Erro ao buscar contas a receber:', error);
     }
@@ -2701,7 +2586,6 @@ async function atualizarContasAReceber(codigoVenda, novoStatus) {
  * Abre o modal de devolução com os dados da venda
  */
 function abrirModalDevolucao(vendaId, codigo, cliente, valor, vendedor) {
-    console.log('Abrindo modal de devolução para venda:', vendaId, codigo);
 
     // Preenche os dados no modal
     document.getElementById('devolucaoVendaId').value = vendaId;
@@ -2759,14 +2643,11 @@ async function processarDevolucao() {
     btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
 
     try {
-        console.log('Processando devolução da venda:', vendaId);
 
         // Chama a API de devolução
         const response = await apiPost(`/api/vendas/${vendaId}/devolucao`, {
             justificativa: justificativa
         });
-
-        console.log('Resposta da devolução:', response);
 
         // Monta a mensagem de sucesso
         let mensagem = response.mensagem || 'Devolução processada com sucesso!';
@@ -2922,8 +2803,6 @@ function gerarPixQRCode(chavePix, valor, nomeDestinatario) {
     // Gera o payload PIX no formato EMV
     const pixPayload = gerarPayloadPix(chavePix, valor, nomeDestinatario);
 
-    console.log('PIX Payload gerado:', pixPayload);
-
     // Usa a biblioteca qrcode-generator
     const typeNumber = 0; // Auto-detect
     const errorCorrectionLevel = 'M';
@@ -3004,8 +2883,6 @@ function gerarPayloadPix(chavePix, valor, nomeDestinatario) {
     // Calcula e adiciona o CRC
     const crc = calcularCRC16(payload);
     payload += crc;
-
-    console.log('PIX Payload:', payload);
 
     return payload;
 }

@@ -56,3 +56,11 @@ function getApiUrl() {
     }
     return _promessaApiUrl;
 }
+
+// App instalável (manifest.webmanifest + sw.js): no celular aparece "Adicionar à tela inicial" e o ERP
+// abre em tela cheia, como um aplicativo. O service worker não guarda telas em cache (ver sw.js).
+if ('serviceWorker' in navigator && window.isSecureContext) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => { /* sem app instalável, o site segue normal */ });
+    });
+}

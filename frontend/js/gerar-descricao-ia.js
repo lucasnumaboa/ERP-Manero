@@ -137,8 +137,6 @@ Depois dessas informações, escreva a descrição do produto.
 
 Responda APENAS com a descrição pronta, sem explicações adicionais, títulos ou formatação markdown.`;
 
-        console.log(`[IA Descrição] Gerando descrição via ${provider} para:`, nomeProduto);
-
         // Chamar IA usando a função compartilhada se disponível
         let descricaoGerada;
         descricaoGerada = await chamarIA(prompt, 1000, 2);
@@ -158,7 +156,6 @@ Responda APENAS com a descrição pronta, sem explicações adicionais, títulos
             try {
                 // Tenta buscar via API primeiro se tiver ID
                 if (produtoId) {
-                    console.log('[IA Descrição] Buscando componentes via API...');
                     try {
                         const componentes = await apiGet(`/api/produtos/${produtoId}/consumo`);
                         if (componentes && componentes.length > 0) {
@@ -172,7 +169,6 @@ Responda APENAS com a descrição pronta, sem explicações adicionais, títulos
                 // Se não conseguiu via API (ou array vazio), tenta ler do DOM (tabela visual)
                 // Isso cobre o caso de novos produtos onde os componentes estão na tabela mas ainda não salvos/associados com ID persistido corretamente ou delay de API
                 if (componentesNomes.length === 0) {
-                    console.log('[IA Descrição] Lendo componentes da tabela HTML...');
                     const linhas = document.querySelectorAll('#consumoTableBody tr');
                     linhas.forEach(linha => {
                         // Ignora linha de "Nenhum componente" ou "Carregando"
@@ -209,8 +205,6 @@ Responda APENAS com a descrição pronta, sem explicações adicionais, títulos
         // Feedback visual de sucesso
         btnGerarIA.innerHTML = '<i class="fas fa-check"></i>';
         btnGerarIA.style.background = '#28a745';
-
-        console.log('[IA Descrição] Descrição gerada com sucesso!');
 
         // Restaurar botão após 2 segundos
         setTimeout(() => {

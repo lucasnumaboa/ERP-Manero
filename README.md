@@ -93,12 +93,17 @@ Sistema ERP completo para pequenas e médias empresas, com cliente desktop para 
 - **Logo do login em WebP animado**: 1,2 MB em vez de 7 MB.
 - **Cache no frontend**: o servidor (`start_frontend.bat`, `-c0`) faz o navegador conferir cada arquivo e baixar só o que mudou; trocar de tela caiu de ~470 KB para ~7 KB.
 - **Endereço da API consultado uma vez por sessão**, em vez de antes de cada requisição.
+- **Dashboard**: 8 pedidos ao servidor, todos ao mesmo tempo (antes 15, um depois do outro): carrega em ~0,5 s em vez de ~1,6 s.
+- **Miniaturas em Produtos 3D**: o card mostra um JPEG leve (primeiro quadro, no caso do GIF) e a animação só é baixada ao passar o mouse; uma página caiu de ~7,7 MB para ~0,45 MB. `python scripts/gerar_miniaturas_3d.py` cria as que faltarem.
 
 ### Interface
 
 - **Menu lateral sem "piscar"**: é montado já filtrado pelas permissões do usuário (antes aparecia o menu completo por um instante).
 - **Avisos e confirmações no visual do ERP** (`js/avisos.js`) no lugar dos pop-ups do navegador.
 - **Botão de recolher o menu** e **nome do usuário** centralizados no `js/sidebar-template.js`.
+- **Celular** (`css/celular.css`, último CSS de cada tela): menu em gaveta (botão ☰), conteúdo na largura da tela, tabelas largas rolam dentro do próprio quadro e as tabelas com `.tabela-cartoes` (Home, Vendas, Produtos, histórico de Orçamentos) viram cartões — o nome de cada coluna é preenchido pelo `sidebar-template.js`.
+- **Instalável como app** (`manifest.webmanifest`, `sw.js`, ícones em `img/app/`): no celular aparece "Adicionar à tela inicial" e o ERP abre em tela cheia. O service worker não guarda telas em cache (atualizações chegam na hora); só mostra `offline.html` quando a internet cai.
+- **Estilos de Relatórios e Produtos** saíram do HTML para `css/relatorios.css` e `css/produtos-tela.css` (visual conferido propriedade por propriedade, sem mudança).
 
 ---
 

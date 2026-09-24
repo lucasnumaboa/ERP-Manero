@@ -10,7 +10,6 @@ let datasCalendario = [];
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', async function () {
-    console.log('[Calendario] Inicializando...');
 
     // Verifica autenticação
     const userData = await verificarUsuario();
@@ -47,7 +46,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     });
 
-    console.log('[Calendario] Inicialização concluída');
 });
 
 async function verificarUsuario() {
@@ -359,27 +357,13 @@ async function executarAgora() {
         return;
     }
 
-    console.log('[Calendario] ========== EXECUTANDO VERIFICAÇÃO ==========');
-    console.log('[Calendario] Data de hoje:', new Date().toLocaleDateString('pt-BR'));
-
     try {
-        console.log('[Calendario] Chamando API /api/calendario/executar-agora...');
         const result = await apiPost('/api/calendario/executar-agora');
 
-        console.log('[Calendario] Resposta da API:', result);
-        console.log('[Calendario] Notificações enviadas:', result.enviadas);
-
         if (result.detalhes && result.detalhes.length > 0) {
-            console.log('[Calendario] Detalhes das notificações:');
             result.detalhes.forEach((d, i) => {
-                console.log(`  ${i + 1}. ${d.descricao} - ${d.dias_restantes} dias - ${d.notificacao} (${d.vendedores} vendedores)`);
             });
         } else {
-            console.log('[Calendario] Nenhuma notificação enviada. Possíveis motivos:');
-            console.log('  - Nenhuma data comemorativa com notifica=TRUE dentro do período');
-            console.log('  - Hoje não é um dia de notificação calculado');
-            console.log('  - Webhook não está configurado ou desativado');
-            console.log('  - Nenhum vendedor ativo com telefone');
         }
 
         let mensagem = `Verificação concluída!\n\n`;
@@ -410,5 +394,3 @@ document.addEventListener('click', function (e) {
         fecharModal();
     }
 });
-
-console.log('[Calendario] Módulo carregado');

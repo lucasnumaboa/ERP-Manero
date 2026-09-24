@@ -4,7 +4,6 @@ let plataformaAtual = null;
 let editandoPlataforma = false;
 
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('DOM carregado - iniciando configuração da página de plataformas de venda');
     
     // Verificar autenticação
     checkAuth();
@@ -60,7 +59,6 @@ async function carregarPlataformas() {
         }
         
         plataformas = await apiGet('/api/plataformas-venda', params);
-        console.log('Plataformas carregadas:', plataformas);
         
         renderizarPlataformas(plataformas);
     } catch (error) {

@@ -8,9 +8,7 @@
 async function syncApiUrl() {
     try {
         const apiUrl = await getApiUrl();
-        console.log('URL da API obtida do banco:', apiUrl);
     } catch (error) {
-        console.log('Não foi possível obter a URL da API do banco');
     }
 }
 

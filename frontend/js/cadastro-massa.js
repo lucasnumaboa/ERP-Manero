@@ -638,7 +638,6 @@ async function salvarProdutosMassa() {
                     };
 
                     const compraResult = await apiPost('/api/compras', compraData);
-                    console.log('[CadastroMassa] Compra criada:', compraResult);
 
                     // Se status selecionado for 'aprovado', atualizar
                     if (compraStatus === 'aprovado' && compraResult?.id) {
@@ -648,14 +647,11 @@ async function salvarProdutosMassa() {
                     else if (compraStatus === 'recebido' && compraResult?.id) {
                         // Chamar API de recebimento que atualiza o estoque
                         await apiPost(`/api/estoque/receber-pedido/${compraResult.id}`);
-                        console.log('[CadastroMassa] Estoque atualizado via receber-pedido');
 
                         // Notificar vendedores via webhook sobre a entrada de produtos
                         // Usa itensCompra que já temos (produto_id + quantidade) em vez de re-buscar da API
                         if (itensCompra.length > 0 && window.webhookEstoque) {
-                            console.log('[CadastroMassa] Notificando entrada de produtos via webhook...', itensCompra);
                             await window.webhookEstoque.notificarEntradaProdutos(itensCompra);
-                            console.log('[CadastroMassa] Webhook de entrada enviado com sucesso');
                         } else {
                             console.warn('[CadastroMassa] Webhook não enviado - itens:', itensCompra.length, 'webhookEstoque:', !!window.webhookEstoque);
                         }

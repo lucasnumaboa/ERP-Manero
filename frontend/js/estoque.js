@@ -222,7 +222,6 @@ async function checkMovimentacaoPermission() {
 
         // Verifica se o container existe
         if (!btnContainer) {
-            console.log('Container de nova movimentação não encontrado');
             return;
         }
 
@@ -243,7 +242,6 @@ async function checkMovimentacaoPermission() {
                     document.getElementById('movimentacaoModal').style.display = 'flex';
                 });
             } else {
-                console.log('Botão de adicionar estoque não encontrado');
             }
         } else {
             btnContainer.style.display = 'none';
@@ -301,8 +299,6 @@ async function loadEstoque() {
     if (termoPesquisa) {
         queryParams.nome = termoPesquisa;
     }
-
-    console.log("Filtros aplicados:", queryParams);
 
     if (categoriaId) {
         queryParams.categoria_id = categoriaId;
@@ -687,13 +683,11 @@ async function loadCategorias() {
     select.innerHTML = '<option value="">Todas as categorias</option>';
 
     try {
-        console.log('Buscando categorias da API centralizada');
 
         // Usa a API centralizada para buscar categorias reais
         const categorias = await apiGet('/api/categorias');
 
         if (categorias && Array.isArray(categorias) && categorias.length > 0) {
-            console.log('Categorias recebidas da API:', categorias);
 
             // Adiciona as categorias reais ao select
             categorias.forEach(categoria => {
@@ -703,7 +697,6 @@ async function loadCategorias() {
                 select.appendChild(option);
             });
         } else {
-            console.log('API retornou dados vazios ou inválidos para categorias');
             select.innerHTML += '<option value="" disabled>Nenhuma categoria encontrada</option>';
         }
     } catch (error) {
@@ -1081,13 +1074,11 @@ async function saveMovimentacao() {
             try {
                 // Usa a API centralizada para fazer a requisição
                 await apiPost('/api/estoque/movimentacoes', movimentacao);
-                console.log('API respondeu com sucesso!');
 
                 // Notifica via webhook sobre a movimentação manual
                 if (window.webhookEstoque) {
     // Isso é importante para que o usuário possa continuar testando a interface
                     const tipoMovimento = movimentacao.tipo === 'entrada' ? 'entrada' : 'saida';
-                    console.log(`[Estoque] Notificando ${tipoMovimento} manual via webhook...`);
                     window.webhookEstoque.notificarMovimentacaoManual(tipoMovimento, movimentacao.produto_id, movimentacao.quantidade, movimentacao.motivo);
                 }
             } catch (error) {

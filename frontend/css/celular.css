@@ -1,0 +1,379 @@
+/*
+ * Celular e tablet pequeno (até 768px).
+ * Fica por último no <head> de cada tela para valer sobre os estilos da página.
+ * - menu lateral vira gaveta (abre no botão ☰, fecha no X, na sombra ou ao escolher uma tela);
+ * - o conteúdo ocupa a largura toda e nada alarga a página: tabela larga rola dentro do próprio quadro;
+ * - tabelas marcadas com .tabela-cartoes viram cartões (cada célula mostra o nome da coluna).
+ */
+
+#botaoMenuCelular,
+#sombraMenuCelular {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    html,
+    body {
+        overflow-x: hidden;
+    }
+
+    /* ---------- Menu em gaveta ---------- */
+    .sidebar,
+    .sidebar.collapsed {
+        width: 260px;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        z-index: 1200;
+        box-shadow: none;
+    }
+
+    body.menu-celular-aberto .sidebar {
+        transform: translateX(0);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.45);
+    }
+
+    /* dentro da gaveta o menu aparece completo (sem o modo "só ícones") */
+    .sidebar .sidebar-header .logo-img,
+    .sidebar .user-info,
+    .sidebar .sidebar-nav a span {
+        display: initial;
+    }
+
+    .sidebar .user-info {
+        display: block;
+    }
+
+    .sidebar .sidebar-user {
+        justify-content: flex-start;
+    }
+
+    .sidebar .user-avatar {
+        margin-right: 12px;
+    }
+
+    .sidebar .sidebar-nav i {
+        margin-right: 10px;
+    }
+
+    #sombraMenuCelular {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1100;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+    }
+
+    body.menu-celular-aberto #sombraMenuCelular {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    #botaoMenuCelular {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        width: 44px;
+        height: 44px;
+        border: 1px solid var(--border-color, rgba(100, 255, 218, 0.2));
+        border-radius: 10px;
+        background: var(--gradient-card, #112240);
+        color: var(--accent-primary, #64ffda);
+        font-size: 20px;
+        z-index: 1000;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+        cursor: pointer;
+    }
+
+    body.menu-celular-aberto #botaoMenuCelular {
+        display: none;
+    }
+
+    /* ---------- Conteúdo em largura total ---------- */
+    .main-content,
+    .main-content.expanded {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100vw;
+        min-width: 0;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .app-container {
+        min-width: 0;
+    }
+
+    .content {
+        padding: 60px 12px 16px !important;   /* 60px no topo: espaço do botão ☰ */
+        min-width: 0;
+    }
+
+    .page-header,
+    .content-header {
+        padding: 1rem !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .page-header h1,
+    .content-header h1 {
+        font-size: 1.35rem;
+    }
+
+    /* barras de filtro, botões e linhas de formulário quebram em vez de alargar */
+    .header-actions,
+    .filters,
+    .filtros,
+    .filter-container,
+    .filtros-container,
+    .form-row,
+    .actions,
+    .toolbar {
+        flex-wrap: wrap !important;
+        gap: 8px;
+    }
+
+    .form-row > *,
+    .form-row .form-group {
+        flex: 1 1 100% !important;
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+        max-width: 100%;
+    }
+
+    /* 16px evita o zoom automático do iPhone ao tocar num campo */
+    input[type="text"],
+    input[type="search"],
+    input[type="number"],
+    input[type="email"],
+    input[type="password"],
+    input[type="date"],
+    select,
+    textarea {
+        font-size: 16px;
+    }
+
+    /* ---------- Tabelas: rolam dentro do quadro ---------- */
+    .table-container,
+    .tabela-container,
+    .table-responsive,
+    .tabela-rolavel {
+        max-width: 100%;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    /* grades e cartões de resumo em uma coluna */
+    .dashboard-cards,
+    .cards-container,
+    .summary-cards,
+    .cards-resumo,
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* barras de ações e filtros das telas (botões quebram linha) */
+    .actions-bar,
+    .actions-left,
+    .actions-right,
+    .stats-bar {
+        flex-wrap: wrap !important;
+        max-width: 100%;
+    }
+
+    .actions-left,
+    .actions-right {
+        width: 100%;
+    }
+
+    /* quadros dentro de quadros: menos margem e recuo para sobrar espaço ao conteúdo */
+    .actions-bar,
+    .table-container,
+    .tabela-container,
+    .settings-card,
+    .card {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    .actions-bar {
+        padding: 12px !important;
+        margin-top: 12px !important;
+        margin-bottom: 12px !important;
+    }
+
+    .filter-container {
+        padding: 12px !important;
+        margin-top: 8px !important;
+    }
+
+    .actions-right > *,
+    .actions-right input,
+    .actions-right select {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .stats-bar > * {
+        flex: 1 1 140px;
+        min-width: 0;
+    }
+
+    /* filtros "rótulo + campo": o campo desce para baixo do rótulo e ocupa a linha */
+    .filter-row {
+        flex-wrap: wrap !important;
+        align-items: stretch !important;
+    }
+
+    .filter-control {
+        flex-wrap: wrap;
+        width: 100%;
+        min-width: 0;
+        margin-right: 0 !important;
+    }
+
+    .filter-control > input,
+    .filter-control > select,
+    .filter-control > .search-input-group {
+        flex: 1 1 100%;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .control-label {
+        white-space: normal !important;
+    }
+
+    .radio-group {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* cartões dentro de grade/flex não podem ser mais largos que a tela */
+    .card,
+    .card-body,
+    .content > * {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    /* painéis lado a lado viram um embaixo do outro */
+    .controle-layout > * {
+        flex: 1 1 100% !important;
+        min-width: 0 !important;
+        max-width: 100%;
+    }
+
+    /* abas: rolam de lado em vez de alargar a tela */
+    .tabs {
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        max-width: 100%;
+    }
+
+    .tabs > * {
+        flex: 0 0 auto;
+    }
+
+    /* tabelas soltas (fora de um quadro com rolagem): a própria tabela rola */
+    .card-body > table,
+    .card-body > .table,
+    .metas-table {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    /* ---------- Janelas (modais) ---------- */
+    .modal-content {
+        width: calc(100vw - 16px) !important;
+        max-width: calc(100vw - 16px) !important;
+        margin: 8px auto !important;
+        max-height: calc(100vh - 16px);
+        overflow-y: auto;
+    }
+
+    .modal-footer {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* ---------- Tabelas em cartões (.tabela-cartoes) ---------- */
+    table.tabela-cartoes,
+    table.tabela-cartoes tbody {
+        display: block;
+        width: 100%;
+    }
+
+    table.tabela-cartoes thead {
+        display: none;
+    }
+
+    table.tabela-cartoes tr {
+        display: block;
+        margin: 0 0 12px;
+        padding: 10px 12px;
+        border: 1px solid var(--border-color, rgba(100, 255, 218, 0.15));
+        border-radius: 10px;
+        background: var(--gradient-card, rgba(17, 34, 64, 0.6));
+    }
+
+    table.tabela-cartoes td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 6px 0 !important;
+        border: none !important;
+        text-align: right !important;
+        min-height: 0;
+        overflow-wrap: anywhere;
+    }
+
+    table.tabela-cartoes td::before {
+        content: attr(data-label);
+        flex: 0 0 auto;
+        max-width: 45%;
+        text-align: left;
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--text-muted, #8892b0);
+    }
+
+    /* célula sem título de coluna (ações, foto) ocupa a linha toda */
+    table.tabela-cartoes td[data-label=""]::before,
+    table.tabela-cartoes td:not([data-label])::before {
+        display: none;
+    }
+
+    table.tabela-cartoes td[data-label=""],
+    table.tabela-cartoes td:not([data-label]) {
+        justify-content: flex-end;
+    }
+
+    /* linha de "nenhum registro" / carregando (uma célula só) */
+    table.tabela-cartoes td[colspan] {
+        justify-content: center;
+        text-align: center !important;
+    }
+
+    table.tabela-cartoes td[colspan]::before {
+        display: none;
+    }
+}

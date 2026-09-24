@@ -60,7 +60,6 @@ let todosClientes = [];
 
 // Carrega a lista de clientes da API
 async function loadClientes() {
-    console.log('Carregando clientes da API centralizada');
 
     // Mostra mensagem inicial - NÃO carrega automaticamente
     const tableBody = document.getElementById('clientesTableBody');
@@ -71,7 +70,6 @@ async function loadClientes() {
 
 // Função para filtrar clientes - chamada ao clicar no botão Pesquisar
 async function filtrarClientes() {
-    console.log('Filtrando clientes...');
 
     // Mostra mensagem de carregamento
     const tableBody = document.getElementById('clientesTableBody');
@@ -95,10 +93,8 @@ async function filtrarClientes() {
     try {
         // Usa a API centralizada
         const url = `/api/clientes${params.toString() ? '?' + params.toString() : ''}`;
-        console.log(`Enviando requisição GET para API centralizada: ${url}`);
 
         let data = await apiGet(url);
-        console.log('Clientes carregados com sucesso:', data.length);
 
         // Armazena todos os clientes
         todosClientes = data;
@@ -110,7 +106,6 @@ async function filtrarClientes() {
                 const email = (cliente.email || '').toLowerCase();
                 return nome.includes(termoPesquisa) || email.includes(termoPesquisa);
             });
-            console.log(`Clientes após filtro de pesquisa: ${data.length}`);
         }
 
         // Configuração da paginação
@@ -140,7 +135,6 @@ function limparFiltros() {
         tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Configure os filtros e clique em "Pesquisar" para visualizar os clientes</td></tr>';
     }
 
-    console.log('Filtros limpos');
 }
 
 // Exibe os clientes na tabela

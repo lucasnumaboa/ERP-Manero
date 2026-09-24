@@ -1625,3 +1625,15 @@ body.modal-open {
         text-align: center;
     }
 }
+
+/* Tabela que pode ser mais larga que a tela: rola dentro do próprio quadro, não a página inteira */
+.tabela-rolavel {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Textos longos sem espaço (URLs, chaves) quebram em vez de alargar a coluna */
+.tabela-texto-longo td {
+    overflow-wrap: anywhere;
+}

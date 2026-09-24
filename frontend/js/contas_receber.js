@@ -35,8 +35,6 @@ async function carregarTodasAsContas() {
         // Busca todas as contas sem filtro
         const data = await apiGet('/api/contas-receber', {});
         
-        console.log('Dados recebidos:', data);
-        
         // Converte para array se necessário
         let contas = [];
         if (Array.isArray(data)) {
@@ -53,8 +51,6 @@ async function carregarTodasAsContas() {
         
         // Armazena todas as contas globalmente
         todasAsContasReceber = contas;
-        
-        console.log('Total de contas carregadas:', todasAsContasReceber.length);
         
         // Exibe as contas
         if (!todasAsContasReceber || todasAsContasReceber.length === 0) {
@@ -80,10 +76,6 @@ function aplicarFiltrosReceber() {
     const dataInicial = document.getElementById('filtroDataInicial').value;
     const dataFinal = document.getElementById('filtroDataFinal').value;
     const status = document.getElementById('filterStatus').value;
-    
-    console.log('=== APLICANDO FILTROS - CONTAS A RECEBER ===');
-    console.log('Filtros:', { codigo, cliente, dataInicial, dataFinal, status });
-    console.log('Total de contas antes do filtro:', todasAsContasReceber.length);
     
     // Filtra as contas armazenadas
     let contasFiltradas = todasAsContasReceber.filter(conta => {
@@ -115,8 +107,6 @@ function aplicarFiltrosReceber() {
         
         return true;
     });
-    
-    console.log('Total de contas após filtro:', contasFiltradas.length);
     
     // Exibe as contas filtradas
     if (contasFiltradas.length === 0) {

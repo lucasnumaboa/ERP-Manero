@@ -58,7 +58,7 @@ def test_paginas_carregam_scripts_centrais():
     problemas = []
     for p in PAGINAS:
         html = p.read_text(encoding="utf-8")
-        if not html.strip():
+        if not html.strip() or p.name == "offline.html":  # offline.html é mostrada sem internet: não carrega nada do servidor
             continue
         for obrigatorio in ("js/config.js", "js/avisos.js"):
             if obrigatorio not in html:
@@ -113,3 +113,37 @@ def test_sem_script_repetido_na_mesma_pagina():
         if len(scripts) != len(set(scripts)):
             repetidos.append(p.name)
     assert not repetidos, f"script carregado mais de uma vez: {repetidos}"
+
+
+APP = [p for p in PAGINAS if 'class="sidebar"' in p.read_text(encoding="utf-8")]
+
+
+def test_sem_console_log_nos_scripts():
+    achados = [f"{s.name}:{n}" for s in SCRIPTS
+               for n, linha in enumerate(s.read_text(encoding="utf-8").splitlines(), 1)
+               if "console.log(" in linha and not linha.strip().startswith("//")]
+    assert not achados, f"console.log voltou (use console.error só para erros): {achados}"
+
+
+def test_telas_funcionam_no_celular_e_como_app():
+    for pagina in APP:
+        html = pagina.read_text(encoding="utf-8")
+        assert 'href="css/celular.css"' in html, f"{pagina.name} sem css/celular.css"
+        # celular.css precisa ser o último CSS do <head> para valer sobre os estilos da tela
+        cabeca = html.split("</head>")[0]
+        assert cabeca.rstrip().rsplit("<link", 1)[1].startswith(' rel="stylesheet" href="css/celular.css"'), pagina.name
+    for pagina in PAGINAS:
+        if pagina.name != "offline.html":
+            assert 'rel="manifest"' in pagina.read_text(encoding="utf-8"), f"{pagina.name} sem manifest"
+    manifesto = (FRONTEND / "manifest.webmanifest").read_text(encoding="utf-8")
+    for icone in re.findall(r'"src":\s*"([^"]+)"', manifesto):
+        assert (FRONTEND / icone).exists(), icone
+
+
+def test_relatorios_e_produtos_sem_estilo_no_html():
+    for nome in ("relatorios.html", "produtos.html"):
+        html = (FRONTEND / nome).read_text(encoding="utf-8")
+        assert "<style" not in html, f"{nome} voltou a ter <style>"
+        # só estado liga/desliga do JS (display) pode ficar inline
+        outros = [s for s in re.findall(r'\sstyle="([^"]*)"', html) if s.replace(" ", "") not in ("display:none;", "display:block;")]
+        assert not outros, f"{nome}: style inline {outros[:5]}"

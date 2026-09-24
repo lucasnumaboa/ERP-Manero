@@ -394,7 +394,6 @@ async function displayCompras(compras) {
                             };
 
                             await apiPost('/api/contas-pagar', contaPagarData);
-                            console.log('[Compras] Conta a pagar criada com sucesso!');
 
                             // Marca como criado no backend
                             await apiPut(`/api/compras/${compraId}`, { criado_tit_ap: true });
@@ -411,15 +410,12 @@ async function displayCompras(compras) {
 
                     // Notifica via webhook sobre a entrada de produtos
                     if (itensCompra.length > 0 && window.webhookEstoque) {
-                        console.log('[Compras] Notificando entrada de produtos via webhook...');
                         window.webhookEstoque.notificarEntradaProdutos(itensCompra);
                     }
 
                     // Atualiza o data-attribute e classe
                     this.dataset.statusAtual = novoStatus;
                     this.className = `status-select-inline status-${novoStatus}`;
-
-                    console.log(`Status da compra #${compraId} alterado para "recebido" com atualização de estoque e webhook`);
 
                 } else if (novoStatus === 'aprovado' && statusAtual !== 'aprovado') {
                     // Busca os dados da compra para verificar criado_tit_ap
@@ -441,7 +437,6 @@ async function displayCompras(compras) {
                             };
 
                             await apiPost('/api/contas-pagar', contaPagarData);
-                            console.log('[Compras] Conta a pagar criada com sucesso!');
 
                             // Marca como criado no backend
                             await apiPut(`/api/compras/${compraId}`, { criado_tit_ap: true, status: novoStatus });
@@ -459,8 +454,6 @@ async function displayCompras(compras) {
                     this.dataset.statusAtual = novoStatus;
                     this.className = `status-select-inline status-${novoStatus}`;
 
-                    console.log(`Status da compra #${compraId} alterado de "${statusAtual}" para "${novoStatus}"`);
-
                 } else {
                     // Atualiza o status via API (endpoint correto: /api/compras/)
                     await apiPut(`/api/compras/${compraId}`, { status: novoStatus });
@@ -469,7 +462,6 @@ async function displayCompras(compras) {
                     this.dataset.statusAtual = novoStatus;
                     this.className = `status-select-inline status-${novoStatus}`;
 
-                    console.log(`Status da compra #${compraId} alterado de "${statusAtual}" para "${novoStatus}"`);
                 }
 
                 this.disabled = false;
@@ -850,7 +842,6 @@ async function loadCompraDataAndThenFornecedores(compraId) {
 
         // Armazena o status atual para comparação posterior
         document.getElementById('compraForm').setAttribute('data-status-anterior', data.status || 'pendente');
-        console.log('Carregou compra com status:', data.status, 'e criado_tit_ap:', data.criado_tit_ap);
 
         // Carrega os itens da compra
         if (data.itens && data.itens.length > 0) {
@@ -1238,7 +1229,6 @@ async function saveCompra() {
     btnSalvar.disabled = true;
 
     try {
-        console.log('Enviando dados para a API:', compraData);
 
         // Usa a nova API centralizada
         let data;
@@ -1248,8 +1238,6 @@ async function saveCompra() {
             data = await apiPost('/api/compras', compraData);
         }
 
-        console.log('Compra salva com sucesso:', data);
-
         // Verifica se deve criar conta a pagar
         // Se status for 'aprovado' OU 'recebido' E criado_tit_ap for 0 ou false, cria a conta
         // Usa novoStatus ao invés de data.status porque quando vai para 'recebido', o status é deletado antes de enviar
@@ -1257,19 +1245,10 @@ async function saveCompra() {
         const naoFoiCriado = data.criado_tit_ap === false || data.criado_tit_ap === 0;
         const deveGravarConta = statusAprovadoOuRecebido && naoFoiCriado;
 
-        console.log('Status:', data.status);
-        console.log('criado_tit_ap:', data.criado_tit_ap);
-        console.log('Status aprovado ou recebido?', statusAprovadoOuRecebido);
-        console.log('Não foi criado?', naoFoiCriado);
-        console.log('Deve gravar conta?', deveGravarConta);
-
         if (deveGravarConta) {
-            console.log('Iniciando criação de conta a pagar');
             try {
                 // Usa o valor total retornado pela API
                 const valorTotal = data.valor_total || 0;
-
-                console.log('Valor total da compra:', valorTotal);
 
                 // Cria o movimento em contas a pagar
                 const contaPagarData = {
@@ -1281,15 +1260,11 @@ async function saveCompra() {
                     observacoes: data.observacoes || ''
                 };
 
-                console.log('Criando conta a pagar:', contaPagarData);
                 const resultadoConta = await apiPost('/api/contas-pagar', contaPagarData);
-                console.log('Conta a pagar criada com sucesso!', resultadoConta);
 
                 // Marca como criado no backend
-                console.log('Marcando criado_tit_ap = 1 para compra #' + data.id);
                 try {
                     await apiPut(`/api/compras/${data.id}`, { criado_tit_ap: true });
-                    console.log('Marcado criado_tit_ap = 1 com sucesso!');
                 } catch (error) {
                     console.error('Erro ao marcar criado_tit_ap:', error);
                 }
@@ -1300,16 +1275,13 @@ async function saveCompra() {
         }
 
         // Se o status foi alterado para 'recebido' (e não era 'recebido' antes), chama a API para atualizar o estoque
-        console.log('statusAnterior:', statusAnterior, 'novoStatus:', novoStatus, 'alterandoParaRecebido:', alterandoParaRecebido);
 
         // Para compras existentes que estão sendo alteradas para "recebido"
         if (compraId && alterandoParaRecebido) {
-            console.log('Chamando receberCompra...');
             receberCompra(compraId);
         }
         // Para novas compras com status "recebido" selecionado
         else if (!compraId && novoStatus === 'recebido') {
-            console.log('Nova compra com status recebido - processando recebimento...');
             // Como a compra foi criada com status 'pendente', precisamos recebê-la
             // Usa o ID retornado pela API
             await receberCompraAsync(data.id);
@@ -1325,7 +1297,6 @@ async function saveCompra() {
         }
         // Para novas compras com status "aprovado" selecionado
         else if (!compraId && novoStatus === 'aprovado') {
-            console.log('Nova compra com status aprovado - atualizando status...');
             // Atualiza o status para aprovado
             await apiPut(`/api/compras/${data.id}`, { status: 'aprovado' });
 
@@ -1427,7 +1398,6 @@ async function deleteCompra(compraId) {
 async function receberCompra(compraId) {
     // Exibe mensagem de processamento
     const loadingMessage = 'Recebendo compra e atualizando estoque...';
-    console.log(loadingMessage);
 
     try {
         // Busca os itens da compra antes de receber para notificar via webhook
@@ -1444,7 +1414,6 @@ async function receberCompra(compraId) {
 
         // Notifica via webhook sobre a entrada de produtos
         if (itensCompra.length > 0 && window.webhookEstoque) {
-            console.log('[Compras] Notificando entrada de produtos via webhook...');
             window.webhookEstoque.notificarEntradaProdutos(itensCompra);
         }
 
@@ -1469,7 +1438,6 @@ async function receberCompra(compraId) {
 // Versão async de receberCompra para uso quando criando nova compra com status 'recebido'
 // Não gerencia o modal nem exibe alertas - isso é feito pelo chamador
 async function receberCompraAsync(compraId) {
-    console.log('Recebendo compra de forma assíncrona:', compraId);
 
     // Busca os itens da compra antes de receber para notificar via webhook
     let itensCompra = [];
@@ -1485,11 +1453,9 @@ async function receberCompraAsync(compraId) {
 
     // Notifica via webhook sobre a entrada de produtos
     if (itensCompra.length > 0 && window.webhookEstoque) {
-        console.log('[Compras] Notificando entrada de produtos via webhook...');
         window.webhookEstoque.notificarEntradaProdutos(itensCompra);
     }
 
-    console.log('Compra recebida com sucesso:', compraId);
 }
 
 // Abre o modal para criar novo fornecedor
@@ -1526,9 +1492,7 @@ async function saveFornecedor() {
             endereco: endereco || null
         };
 
-        console.log('Criando fornecedor:', fornecedorData);
         const data = await apiPost('/api/parceiros', fornecedorData);
-        console.log('Fornecedor criado com sucesso:', data);
 
         // Fecha o modal de fornecedor
         closeFornecedorModal();
@@ -1766,7 +1730,6 @@ async function verificarEstoqueFabricacao() {
         precosContainer.style.display = 'block';
 
         const resultado = await apiGet(`/api/produtos/${produtoId}/verificar-estoque-fabricacao?quantidade=${quantidade}`);
-        console.log('Resultado verificação estoque:', resultado);
 
         if (!resultado.componentes || resultado.componentes.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" class="text-center">Este produto não possui componentes cadastrados</td></tr>';
@@ -1897,11 +1860,8 @@ async function executarFabricacao() {
             quantidade: quantidade
         });
 
-        console.log('Fabricação concluída:', resultado);
-
         // Notifica via webhook sobre a entrada do produto fabricado
         if (window.webhookEstoque) {
-            console.log('[Compras] Notificando fabricação de produto via webhook...');
             window.webhookEstoque.notificarEntradaProdutos([{
                 produto_id: parseInt(produtoId),
                 quantidade: quantidade
@@ -1962,8 +1922,6 @@ async function salvarPrecosFabricacao() {
             preco_venda: precoVenda,
             comissao: comissao
         });
-
-        console.log('Preços atualizados com sucesso!');
 
         // Mostra mensagem de sucesso
         statusEl.innerHTML = '<span style="color: green;"><i class="fas fa-check-circle"></i> Salvo!</span>';

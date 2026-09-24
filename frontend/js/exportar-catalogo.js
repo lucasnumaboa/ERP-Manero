@@ -128,7 +128,6 @@ async function getApiBaseUrlCatalogo() {
             return await getBaseUrl();
         }
     } catch (e) {
-        console.log('Usando URL padrão para catálogo');
     }
     return apiUrlAtual();
 }
@@ -253,7 +252,6 @@ async function carregarUsuarioLogadoId() {
         const usuario = await apiGet('/api/usuarios/me');
         if (usuario) {
             usuarioLogadoId = usuario.id;
-            console.log('[Catalogo] Usuário logado ID:', usuarioLogadoId);
         }
     } catch (error) {
         console.error('Erro ao carregar usuário logado:', error);
@@ -379,8 +377,6 @@ async function confirmarPrecosEGerarPDF() {
         return;
     }
 
-    console.log('[Catalogo] Preços alterados:', precosAlterados);
-
     // Fecha o modal
     fecharAlterarPrecosModal();
 
@@ -426,7 +422,6 @@ async function gerarCatalogoPDF() {
 
         // Aplica os preços alterados (apenas para o PDF, não salva no banco)
         if (Object.keys(precosAlterados).length > 0) {
-            console.log('[Catalogo] Aplicando preços alterados:', precosAlterados);
             produtosParaPDF = produtosParaPDF.map(produto => {
                 if (precosAlterados[produto.id] !== undefined) {
                     return {
@@ -542,7 +537,6 @@ async function criarPDFCatalogo(vendedorNome, vendedorCelular, produtos) {
         return new Promise((resolve) => {
             // Timeout de 5 segundos para cada imagem
             const timeout = setTimeout(() => {
-                console.log('Timeout ao carregar imagem:', url);
                 resolve(null);
             }, 5000);
 
@@ -585,7 +579,6 @@ async function criarPDFCatalogo(vendedorNome, vendedorCelular, produtos) {
             };
             img.onerror = function () {
                 clearTimeout(timeout);
-                console.log('Erro ao carregar imagem:', url);
                 resolve(null);
             };
             // Adiciona timestamp para evitar cache
@@ -625,7 +618,6 @@ async function criarPDFCatalogo(vendedorNome, vendedorCelular, produtos) {
     const categoriasOrdenadas = Object.keys(produtosPorCategoria).sort();
 
     // Pré-carrega todas as imagens em paralelo para melhor performance
-    console.log('Carregando imagens dos produtos...');
     const imagensCarregadas = {};
 
     // Cria array de promessas para carregar imagens em paralelo
@@ -641,7 +633,6 @@ async function criarPDFCatalogo(vendedorNome, vendedorCelular, produtos) {
                         imagensCarregadas[produto.id] = imgBase64;
                     }
                 } catch (e) {
-                    console.log('Erro ao carregar imagem do produto:', produto.id);
                 }
             }
         }
@@ -649,7 +640,6 @@ async function criarPDFCatalogo(vendedorNome, vendedorCelular, produtos) {
 
     // Aguarda todas as imagens carregarem em paralelo
     await Promise.all(promessasImagens);
-    console.log('Imagens carregadas:', Object.keys(imagensCarregadas).length);
 
     // Desenha cabeçalho inicial
     desenharCabecalhoVendedor();

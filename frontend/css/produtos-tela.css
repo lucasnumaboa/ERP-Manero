@@ -1,0 +1,992 @@
+/* Estilos da tela produtos.html (antes ficavam dentro do HTML) */
+
+        /* Estilos do botão Gerar por IA */
+        .label-with-action {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .label-with-action label {
+            margin-bottom: 0;
+        }
+
+        .btn-gerar-ia {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-gerar-ia:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-gerar-ia:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-gerar-ia i {
+            font-size: 12px;
+        }
+
+        /* Estilos dos Filtros Reformulados */
+        .filter-container {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+        }
+
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .filter-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .checkboxes-row {
+            flex-wrap: wrap;
+        }
+
+        .controls-row {
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 20px;
+            margin-bottom: 5px;
+        }
+
+        .filter-checkbox {
+            display: none;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: #495057;
+            user-select: none;
+        }
+
+        .checkbox-custom {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #6c757d;
+            border-radius: 3px;
+            margin-right: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .filter-checkbox:checked+.checkbox-label .checkbox-custom {
+            background: #007bff;
+            border-color: #007bff;
+        }
+
+        .filter-checkbox:checked+.checkbox-label .checkbox-custom::after {
+            content: 'âœ“';
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .checkbox-label:hover .checkbox-custom {
+            border-color: #007bff;
+            transform: scale(1.05);
+        }
+
+        .filter-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 20px;
+            margin-bottom: 5px;
+        }
+
+        .control-label {
+            font-size: 14px;
+            color: #495057;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .search-input-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .filter-input {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            min-width: 200px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        .search-btn {
+            padding: 8px 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .search-btn:hover {
+            background: #0056b3;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            min-width: 150px;
+            background: white;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        .btn-clear-filters {
+            padding: 8px 16px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+            margin-left: auto;
+        }
+
+        .btn-clear-filters:hover {
+            background: #545b62;
+        }
+
+        @media (max-width: 768px) {
+            .filter-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .controls-row {
+                width: 100%;
+            }
+
+            .filter-control {
+                width: 100%;
+                margin-right: 0;
+            }
+
+            .filter-input,
+            .filter-select {
+                width: 100%;
+                min-width: unset;
+            }
+
+            .btn-clear-filters {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+    
+
+        /* Loading Overlay Styles */
+        .loading-overlay-produtos {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 25, 47, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .loading-overlay-produtos.active {
+            display: flex;
+        }
+
+        .loading-content-produtos {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 40px;
+            background: rgba(17, 34, 64, 0.95);
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .loading-gif-produtos {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+
+        .loading-text-produtos {
+            color: #64ffda;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .loading-progress-container-produtos {
+            width: 240px;
+            background: rgba(100, 255, 218, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            height: 10px;
+            border: 1px solid rgba(100, 255, 218, 0.2);
+        }
+
+        .loading-progress-bar-produtos {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #64ffda, #00bcd4, #64ffda);
+            background-size: 200% 100%;
+            border-radius: 10px;
+            animation: progressAnimationProdutos 1.5s ease-in-out infinite;
+        }
+
+        @keyframes progressAnimationProdutos {
+            0% {
+                width: 0%;
+            }
+
+            50% {
+                width: 70%;
+            }
+
+            100% {
+                width: 100%;
+            }
+        }
+
+        .loading-progress-text-produtos {
+            color: #a8b2d1;
+            font-size: 14px;
+        }
+    
+
+        /* Estilos para Cadastro em Massa */
+        #dropZoneMassa:hover {
+            border-color: #64ffda;
+            background: rgba(100,255,218,0.03);
+        }
+        .massa-produto-card {
+            border: 1px solid rgba(100,255,218,0.15);
+            border-radius: 8px;
+            padding: 12px;
+            background: rgba(17,34,64,0.4);
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            transition: border-color 0.2s;
+        }
+        .massa-produto-card:hover {
+            border-color: rgba(100,255,218,0.35);
+        }
+        .massa-produto-thumb {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid rgba(100,255,218,0.2);
+            flex-shrink: 0;
+        }
+        .massa-produto-fields {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .massa-produto-fields .field-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .massa-produto-fields input,
+        .massa-produto-fields textarea,
+        .massa-produto-fields select {
+            background: rgba(10,25,47,0.8);
+            color: #ccd6f6;
+            border: 1px solid rgba(100,255,218,0.2);
+            border-radius: 4px;
+            padding: 5px 8px;
+            font-size: 12px;
+        }
+        .massa-produto-fields input:focus,
+        .massa-produto-fields textarea:focus,
+        .massa-produto-fields select:focus {
+            outline: none;
+            border-color: #64ffda;
+        }
+        .massa-produto-fields textarea {
+            resize: vertical;
+            min-height: 40px;
+        }
+        .massa-remove-btn {
+            background: rgba(245,87,108,0.2);
+            color: #f5576c;
+            border: 1px solid rgba(245,87,108,0.3);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .massa-remove-btn:hover {
+            background: rgba(245,87,108,0.4);
+        }
+        .massa-img-count {
+            font-size: 11px;
+            color: #a8b2d1;
+            background: rgba(100,255,218,0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+            border: 1px solid rgba(100,255,218,0.15);
+        }
+        /* Light theme overrides for massa */
+        [data-theme="light"] .massa-produto-card {
+            background: #f8f9fa;
+            border-color: #dee2e6;
+        }
+        [data-theme="light"] .massa-produto-fields input,
+        [data-theme="light"] .massa-produto-fields textarea,
+        [data-theme="light"] .massa-produto-fields select {
+            background: #fff;
+            color: #333;
+            border-color: #ced4da;
+        }
+        [data-theme="light"] .massa-produto-fields input:focus,
+        [data-theme="light"] .massa-produto-fields textarea:focus,
+        [data-theme="light"] .massa-produto-fields select:focus {
+            border-color: #007bff;
+        }
+    
+
+        /* Estilos para Recalcular Custo */
+        #recalcularCustoTable tbody tr {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        #recalcularCustoTable tbody tr:hover {
+            background: rgba(100, 255, 218, 0.05) !important;
+        }
+
+        .custo-input {
+            width: 120px;
+            padding: 6px 10px;
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 6px;
+            background: rgba(17, 34, 64, 0.8);
+            color: #ccd6f6;
+            font-size: 14px;
+            text-align: right;
+        }
+
+        .custo-input:focus {
+            outline: none;
+            border-color: #64ffda;
+            box-shadow: 0 0 0 2px rgba(100, 255, 218, 0.15);
+        }
+
+        .diff-positiva {
+            color: #f5576c;
+            font-weight: 600;
+        }
+
+        .diff-negativa {
+            color: #38ef7d;
+            font-weight: 600;
+        }
+
+        .diff-zero {
+            color: #a8b2d1;
+        }
+
+        .badge-compra {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(100, 255, 218, 0.1);
+            color: #64ffda;
+            border: 1px solid rgba(100, 255, 218, 0.2);
+        }
+
+        .badge-movimentacao {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(245, 87, 108, 0.1);
+            color: #f5576c;
+            border: 1px solid rgba(245, 87, 108, 0.2);
+        }
+
+        /* Light theme overrides */
+        [data-theme="light"] .custo-input {
+            background: #fff;
+            color: #333;
+            border-color: #ced4da;
+        }
+
+        [data-theme="light"] .custo-input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+    
+
+/* ---- Antes em atributos style="..." no HTML ---- */
+
+#btnRecalcularCusto {
+    background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);
+}
+
+#btnAtualizarDescricoes, #btnGerarDescBulk {
+    background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+}
+
+#btnCadastroMassa, #btnAplicarRecalculo, #btnConfirmarAplicarCusto, #btnAplicarDescBulk, #btnSalvarMassa {
+    background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%);
+}
+
+.titulo-secao-cinza {
+    margin:0 0 10px 0;
+    color:#495057;
+    font-size:16px;
+}
+
+.texto-secao-cinza {
+    margin:0 0 15px 0;
+    color:#6c757d;
+    font-size:14px;
+}
+
+.nota-cinza {
+    color:#666;
+}
+
+#imagens_produto, #video_produto {
+    margin-bottom:10px;
+}
+
+#preview_imagens {
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:10px;
+}
+
+#preview_video {
+    margin-top:10px;
+}
+
+.itens-cabecalho-linha {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:15px;
+}
+
+.texto-cinza-sem-margem {
+    margin:0;
+    color:#666;
+}
+
+.nota-cinza-bloco {
+    color:#666;
+    display:block;
+    margin-top:10px;
+}
+
+.modal-extra-largo {
+    max-width:1100px;
+    width:95%;
+}
+
+.texto-apoio {
+    color:#8892b0;
+    margin-bottom:15px;
+}
+
+#recalcularCustoLoading {
+    text-align:center;
+    padding:40px;
+}
+
+.icone-carregando {
+    font-size:32px;
+    color:#64ffda;
+}
+
+.texto-carregando {
+    margin-top:15px;
+    color:#a8b2d1;
+}
+
+.barra-contagem {
+    margin-bottom:10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+#recalcularCustoCount, #cadastroMassaCount {
+    color:#a8b2d1;
+    font-size:14px;
+}
+
+#recalcularCustoSearch {
+    max-width:300px;
+}
+
+.tabela-rolavel-500 {
+    max-height:500px;
+    overflow-y:auto;
+}
+
+th.coluna-checkbox {
+    width:40px;
+    text-align:center;
+}
+
+#selecionarTodosCusto, #selecionarTodosDesc {
+    cursor:pointer;
+    width:16px;
+    height:16px;
+}
+
+.modal-medio {
+    max-width:800px;
+    width:90%;
+}
+
+.tabela-rolavel-400 {
+    max-height:400px;
+    overflow-y:auto;
+}
+
+.modal-largo {
+    max-width:950px;
+    width:95%;
+}
+
+.barra-filtros {
+    display:flex;
+    gap:10px;
+    margin-bottom:12px;
+    flex-wrap:wrap;
+    align-items:center;
+}
+
+#descBulkSearch {
+    flex:1;
+    min-width:180px;
+}
+
+#descBulkCategoria {
+    min-width:160px;
+}
+
+.botao-compacto {
+    padding:6px 12px;
+    font-size:13px;
+}
+
+.texto-contagem {
+    margin-bottom:10px;
+    color:#a8b2d1;
+    font-size:14px;
+}
+
+.tabela-rolavel-450 {
+    max-height:450px;
+    overflow-y:auto;
+}
+
+#descResultadoLoading {
+    text-align:center;
+    padding:50px;
+}
+
+.icone-robo {
+    font-size:48px;
+    color:#667eea;
+    animation:fa-bounce 1s infinite;
+}
+
+.texto-carregando-ia {
+    margin-top:15px;
+    color:#a8b2d1;
+    font-size:16px;
+}
+
+#descResultadoProgresso {
+    color:#667eea;
+    font-size:13px;
+    margin-top:8px;
+}
+
+.texto-apoio-ia {
+    color:#a8b2d1;
+    margin-bottom:15px;
+    font-size:14px;
+}
+
+#descResultadoLista {
+    max-height:500px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+}
+
+#composicaoCustoLoading {
+    text-align:center;
+    padding:30px;
+}
+
+.icone-carregando-medio {
+    font-size:24px;
+    color:#64ffda;
+}
+
+.painel-composicao {
+    margin-bottom:15px;
+    padding:15px;
+    background:rgba(100,255,218,0.05);
+    border-radius:8px;
+    border:1px solid rgba(100,255,218,0.1);
+}
+
+#composicaoProdutoNome {
+    margin:0 0 8px 0;
+    color:#ccd6f6;
+}
+
+.linha-dados {
+    display:flex;
+    gap:20px;
+    flex-wrap:wrap;
+}
+
+.texto-secundario {
+    color:#a8b2d1;
+}
+
+.valor-destaque {
+    color:#64ffda;
+}
+
+#composicaoCustoAtual {
+    color:#f5576c;
+}
+
+#composicaoCustoRecalc {
+    color:#38ef7d;
+}
+
+.modal-massa {
+    max-width:1200px;
+    width:95%;
+    max-height:95vh;
+    display:flex;
+    flex-direction:column;
+}
+
+.modal-corpo-rolavel {
+    overflow-y:auto;
+    flex:1;
+}
+
+#dropZoneMassa {
+    text-align:center;
+    padding:40px 20px;
+    border:2px dashed rgba(100,255,218,0.3);
+    border-radius:12px;
+    cursor:pointer;
+    transition:all 0.3s;
+}
+
+.icone-upload {
+    font-size:48px;
+    color:#64ffda;
+    margin-bottom:15px;
+    display:block;
+}
+
+.texto-upload {
+    color:#ccd6f6;
+    font-size:16px;
+    margin-bottom:8px;
+}
+
+.texto-apoio-pequeno {
+    color:#a8b2d1;
+    font-size:13px;
+}
+
+.texto-dica {
+    color:#8892b0;
+    font-size:12px;
+    margin-top:5px;
+}
+
+.barra-acoes-massa {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:15px;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.grupo-acoes-massa {
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+}
+
+#btnPreencherTudoMassa {
+    padding:8px 16px;
+    font-size:13px;
+    background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%);
+}
+
+#btnCategorizarIAMassa, #btnIAMassa {
+    padding:8px 16px;
+    font-size:13px;
+}
+
+#btnVoltarEtapa1 {
+    padding:6px 14px;
+}
+
+.painel-massa {
+    border:1px solid rgba(100,255,218,0.15);
+    border-radius:8px;
+    padding:15px;
+    margin-bottom:15px;
+    background:rgba(17,34,64,0.3);
+}
+
+.titulo-painel-massa {
+    color:#ccd6f6;
+    margin:0 0 12px 0;
+    font-size:14px;
+}
+
+.linha-campos {
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    align-items:flex-end;
+}
+
+.campo-flex {
+    flex:1;
+    min-width:150px;
+}
+
+.rotulo-campo {
+    color:#a8b2d1;
+    font-size:12px;
+    display:block;
+    margin-bottom:4px;
+}
+
+#massaCategoria, #massaTipo, #massaPrecoCusto, #massaPrecoVenda, #massaComissao, #massaFornecedor, #massaCompraStatus {
+    width:100%;
+    font-size:13px;
+    padding:6px 8px;
+}
+
+.campo-130 {
+    flex:0 0 130px;
+}
+
+.campo-110 {
+    flex:0 0 110px;
+}
+
+.campo-100 {
+    flex:0 0 100px;
+}
+
+.linha-opcoes {
+    display:flex;
+    gap:12px;
+    align-items:center;
+    flex-wrap:wrap;
+}
+
+.rotulo-opcao {
+    color:#a8b2d1;
+    font-size:12px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:4px;
+}
+
+#btnAplicarGlobal {
+    padding:6px 14px;
+    font-size:12px;
+    background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+}
+
+#massaCompraHeader {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:0;
+}
+
+.rotulo-compra {
+    color:#ccd6f6;
+    font-size:14px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-weight:600;
+}
+
+#massaCriarCompra {
+    width:16px;
+    height:16px;
+    cursor:pointer;
+}
+
+#massaCompraOpcoes {
+    margin-top:12px;
+}
+
+.aviso-amarelo {
+    color:#f0ad4e;
+    font-size:12px;
+    margin:0 0 12px 0;
+    padding:8px 12px;
+    background:rgba(240,173,78,0.1);
+    border:1px solid rgba(240,173,78,0.2);
+    border-radius:6px;
+}
+
+.campo-flex-200 {
+    flex:1;
+    min-width:200px;
+}
+
+.campo-160 {
+    flex:0 0 160px;
+}
+
+#listaProdutosMassa {
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    max-height:450px;
+    overflow-y:auto;
+    padding-right:5px;
+}
+
+#cadastroMassaProgressContainer {
+    margin-top:15px;
+}
+
+.linha-progresso {
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:6px;
+}
+
+#cadastroMassaProgressPercent {
+    color:#64ffda;
+    font-size:13px;
+    font-weight:600;
+}
+
+.trilho-progresso-borda {
+    width:100%;
+    background:rgba(100,255,218,0.1);
+    border-radius:10px;
+    overflow:hidden;
+    height:12px;
+    border:1px solid rgba(100,255,218,0.2);
+}
+
+#cadastroMassaProgressBar {
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#11998e,#38ef7d);
+    border-radius:10px;
+    transition:width 0.3s ease;
+}
+
+#cadastroMassaProgressDetail {
+    color:#8892b0;
+    font-size:12px;
+    margin-top:4px;
+}

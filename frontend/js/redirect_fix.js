@@ -5,18 +5,15 @@
     window.fetch = function(url, options) {
         // Se a URL contém 'api/dashboard', redireciona para a homepage APENAS se estamos na página dashboard.html
         if (typeof url === 'string' && url.includes('/api/dashboard')) {
-            console.log('Interceptando chamada para dashboard API:', url);
             
             // Redireciona para homepage APENAS se estamos na página dashboard.html
             if (window.location.pathname.includes('dashboard.html')) {
-                console.log('Redirecionando para homepage...');
                 window.location.href = 'homepage.html';
                 // Retorna uma promise vazia para evitar erros
                 return new Promise(() => {});
             }
             
             // Se já estamos na homepage ou em qualquer outra página, apenas simula a resposta da API
-            console.log('Simulando resposta da API do dashboard');
             return new Promise(resolve => {
                 // Retorna um objeto vazio como resposta
                 resolve({
@@ -40,7 +37,6 @@
     
     // Verifica se estamos na página de dashboard e redireciona
     if (window.location.pathname.includes('dashboard.html')) {
-        console.log('Página de dashboard detectada, redirecionando para homepage...');
         window.location.href = 'homepage.html';
     }
     

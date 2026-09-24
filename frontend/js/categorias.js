@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Carrega a lista de categorias da API
 async function loadCategorias() {
-    console.log('Carregando categorias da API centralizada');
     
     // Mostra mensagem de carregamento
     document.getElementById('categoriasTableBody').innerHTML = '<tr><td colspan="6" class="text-center">Carregando categorias...</td></tr>';
@@ -36,10 +35,8 @@ async function loadCategorias() {
     try {
         // Usa a API centralizada
         const url = `/api/categorias${params.toString() ? '?' + params.toString() : ''}`;
-        console.log(`Enviando requisição GET para API centralizada: ${url}`);
         
         const data = await apiGet(url);
-        console.log('Categorias carregadas com sucesso:', data.length);
         
         // Configuração da paginação
         window.currentDisplayFunction = displayCategorias;
@@ -48,7 +45,6 @@ async function loadCategorias() {
         console.error('Erro ao carregar categorias:', error);
         
         // Se a API não estiver disponível, carrega dados de exemplo para demonstração
-        console.log('Carregando dados de exemplo para demonstração');
         const exemplosCategorias = [
             {id: 1, nome: 'Eletrônicos', descricao: 'Produtos eletrônicos em geral', ativo: true},
             {id: 2, nome: 'Móveis', descricao: 'Móveis para casa e escritório', ativo: true},
@@ -64,7 +60,6 @@ async function loadCategorias() {
 
 // Exibe as categorias na tabela
 function displayCategorias(categorias) {
-    console.log('Exibindo categorias na tabela:', categorias ? categorias.length : 0, 'categorias');
     
     const tbody = document.getElementById('categoriasTableBody');
     if (!tbody) {
@@ -73,12 +68,10 @@ function displayCategorias(categorias) {
     }
     
     if (!categorias || categorias.length === 0) {
-        console.log('Nenhuma categoria encontrada para exibir');
         tbody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhuma categoria encontrada</td></tr>';
         return;
     }
     
-    console.log('Limpando tabela e adicionando', categorias.length, 'categorias');
     tbody.innerHTML = '';
     
     // Adiciona cada categoria na tabela
@@ -153,7 +146,6 @@ function setupActionButtons() {
 
 // Abre o modal de categoria
 function openCategoriaModal(categoriaId = null) {
-    console.log(`Abrindo modal de categoria${categoriaId ? ' para edição' : ' para criação'}`);
     
     // Limpa o formulário
     document.getElementById('categoriaForm').reset();
@@ -175,20 +167,16 @@ function openCategoriaModal(categoriaId = null) {
 
 // Carrega os dados de uma categoria específica
 async function loadCategoriaData(categoriaId) {
-    console.log(`Carregando dados da categoria ID: ${categoriaId}`);
     
     try {
         // Usa a API centralizada
-        console.log(`Enviando requisição GET para API centralizada: /api/categorias/${categoriaId}`);
         const categoria = await apiGet(`/api/categorias/${categoriaId}`);
         
-        console.log('Dados da categoria carregados:', categoria);
         preencherFormularioCategoria(categoria, categoriaId);
     } catch (error) {
         console.error('Erro ao carregar dados da categoria:', error);
         
         // Simulando dados para demonstração
-        console.log('Carregando dados de exemplo para demonstração');
         const exemploCategoria = {
             id: categoriaId,
             nome: `Categoria ${categoriaId}`,
@@ -209,7 +197,6 @@ function preencherFormularioCategoria(categoria, categoriaId) {
 
 // Fecha o modal
 function closeModal(modalId) {
-    console.log(`Fechando modal: ${modalId}`);
     
     // Limpa o formulário
     if (modalId === 'categoriaModal') {
@@ -223,14 +210,11 @@ function closeModal(modalId) {
 
 // Salva a categoria (nova ou edição)
 async function saveCategoria() {
-    console.log('Tentando salvar categoria...');
     
     try {
         // Obtém o ID da categoria (se for edição)
         const form = document.getElementById('categoriaForm');
         const categoriaId = form.getAttribute('data-id');
-        
-        console.log(`Salvando categoria${categoriaId ? ' (edição)' : ' (nova)'}`);
         
         // Obtém os dados do formulário
         const nome = document.getElementById('nome').value.trim();
@@ -251,22 +235,16 @@ async function saveCategoria() {
             ativo: ativo
         };
         
-        console.log('Dados da categoria para salvar:', categoriaData);
-        
         try {
             let data;
             
             if (categoriaId) {
                 // Atualiza categoria existente
-                console.log(`Atualizando categoria ID: ${categoriaId}`);
                 data = await apiPut(`/api/categorias/${categoriaId}`, categoriaData);
             } else {
                 // Cria nova categoria
-                console.log('Criando nova categoria');
                 data = await apiPost('/api/categorias', categoriaData);
             }
-            
-            console.log('Categoria salva com sucesso:', data);
             
             // Fecha o modal
             closeModal('categoriaModal');
@@ -284,7 +262,6 @@ async function saveCategoria() {
             
             // Para fins de demonstração, simula sucesso se estiver em ambiente de desenvolvimento
             if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                console.log('Ambiente de desenvolvimento detectado. Simulando salvamento bem-sucedido para demonstração');
                 closeModal('categoriaModal');
                 loadCategorias();
                 alert(categoriaId ? 'Categoria atualizada com sucesso! (simulação)' : 'Categoria criada com sucesso! (simulação)');
@@ -298,7 +275,6 @@ async function saveCategoria() {
 
 // Exclui uma categoria
 async function deleteCategoria(categoriaId) {
-    console.log(`Tentando excluir categoria ID: ${categoriaId}`);
     
     try {
         if (!categoriaId) {
@@ -307,16 +283,12 @@ async function deleteCategoria(categoriaId) {
         }
         
         if (!await confirmarAcao('Tem certeza que deseja excluir esta categoria?')) {
-            console.log('Exclusão cancelada pelo usuário');
             return;
         }
-        
-        console.log('Exclusão confirmada, enviando requisição para a API centralizada...');
         
         try {
             // Usa a API centralizada
             await apiDelete(`/api/categorias/${categoriaId}`);
-            console.log('Categoria excluída com sucesso');
             
             // Recarrega a lista de categorias
             loadCategorias();
@@ -334,7 +306,6 @@ async function deleteCategoria(categoriaId) {
                 
                 // Simulando exclusão bem-sucedida para demonstração em ambiente de desenvolvimento
                 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                    console.log('Ambiente de desenvolvimento detectado. Simulando exclusão bem-sucedida para demonstração');
                     loadCategorias();
                 }
             }

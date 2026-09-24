@@ -345,8 +345,6 @@ Depois dessas informações, escreva a descrição do produto.
 
 Responda APENAS com a descrição pronta, sem explicações adicionais.`;
 
-        console.log('[IA Descrição 3D] Gerando descrição para:', tituloProduto);
-
         const descricaoGerada = (await chamarIA(prompt, 1000, 2, 2000))?.trim();
 
         if (!descricaoGerada || descricaoGerada.length < 20) {
@@ -359,8 +357,6 @@ Responda APENAS com a descrição pronta, sem explicações adicionais.`;
         // Feedback visual de sucesso
         btnGerarIA.innerHTML = '<i class="fas fa-check"></i> Gerado!';
         btnGerarIA.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
-
-        console.log('[IA Descrição 3D] Descrição gerada com sucesso!');
 
         // Restaurar botão após 2 segundos
         setTimeout(() => {
@@ -943,6 +939,32 @@ async function carregarProdutos() {
     }
 }
 
+// Miniatura JPEG gerada no upload (uploads/produtos_3d/gifs/x.gif -> .../gifs/thumbs/x.jpg).
+// Imagens e GIFs originais chegam a dezenas de MB; o card mostra a miniatura e o GIF só é
+// baixado quando o mouse passa por cima.
+function miniatura3D(caminho) {
+    const partes = caminho.split('/');
+    const nome = partes.pop().replace(/\.[^.]+$/, '') + '.jpg';
+    return [...partes, 'thumbs', nome].join('/');
+}
+
+// Sem miniatura (falhou na geração): tenta o arquivo original; se também falhar, mostra o ícone
+function imagemCard3DFalhou(img) {
+    if (!img.dataset.tentouOriginal && img.dataset.original) {
+        img.dataset.tentouOriginal = '1';
+        img.src = img.dataset.original;
+    } else {
+        img.parentElement.innerHTML = '<i class="fas fa-cube no-image"></i>';
+    }
+}
+
+function animarGifDoCard(evento, animar) {
+    const img = evento.target.closest && evento.target.closest('.card-image img[data-gif]');
+    if (!img || img.dataset.tentouOriginal) return;
+    const destino = animar ? img.dataset.original : img.dataset.miniatura;
+    if (img.getAttribute('src') !== destino) img.src = destino;
+}
+
 // Renderizar produtos (recebe os produtos da página atual, vindos da paginação)
 function renderizarProdutos(produtosPagina) {
     const grid = document.getElementById('produtos3DGrid');
@@ -994,7 +1016,7 @@ function renderizarProdutos(produtosPagina) {
             <div class="produto-3d-card" data-id="${produto.id}">
                 <div class="card-image">
                     ${imagemPadrao
-                ? `<img src="${imagemPadrao.caminho}" alt="${produto.titulo}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-cube no-image\\'></i>'">`
+                ? `<img src="${escapeHtml(miniatura3D(imagemPadrao.caminho))}" data-miniatura="${escapeHtml(miniatura3D(imagemPadrao.caminho))}" data-original="${escapeHtml(imagemPadrao.caminho)}" ${gif ? 'data-gif="1"' : ''} alt="${escapeHtml(produto.titulo)}" loading="lazy" onerror="imagemCard3DFalhou(this)">`
                 : '<i class="fas fa-cube no-image"></i>'
             }
                 </div>
@@ -1026,6 +1048,8 @@ function renderizarProdutos(produtosPagina) {
             </div>
         `;
     }).join('');
+    grid.onmouseover = (e) => animarGifDoCard(e, true);
+    grid.onmouseout = (e) => animarGifDoCard(e, false);
 }
 
 // Filtrar produtos
@@ -1138,7 +1162,6 @@ async function salvarProduto() {
 
         const imagensComprimidas = [];
         if (imagensParaUpload.length > 0) {
-            console.log(`Comprimindo ${imagensParaUpload.length} imagem(ns)...`);
             for (let i = 0; i < imagensParaUpload.length; i++) {
                 const originalFile = imagensParaUpload[i];
                 const percentFile = Math.round(((i + 1) / imagensParaUpload.length) * 100);
@@ -1150,8 +1173,6 @@ async function salvarProduto() {
                     originalFile.name
                 );
 
-                console.log(`Comprimindo imagem ${i + 1}/${imagensParaUpload.length}: ${originalFile.name} (${formatFileSize(originalFile.size)})`);
-
                 const compressedBlob = await ImageCompressor.compress(originalFile, {
                     maxWidth: 1920,
                     maxHeight: 1080,
@@ -1162,7 +1183,6 @@ async function salvarProduto() {
 
                 const compressedFile = ImageCompressor.blobToFile(compressedBlob, originalFile.name);
                 imagensComprimidas.push(compressedFile);
-                console.log(`Imagem ${i + 1} comprimida: ${formatFileSize(compressedFile.size)}`);
             }
             updateUploadStats(imagensComprimidas.length, totalImages, 0, totalVideos, 0, totalSTL, 0, totalGIF);
         }
@@ -1505,7 +1525,6 @@ async function carregarSTL(caminho, elemento) {
 
     try {
         // Primeiro, busca o arquivo e valida
-        console.log('Carregando STL de:', caminho);
         const response = await fetch(caminho);
 
         if (!response.ok) {
@@ -1513,7 +1532,6 @@ async function carregarSTL(caminho, elemento) {
         }
 
         const contentType = response.headers.get('content-type') || '';
-        console.log('Content-Type recebido:', contentType);
 
         // Se recebeu HTML, provavelmente é página de erro
         if (contentType.includes('text/html')) {
@@ -1521,7 +1539,6 @@ async function carregarSTL(caminho, elemento) {
         }
 
         const arrayBuffer = await response.arrayBuffer();
-        console.log('Tamanho do arquivo:', arrayBuffer.byteLength, 'bytes');
 
         // Valida tamanho mínimo (STL binário tem header de 84 bytes)
         if (arrayBuffer.byteLength < 84) {
@@ -1539,14 +1556,11 @@ async function carregarSTL(caminho, elemento) {
             const numTriangles = dataView.getUint32(80, true);
             const expectedSize = 84 + (numTriangles * 50);
 
-            console.log('STL Binário - Triângulos:', numTriangles, '- Tamanho esperado:', expectedSize);
-
             // Valida se o tamanho faz sentido (com tolerância de alguns bytes)
             if (Math.abs(arrayBuffer.byteLength - expectedSize) > 100) {
                 console.warn('Tamanho do arquivo não corresponde ao esperado. Arquivo pode estar corrompido ou não é STL.');
             }
         } else {
-            console.log('STL ASCII detectado');
         }
 
         // Cria cena Three.js

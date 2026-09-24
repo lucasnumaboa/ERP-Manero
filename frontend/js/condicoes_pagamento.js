@@ -4,7 +4,6 @@ let condicaoAtual = null;
 let editandoCondicao = false;
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM carregado - iniciando configuração da página de condições de pagamento');
     
     // Verificar autenticação
     checkAuth();
@@ -211,8 +210,6 @@ async function salvarCondicao() {
         ativo: document.getElementById('ativo').checked
     };
     
-    console.log('Dados da condição a serem enviados:', condicaoData);
-    
     if (editandoCondicao && condicaoAtual) {
         await atualizarCondicao(condicaoAtual.id, condicaoData);
     } else {
@@ -222,7 +219,6 @@ async function salvarCondicao() {
 
 async function criarCondicao(condicaoData) {
     try {
-        console.log('Dados da condição a serem enviados:', condicaoData);
         
         await apiPost('/api/condicoes-pagamento', condicaoData);
         

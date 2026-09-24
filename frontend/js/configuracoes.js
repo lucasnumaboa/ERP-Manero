@@ -351,7 +351,11 @@ function preencherDadosConfiguracoes(configuracoes) {
     });
 
     table.appendChild(tbody);
-    configContainer.appendChild(table);
+    // Valores longos (URLs, textos) quebram a linha e, se ainda não couber, a tabela rola dentro do quadro
+    const rolagem = document.createElement('div');
+    rolagem.className = 'tabela-rolavel tabela-texto-longo';
+    rolagem.appendChild(table);
+    configContainer.appendChild(rolagem);
 
     // Adiciona eventos aos botões de editar e excluir
     document.querySelectorAll('.editar-config').forEach(btn => {
@@ -395,7 +399,6 @@ function preencherDadosConfiguracoes(configuracoes) {
                 });
 
                 if (response.ok) {
-                    console.log(`OLX ${this.checked ? 'ativado' : 'desativado'} com sucesso`);
                 } else {
                     console.error('Erro ao salvar configuração olx_ativo');
                     // Reverte o toggle em caso de erro
@@ -789,7 +792,6 @@ function setupIAProviderForm() {
                 // Não sobrescreve apikeys com string vazia (preserva o valor existente no banco)
                 const isApikeyField = config.chave.endsWith('_apikey') || config.chave === 'apikey_openrouter';
                 if (isApikeyField && config.valor === '') {
-                    console.log(`[IA Config] Pulando ${config.chave} (vazio) — mantendo valor salvo no banco`);
                     sucessos++; // Conta como sucesso (não houve erro)
                     continue;
                 }
@@ -1624,7 +1626,6 @@ function closeModal(modalId) {
     if (modal) {
         modal.classList.remove('active');
         document.body.classList.remove('modal-open');
-        console.log(`Modal ${modalId} fechado com sucesso`);
     } else {
         console.error(`Modal ${modalId} não encontrado ao tentar fechar`);
     }
@@ -1737,7 +1738,6 @@ async function carregarConfiguracoesWebhook() {
             atualizarLabelWebhook(isAtivo);
         }
 
-        console.log('Configurações de webhook carregadas');
     } catch (error) {
         console.error('Erro ao carregar configurações de webhook:', error);
     }

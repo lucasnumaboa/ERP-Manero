@@ -146,5 +146,4 @@
     initParticles();
     animate();
     
-    console.log('[Internal Animation] Animação de fundo iniciada');
 })();

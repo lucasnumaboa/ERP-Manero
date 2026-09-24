@@ -135,6 +135,23 @@ async def listar_pedidos_venda(
     
     return pedidos
 
+@router.get("/recentes")
+async def vendas_recentes(limite: int = 3, current_user: UserInDB = Depends(get_current_user)):
+    """Últimas vendas com os produtos, para o quadro de atividades recentes da Home."""
+    limite = max(1, min(limite, 20))
+    with get_db_cursor() as cursor:
+        cursor.execute(
+            "SELECT pv.id, pv.codigo, p.nome AS cliente_nome, pv.valor_total, pv.status, pv.data_pedido, "
+            "(SELECT GROUP_CONCAT(CONCAT(prod.nome, ' (', i.quantidade, ')') SEPARATOR ', ') "
+            " FROM itens_pedido_venda i JOIN produtos prod ON i.produto_id = prod.id WHERE i.pedido_id = pv.id) AS produtos_vendidos, "
+            "(SELECT SUM(i.quantidade) FROM itens_pedido_venda i WHERE i.pedido_id = pv.id) AS quantidade_total "
+            "FROM pedidos_venda pv LEFT JOIN parceiros p ON pv.cliente_id = p.id "
+            "ORDER BY pv.data_pedido DESC, pv.id DESC LIMIT %s",
+            (limite,),
+        )
+        return cursor.fetchall()
+
+
 @router.get("/{pedido_id}", response_model=PedidoVendaDetalhado)
 async def obter_pedido_venda(
     pedido_id: int,

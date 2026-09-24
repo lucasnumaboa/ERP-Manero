@@ -550,5 +550,3 @@ window.toggleSelecionarTodosPrecos = toggleSelecionarTodosPrecos;
 window.confirmarReplicarSugestao = confirmarReplicarSugestao;
 window.mostrarFontesPesquisa = mostrarFontesPesquisa;
 window.fecharModalFontes = fecharModalFontes;
-
-console.log('[Análise Preços] Módulo carregado');

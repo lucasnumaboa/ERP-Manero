@@ -126,3 +126,11 @@ def test_saude_do_sistema_e_alerta_so_para_admin(cliente_api, admin, vendedor):
     sql("DELETE FROM configuracoes WHERE chave='alerta_telefones'")
     r = cliente_api.post("/api/configuracoes/testar-alerta", headers=admin["headers"])
     assert r.status_code == 400 and "telefone" in r.json()["detail"]
+
+
+def test_vendas_recentes_da_home(cliente_api, vendedor, admin):
+    r = cliente_api.get("/api/vendas/recentes?limite=3", headers=vendedor["headers"])  # vendedor tem vendas_visualizar
+    assert r.status_code == 200 and isinstance(r.json(), list) and len(r.json()) <= 3
+    for venda in r.json():
+        assert {"codigo", "cliente_nome", "valor_total", "status", "produtos_vendidos", "quantidade_total"} <= venda.keys()
+    assert cliente_api.get("/api/vendas/recentes").status_code == 401

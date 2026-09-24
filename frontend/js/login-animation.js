@@ -222,5 +222,4 @@
     initParticles();
     animate();
     
-    console.log('[Login Animation] Animação de fundo iniciada');
 })();

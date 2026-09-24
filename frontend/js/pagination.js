@@ -18,7 +18,6 @@ let allItems = [];
 function initPagination(items, displayFunction, paginationContainerId = 'pagination') {
     // Verifica se os parâmetros necessários foram fornecidos
     if (!items || !displayFunction) {
-        console.log('Paginação: aguardando dados...');
         return;
     }
     

@@ -28,7 +28,6 @@ function updateLoadingText(text, progressText) {
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
-    console.log('Softwares: Inicializando...');
     
     // Verifica se é admin para mostrar seção de upload
     await verificarPermissoes();
@@ -62,12 +61,10 @@ async function verificarPermissoes() {
         const userData = await getCurrentUser();
 
         if (!userData) {
-            console.log('Softwares: Usuário não autenticado');
             return;
         }
 
         isAdmin = userData.nivel_acesso === 'admin';
-        console.log('Softwares: Usuário:', userData.nome, '| Admin:', isAdmin);
 
         // Mostra seção de upload apenas para admin
         const uploadSection = document.getElementById('upload-section');
@@ -90,15 +87,12 @@ async function carregarSoftwares() {
     const emptyState = document.getElementById('empty-state');
 
     try {
-        console.log('Softwares: Carregando lista...');
         const softwares = await apiGet('/api/softwares');
 
         if (softwares === null) {
-            console.log('Softwares: Erro de autenticação');
             return;
         }
 
-        console.log('Softwares: Recebidos', softwares.length, 'itens');
         renderizarSoftwares(softwares);
     } catch (error) {
         console.error('Softwares: Erro ao carregar:', error);
@@ -161,7 +155,6 @@ function renderizarSoftwares(softwares) {
 
 async function handleUpload(event) {
     event.preventDefault();
-    console.log('Softwares: Iniciando upload...');
 
     const fileInput = document.getElementById('arquivo');
     const descricaoInput = document.getElementById('descricao');
@@ -173,12 +166,10 @@ async function handleUpload(event) {
 
     const file = fileInput.files[0];
     const nomeArquivo = file.name;
-    console.log('Softwares: Arquivo selecionado:', nomeArquivo);
 
     // Verifica se arquivo já existe
     try {
         const checkData = await apiGet(`/api/softwares/verificar/${encodeURIComponent(nomeArquivo)}`);
-        console.log('Softwares: Verificação:', checkData);
 
         if (checkData && checkData.existe) {
             // Arquivo já existe, abre modal de atualização
@@ -205,16 +196,13 @@ async function handleUpload(event) {
     showLoading('Enviando software...', `Enviando: ${nomeArquivo}`);
 
     try {
-        console.log('Softwares: Enviando arquivo...');
         const result = await apiPostFormData('/api/softwares/upload', formData);
 
         if (result === null) {
-            console.log('Softwares: Erro de autenticação no upload');
             hideLoading();
             return;
         }
 
-        console.log('Softwares: Upload concluído:', result);
         hideLoading();
         alert('Software enviado com sucesso!');
 
@@ -240,7 +228,6 @@ async function handleUpload(event) {
 
 async function handleUpdate(event) {
     event.preventDefault();
-    console.log('Softwares: Iniciando atualização...');
 
     const softwareIdField = document.getElementById('update-software-id');
     const fileInput = document.getElementById('update-arquivo');
@@ -272,16 +259,13 @@ async function handleUpdate(event) {
     showLoading('Atualizando software...', `Enviando: ${nomeArquivo}`);
 
     try {
-        console.log('Softwares: Atualizando software ID:', softwareId);
         const result = await apiPostFormData(`/api/softwares/atualizar/${softwareId}`, formData);
 
         if (result === null) {
-            console.log('Softwares: Erro de autenticação na atualização');
             hideLoading();
             return;
         }
 
-        console.log('Softwares: Atualização concluída:', result);
         hideLoading();
         alert(`Software atualizado para versão ${result.versao}!`);
 
@@ -311,7 +295,6 @@ async function handleUpdate(event) {
 }
 
 async function downloadSoftware(softwareId) {
-    console.log('Softwares: Iniciando download ID:', softwareId);
     
     // Mostra loading
     showLoading('Baixando software...', 'Preparando download...');
@@ -353,8 +336,6 @@ async function downloadSoftware(softwareId) {
             filename = filename + '.exe';
         }
 
-        console.log('Softwares: Baixando arquivo:', filename);
-        
         updateLoadingText('Baixando software...', `Baixando: ${filename}`);
 
         // Cria blob e faz download
@@ -382,17 +363,14 @@ async function downloadSoftware(softwareId) {
 }
 
 async function abrirModalHistorico(softwareId) {
-    console.log('Softwares: Carregando histórico ID:', softwareId);
     
     try {
         const historico = await apiGet(`/api/softwares/historico/${softwareId}`);
 
         if (historico === null) {
-            console.log('Softwares: Erro de autenticação no histórico');
             return;
         }
 
-        console.log('Softwares: Histórico recebido:', historico.length, 'itens');
         renderizarHistorico(historico);
         
         const modal = document.getElementById('modal-historico');
@@ -434,7 +412,6 @@ function fecharModalHistorico() {
 }
 
 function abrirModalAtualizar(softwareId) {
-    console.log('Softwares: Abrindo modal de atualização ID:', softwareId);
     
     const updateIdField = document.getElementById('update-software-id');
     const updateArquivo = document.getElementById('update-arquivo');
@@ -466,17 +443,13 @@ async function excluirSoftware(softwareId, nomeArquivo) {
         return;
     }
 
-    console.log('Softwares: Excluindo ID:', softwareId);
-
     try {
         const result = await apiDelete(`/api/softwares/${softwareId}`);
 
         if (result === null) {
-            console.log('Softwares: Erro de autenticação na exclusão');
             return;
         }
 
-        console.log('Softwares: Exclusão concluída');
         alert('Software excluído com sucesso!');
         await carregarSoftwares();
     } catch (error) {

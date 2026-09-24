@@ -75,21 +75,7 @@ async function loadRecentActivities() {
             recentActivitiesSection.style.display = 'block';
         }
         
-        // Fazer requisição para obter dados do dashboard
-        const response = await fetch(`${API_BASE_URL}/dashboard/`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `${localStorage.getItem('erp_token_type')} ${localStorage.getItem('erp_token')}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Erro ao carregar atividades recentes');
-        }
-        
-        const data = await response.json();
-        updateHomepageRecentActivities(data.vendas_recentes || []);
+        updateHomepageRecentActivities(await apiGet('/api/vendas/recentes', { limite: 3 }) || []);
         
     } catch (error) {
         console.error('Erro ao carregar atividades recentes:', error);
@@ -115,8 +101,9 @@ function updateHomepageRecentActivities(vendasRecentes) {
     
     tbody.innerHTML = recentActivities.map(venda => {
         const dataFormatada = new Date(venda.data_pedido).toLocaleDateString('pt-BR');
-        const statusClass = venda.status === 'concluido' ? 'status-completed' : 
-                           venda.status === 'pendente' ? 'status-pending' : 'status-cancelled';
+        const status = String(venda.status || '').toLowerCase();
+        const statusClass = ['finalizada', 'concluída', 'concluida'].includes(status) ? 'status-completed' :
+                           status === 'pendente' ? 'status-pending' : 'status-cancelled';
         
         // Formatação dos produtos vendidos
         const produtosVendidos = venda.produtos_vendidos || 'N/A';
@@ -131,10 +118,10 @@ function updateHomepageRecentActivities(vendasRecentes) {
             <tr>
                 <td>#${escapeHtml(venda.codigo)}</td>
                 <td>${escapeHtml(venda.cliente_nome)}</td>
-                <td title="${produtosVendidos}">${produtosDisplay}</td>
+                <td title="${escapeHtml(produtosVendidos)}">${escapeHtml(produtosDisplay)}</td>
                 <td>${quantidadeTotal}</td>
                 <td>R$ ${parseFloat(venda.valor_total).toFixed(2)}</td>
-                <td><span class="status ${statusClass}">${venda.status}</span></td>
+                <td><span class="status ${statusClass}">${escapeHtml(venda.status)}</span></td>
                 <td>${dataFormatada}</td>
             </tr>
         `;
@@ -250,8 +237,6 @@ async function carregarNotificacoesSoftware() {
         
         container.innerHTML = html;
         container.style.display = 'block';
-        
-        console.log(`Homepage: ${softwares.length} notificação(ões) de software carregada(s)`);
         
     } catch (error) {
         console.error('Erro ao carregar notificações de software:', error);

@@ -19,6 +19,38 @@ router = APIRouter()
 
 # Diretório de uploads para produtos 3D
 UPLOAD_DIR = "../frontend/uploads/produtos_3d"
+# Miniatura do card: imagens e GIFs chegam a dezenas de MB; a listagem mostra um JPEG leve
+# (o primeiro quadro, no caso do GIF) e a animação só é baixada ao passar o mouse.
+MINIATURA_3D_MAX = (480, 480)
+TIPOS_COM_MINIATURA = ("imagens", "gifs")
+
+
+def caminho_miniatura_3d(caminho_relativo: str) -> str:
+    """uploads/produtos_3d/gifs/x.gif -> uploads/produtos_3d/gifs/thumbs/x.jpg"""
+    pasta, nome = os.path.split(caminho_relativo)
+    return f"{pasta}/thumbs/{os.path.splitext(nome)[0]}.jpg"
+
+
+def gerar_miniatura_3d(caminho_relativo: str) -> bool:
+    """Gera a miniatura; falha aqui não pode impedir o upload (o card cai para o arquivo original)."""
+    try:
+        from PIL import Image
+        destino = os.path.join("../frontend", caminho_miniatura_3d(caminho_relativo))
+        os.makedirs(os.path.dirname(destino), exist_ok=True)
+        with Image.open(os.path.join("../frontend", caminho_relativo)) as img:
+            img = img.convert("RGB")
+            img.thumbnail(MINIATURA_3D_MAX)
+            img.save(destino, "JPEG", quality=82)
+        return True
+    except Exception:
+        return False
+
+
+def remover_arquivo_3d(caminho_relativo: str):
+    for relativo in (caminho_relativo, caminho_miniatura_3d(caminho_relativo)):
+        caminho = os.path.join("../frontend", relativo)
+        if os.path.exists(caminho):
+            os.remove(caminho)
 
 # ============================================
 # Modelos Pydantic - Categorias 3D
@@ -1020,9 +1052,7 @@ async def excluir_produto_3d(
     
     # Deleta arquivos do disco
     for arquivo in arquivos:
-        file_path = os.path.join("../frontend", arquivo["caminho"])
-        if os.path.exists(file_path):
-            os.remove(file_path)
+        remover_arquivo_3d(arquivo["caminho"])
     
     # Deleta do banco (CASCADE vai deletar arquivos_produto_3d)
     with get_db_cursor(commit=True) as cursor:
@@ -1051,9 +1081,7 @@ async def excluir_arquivo_produto_3d(
             )
     
     # Deleta arquivo do disco
-    file_path = os.path.join("../frontend", arquivo["caminho"])
-    if os.path.exists(file_path):
-        os.remove(file_path)
+    remover_arquivo_3d(arquivo["caminho"])
     
     # Deleta do banco
     with get_db_cursor(commit=True) as cursor:
@@ -1312,6 +1340,8 @@ async def salvar_arquivo(arquivo: UploadFile, tipo: str, produto_id: int) -> dic
     
     # Obtém o tamanho do arquivo salvo
     tamanho = os.path.getsize(caminho_completo)
+    if tipo in TIPOS_COM_MINIATURA:
+        gerar_miniatura_3d(caminho_relativo)
     
     return {
         "nome": arquivo.filename,

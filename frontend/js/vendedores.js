@@ -101,9 +101,6 @@ async function loadVendedores() {
                     vendedor.usuario_id === userData.id
                 );
                 
-                console.log('Filtrando vendedores para o usuário:', userData.id);
-                console.log('Vendedores encontrados:', filteredVendedores.length);
-                
                 data = filteredVendedores;
             } else {
                 data = [];

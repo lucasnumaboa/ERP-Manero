@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a192f">
+    <title>ERP Maneiro - Sem conexão</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0a192f;
+            color: #ccd6f6;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            text-align: center;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+
+        img {
+            width: 96px;
+            height: 96px;
+            border-radius: 20px;
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            margin: 20px 0 8px;
+        }
+
+        p {
+            color: #8892b0;
+            margin: 0 0 24px;
+        }
+
+        button {
+            background: #64ffda;
+            color: #0a192f;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <img src="img/app/icone-192.png" alt="">
+        <h1>Sem conexão com o ERP</h1>
+        <p>Confira a internet do aparelho e tente de novo.</p>
+        <button type="button" onclick="location.reload()">Tentar de novo</button>
+    </main>
+</body>
+</html>

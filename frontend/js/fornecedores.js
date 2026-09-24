@@ -68,7 +68,6 @@ function resetarAbasModalFornecedores() {
 
 // Carrega a lista de fornecedores da API
 async function loadFornecedores() {
-    console.log('Carregando fornecedores da API centralizada');
     
     const statusFilter = document.getElementById('filtroStatus').value;
     
@@ -86,9 +85,7 @@ async function loadFornecedores() {
     
     try {
         // Usa a nova API centralizada
-        console.log(`Enviando requisição GET para API centralizada: /api/parceiros`);
         const data = await apiGet('/api/parceiros', queryParams);
-        console.log('Fornecedores carregados com sucesso:', data.length);
         
         // Configuração da paginação
         window.currentDisplayFunction = displayFornecedores;

@@ -4,6 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0a192f">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/app/favicon-32.png">
+    <link rel="apple-touch-icon" href="img/app/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="ERP Maneiro">
     <title>ERP Maneiro - Relatórios</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/dashboard.css">
@@ -13,954 +20,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="css/theme-dark.css">
     <link rel="stylesheet" href="css/theme-light.css">
-    <style>
-        .relatorio-container {
-            padding: 20px;
-        }
-
-        .filtro-container {
-            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
-            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(20px);
-        }
-
-        .filtro-row {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-            margin-bottom: 15px;
-        }
-
-        .filtro-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .filtro-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .filtro-group label {
-            font-weight: 600;
-            font-size: 14px;
-            color: var(--text-secondary, #a8b2d1);
-        }
-
-        .filtro-group input[type="date"],
-        .filtro-group select {
-            padding: 8px 12px;
-            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
-            border-radius: 4px;
-            font-size: 14px;
-            min-width: 150px;
-            background: rgba(10, 25, 47, 0.8);
-            color: var(--text-primary, #e6f1ff);
-        }
-
-        .btn-gerar {
-            background-color: #3498db;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background-color 0.3s;
-        }
-
-        .btn-gerar:hover {
-            background-color: #2980b9;
-        }
-
-        .btn-exportar {
-            background-color: #27ae60;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-left: 10px;
-            transition: background-color 0.3s;
-        }
-
-        .btn-exportar:hover {
-            background-color: #229954;
-        }
-
-        .btn-exportar:disabled {
-            background-color: #bdc3c7;
-            cursor: not-allowed;
-        }
-
-        .resumo-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .card-resumo {
-            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
-            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            backdrop-filter: blur(20px);
-        }
-
-        .card-resumo h3 {
-            font-size: 12px;
-            color: var(--text-muted, #8892b0);
-            text-transform: uppercase;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-
-        .card-resumo .valor {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text-primary, #e6f1ff);
-        }
-
-        .card-resumo.vendas {
-            border-left: 4px solid #3498db;
-        }
-
-        .card-resumo.lucro {
-            border-left: 4px solid #27ae60;
-        }
-
-        .card-resumo.compras {
-            border-left: 4px solid #e74c3c;
-        }
-
-        .card-resumo.margem {
-            border-left: 4px solid #f39c12;
-        }
-
-        .tabela-container {
-            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
-            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            overflow-x: auto;
-            backdrop-filter: blur(20px);
-        }
-
-        .tabela-container h2 {
-            font-size: 18px;
-            color: var(--accent-primary, #64ffda);
-            margin-bottom: 15px;
-            border-bottom: 2px solid var(--accent-primary, #64ffda);
-            padding-bottom: 10px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        table thead {
-            background-color: rgba(100, 255, 218, 0.1);
-        }
-
-        table th {
-            padding: 12px;
-            text-align: left;
-            font-weight: 600;
-            color: var(--accent-primary, #64ffda);
-            border-bottom: 2px solid var(--border-color, rgba(100, 255, 218, 0.1));
-            font-size: 13px;
-            text-transform: uppercase;
-        }
-
-        table td {
-            padding: 12px;
-            border-bottom: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
-            font-size: 14px;
-            color: var(--text-secondary, #a8b2d1);
-        }
-
-        table tbody tr:hover {
-            background-color: rgba(100, 255, 218, 0.05);
-        }
-
-        .valor-moeda {
-            text-align: right;
-            font-weight: 600;
-            color: #27ae60;
-        }
-
-        .valor-negativo {
-            color: #e74c3c;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 40px;
-            color: var(--text-muted, #8892b0);
-        }
-
-        .loading i {
-            font-size: 32px;
-            margin-bottom: 10px;
-            color: var(--accent-primary, #64ffda);
-        }
-
-        .mensagem-vazia {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-muted, #8892b0);
-            font-size: 16px;
-        }
-
-        .mensagem-vazia i {
-            font-size: 48px;
-            margin-bottom: 10px;
-            color: var(--text-muted, #8892b0);
-        }
-
-        /* Estilos para Modal de IA */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.3s ease-in;
-        }
-
-        .modal.active {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
-            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            width: 90%;
-            max-width: 900px;
-            max-height: 90vh;
-            overflow-y: auto;
-            animation: slideIn 0.3s ease-out;
-            backdrop-filter: blur(20px);
-        }
-
-        .modal-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: linear-gradient(135deg, rgba(100, 255, 218, 0.15) 0%, rgba(52, 152, 219, 0.15) 100%);
-            color: var(--accent-primary, #64ffda);
-        }
-
-        .modal-header h2 {
-            margin: 0;
-            font-size: 20px;
-        }
-
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 28px;
-            cursor: pointer;
-            color: white;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .close-modal:hover {
-            opacity: 0.8;
-        }
-
-        .modal-body {
-            padding: 20px;
-            background: rgba(10, 25, 47, 0.5);
-        }
-
-        .modal-footer {
-            padding: 20px;
-            border-top: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            background: rgba(17, 34, 64, 0.8);
-        }
-
-        .tabs-ia {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--border-color, rgba(100, 255, 218, 0.1));
-        }
-
-        .tab-btn-ia {
-            background: none;
-            border: none;
-            padding: 10px 15px;
-            cursor: pointer;
-            font-size: 14px;
-            color: var(--text-muted, #8892b0);
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s;
-        }
-
-        .tab-btn-ia:hover {
-            color: var(--text-primary, #e6f1ff);
-        }
-
-        .tab-btn-ia.active {
-            color: var(--accent-primary, #64ffda);
-            border-bottom-color: var(--accent-primary, #64ffda);
-        }
-
-        .tab-content-ia {
-            display: none;
-        }
-
-        .tab-content-ia.active {
-            display: block;
-        }
-
-        .relatorio-ia-content {
-            background: rgba(10, 25, 47, 0.5);
-            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
-            border-radius: 4px;
-            padding: 15px;
-            min-height: 300px;
-        }
-
-        .relatorio-ia-text {
-            color: var(--text-secondary, #a8b2d1);
-            line-height: 1.6;
-            font-size: 14px;
-            word-wrap: break-word;
-        }
-
-        .relatorio-ia-text table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-            background: rgba(17, 34, 64, 0.8);
-            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .relatorio-ia-text table thead {
-            background-color: rgba(100, 255, 218, 0.15);
-            color: var(--accent-primary, #64ffda);
-        }
-
-        .relatorio-ia-text table th {
-            padding: 12px;
-            text-align: left;
-            font-weight: bold;
-            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
-            color: var(--accent-primary, #64ffda);
-        }
-
-        .relatorio-ia-text table td {
-            padding: 12px;
-            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
-            color: var(--text-secondary, #a8b2d1);
-        }
-
-        .relatorio-ia-text table tbody tr:nth-child(even) {
-            background-color: rgba(100, 255, 218, 0.03);
-        }
-
-        .relatorio-ia-text table tbody tr:hover {
-            background-color: rgba(100, 255, 218, 0.08);
-        }
-
-        .relatorio-ia-text strong {
-            color: var(--accent-primary, #64ffda);
-            font-weight: bold;
-        }
-
-        .relatorio-ia-text ul {
-            list-style-type: disc;
-            margin: 10px 0;
-            padding-left: 20px;
-        }
-
-        .relatorio-ia-text li {
-            margin-left: 20px;
-            color: var(--text-secondary, #a8b2d1);
-            margin-bottom: 5px;
-        }
-
-        .loading-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 300px;
-            color: var(--text-muted, #8892b0);
-        }
-
-        .loading-state i {
-            font-size: 48px;
-            color: var(--accent-primary, #64ffda);
-            margin-bottom: 15px;
-            animation: spin 2s linear infinite;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateY(-50px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .alert {
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 15px;
-        }
-
-        .alert-danger {
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-        }
-
-        @media (max-width: 768px) {
-            .filtro-row {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .filtro-group input[type="date"],
-            .filtro-group select {
-                min-width: 100%;
-            }
-
-            .resumo-cards {
-                grid-template-columns: 1fr;
-            }
-
-            .tabela-container {
-                overflow-x: auto;
-            }
-
-            table {
-                font-size: 12px;
-            }
-
-            table th,
-            table td {
-                padding: 8px;
-            }
-
-            .modal-content {
-                width: 95%;
-                max-height: 95vh;
-            }
-
-            .tabs-ia {
-                flex-wrap: wrap;
-            }
-        }
-
-        /* ===== ESTILOS DO MAPA DE VENDAS POR REGIÃO ===== */
-        .btn-regiao {
-            background-color: #2ecc71 !important;
-            margin-left: 10px;
-        }
-
-        .btn-regiao:hover {
-            background-color: #27ae60 !important;
-        }
-
-        .resumo-regiao {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .card-resumo-regiao {
-            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
-            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
-            border-radius: 8px;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex: 1;
-            min-width: 200px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(20px);
-        }
-
-        .card-resumo-regiao i {
-            font-size: 32px;
-            color: var(--accent-primary, #64ffda);
-        }
-
-        .card-resumo-regiao .card-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .card-resumo-regiao .card-label {
-            font-size: 12px;
-            color: var(--text-muted, #8892b0);
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-
-        .card-resumo-regiao .card-valor {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text-primary, #e6f1ff);
-        }
-
-        .mapa-wrapper {
-            display: flex;
-            gap: 20px;
-            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
-            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(20px);
-        }
-
-        .mapa-container {
-            flex: 0 0 auto;
-            width: 480px;
-            height: 520px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
-            border-radius: 8px;
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-sizing: border-box;
-        }
-
-        .mapa-container svg {
-            display: block;
-            max-width: 100%;
-            max-height: 100%;
-        }
-
-        .estado {
-            fill: #e0e0e0;
-            stroke: #bdbdbd;
-            stroke-width: 1;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .estado:hover {
-            fill: #81c784 !important;
-            stroke: #2e7d32;
-            stroke-width: 2;
-            filter: brightness(1.1);
-        }
-
-        .estado.selecionado {
-            stroke: #1565c0 !important;
-            stroke-width: 3 !important;
-            filter: drop-shadow(0 0 5px rgba(21, 101, 192, 0.5));
-        }
-
-        /* Tooltip do mapa */
-        .tooltip-mapa {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 6px;
-            font-size: 13px;
-            z-index: 10000;
-            pointer-events: none;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            max-width: 250px;
-            line-height: 1.5;
-        }
-
-        .esfera-venda {
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .esfera-venda:hover {
-            transform: scale(1.2);
-            filter: brightness(1.2) url(#glow);
-        }
-
-        .painel-estado {
-            flex: 1;
-            min-width: 400px;
-            background: var(--gradient-card, rgba(17, 34, 64, 0.95));
-            border-radius: 8px;
-            border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
-            overflow: hidden;
-            max-height: 650px;
-            overflow-y: auto;
-        }
-
-        .painel-header {
-            background: linear-gradient(135deg, rgba(100, 255, 218, 0.15) 0%, rgba(52, 152, 219, 0.15) 100%);
-            color: var(--accent-primary, #64ffda);
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .painel-header h3 {
-            margin: 0;
-            font-size: 16px;
-        }
-
-        .btn-fechar-painel {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 5px;
-            opacity: 0.8;
-            transition: opacity 0.3s;
-        }
-
-        .btn-fechar-painel:hover {
-            opacity: 1;
-        }
-
-        .painel-resumo {
-            padding: 15px 20px;
-            background: rgba(10, 25, 47, 0.5);
-            border-bottom: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
-        }
-
-        .resumo-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-        }
-
-        .resumo-label {
-            color: var(--text-muted, #8892b0);
-            font-size: 13px;
-        }
-
-        .resumo-valor {
-            font-weight: 600;
-            color: var(--text-primary, #e6f1ff);
-        }
-
-        .valor-destaque {
-            color: #27ae60 !important;
-            font-size: 18px;
-        }
-
-        .painel-produtos {
-            padding: 15px 20px;
-        }
-
-        .painel-produtos h4 {
-            margin: 0 0 15px 0;
-            font-size: 14px;
-            color: var(--accent-primary, #64ffda);
-        }
-
-        .tabela-produtos-estado {
-            max-height: 500px;
-            overflow-y: auto;
-        }
-
-        .tabela-produtos-estado table {
-            width: 100%;
-            font-size: 12px;
-        }
-
-        .tabela-produtos-estado th {
-            background: rgba(100, 255, 218, 0.1);
-            padding: 8px;
-            font-size: 11px;
-            position: sticky;
-            top: 0;
-            color: var(--accent-primary, #64ffda);
-        }
-
-        .tabela-produtos-estado td {
-            padding: 8px;
-            border-bottom: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));
-            color: var(--text-secondary, #a8b2d1);
-        }
-
-        .loading-estado,
-        .erro-estado {
-            padding: 40px 20px;
-            text-align: center;
-            color: var(--text-muted, #8892b0);
-        }
-
-        .loading-estado i,
-        .erro-estado i {
-            font-size: 32px;
-            margin-bottom: 10px;
-        }
-
-        .erro-estado {
-            color: #e74c3c;
-        }
-
-        .legenda-mapa {
-            margin-top: 20px;
-            background: white;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 15px 20px;
-        }
-
-        .legenda-mapa h4 {
-            margin: 0 0 15px 0;
-            font-size: 14px;
-            color: #2c3e50;
-        }
-
-        .legenda-itens {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .legenda-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            color: #7f8c8d;
-        }
-
-        .legenda-cor {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
-            border: 1px solid #bdbdbd;
-        }
-
-        .legenda-esfera {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ff9800 0%, #f44336 100%);
-            border: 2px solid white;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-        }
-
-        .legenda-dica {
-            margin-top: 15px;
-            font-size: 12px;
-            color: #95a5a6;
-            font-style: italic;
-        }
-
-        .legenda-dica i {
-            margin-right: 5px;
-        }
-
-        /* Legenda no topo - inline */
-        .legenda-mapa-topo {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 12px 20px;
-            margin-bottom: 20px;
-        }
-
-        .legenda-itens-inline {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .legenda-titulo {
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 14px;
-        }
-
-        .legenda-titulo i {
-            color: #3498db;
-            margin-right: 5px;
-        }
-
-        .legenda-item-inline {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            color: #495057;
-        }
-
-        .legenda-dica-inline {
-            font-size: 12px;
-            color: #6c757d;
-            font-style: italic;
-            margin-left: auto;
-        }
-
-        .legenda-dica-inline i {
-            margin-right: 5px;
-            color: #3498db;
-        }
-
-        .text-right {
-            text-align: right;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .badge {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.85em;
-            font-weight: 600;
-            display: inline-block;
-        }
-
-        .badge-success {
-            background-color: #27ae60;
-            color: white;
-        }
-
-        .badge-danger {
-            background-color: #e74c3c;
-            color: white;
-        }
-
-        .badge-warning {
-            background-color: #f39c12;
-            color: white;
-        }
-
-        /* Row coloring for price analysis */
-        .row-competitivo {
-            background-color: rgba(39, 174, 96, 0.15) !important;
-        }
-
-        .row-competitivo:hover {
-            background-color: rgba(39, 174, 96, 0.25) !important;
-        }
-
-        .row-nao-competitivo {
-            background-color: rgba(231, 76, 60, 0.15) !important;
-        }
-
-        .row-nao-competitivo:hover {
-            background-color: rgba(231, 76, 60, 0.25) !important;
-        }
-
-        @media (max-width: 900px) {
-            .mapa-wrapper {
-                flex-direction: column;
-            }
-
-            .painel-estado {
-                width: 100%;
-            }
-
-            .mapa-container {
-                min-width: 100%;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="css/relatorios.css">
     <script src="js/config.js"></script>
     <script src="js/avisos.js"></script>
+    <link rel="stylesheet" href="css/celular.css">
 </head>
 
 <body>
     <!-- Estilo inicial para ocultar o conteúdo até verificar permissões -->
-    <style>
-        .app-container {
-            display: none;
-        }
-
-        #permission-loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            width: 100%;
-            position: fixed;
-            top: 0;
-            left: 0;
-            background-color: #f8f9fa;
-            z-index: 9999;
-        }
-
-        #permission-loading i {
-            font-size: 48px;
-            color: #3498db;
-            margin-bottom: 20px;
-        }
-
-        #permission-loading p {
-            color: #7f8c8d;
-            font-size: 18px;
-        }
-    </style>
 
     <!-- Tela de carregamento enquanto verifica permissões -->
     <div id="permission-loading">
@@ -1024,34 +91,34 @@
                         </div>
 
                         <!-- Seção de Botões de Relatório -->
-                        <div class="relatorios-acoes"
-                            style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(100, 255, 218, 0.1);">
-                            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                        <div class="relatorios-acoes acoes-com-divisoria"
+                           >
+                            <div class="linha-botoes">
                                 <!-- Relatórios Principais -->
-                                <button class="btn-gerar" onclick="gerarRelatorio()" style="flex: 1; min-width: 150px;">
+                                <button class="btn-gerar botao-flex" onclick="gerarRelatorio()">
                                     <i class="fas fa-chart-bar"></i> Relatório Geral
                                 </button>
-                                <button class="btn-gerar" onclick="gerarRelatorioProdutos()"
-                                    style="flex: 1; min-width: 150px; background-color: #2980b9;">
+                                <button class="btn-gerar botao-flex-azul" onclick="gerarRelatorioProdutos()"
+                                   >
                                     <i class="fas fa-cubes"></i> Por Produtos
                                 </button>
-                                <button class="btn-gerar btn-regiao" onclick="gerarRelatorioRegiao()"
-                                    style="flex: 1; min-width: 150px;">
+                                <button class="btn-gerar btn-regiao botao-flex" onclick="gerarRelatorioRegiao()"
+                                   >
                                     <i class="fas fa-map-marked-alt"></i> Por Região
                                 </button>
                             </div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                            <div class="linha-botoes">
                                 <!-- Relatórios Secundários -->
-                                <button class="btn-gerar" onclick="gerarRelatorioEstoque()"
-                                    style="flex: 1; min-width: 140px; background-color: #16a085;">
+                                <button class="btn-gerar botao-flex-verde-agua" onclick="gerarRelatorioEstoque()"
+                                   >
                                     <i class="fas fa-boxes"></i> Estoque
                                 </button>
-                                <button class="btn-gerar" onclick="abrirAnalisePreco()"
-                                    style="flex: 1; min-width: 140px; background-color: #e67e22;">
+                                <button class="btn-gerar botao-flex-laranja" onclick="abrirAnalisePreco()"
+                                   >
                                     <i class="fas fa-search-dollar"></i> Análise de Preço
                                 </button>
-                                <button class="btn-gerar" onclick="gerarRelatorioIA()"
-                                    style="flex: 1; min-width: 140px; background-color: #9b59b6;">
+                                <button class="btn-gerar botao-flex-roxo" onclick="gerarRelatorioIA()"
+                                   >
                                     <i class="fas fa-brain"></i> Gerar por IA
                                 </button>
                             </div>
@@ -1066,57 +133,57 @@
                 </div>
 
                 <!-- Loading com Progresso para IA -->
-                <div id="loadingIA" style="display: none; padding: 40px 20px; text-align: center;">
-                    <div style="max-width: 500px; margin: 0 auto;">
-                        <h3 style="color: #2c3e50; margin-bottom: 20px;">
-                            <i class="fas fa-brain" style="color: #9b59b6;"></i> Gerando Relatórios por IA
+                <div id="loadingIA" style="display:none;">
+                    <div class="caixa-centralizada">
+                        <h3 class="titulo-escuro">
+                            <i class="fas fa-brain icone-roxo"></i> Gerando Relatórios por IA
                         </h3>
-                        <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                                <span style="font-weight: 600; color: #2c3e50;">Progresso</span>
-                                <span style="font-weight: 600; color: #9b59b6;" id="progressoTexto">0/5</span>
+                        <div class="painel-cinza">
+                            <div class="linha-entre">
+                                <span class="texto-forte-escuro">Progresso</span>
+                                <span id="progressoTexto">0/5</span>
                             </div>
-                            <div style="background: #e9ecef; border-radius: 4px; height: 30px; overflow: hidden;">
+                            <div class="trilho-progresso">
                                 <div id="progressoBar"
-                                    style="background: linear-gradient(90deg, #9b59b6, #8e44ad); height: 100%; width: 0%; transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
+                                   >
                                     0%
                                 </div>
                             </div>
-                            <div style="margin-top: 15px; text-align: left;">
-                                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <div class="bloco-status">
+                                <div class="linha-status">
                                     <span id="status-vendas"
-                                        style="display: inline-block; width: 20px; height: 20px; background: #e9ecef; border-radius: 50%; margin-right: 10px; text-align: center; line-height: 20px; color: white; font-size: 12px;">
-                                        <i class="fas fa-circle" style="font-size: 8px;"></i>
+                                       >
+                                        <i class="fas fa-circle icone-mini"></i>
                                     </span>
-                                    <span style="color: #7f8c8d;">Análise de Vendas</span>
+                                    <span class="texto-cinza">Análise de Vendas</span>
                                 </div>
-                                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                <div class="linha-status">
                                     <span id="status-estoque"
-                                        style="display: inline-block; width: 20px; height: 20px; background: #e9ecef; border-radius: 50%; margin-right: 10px; text-align: center; line-height: 20px; color: white; font-size: 12px;">
-                                        <i class="fas fa-circle" style="font-size: 8px;"></i>
+                                       >
+                                        <i class="fas fa-circle icone-mini"></i>
                                     </span>
-                                    <span style="color: #7f8c8d;">Análise de Estoque</span>
+                                    <span class="texto-cinza">Análise de Estoque</span>
                                 </div>
-                                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                <div class="linha-status">
                                     <span id="status-recomendacoes"
-                                        style="display: inline-block; width: 20px; height: 20px; background: #e9ecef; border-radius: 50%; margin-right: 10px; text-align: center; line-height: 20px; color: white; font-size: 12px;">
-                                        <i class="fas fa-circle" style="font-size: 8px;"></i>
+                                       >
+                                        <i class="fas fa-circle icone-mini"></i>
                                     </span>
-                                    <span style="color: #7f8c8d;">Recomendações</span>
+                                    <span class="texto-cinza">Recomendações</span>
                                 </div>
-                                <div style="display: flex; align-items: center;">
+                                <div class="linha-centro">
                                     <span id="status-estrategia"
-                                        style="display: inline-block; width: 20px; height: 20px; background: #e9ecef; border-radius: 50%; margin-right: 10px; text-align: center; line-height: 20px; color: white; font-size: 12px;">
-                                        <i class="fas fa-circle" style="font-size: 8px;"></i>
+                                       >
+                                        <i class="fas fa-circle icone-mini"></i>
                                     </span>
-                                    <span style="color: #7f8c8d;">Estratégia Mês</span>
+                                    <span class="texto-cinza">Estratégia Mês</span>
                                 </div>
-                                <div style="display: flex; align-items: center; margin-top: 10px;">
+                                <div class="linha-centro-topo">
                                     <span id="status-whatsapp"
-                                        style="display: inline-block; width: 20px; height: 20px; background: #e9ecef; border-radius: 50%; margin-right: 10px; text-align: center; line-height: 20px; color: white; font-size: 12px;">
-                                        <i class="fab fa-whatsapp" style="font-size: 10px;"></i>
+                                       >
+                                        <i class="fab fa-whatsapp icone-pequeno"></i>
                                     </span>
-                                    <span style="color: #25D366;">Relatório WhatsApp</span>
+                                    <span class="texto-whatsapp">Relatório WhatsApp</span>
                                 </div>
                             </div>
                         </div>
@@ -1124,7 +191,7 @@
                 </div>
 
                 <!-- Conteúdo do Relatório -->
-                <div id="relatorioConteudo" style="display: none;">
+                <div id="relatorioConteudo" style="display:none;">
                     <!-- Resumo -->
                     <div class="resumo-cards">
                         <div class="card-resumo vendas">
@@ -1136,16 +203,16 @@
                             <div class="valor" id="faturamento">R$ 0,00</div>
                         </div>
                         <div class="card-resumo lucro">
-                            <h3>Lucro Total <small style="font-size:10px;color:#8892b0;">(ajustado)</small></h3>
+                            <h3>Lucro Total <small class="nota-pequena">(ajustado)</small></h3>
                             <div class="valor" id="lucroTotal">R$ 0,00</div>
                         </div>
-                        <div class="card-resumo" style="border-left:4px solid #8e44ad;">
+                        <div class="card-resumo card-borda-roxa">
                             <h3>Lucro (bruto)</h3>
-                            <div class="valor" id="lucroOriginal" style="font-size:18px;">R$ 0,00</div>
+                            <div class="valor" id="lucroOriginal">R$ 0,00</div>
                         </div>
-                        <div class="card-resumo" style="border-left:4px solid #f39c12;">
+                        <div class="card-resumo card-borda-laranja">
                             <h3>Ajuste Controle</h3>
-                            <div class="valor" id="ajusteControle" style="font-size:18px;">R$ 0,00</div>
+                            <div class="valor" id="ajusteControle">R$ 0,00</div>
                         </div>
                         <div class="card-resumo margem">
                             <h3>Margem de Lucro</h3>
@@ -1170,14 +237,14 @@
                                     <th>Código</th>
                                     <th>Produto</th>
                                     <th>Plataforma</th>
-                                    <th style="text-align: right;">Qtd</th>
-                                    <th style="text-align: right;">Preço Custo</th>
-                                    <th style="text-align: right;">Preço Venda</th>
-                                    <th style="text-align: right;">Valor Total</th>
-                                    <th style="text-align: right;">Custo</th>
-                                    <th style="text-align: right;">Comissão</th>
-                                    <th style="text-align: right;">Lucro</th>
-                                    <th style="text-align: right;">Margem %</th>
+                                    <th class="texto-direita">Qtd</th>
+                                    <th class="texto-direita">Preço Custo</th>
+                                    <th class="texto-direita">Preço Venda</th>
+                                    <th class="texto-direita">Valor Total</th>
+                                    <th class="texto-direita">Custo</th>
+                                    <th class="texto-direita">Comissão</th>
+                                    <th class="texto-direita">Lucro</th>
+                                    <th class="texto-direita">Margem %</th>
                                 </tr>
                             </thead>
                             <tbody id="bodyProdutosVendidos">
@@ -1198,9 +265,9 @@
                             <thead>
                                 <tr>
                                     <th>Vendedor</th>
-                                    <th style="text-align: right;">Total de Vendas</th>
-                                    <th style="text-align: right;">Valor Total Vendas</th>
-                                    <th style="text-align: right;">Comissão Total</th>
+                                    <th class="texto-direita">Total de Vendas</th>
+                                    <th class="texto-direita">Valor Total Vendas</th>
+                                    <th class="texto-direita">Comissão Total</th>
                                 </tr>
                             </thead>
                             <tbody id="bodyComissoes">
@@ -1223,9 +290,9 @@
                                     <th>Código</th>
                                     <th>Produto</th>
                                     <th>Fornecedor</th>
-                                    <th style="text-align: right;">Qtd</th>
-                                    <th style="text-align: right;">Preço Compra</th>
-                                    <th style="text-align: right;">Valor Total</th>
+                                    <th class="texto-direita">Qtd</th>
+                                    <th class="texto-direita">Preço Compra</th>
+                                    <th class="texto-direita">Valor Total</th>
                                 </tr>
                             </thead>
                             <tbody id="bodyProdutosComprados">
@@ -1240,12 +307,12 @@
                     </div>
 
                     <!-- Quadro de Ajustes de Controle Financeiro -->
-                    <div id="controleRelatorioContainer" class="tabela-container"
-                        style="display:none; border-left: 4px solid #f39c12;">
-                        <h2 style="color:#f39c12; border-bottom-color:#f39c12;">
+                    <div id="controleRelatorioContainer" class="tabela-container card-borda-laranja"
+                        style="display:none;">
+                        <h2 class="titulo-laranja">
                             <i class="fas fa-sliders-h"></i> Ajustes de Controle Financeiro
                         </h2>
-                        <p style="color:var(--text-muted,#8892b0);font-size:13px;margin-bottom:12px;">
+                        <p class="nota-explicativa">
                             Lançamentos que ajustam o lucro total do período selecionado.
                         </p>
                         <table>
@@ -1255,40 +322,40 @@
                                     <th>Tipo</th>
                                     <th>Categoria</th>
                                     <th>Descrição</th>
-                                    <th style="text-align:right;">Valor</th>
+                                    <th class="texto-direita">Valor</th>
                                 </tr>
                             </thead>
                             <tbody id="bodyControleRelatorio"></tbody>
                         </table>
                         <div id="controleRelatorioTotal"
-                            style="text-align:right;margin-top:12px;font-size:15px;color:var(--text-secondary,#a8b2d1);">
+                           >
                         </div>
                     </div>
                 </div>
 
                 <!-- Relatórios por IA -->
-                <div id="relatorioIAConteudo" style="display: none;">
+                <div id="relatorioIAConteudo" style="display:none;">
                     <!-- Abas de IA -->
-                    <div style="border-bottom: 2px solid #e9ecef; margin-bottom: 20px;">
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button class="tab-btn-ia active" data-tab="vendas"
-                                style="padding: 12px 20px; background: none; border: none; border-bottom: 3px solid #9b59b6; color: #9b59b6; cursor: pointer; font-weight: 600;">
+                    <div class="abas-ia-cabecalho">
+                        <div class="abas-ia-lista">
+                            <button class="tab-btn-ia active aba-ia-ativa" data-tab="vendas"
+                               >
                                 <i class="fas fa-chart-line"></i> Análise de Vendas
                             </button>
-                            <button class="tab-btn-ia" data-tab="estoque"
-                                style="padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent; color: #7f8c8d; cursor: pointer; font-weight: 600;">
+                            <button class="tab-btn-ia aba-ia" data-tab="estoque"
+                               >
                                 <i class="fas fa-boxes"></i> Análise de Estoque
                             </button>
-                            <button class="tab-btn-ia" data-tab="recomendacoes"
-                                style="padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent; color: #7f8c8d; cursor: pointer; font-weight: 600;">
+                            <button class="tab-btn-ia aba-ia" data-tab="recomendacoes"
+                               >
                                 <i class="fas fa-lightbulb"></i> Recomendações
                             </button>
-                            <button class="tab-btn-ia" data-tab="estrategia"
-                                style="padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent; color: #7f8c8d; cursor: pointer; font-weight: 600;">
+                            <button class="tab-btn-ia aba-ia" data-tab="estrategia"
+                               >
                                 <i class="fas fa-chess"></i> Estratégia Mês
                             </button>
-                            <button class="tab-btn-ia" data-tab="whatsapp"
-                                style="padding: 12px 20px; background: rgba(37, 211, 102, 0.1); border: none; border-bottom: 3px solid transparent; color: #25D366; cursor: pointer; font-weight: 600;">
+                            <button class="tab-btn-ia aba-ia-whatsapp" data-tab="whatsapp"
+                               >
                                 <i class="fab fa-whatsapp"></i> Relatório WhatsApp
                             </button>
                         </div>
@@ -1296,26 +363,26 @@
 
                     <!-- Conteúdo das Abas -->
                     <div id="tab-vendas" class="tab-content-ia active"
-                        style="display: block; padding: 20px; background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border-radius: 8px; border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));">
+                        style="display:block;">
                     </div>
                     <div id="tab-estoque" class="tab-content-ia"
-                        style="display: none; padding: 20px; background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border-radius: 8px; border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));">
+                        style="display:none;">
                     </div>
                     <div id="tab-recomendacoes" class="tab-content-ia"
-                        style="display: none; padding: 20px; background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border-radius: 8px; border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));">
+                        style="display:none;">
                     </div>
                     <div id="tab-estrategia" class="tab-content-ia"
-                        style="display: none; padding: 20px; background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border-radius: 8px; border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));">
+                        style="display:none;">
                     </div>
                     <div id="tab-whatsapp" class="tab-content-ia"
-                        style="display: none; padding: 20px; background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border-radius: 8px; border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));">
+                        style="display:none;">
                     </div>
                 </div>
 
                 <!-- Relatório de Vendas por Região -->
-                <div id="relatorioRegiaoConteudo" style="display: none;">
+                <div id="relatorioRegiaoConteudo" style="display:none;">
                     <!-- Filtro de Plataforma para Região -->
-                    <div class="filtro-container" style="margin-bottom: 15px;">
+                    <div class="filtro-container espaco-abaixo">
                         <div class="filtro-row">
                             <div class="filtro-group">
                                 <label for="plataformaRegiaoFiltro">Filtrar por Plataforma:</label>
@@ -1327,37 +394,37 @@
                     </div>
 
                     <!-- Legenda (logo abaixo do filtro, sempre visível) -->
-                    <div class="legenda-mapa-topo"
-                        style="background: var(--gradient-card, rgba(17, 34, 64, 0.95)); border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1));">
+                    <div class="legenda-mapa-topo legenda-mapa-caixa"
+                       >
                         <div class="legenda-itens-inline">
-                            <span class="legenda-titulo" style="color: var(--accent-primary, #64ffda);"><i
+                            <span class="legenda-titulo texto-destaque"><i
                                     class="fas fa-info-circle"></i> Legenda:</span>
                             <div class="legenda-item-inline">
-                                <span class="legenda-cor" style="background: #c8e6c9;"></span>
-                                <span style="color: var(--text-secondary, #a8b2d1);">Baixa</span>
+                                <span class="legenda-cor legenda-cor-1"></span>
+                                <span class="texto-secundario">Baixa</span>
                             </div>
                             <div class="legenda-item-inline">
-                                <span class="legenda-cor" style="background: #81c784;"></span>
-                                <span style="color: var(--text-secondary, #a8b2d1);">Média</span>
+                                <span class="legenda-cor legenda-cor-2"></span>
+                                <span class="texto-secundario">Média</span>
                             </div>
                             <div class="legenda-item-inline">
-                                <span class="legenda-cor" style="background: #4caf50;"></span>
-                                <span style="color: var(--text-secondary, #a8b2d1);">Alta</span>
+                                <span class="legenda-cor legenda-cor-3"></span>
+                                <span class="texto-secundario">Alta</span>
                             </div>
-                            <span class="legenda-dica-inline" style="color: var(--text-muted, #8892b0);"><i
+                            <span class="legenda-dica-inline texto-suave"><i
                                     class="fas fa-hand-pointer"></i> Clique em um estado para ver os produtos</span>
                         </div>
                     </div>
 
                     <!-- Loading do Mapa -->
-                    <div id="loadingMapa" style="display: none; padding: 60px 20px; text-align: center;">
-                        <i class="fas fa-spinner fa-spin"
-                            style="font-size: 48px; color: #3498db; margin-bottom: 20px;"></i>
-                        <p style="font-size: 18px; color: #7f8c8d;">Carregando mapa de vendas por região...</p>
+                    <div id="loadingMapa" style="display:none;">
+                        <i class="fas fa-spinner fa-spin icone-carregando-grande"
+                           ></i>
+                        <p class="texto-carregando">Carregando mapa de vendas por região...</p>
                     </div>
 
                     <!-- Conteúdo do Mapa -->
-                    <div id="mapaConteudo" style="display: none;">
+                    <div id="mapaConteudo" style="display:none;">
                         <!-- Resumo -->
                         <div class="resumo-regiao">
                             <div class="card-resumo-regiao">
@@ -1384,7 +451,7 @@
                             </div>
 
                             <!-- Painel Lateral com Detalhes do Estado (toda a direita) -->
-                            <div class="painel-estado" id="painelEstado" style="display: none;">
+                            <div class="painel-estado" id="painelEstado" style="display:none;">
                                 <!-- Conteúdo será preenchido via JavaScript -->
                             </div>
                         </div>
@@ -1392,24 +459,24 @@
                 </div>
 
                 <!-- Relatório de Análise de Preço -->
-                <div id="relatorioAnalisePrecoConteudo" style="display: none;">
+                <div id="relatorioAnalisePrecoConteudo" style="display:none;">
                     <!-- Header com botão de nova pesquisa -->
                     <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        class="cabecalho-analise">
                         <div>
-                            <h2 style="color: var(--accent-primary, #64ffda); margin: 0;">
+                            <h2 class="titulo-destaque">
                                 <i class="fas fa-search-dollar"></i> Análise de Preço
                             </h2>
                             <p id="dataUltimaAnalise"
-                                style="color: var(--text-muted, #8892b0); font-size: 14px; margin-top: 5px;"></p>
+                               ></p>
                         </div>
-                        <div style="display: flex; gap: 10px;">
+                        <div class="grupo-botoes">
                             <button id="btnReplicarSugestao" class="btn-gerar"
-                                style="background-color: #9b59b6; display: none;"
+                                style="display:none;"
                                 onclick="abrirModalReplicarSugestao()">
                                 <i class="fas fa-magic"></i> Replicar Sugestão
                             </button>
-                            <button class="btn-gerar" style="background-color: #e67e22;"
+                            <button class="btn-gerar botao-laranja"
                                 onclick="iniciarNovaAnalisePreco()">
                                 <i class="fas fa-sync"></i> Gerar Nova Pesquisa
                             </button>
@@ -1439,9 +506,9 @@
                             <thead>
                                 <tr>
                                     <th>Produto</th>
-                                    <th style="text-align: right;">Preço ERP</th>
-                                    <th style="text-align: center;">Competitivo?</th>
-                                    <th style="text-align: right;">Preço Sugerido</th>
+                                    <th class="texto-direita">Preço ERP</th>
+                                    <th class="texto-centro">Competitivo?</th>
+                                    <th class="texto-direita">Preço Sugerido</th>
                                     <th>Justificativa</th>
                                 </tr>
                             </thead>
@@ -1458,31 +525,31 @@
                 </div>
 
                 <!-- Modal Replicar Sugestão -->
-                <div id="modalReplicarSugestao" class="modal" style="display: none;">
-                    <div class="modal-content" style="max-width: 800px; max-height: 80vh; overflow-y: auto;">
+                <div id="modalReplicarSugestao" class="modal" style="display:none;">
+                    <div class="modal-content modal-replicar">
                         <div class="modal-header">
                             <h2><i class="fas fa-magic"></i> Replicar Sugestão de Preços</h2>
                             <button class="close-modal" onclick="fecharModalReplicarSugestao()">&times;</button>
                         </div>
                         <div class="modal-body">
-                            <p style="margin-bottom: 15px; color: var(--text-muted, #666);">
+                            <p class="texto-aviso-modal">
                                 Selecione os produtos que deseja atualizar com o preço sugerido:
                             </p>
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <div class="espaco-abaixo">
+                                <label class="rotulo-checkbox">
                                     <input type="checkbox" id="selecionarTodosPrecos"
                                         onchange="toggleSelecionarTodosPrecos()">
                                     <strong>Selecionar Todos</strong>
                                 </label>
                             </div>
-                            <table id="tabelaReplicarPrecos" style="width: 100%;">
+                            <table id="tabelaReplicarPrecos">
                                 <thead>
                                     <tr>
-                                        <th style="width: 40px;"></th>
+                                        <th class="coluna-checkbox"></th>
                                         <th>Produto</th>
-                                        <th style="text-align: right;">Preço Atual</th>
-                                        <th style="text-align: right;">Preço Sugerido</th>
-                                        <th style="text-align: right;">Diferença</th>
+                                        <th class="texto-direita">Preço Atual</th>
+                                        <th class="texto-direita">Preço Sugerido</th>
+                                        <th class="texto-direita">Diferença</th>
                                     </tr>
                                 </thead>
                                 <tbody id="bodyReplicarPrecos">
@@ -1490,29 +557,29 @@
                             </table>
                         </div>
                         <!-- Barra de progresso (oculta inicialmente) -->
-                        <div id="progressoReplicar" style="display: none; margin-bottom: 15px;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                <span style="font-weight: 600; color: var(--text-primary, #2c3e50);">Atualizando
+                        <div id="progressoReplicar" style="display:none;" class="espaco-abaixo">
+                            <div class="linha-entre-compacta">
+                                <span class="texto-forte">Atualizando
                                     preços...</span>
-                                <span id="progressoReplicarTexto" style="font-weight: 600; color: #9b59b6;">0%</span>
+                                <span id="progressoReplicarTexto">0%</span>
                             </div>
-                            <div style="background: #e9ecef; border-radius: 4px; height: 25px; overflow: hidden;">
+                            <div class="trilho-progresso-fino">
                                 <div id="progressoReplicarBar"
-                                    style="background: linear-gradient(90deg, #9b59b6, #8e44ad); height: 100%; width: 0%; transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
+                                   >
                                     0%
                                 </div>
                             </div>
                             <p id="produtoAtualReplicar"
-                                style="margin-top: 10px; color: var(--text-muted, #7f8c8d); font-size: 13px; text-align: center;">
+                               >
                             </p>
                         </div>
 
                         <div id="botoesReplicar" class="modal-footer"
-                            style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 15px; border-top: 1px solid var(--border-color, #ddd);">
+                           >
                             <button class="btn-cancelar" onclick="fecharModalReplicarSugestao()">
                                 <i class="fas fa-times"></i> Cancelar
                             </button>
-                            <button id="btnConfirmarReplicar" class="btn-gerar" style="background-color: #27ae60;"
+                            <button id="btnConfirmarReplicar" class="btn-gerar"
                                 onclick="confirmarReplicarSugestao()">
                                 <i class="fas fa-check"></i> Confirmar Alterações
                             </button>
@@ -1521,14 +588,14 @@
                 </div>
 
                 <!-- Relatório de Estoque -->
-                <div id="relatorioEstoqueConteudo" style="display: none;">
+                <div id="relatorioEstoqueConteudo" style="display:none;">
                     <!-- Resumo do Estoque -->
                     <div class="resumo-cards">
-                        <div class="card-resumo" style="border-left: 4px solid #16a085;">
+                        <div class="card-resumo card-borda-verde">
                             <h3>Total de Produtos</h3>
                             <div class="valor" id="estoqueQtdProdutos">0</div>
                         </div>
-                        <div class="card-resumo" style="border-left: 4px solid #1abc9c;">
+                        <div class="card-resumo card-borda-turquesa">
                             <h3>Total de Itens</h3>
                             <div class="valor" id="estoqueQtdItens">0</div>
                         </div>
@@ -1544,7 +611,7 @@
                             <h3>Valorização Simulada</h3>
                             <div class="valor" id="estoqueValorizacaoSimulada">R$ 0,00</div>
                         </div>
-                        <div class="card-resumo" style="border-left: 4px solid #9b59b6;">
+                        <div class="card-resumo card-borda-roxa-clara">
                             <h3>Valorização Real</h3>
                             <div class="valor" id="estoqueValorizacaoReal">R$ 0,00</div>
                         </div>
@@ -1552,7 +619,7 @@
                             <h3>Margem Média Simulada</h3>
                             <div class="valor" id="estoqueMargemSimulada">0%</div>
                         </div>
-                        <div class="card-resumo" style="border-left: 4px solid #8e44ad;">
+                        <div class="card-resumo card-borda-roxa">
                             <h3>Margem Média Real</h3>
                             <div class="valor" id="estoqueMargemReal">0%</div>
                         </div>
@@ -1561,25 +628,25 @@
                     <!-- Tabela de Produtos em Estoque -->
                     <div class="tabela-container">
                         <h2><i class="fas fa-boxes"></i> Produtos em Estoque (Faturáveis com Estoque > 0)</h2>
-                        <div style="overflow-x: auto;">
+                        <div class="rolagem-horizontal">
                             <table id="tabelaEstoque">
                                 <thead>
                                     <tr>
                                         <th>Código</th>
                                         <th>Produto</th>
                                         <th>Categoria</th>
-                                        <th style="text-align: right;">Qtd Disp</th>
-                                        <th style="text-align: right;">Custo Unit.</th>
-                                        <th style="text-align: right;">Custo Total</th>
-                                        <th style="text-align: right;">Preço Venda</th>
-                                        <th style="text-align: right;">Preço Médio</th>
-                                        <th style="text-align: right;">Qtd Vendida</th>
-                                        <th style="text-align: right;">Comissão %</th>
-                                        <th style="text-align: right;">Valor. Simulada</th>
-                                        <th style="text-align: right;">Valor. Real</th>
-                                        <th style="text-align: right;">Margem Sim.</th>
-                                        <th style="text-align: right;">Margem Real</th>
-                                        <th style="text-align: right;">Giro</th>
+                                        <th class="texto-direita">Qtd Disp</th>
+                                        <th class="texto-direita">Custo Unit.</th>
+                                        <th class="texto-direita">Custo Total</th>
+                                        <th class="texto-direita">Preço Venda</th>
+                                        <th class="texto-direita">Preço Médio</th>
+                                        <th class="texto-direita">Qtd Vendida</th>
+                                        <th class="texto-direita">Comissão %</th>
+                                        <th class="texto-direita">Valor. Simulada</th>
+                                        <th class="texto-direita">Valor. Real</th>
+                                        <th class="texto-direita">Margem Sim.</th>
+                                        <th class="texto-direita">Margem Real</th>
+                                        <th class="texto-direita">Giro</th>
                                     </tr>
                                 </thead>
                                 <tbody id="bodyEstoque">
@@ -1595,21 +662,21 @@
                     </div>
 
                     <!-- Botão Exportar Estoque -->
-                    <div style="margin-top: 20px; text-align: right;">
-                        <button class="btn-exportar" onclick="exportarEstoquePDF()" style="background-color: #16a085;">
+                    <div class="acoes-direita">
+                        <button class="btn-exportar botao-verde-agua" onclick="exportarEstoquePDF()">
                             <i class="fas fa-file-pdf"></i> Exportar PDF
                         </button>
-                        <button class="btn-exportar" onclick="exportarEstoqueExcel()"
-                            style="background-color: #27ae60; margin-left: 10px;">
+                        <button class="btn-exportar botao-verde-espaco" onclick="exportarEstoqueExcel()"
+                           >
                             <i class="fas fa-file-excel"></i> Exportar Excel
                         </button>
                     </div>
                 </div>
 
                 <!-- Relatório por Produtos -->
-                <div id="relatorioProdutosConteudo" style="display: none;">
+                <div id="relatorioProdutosConteudo" style="display:none;">
                     <!-- Filtros Específicos do Relatório -->
-                    <div class="filtro-container" style="margin-bottom: 15px;">
+                    <div class="filtro-container espaco-abaixo">
                         <div class="filtro-row">
                             <div class="filtro-group">
                                 <label for="categoriaProdutoFiltro">Grupo (Categoria):</label>
@@ -1620,9 +687,9 @@
                             <div class="filtro-group">
                                 <label for="nomeProdutoFiltro">Nome do Produto:</label>
                                 <input type="text" id="nomeProdutoFiltro" placeholder="Filtrar por nome..."
-                                    style="padding: 8px 12px; border: 1px solid var(--border-color, rgba(100, 255, 218, 0.1)); border-radius: 4px; font-size: 14px; min-width: 200px; background: rgba(10, 25, 47, 0.8); color: var(--text-primary, #e6f1ff);">
+                                   >
                             </div>
-                            <div class="filtro-group" style="align-self: flex-end;">
+                            <div class="filtro-group grupo-alinhado-base">
                                 <button class="btn-gerar" onclick="filtrarRelatorioProdutos()">
                                     <i class="fas fa-filter"></i> Filtrar
                                 </button>
@@ -1633,24 +700,24 @@
                     <!-- Tabela de Quantidade por Mês -->
                     <div class="tabela-container">
                         <h2><i class="fas fa-boxes"></i> Quantidade Vendida por Mês</h2>
-                        <div style="overflow-x: auto;">
+                        <div class="rolagem-horizontal">
                             <table id="tabelaQuantidadeMensal">
                                 <thead>
                                     <tr>
                                         <th>Produto</th>
-                                        <th style="text-align: center;">Jan</th>
-                                        <th style="text-align: center;">Fev</th>
-                                        <th style="text-align: center;">Mar</th>
-                                        <th style="text-align: center;">Abr</th>
-                                        <th style="text-align: center;">Mai</th>
-                                        <th style="text-align: center;">Jun</th>
-                                        <th style="text-align: center;">Jul</th>
-                                        <th style="text-align: center;">Ago</th>
-                                        <th style="text-align: center;">Set</th>
-                                        <th style="text-align: center;">Out</th>
-                                        <th style="text-align: center;">Nov</th>
-                                        <th style="text-align: center;">Dez</th>
-                                        <th style="text-align: center; font-weight: 700;">Total</th>
+                                        <th class="texto-centro">Jan</th>
+                                        <th class="texto-centro">Fev</th>
+                                        <th class="texto-centro">Mar</th>
+                                        <th class="texto-centro">Abr</th>
+                                        <th class="texto-centro">Mai</th>
+                                        <th class="texto-centro">Jun</th>
+                                        <th class="texto-centro">Jul</th>
+                                        <th class="texto-centro">Ago</th>
+                                        <th class="texto-centro">Set</th>
+                                        <th class="texto-centro">Out</th>
+                                        <th class="texto-centro">Nov</th>
+                                        <th class="texto-centro">Dez</th>
+                                        <th class="texto-centro-forte">Total</th>
                                     </tr>
                                 </thead>
                                 <tbody id="bodyQuantidadeMensal">
@@ -1668,24 +735,24 @@
                     <!-- Tabela de Faturamento por Mês -->
                     <div class="tabela-container">
                         <h2><i class="fas fa-dollar-sign"></i> Faturamento por Mês</h2>
-                        <div style="overflow-x: auto;">
+                        <div class="rolagem-horizontal">
                             <table id="tabelaFaturamentoMensal">
                                 <thead>
                                     <tr>
                                         <th>Produto</th>
-                                        <th style="text-align: right;">Jan</th>
-                                        <th style="text-align: right;">Fev</th>
-                                        <th style="text-align: right;">Mar</th>
-                                        <th style="text-align: right;">Abr</th>
-                                        <th style="text-align: right;">Mai</th>
-                                        <th style="text-align: right;">Jun</th>
-                                        <th style="text-align: right;">Jul</th>
-                                        <th style="text-align: right;">Ago</th>
-                                        <th style="text-align: right;">Set</th>
-                                        <th style="text-align: right;">Out</th>
-                                        <th style="text-align: right;">Nov</th>
-                                        <th style="text-align: right;">Dez</th>
-                                        <th style="text-align: right; font-weight: 700;">Total</th>
+                                        <th class="texto-direita">Jan</th>
+                                        <th class="texto-direita">Fev</th>
+                                        <th class="texto-direita">Mar</th>
+                                        <th class="texto-direita">Abr</th>
+                                        <th class="texto-direita">Mai</th>
+                                        <th class="texto-direita">Jun</th>
+                                        <th class="texto-direita">Jul</th>
+                                        <th class="texto-direita">Ago</th>
+                                        <th class="texto-direita">Set</th>
+                                        <th class="texto-direita">Out</th>
+                                        <th class="texto-direita">Nov</th>
+                                        <th class="texto-direita">Dez</th>
+                                        <th class="texto-direita-forte">Total</th>
                                     </tr>
                                 </thead>
                                 <tbody id="bodyFaturamentoMensal">
@@ -1703,24 +770,24 @@
                     <!-- Tabela de Lucro por Mês -->
                     <div class="tabela-container">
                         <h2><i class="fas fa-chart-line"></i> Lucro por Mês</h2>
-                        <div style="overflow-x: auto;">
+                        <div class="rolagem-horizontal">
                             <table id="tabelaLucroMensal">
                                 <thead>
                                     <tr>
                                         <th>Produto</th>
-                                        <th style="text-align: right;">Jan</th>
-                                        <th style="text-align: right;">Fev</th>
-                                        <th style="text-align: right;">Mar</th>
-                                        <th style="text-align: right;">Abr</th>
-                                        <th style="text-align: right;">Mai</th>
-                                        <th style="text-align: right;">Jun</th>
-                                        <th style="text-align: right;">Jul</th>
-                                        <th style="text-align: right;">Ago</th>
-                                        <th style="text-align: right;">Set</th>
-                                        <th style="text-align: right;">Out</th>
-                                        <th style="text-align: right;">Nov</th>
-                                        <th style="text-align: right;">Dez</th>
-                                        <th style="text-align: right; font-weight: 700;">Total</th>
+                                        <th class="texto-direita">Jan</th>
+                                        <th class="texto-direita">Fev</th>
+                                        <th class="texto-direita">Mar</th>
+                                        <th class="texto-direita">Abr</th>
+                                        <th class="texto-direita">Mai</th>
+                                        <th class="texto-direita">Jun</th>
+                                        <th class="texto-direita">Jul</th>
+                                        <th class="texto-direita">Ago</th>
+                                        <th class="texto-direita">Set</th>
+                                        <th class="texto-direita">Out</th>
+                                        <th class="texto-direita">Nov</th>
+                                        <th class="texto-direita">Dez</th>
+                                        <th class="texto-direita-forte">Total</th>
                                     </tr>
                                 </thead>
                                 <tbody id="bodyLucroMensal">
@@ -1737,27 +804,27 @@
                 </div>
 
                 <!-- Loading Análise de Preço -->
-                <div id="loadingAnalisePreco" style="display: none; padding: 40px 20px; text-align: center;">
-                    <div style="max-width: 500px; margin: 0 auto;">
-                        <h3 style="color: #2c3e50; margin-bottom: 20px;">
-                            <i class="fas fa-search-dollar" style="color: #e67e22;"></i> Análise de Preço Iniciada
+                <div id="loadingAnalisePreco" style="display:none;">
+                    <div class="caixa-centralizada">
+                        <h3 class="titulo-escuro">
+                            <i class="fas fa-search-dollar icone-laranja"></i> Análise de Preço Iniciada
                         </h3>
-                        <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                                <span style="font-weight: 600; color: #2c3e50;">Progresso</span>
-                                <span style="font-weight: 600; color: #e67e22;" id="progressoAnaliseTexto">0%</span>
+                        <div class="painel-cinza">
+                            <div class="linha-entre">
+                                <span class="texto-forte-escuro">Progresso</span>
+                                <span id="progressoAnaliseTexto">0%</span>
                             </div>
-                            <div style="background: #e9ecef; border-radius: 4px; height: 30px; overflow: hidden;">
+                            <div class="trilho-progresso">
                                 <div id="progressoAnaliseBar"
-                                    style="background: linear-gradient(90deg, #e67e22, #d35400); height: 100%; width: 0%; transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
+                                   >
                                     0%
                                 </div>
                             </div>
-                            <p id="produtoAtualAnalise" style="margin-top: 15px; color: #7f8c8d; font-size: 14px;">
+                            <p id="produtoAtualAnalise">
                                 Iniciando análise...</p>
                         </div>
-                        <div class="alert"
-                            style="background: rgba(230, 126, 34, 0.1); border: 1px solid #e67e22; color: #e67e22;">
+                        <div class="alert alerta-laranja"
+                           >
                             <i class="fas fa-info-circle"></i> Você será notificado quando a análise for concluída.
                         </div>
                     </div>
@@ -1765,9 +832,9 @@
             </div>
 
             <!-- Mensagem Inicial -->
-            <div id="mensagemInicial" style="text-align: center; padding: 60px 20px;">
-                <i class="fas fa-chart-bar" style="font-size: 64px; color: #bdc3c7; margin-bottom: 20px;"></i>
-                <p style="font-size: 18px; color: #7f8c8d;">Selecione um período e clique em "Gerar Relatório" para
+            <div id="mensagemInicial">
+                <i class="fas fa-chart-bar icone-vazio"></i>
+                <p class="texto-carregando">Selecione um período e clique em "Gerar Relatório" para
                     visualizar os dados</p>
             </div>
     </div>

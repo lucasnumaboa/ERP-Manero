@@ -915,7 +915,6 @@ async function gerarRelatorioIA() {
         atualizarStatusItem('estrategia', 'carregando');
         try {
             const estrategia = await gerarEstrategiaParaMesIA(dataInicio, dataFim);
-            console.log('Estratégia recebida:', estrategia);
 
             if (!estrategia || estrategia.trim() === '') {
                 document.getElementById('tab-estrategia').innerHTML = `
@@ -952,7 +951,6 @@ async function gerarRelatorioIA() {
         atualizarStatusItem('whatsapp', 'carregando');
         try {
             const relatorioWhatsApp = await gerarRelatorioWhatsAppIA(dataInicio, dataFim);
-            console.log('Relatório WhatsApp recebido:', relatorioWhatsApp);
 
             if (!relatorioWhatsApp || relatorioWhatsApp.trim() === '') {
                 document.getElementById('tab-whatsapp').innerHTML = `

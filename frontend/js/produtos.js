@@ -106,13 +106,10 @@ async function loadProdutos() {
 
     try {
         // Carrega apenas os produtos do usuário logado
-        console.log('Carregando produtos do usuário logado...');
         const data = await apiGet('/api/produtos?apenas_meus=true');
 
         // Armazena os produtos do usuário
         todosProdutos = data || [];
-        console.log(`${todosProdutos.length} produtos carregados da API`);
-        console.log('Primeiros produtos:', todosProdutos.slice(0, 3));
 
         // Aplica os filtros no frontend
         filtrarProdutos();
@@ -139,7 +136,6 @@ async function loadProdutos() {
 
 // Exibe os produtos na tabela
 function displayProdutos(produtos) {
-    console.log('Exibindo produtos na tabela:', produtos ? produtos.length : 0, 'produtos');
 
     const tbody = document.getElementById('produtosTableBody');
     if (!tbody) {
@@ -148,16 +144,13 @@ function displayProdutos(produtos) {
     }
 
     if (!produtos || produtos.length === 0) {
-        console.log('Nenhum produto encontrado para exibir');
         tbody.innerHTML = '<tr><td colspan="9" class="text-center">Nenhum produto encontrado</td></tr>';
         return;
     }
 
-    console.log('Limpando tabela e adicionando', produtos.length, 'produtos');
     tbody.innerHTML = '';
 
     produtos.forEach((produto, index) => {
-        console.log(`Renderizando produto ${index + 1}/${produtos.length}:`, produto.id, produto.nome);
 
         const row = document.createElement('tr');
 
@@ -198,7 +191,6 @@ function displayProdutos(produtos) {
         row.addEventListener('click', function (e) {
             // Se o clique não foi em um botão de ação
             if (!e.target.closest('.btn-icon')) {
-                console.log(`Linha clicada para o produto ID: ${produto.id}`);
                 openProdutoModal(produto.id);
             }
         });
@@ -206,11 +198,8 @@ function displayProdutos(produtos) {
         tbody.appendChild(row);
     });
 
-    console.log('Configurando botões de ação nas linhas da tabela');
-
     // Adiciona event listeners para os botões de editar e excluir
     const editButtons = document.querySelectorAll('.btn-edit');
-    console.log(`Encontrados ${editButtons.length} botões de editar`);
 
     editButtons.forEach(button => {
         button.addEventListener('click', function (e) {
@@ -218,7 +207,6 @@ function displayProdutos(produtos) {
             e.stopPropagation(); // Impede que o evento de clique se propague para a linha
 
             const id = this.getAttribute('data-id');
-            console.log(`Botão editar clicado para o produto ID: ${id}`);
 
             // Pequeno atraso para garantir que o evento seja registrado corretamente
             setTimeout(() => {
@@ -228,7 +216,6 @@ function displayProdutos(produtos) {
     });
 
     const deleteButtons = document.querySelectorAll('.btn-delete');
-    console.log(`Encontrados ${deleteButtons.length} botões de excluir`);
 
     deleteButtons.forEach(button => {
         button.addEventListener('click', function (e) {
@@ -236,7 +223,6 @@ function displayProdutos(produtos) {
             e.stopPropagation(); // Impede que o evento de clique se propague para a linha
 
             const id = this.getAttribute('data-id');
-            console.log(`Botão excluir clicado para o produto ID: ${id}`);
 
             // Pequeno atraso para garantir que o evento seja registrado corretamente
             setTimeout(() => {
@@ -245,7 +231,6 @@ function displayProdutos(produtos) {
         });
     });
 
-    console.log('Produtos exibidos e eventos configurados com sucesso!');
 }
 
 // Formata números para exibição
@@ -256,11 +241,9 @@ function formatNumber(value) {
 
 // Tenta endpoints alternativos para obter a URL da API
 async function tryAlternativeEndpoint() {
-    console.log('Tentando endpoints alternativos para sincronizar URL da API...');
 
     // Obtém a URL atual da API
     const currentApiUrl = getApiBaseUrl();
-    console.log('URL atual da API:', currentApiUrl);
 
     try {
         // Cria um controller para abortar a requisição se demorar muito
@@ -269,7 +252,6 @@ async function tryAlternativeEndpoint() {
 
         // Primeiro tenta o endpoint de status
         const statusUrl = `${currentApiUrl}/api/configuracoes/status`;
-        console.log('Tentando endpoint de status:', statusUrl);
 
         const response = await fetch(statusUrl, {
             method: 'GET',
@@ -278,7 +260,6 @@ async function tryAlternativeEndpoint() {
             },
             signal: controller.signal
         }).catch(error => {
-            console.log('Endpoint de status não disponível:', error);
             return null;
         });
 
@@ -289,7 +270,6 @@ async function tryAlternativeEndpoint() {
 
             // Se a URL da API no servidor for diferente da armazenada localmente
             if (data.api_url && data.api_url !== currentApiUrl) {
-                console.log(`Atualizando URL da API: ${currentApiUrl} -> ${data.api_url}`);
                 localStorage.setItem('api_base_url', data.api_url);
 
                 // Exibe mensagem e recarrega a página após 2 segundos
@@ -301,7 +281,6 @@ async function tryAlternativeEndpoint() {
         }
 
         // Se o endpoint de status falhar, tenta o endpoint link_api
-        console.log('Tentando endpoint link_api...');
         const linkApiUrl = `${currentApiUrl}/api/configuracoes/link_api`;
 
         const controller2 = new AbortController();
@@ -314,7 +293,6 @@ async function tryAlternativeEndpoint() {
             },
             signal: controller2.signal
         }).catch(error => {
-            console.log('Endpoint link_api não disponível:', error);
             return null;
         });
 
@@ -324,7 +302,6 @@ async function tryAlternativeEndpoint() {
             const data = await response2.json();
 
             if (data.valor && data.valor !== currentApiUrl) {
-                console.log(`Atualizando URL da API: ${currentApiUrl} -> ${data.valor}`);
                 localStorage.setItem('api_base_url', data.valor);
 
                 // Exibe mensagem e recarrega a página após 2 segundos
@@ -374,7 +351,6 @@ function showApiUrlChangedAlert(newUrl) {
 
 // Carrega as categorias para o dropdown
 async function loadCategorias() {
-    console.log('Carregando categorias da API...');
 
     const selectCategoria = document.getElementById('filtroCategoria');
     const selectCategoriaModal = document.getElementById('categoria_id');
@@ -386,36 +362,29 @@ async function loadCategorias() {
 
     try {
         // Usa a API centralizada
-        console.log('Enviando requisição GET para /api/categorias');
         const categorias = await apiGet('/api/categorias');
-        console.log('Categorias recebidas da API:', categorias);
 
         // Adiciona a opção "Todas" apenas para o filtro
         if (selectCategoria) {
-            console.log('Preenchendo dropdown de filtro de categorias');
             selectCategoria.innerHTML = '<option value="">Todas as categorias</option>';
 
             if (categorias && categorias.length > 0) {
                 categorias.forEach(categoria => {
-                    console.log(`Adicionando categoria ao filtro: ID=${categoria.id}, Nome=${categoria.nome}, Produtos=${categoria.produtos_count || 0}`);
                     const option = document.createElement('option');
                     option.value = categoria.id;
                     option.textContent = categoria.nome;
                     selectCategoria.appendChild(option);
                 });
             } else {
-                console.log('Nenhuma categoria recebida da API');
             }
         }
 
         // Adiciona as opções ao select do modal
         if (selectCategoriaModal) {
-            console.log('Preenchendo dropdown de categorias no modal');
             selectCategoriaModal.innerHTML = '<option value="">Selecione...</option>';
 
             if (categorias && categorias.length > 0) {
                 categorias.forEach(categoria => {
-                    console.log(`Adicionando categoria ao modal: ID=${categoria.id}, Nome=${categoria.nome}`);
                     const option = document.createElement('option');
                     option.value = categoria.id;
                     option.textContent = categoria.nome;
@@ -539,21 +508,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // Configura os botões de ação
 function setupActionButtons() {
-    console.log('Configurando botões de ação...');
 
     // Botão Novo Produto
     const btnNovoProduto = document.getElementById('btnNovoProduto');
     if (btnNovoProduto) {
-        console.log('Botão Novo Produto encontrado, adicionando event listener');
         btnNovoProduto.addEventListener('click', function (e) {
-            console.log('Botão Novo Produto clicado!');
             e.preventDefault();
-
-            console.log('Chamando openProdutoModal()...');
 
             // Verificar se o modal existe antes de tentar abri-lo
             const modal = document.getElementById('produtoModal');
-            console.log('Modal encontrado:', modal);
 
             openProdutoModal();
         });
@@ -563,10 +526,8 @@ function setupActionButtons() {
 
     // Botão Fechar Modal
     const closeButtons = document.querySelectorAll('.close-modal, #btnCancelar');
-    console.log(`Encontrados ${closeButtons.length} botões de fechar modal`);
     closeButtons.forEach(button => {
         button.addEventListener('click', function (e) {
-            console.log('Botão fechar modal clicado!');
             e.preventDefault();
             closeModal('produtoModal');
         });
@@ -575,9 +536,7 @@ function setupActionButtons() {
     // Botão Salvar
     const btnSalvar = document.getElementById('btnSalvar');
     if (btnSalvar) {
-        console.log('Botão Salvar encontrado, adicionando event listener');
         btnSalvar.addEventListener('click', function (e) {
-            console.log('Botão Salvar clicado!');
             e.preventDefault();
             saveProduto();
         });
@@ -588,9 +547,7 @@ function setupActionButtons() {
     // Botão Gerar Descrição por IA
     const btnGerarDescricaoIA = document.getElementById('btnGerarDescricaoIA');
     if (btnGerarDescricaoIA) {
-        console.log('Botão Gerar Descrição por IA encontrado, adicionando event listener');
         btnGerarDescricaoIA.addEventListener('click', function (e) {
-            console.log('Botão Gerar Descrição por IA clicado!');
             e.preventDefault();
             if (typeof gerarDescricaoIA === 'function') {
                 gerarDescricaoIA();
@@ -621,18 +578,14 @@ function setupActionButtons() {
 
     // Botões de paginação
     const paginationButtons = document.querySelectorAll('.btn-page');
-    console.log(`Encontrados ${paginationButtons.length} botões de paginação`);
     paginationButtons.forEach(button => {
         button.addEventListener('click', function (e) {
-            console.log('Botão de paginação clicado:', this.textContent);
             e.preventDefault();
             document.querySelectorAll('.btn-page').forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
             loadProdutos();
         });
     });
-
-    console.log('Configuração de botões concluída!');
 
     // Bloquear pontos em preços: somente números e vírgula, um único separador e até 2 casas decimais
     // Mostra/oculta e ajusta o rótulo do campo de valor da taxa de armazenagem conforme o tipo escolhido
@@ -829,7 +782,6 @@ async function carregarImagensProduto(caminhoImagem) {
 
 // Abre o modal de produto
 function openProdutoModal(produtoId = null) {
-    console.log(`Abrindo modal de produto. ID: ${produtoId || 'Novo produto'}`);
 
     try {
         // Limpa o formulário
@@ -840,7 +792,6 @@ function openProdutoModal(produtoId = null) {
         }
         form.reset();
         atualizarVisibilidadeTaxaArmazenagem();
-        console.log('Formulário resetado');
 
         // Define o título do modal
         const modalTitle = document.getElementById('modalTitle');
@@ -849,7 +800,6 @@ function openProdutoModal(produtoId = null) {
             return;
         }
         modalTitle.textContent = produtoId ? 'Editar Produto' : 'Novo Produto';
-        console.log(`Título do modal definido: ${modalTitle.textContent}`);
 
         // Limpa o preview de imagens
         const previewDiv = document.getElementById('preview_imagens');
@@ -869,7 +819,6 @@ function openProdutoModal(produtoId = null) {
 
         // Se for edição, carrega os dados do produto
         if (produtoId) {
-            console.log(`Carregando dados do produto ID: ${produtoId}`);
             loadProdutoData(produtoId).then(produto => {
                 // Carregar imagens do produto
                 if (produto && produto.caminho_imagem) {
@@ -881,13 +830,11 @@ function openProdutoModal(produtoId = null) {
                 }
                 // Guarda os dados originais do produto para comparar preço depois
                 produtoOriginal = produto ? { ...produto } : null;
-                console.log('[Webhook] Produto original guardado para comparação de preço:', produtoOriginal);
             });
         } else {
             // Se for novo produto, limpa o ID do formulário e gera um novo código
             form.removeAttribute('data-id');
             produtoOriginal = null; // Limpa dados do produto original
-            console.log('Removido atributo data-id do formulário');
 
             // Gera o próximo código de produto automaticamente
             gerarProximoCodigoProduto();
@@ -910,8 +857,6 @@ function openProdutoModal(produtoId = null) {
             'justify-content': 'center'
         }).addClass('active');
 
-        console.log('Modal aberto com jQuery');
-        console.log('Modal deveria estar visível agora');
     } catch (error) {
         console.error('Erro ao abrir modal:', error);
         alert('Erro ao abrir o modal. Por favor, tente novamente.');
@@ -920,7 +865,6 @@ function openProdutoModal(produtoId = null) {
 
 // Carrega os dados de um produto específico
 async function loadProdutoData(produtoId) {
-    console.log(`Carregando dados do produto ID: ${produtoId}`);
 
     if (!produtoId) {
         console.error('ID do produto não fornecido!');
@@ -928,19 +872,16 @@ async function loadProdutoData(produtoId) {
     }
 
     try {
-        console.log(`Enviando requisição GET para API centralizada: /api/produtos/${produtoId}`);
 
         // Usa a API centralizada
         const produto = await apiGet(`/api/produtos/${produtoId}`);
 
-        console.log('Dados do produto recebidos:', produto);
         preencherFormularioProduto(produto, produtoId);
         return produto; // Retorna o produto para uso em outras funções
     } catch (error) {
         console.error('Erro ao carregar dados do produto:', error);
 
         // Se a API não estiver disponível, carrega dados de exemplo para demonstração
-        console.log('Carregando dados de exemplo para o produto ID:', produtoId);
 
         // Dados de exemplo para demonstração
         const produtosExemplo = {
@@ -951,7 +892,6 @@ async function loadProdutoData(produtoId) {
         };
 
         const produto = produtosExemplo[produtoId] || produtosExemplo[1];
-        console.log('Usando dados de exemplo:', produto);
 
         preencherFormularioProduto(produto, produtoId);
         return produto; // Retorna o produto para uso em outras funções
@@ -969,7 +909,6 @@ function atualizarVisibilidadeTaxaArmazenagem() {
 }
 
 function preencherFormularioProduto(produto, produtoId) {
-    console.log('Preenchendo formulário com dados do produto');
 
     try {
         // Verifica se os elementos existem antes de definir seus valores
@@ -1025,12 +964,10 @@ function preencherFormularioProduto(produto, produtoId) {
         const form = document.getElementById('produtoForm');
         if (form) {
             form.setAttribute('data-id', produtoId);
-            console.log(`ID ${produtoId} armazenado no formulário`);
         } else {
             console.error('Formulário não encontrado para armazenar ID!');
         }
 
-        console.log('Formulário preenchido com sucesso!');
     } catch (error) {
         console.error('Erro ao preencher formulário:', error);
     }
@@ -1038,7 +975,6 @@ function preencherFormularioProduto(produto, produtoId) {
 
 // Fecha o modal
 function closeModal(modalId) {
-    console.log(`Fechando modal: ${modalId}`);
 
     try {
         // Usando jQuery para manipular o modal
@@ -1054,7 +990,6 @@ function closeModal(modalId) {
         // Remover classe do body para permitir rolagem novamente
         $('body').removeClass('modal-open');
 
-        console.log(`Modal ${modalId} fechado com sucesso`);
     } catch (error) {
         console.error('Erro ao fechar modal:', error);
     }
@@ -1062,7 +997,6 @@ function closeModal(modalId) {
 
 // Salva o produto (novo ou edição)
 async function saveProduto() {
-    console.log('Iniciando salvamento de produto...');
 
     // Mostra loading enquanto salva
     mostrarLoadingProduto('Cadastrando produto...', 'Aguarde, processando...');
@@ -1076,7 +1010,6 @@ async function saveProduto() {
         }
 
         const produtoId = form.getAttribute('data-id');
-        console.log(`Tipo de operação: ${produtoId ? 'Edição (ID: ' + produtoId + ')' : 'Novo produto'}`);
 
         const token = getToken();
         if (!token) {
@@ -1156,11 +1089,9 @@ async function saveProduto() {
         // Comprime as imagens antes de enviar
         let imagens = [];
         if (imagensOriginais.length > 0) {
-            console.log('Comprimindo imagens antes do envio...');
             try {
                 for (let i = 0; i < imagensOriginais.length; i++) {
                     const originalFile = imagensOriginais[i];
-                    console.log(`Comprimindo imagem ${i + 1}/${imagensOriginais.length}: ${originalFile.name} (${ImageCompressor.formatFileSize(originalFile.size)})`);
 
                     // Comprime a imagem
                     const compressedBlob = await ImageCompressor.compress(originalFile, {
@@ -1175,9 +1106,7 @@ async function saveProduto() {
                     const compressedFile = ImageCompressor.blobToFile(compressedBlob, originalFile.name);
                     imagens.push(compressedFile);
 
-                    console.log(`Imagem ${i + 1} comprimida: ${ImageCompressor.formatFileSize(compressedFile.size)}`);
                 }
-                console.log('Todas as imagens foram comprimidas com sucesso!');
             } catch (error) {
                 console.error('Erro ao comprimir imagens:', error);
                 alert('Erro ao comprimir imagens. Tentando enviar originais...');
@@ -1229,8 +1158,6 @@ async function saveProduto() {
             formData.append('video', videoInput.files[0]);
         }
 
-        console.log('Dados do produto a serem salvos');
-
         // Validação básica
         if (!codigo || !nome) {
             console.error('Campos obrigatórios não preenchidos!');
@@ -1261,8 +1188,6 @@ async function saveProduto() {
             return;
         }
 
-        console.log(`Enviando requisição para API centralizada`);
-
         let data;
 
         if (produtoId) {
@@ -1271,11 +1196,9 @@ async function saveProduto() {
             if (imagens.length > 0 || videoSelecionado) {
                 // Se tiver imagens/vídeo, usar PUT com FormData para o endpoint específico de upload
                 formData.append('id', produtoId);
-                console.log(`Atualizando produto ID: ${produtoId} com imagens/vídeo`);
                 data = await apiPostFormData(`/api/produtos/${produtoId}/upload`, formData);
             } else {
                 // Se não tiver imagens nem vídeo novos, usar PUT normal com JSON
-                console.log(`Atualizando produto ID: ${produtoId} sem imagens/vídeo`);
                 const jsonData = {
                     codigo, nome, descricao, instrucoes_duvidas, preco_custo, preco_venda,
                     estoque_minimo, categoria_id, tipo_produto, comissao, faturavel, post_olx, post_facebook, ativo, usuario_id,
@@ -1288,11 +1211,8 @@ async function saveProduto() {
             }
         } else {
             // Cria novo produto com FormData (incluindo imagens)
-            console.log('Criando novo produto');
             data = await apiPostFormData('/api/produtos', formData);
         }
-
-        console.log('Produto salvo com sucesso:', data);
 
         // Se for edição e o preço de venda mudou, notifica via webhook
         if (produtoId && produtoOriginal && window.webhookEstoque) {
@@ -1300,7 +1220,6 @@ async function saveProduto() {
             const precoNovo = preco_venda;
 
             if (precoAnterior !== precoNovo) {
-                console.log('[Webhook] Detectada alteração de preço:', { precoAnterior, precoNovo });
 
                 // Monta os dados do produto para o webhook
                 const dadosProdutoWebhook = {
@@ -1342,7 +1261,6 @@ async function saveProduto() {
 
 // Gera o próximo código de produto automaticamente
 function gerarProximoCodigoProduto() {
-    console.log('Gerando próximo código de produto...');
 
     try {
         const token = getToken();
@@ -1377,7 +1295,6 @@ function gerarProximoCodigoProduto() {
 
                 // Incrementa para obter o próximo código
                 const proximoCodigo = maiorCodigo + 1;
-                console.log(`Próximo código de produto: ${proximoCodigo}`);
 
                 // Define o valor no campo de código
                 const codigoInput = document.getElementById('codigo');
@@ -1392,7 +1309,6 @@ function gerarProximoCodigoProduto() {
 
                 // Em caso de erro, gera um código baseado no timestamp
                 const fallbackCodigo = new Date().getTime().toString().slice(-8);
-                console.log(`Usando código fallback: ${fallbackCodigo}`);
 
                 const codigoInput = document.getElementById('codigo');
                 if (codigoInput) {
@@ -1404,7 +1320,6 @@ function gerarProximoCodigoProduto() {
 
         // Em caso de erro, gera um código baseado no timestamp
         const fallbackCodigo = new Date().getTime().toString().slice(-8);
-        console.log(`Usando código fallback: ${fallbackCodigo}`);
 
         const codigoInput = document.getElementById('codigo');
         if (codigoInput) {
@@ -1417,7 +1332,6 @@ function gerarProximoCodigoProduto() {
 
 // Exclui um produto
 async function deleteProduto(produtoId) {
-    console.log(`Tentando excluir produto ID: ${produtoId}`);
 
     try {
         if (!produtoId) {
@@ -1426,16 +1340,11 @@ async function deleteProduto(produtoId) {
         }
 
         if (!await confirmarAcao('Tem certeza que deseja excluir este produto?')) {
-            console.log('Exclusão cancelada pelo usuário');
             return;
         }
 
-        console.log('Exclusão confirmada, enviando requisição para a API centralizada...');
-
         // Usa a API centralizada
         await apiDelete(`/api/produtos/${produtoId}`);
-
-        console.log('Produto excluído com sucesso');
 
         // Recarrega a lista de produtos
         loadProdutos();
@@ -1483,9 +1392,7 @@ async function saveCategoria() {
             descricao: descricao || null
         };
 
-        console.log('Criando categoria:', categoriaData);
         const data = await apiPost('/api/categorias', categoriaData);
-        console.log('Categoria criada com sucesso:', data);
 
         // Fecha o modal de categoria
         closeCategoriaModal();
@@ -1533,12 +1440,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // Função para filtrar produtos no frontend - chamada ao clicar no botão de pesquisa
 function filtrarProdutos() {
-    console.log('Filtrando produtos no frontend...');
-    console.log('Total de produtos disponíveis:', todosProdutos.length);
 
     // Se não há produtos carregados, carrega da API primeiro
     if (todosProdutos.length === 0) {
-        console.log('Nenhum produto carregado ainda, chamando loadProdutos()...');
         loadProdutos();
         return;
     }
@@ -1548,8 +1452,6 @@ function filtrarProdutos() {
     const categoria = document.getElementById('filtroCategoria').value;
     const status = document.getElementById('filtroStatus').value;
     const apenasComEstoque = document.getElementById('filtroApenasComEstoque').checked;
-
-    console.log('Filtros:', { termoPesquisa, categoria, status, apenasComEstoque });
 
     // Filtra os produtos
     let produtosFiltrados = todosProdutos.filter(produto => {
@@ -1566,7 +1468,6 @@ function filtrarProdutos() {
                 descricao.includes(termoPesquisa) ||
                 categoriaNome.includes(termoPesquisa);
 
-            console.log(`Produto "${produto.nome}" - Match: ${matchPesquisa}`);
         }
 
         // Filtro de categoria
@@ -1590,8 +1491,6 @@ function filtrarProdutos() {
         return matchPesquisa && matchCategoria && matchStatus && matchEstoque;
     });
 
-    console.log(`${produtosFiltrados.length} produtos após filtros`);
-
     // Inicializa a paginação com os produtos filtrados
     window.currentDisplayFunction = displayProdutos;
     initPagination(produtosFiltrados, displayProdutos);
@@ -1599,7 +1498,6 @@ function filtrarProdutos() {
 
 // Função para limpar todos os filtros
 function limparFiltros() {
-    console.log('Limpando filtros...');
 
     // Limpa o campo de pesquisa
     document.getElementById('filtroPesquisa').value = '';
@@ -1684,7 +1582,6 @@ function atualizarVisibilidadeAbaConsumo(tipoProduto) {
 
 // Carrega os itens de consumo de um produto
 async function carregarItensConsumo(produtoId) {
-    console.log('Carregando itens de consumo para produto:', produtoId);
     consumoProdutoId = produtoId;
 
     const tbody = document.getElementById('consumoTableBody');
@@ -1694,7 +1591,6 @@ async function carregarItensConsumo(produtoId) {
 
     try {
         const itens = await apiGet(`/api/produtos/${produtoId}/consumo`);
-        console.log('Itens de consumo recebidos:', itens);
 
         if (!itens || itens.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum componente cadastrado</td></tr>';
@@ -1866,7 +1762,6 @@ async function salvarConsumoItem() {
             quantidade: quantidade
         });
 
-        console.log('Componente adicionado:', response);
         fecharModalConsumo();
 
         // Recarrega a lista de componentes
@@ -1898,8 +1793,6 @@ async function removerConsumoItem(consumoId) {
 
     try {
         await apiDelete(`/api/produtos/${consumoProdutoId}/consumo/${consumoId}`);
-
-        console.log('Componente removido:', consumoId);
 
         // Recarrega a lista de componentes
         await carregarItensConsumo(consumoProdutoId);
@@ -1953,7 +1846,6 @@ async function abrirRecalcularCusto() {
 
     try {
         dadosRecalculoCusto = await apiGet('/api/produtos/recalcular-custo');
-        console.log('[RecalcularCusto] Dados recebidos:', dadosRecalculoCusto.length, 'produtos');
 
         renderizarTabelaRecalculo(dadosRecalculoCusto);
 
@@ -2098,7 +1990,6 @@ async function verComposicaoCusto(produtoId) {
 
     try {
         const data = await apiGet(`/api/produtos/${produtoId}/composicao-custo`);
-        console.log('[ComposicaoCusto] Dados:', data);
 
         // Preenche cabeçalho
         document.getElementById('composicaoProdutoNome').textContent = data.produto_nome;
@@ -2219,7 +2110,6 @@ async function confirmarAplicarCusto() {
         const resultado = await apiPost('/api/produtos/aplicar-custo-recalculado', {
             itens: itens.map(i => ({ produto_id: i.produto_id, novo_custo: i.novo_custo }))
         });
-        console.log('[RecalcularCusto] Resultado aplicação:', resultado);
         alert(resultado.message || 'Custos atualizados com sucesso!');
 
         const confirmarModal = document.getElementById('confirmarAplicarCustoModal');

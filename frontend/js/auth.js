@@ -282,9 +282,7 @@ async function getCurrentUser() {
 // Obtém as permissões do usuário atual
 async function getUserPermissions() {
     try {
-        console.log('Iniciando obtenção de permissões do usuário');
         const user = await getCurrentUser();
-        console.log('Dados do usuário obtidos:', user);
         
         if (!user) {
             console.error('Usuário não encontrado');
@@ -293,7 +291,6 @@ async function getUserPermissions() {
         
         // Se for admin, concede todas as permissões
         if (user.nivel_acesso === 'admin') {
-            console.log('Usuário é admin, concedendo todas as permissões');
             return {
                 dashboard_visualizar: true,
                 dashboard_editar: true,
@@ -324,19 +321,15 @@ async function getUserPermissions() {
         }
         
         // Usar o grupo_id original do usuário
-        console.log('Usando grupo_id original do usuário:', user.grupo_id);
         
         if (!user.grupo_id) {
             console.error('Usuário não possui grupo_id');
             return {};
         }
         
-        console.log(`Buscando permissões para o grupo ${user.grupo_id}`);
-        
         // Busca as permissões do grupo do usuário
         const apiUrl = await getApiUrl();
         const url = `${apiUrl}/api/usuarios/grupo/${user.grupo_id}`;
-        console.log('URL da requisição:', url);
         
         const headers = {
             ...getAuthHeader(),
@@ -348,11 +341,8 @@ async function getUserPermissions() {
             headers: headers
         });
         
-        console.log('Status da resposta:', response.status);
-        
         if (response.ok) {
             const data = await response.json();
-            console.log('Permissões obtidas com sucesso:', data);
             
             // Salva as permissões no localStorage para acesso rápido
             localStorage.setItem('erp_user_permissions', JSON.stringify(data));

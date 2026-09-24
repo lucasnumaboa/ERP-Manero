@@ -2,11 +2,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Função para inicializar as abas
     function initTabs() {
-        console.log('Inicializando abas...');
         const tabButtons = document.querySelectorAll('.tab-btn');
         const tabContents = document.querySelectorAll('.tab-content');
-        
-        console.log(`Encontrados ${tabButtons.length} botões de abas e ${tabContents.length} conteúdos de abas`);
         
         if (tabButtons.length > 0) {
             // Garantir que pelo menos uma aba esteja ativa
@@ -36,7 +33,6 @@ document.addEventListener('DOMContentLoaded', function() {
             tabButtons.forEach(button => {
                 button.addEventListener('click', function(e) {
                     e.preventDefault();
-                    console.log(`Clicou na aba: ${this.getAttribute('data-tab')}`);
                     
                     // Remover classe active de todos os botões
                     tabButtons.forEach(btn => btn.classList.remove('active'));
@@ -52,7 +48,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     const tabContent = document.getElementById(tabName);
                     if (tabContent) {
                         tabContent.classList.add('active');
-                        console.log(`Ativando conteúdo da aba: ${tabName}`);
                     } else {
                         console.error(`Conteúdo da aba não encontrado: ${tabName}`);
                     }

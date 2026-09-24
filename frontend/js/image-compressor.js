@@ -25,11 +25,6 @@ const ImageCompressor = {
         const opts = { ...this.defaultOptions, ...options };
         
         if (opts.debug) {
-            console.log('ImageCompressor: Iniciando compressão', {
-                originalSize: this.formatFileSize(file.size),
-                originalType: file.type,
-                options: opts
-            });
         }
 
         // Verifica se é uma imagem válida
@@ -41,7 +36,6 @@ const ImageCompressor = {
         const maxSizeBytes = opts.maxSizeMB * 1024 * 1024;
         if (file.size <= maxSizeBytes && !opts.forceResize) {
             if (opts.debug) {
-                console.log('ImageCompressor: Imagem já está dentro do tamanho limite');
             }
             // Ainda converte para JPEG para padronizar
             return await this.convertToJpeg(file, opts);
@@ -54,10 +48,6 @@ const ImageCompressor = {
         const { width, height } = this.calculateDimensions(img, opts.maxWidth, opts.maxHeight);
         
         if (opts.debug) {
-            console.log('ImageCompressor: Dimensões calculadas', {
-                original: { width: img.width, height: img.height },
-                novo: { width, height }
-            });
         }
 
         // Comprime com qualidade ajustável até atingir tamanho desejado
@@ -68,19 +58,12 @@ const ImageCompressor = {
         while (compressedBlob.size > maxSizeBytes && currentQuality > opts.minQuality) {
             currentQuality -= 0.1;
             if (opts.debug) {
-                console.log(`ImageCompressor: Reduzindo qualidade para ${currentQuality.toFixed(1)}`);
             }
             compressedBlob = await this.compressWithCanvas(img, width, height, currentQuality, opts.mimeType);
         }
 
         if (opts.debug) {
             const reduction = ((1 - compressedBlob.size / file.size) * 100).toFixed(1);
-            console.log('ImageCompressor: Compressão concluída', {
-                originalSize: this.formatFileSize(file.size),
-                compressedSize: this.formatFileSize(compressedBlob.size),
-                reduction: `${reduction}%`,
-                finalQuality: currentQuality.toFixed(1)
-            });
         }
 
         return compressedBlob;

@@ -28,7 +28,6 @@ async function carregarConfiguracoesWebhook() {
             ativo: webhookAtivo ? webhookAtivo.valor === 'true' : false
         };
         
-        console.log('[Webhook] Configurações carregadas:', webhookConfig);
         return webhookConfig;
     } catch (error) {
         console.error('[Webhook] Erro ao carregar configurações:', error);
@@ -48,7 +47,6 @@ async function buscarVendedoresAtivosComTelefone() {
         // Filtra apenas vendedores com telefone preenchido
         const vendedoresComTelefone = vendedores.filter(v => v.telefone && v.telefone.trim() !== '');
         
-        console.log(`[Webhook] Vendedores ativos com telefone: ${vendedoresComTelefone.length}`);
         return vendedoresComTelefone;
     } catch (error) {
         console.error('[Webhook] Erro ao buscar vendedores:', error);
@@ -167,8 +165,6 @@ async function enviarWebhook(webhookUrl, telefone, mensagem) {
             timestamp: new Date().toISOString()
         };
         
-        console.log(`[Webhook] Enviando para ${telefone}...`);
-        
         const response = await fetch(webhookUrl, {
             method: 'POST',
             headers: {
@@ -178,7 +174,6 @@ async function enviarWebhook(webhookUrl, telefone, mensagem) {
         });
         
         if (response.ok) {
-            console.log(`[Webhook] Enviado com sucesso para ${telefone}`);
             return true;
         } else {
             console.error(`[Webhook] Erro ao enviar para ${telefone}: ${response.status}`);
@@ -205,13 +200,11 @@ async function notificarVendedoresMovimentacao(tipoMovimento, produtos, dadosPed
     
     // Verifica se o webhook está ativo
     if (!webhookConfig.ativo) {
-        console.log('[Webhook] Webhook desativado, notificação ignorada');
         return { sucesso: 0, falha: 0, ignorado: true };
     }
     
     // Verifica se a URL está configurada
     if (!webhookConfig.url || webhookConfig.url.trim() === '') {
-        console.log('[Webhook] URL do webhook não configurada');
         return { sucesso: 0, falha: 0, ignorado: true };
     }
     
@@ -219,7 +212,6 @@ async function notificarVendedoresMovimentacao(tipoMovimento, produtos, dadosPed
     const vendedores = await buscarVendedoresAtivosComTelefone();
     
     if (vendedores.length === 0) {
-        console.log('[Webhook] Nenhum vendedor ativo com telefone encontrado');
         return { sucesso: 0, falha: 0, ignorado: true };
     }
     
@@ -247,7 +239,6 @@ async function notificarVendedoresMovimentacao(tipoMovimento, produtos, dadosPed
         await new Promise(resolve => setTimeout(resolve, 100));
     }
     
-    console.log(`[Webhook] Notificações enviadas: ${sucesso} sucesso, ${falha} falha`);
     return { sucesso, falha, ignorado: false };
 }
 
@@ -259,7 +250,6 @@ async function notificarVendedoresMovimentacao(tipoMovimento, produtos, dadosPed
  */
 async function notificarEntradaProdutos(itens) {
     if (!itens || itens.length === 0) {
-        console.log('[Webhook] Nenhum item para notificar entrada');
         return;
     }
     
@@ -276,7 +266,6 @@ async function notificarEntradaProdutos(itens) {
                         quantidade: item.quantidade
                     });
                 } else {
-                    console.log(`[Webhook] Produto ${produto.nome} ignorado (não faturável)`);
                 }
             } catch (error) {
                 console.error(`[Webhook] Erro ao buscar produto ${item.produto_id}:`, error);
@@ -286,7 +275,6 @@ async function notificarEntradaProdutos(itens) {
         if (produtos.length > 0) {
             await notificarVendedoresMovimentacao('entrada', produtos);
         } else {
-            console.log('[Webhook] Nenhum produto faturável para notificar entrada');
         }
     } catch (error) {
         console.error('[Webhook] Erro ao notificar entrada de produtos:', error);
@@ -302,11 +290,8 @@ async function notificarEntradaProdutos(itens) {
  */
 async function notificarSaidaProdutos(itens, dadosPedido = {}) {
     if (!itens || itens.length === 0) {
-        console.log('[Webhook] Nenhum item para notificar saída');
         return;
     }
-    
-    console.log('[Webhook] Dados do pedido recebidos:', dadosPedido);
     
     try {
         // Busca os dados completos de cada produto
@@ -321,7 +306,6 @@ async function notificarSaidaProdutos(itens, dadosPedido = {}) {
                         quantidade: item.quantidade
                     });
                 } else {
-                    console.log(`[Webhook] Produto ${produto.nome} ignorado (não faturável)`);
                 }
             } catch (error) {
                 console.error(`[Webhook] Erro ao buscar produto ${item.produto_id}:`, error);
@@ -331,7 +315,6 @@ async function notificarSaidaProdutos(itens, dadosPedido = {}) {
         if (produtos.length > 0) {
             await notificarVendedoresMovimentacao('saida', produtos, dadosPedido);
         } else {
-            console.log('[Webhook] Nenhum produto faturável para notificar saída');
         }
     } catch (error) {
         console.error('[Webhook] Erro ao notificar saída de produtos:', error);
@@ -387,13 +370,11 @@ async function notificarMovimentacaoManual(tipo, produtoId, quantidade, motivo) 
     
     // Verifica se o webhook está ativo
     if (!webhookConfig.ativo) {
-        console.log('[Webhook] Webhook desativado, notificação ignorada');
         return { sucesso: 0, falha: 0, ignorado: true };
     }
     
     // Verifica se a URL está configurada
     if (!webhookConfig.url || webhookConfig.url.trim() === '') {
-        console.log('[Webhook] URL do webhook não configurada');
         return { sucesso: 0, falha: 0, ignorado: true };
     }
     
@@ -402,7 +383,6 @@ async function notificarMovimentacaoManual(tipo, produtoId, quantidade, motivo) 
         
         // Filtra apenas produtos faturáveis (faturavel = true ou undefined/null para compatibilidade)
         if (produto.faturavel === false) {
-            console.log(`[Webhook] Produto ${produto.nome} ignorado (não faturável)`);
             return { sucesso: 0, falha: 0, ignorado: true };
         }
         
@@ -410,7 +390,6 @@ async function notificarMovimentacaoManual(tipo, produtoId, quantidade, motivo) 
         const vendedores = await buscarVendedoresAtivosComTelefone();
         
         if (vendedores.length === 0) {
-            console.log('[Webhook] Nenhum vendedor ativo com telefone encontrado');
             return { sucesso: 0, falha: 0, ignorado: true };
         }
         
@@ -433,7 +412,6 @@ async function notificarMovimentacaoManual(tipo, produtoId, quantidade, motivo) 
             await new Promise(resolve => setTimeout(resolve, 100));
         }
         
-        console.log(`[Webhook] Notificações de movimentação manual enviadas: ${sucesso} sucesso, ${falha} falha`);
         return { sucesso, falha, ignorado: false };
     } catch (error) {
         console.error('[Webhook] Erro ao notificar movimentação manual:', error);
@@ -498,7 +476,6 @@ function montarMensagemAlteracaoPreco(produto, precoAnterior, precoNovo) {
 async function notificarAlteracaoPreco(produto, precoAnterior, precoNovo) {
     // Não notifica se o preço não mudou
     if (precoAnterior === precoNovo) {
-        console.log('[Webhook] Preço não alterado, notificação ignorada');
         return { sucesso: 0, falha: 0, ignorado: true };
     }
     
@@ -509,19 +486,16 @@ async function notificarAlteracaoPreco(produto, precoAnterior, precoNovo) {
     
     // Verifica se o webhook está ativo
     if (!webhookConfig.ativo) {
-        console.log('[Webhook] Webhook desativado, notificação ignorada');
         return { sucesso: 0, falha: 0, ignorado: true };
     }
     
     // Verifica se a URL está configurada
     if (!webhookConfig.url || webhookConfig.url.trim() === '') {
-        console.log('[Webhook] URL do webhook não configurada');
         return { sucesso: 0, falha: 0, ignorado: true };
     }
     
     // Filtra apenas produtos faturáveis (faturavel = true ou undefined/null para compatibilidade)
     if (produto.faturavel === false) {
-        console.log(`[Webhook] Produto ${produto.nome} ignorado (não faturável)`);
         return { sucesso: 0, falha: 0, ignorado: true };
     }
     
@@ -530,7 +504,6 @@ async function notificarAlteracaoPreco(produto, precoAnterior, precoNovo) {
         const vendedores = await buscarVendedoresAtivosComTelefone();
         
         if (vendedores.length === 0) {
-            console.log('[Webhook] Nenhum vendedor ativo com telefone encontrado');
             return { sucesso: 0, falha: 0, ignorado: true };
         }
         
@@ -553,7 +526,6 @@ async function notificarAlteracaoPreco(produto, precoAnterior, precoNovo) {
             await new Promise(resolve => setTimeout(resolve, 100));
         }
         
-        console.log(`[Webhook] Notificações de alteração de preço enviadas: ${sucesso} sucesso, ${falha} falha`);
         return { sucesso, falha, ignorado: false };
     } catch (error) {
         console.error('[Webhook] Erro ao notificar alteração de preço:', error);
@@ -574,12 +546,10 @@ async function notificarNovoSoftware(nomeArquivo, versao, descricao) {
     }
 
     if (!webhookConfig.ativo) {
-        console.log('[Webhook] Webhook desativado, notificação ignorada');
         return { sucesso: 0, falha: 0, ignorado: true };
     }
 
     if (!webhookConfig.url || webhookConfig.url.trim() === '') {
-        console.log('[Webhook] URL do webhook não configurada');
         return { sucesso: 0, falha: 0, ignorado: true };
     }
 
@@ -587,7 +557,6 @@ async function notificarNovoSoftware(nomeArquivo, versao, descricao) {
         const vendedores = await buscarVendedoresAtivosComTelefone();
 
         if (vendedores.length === 0) {
-            console.log('[Webhook] Nenhum vendedor ativo com telefone encontrado');
             return { sucesso: 0, falha: 0, ignorado: true };
         }
 
@@ -615,7 +584,6 @@ async function notificarNovoSoftware(nomeArquivo, versao, descricao) {
             await new Promise(resolve => setTimeout(resolve, 100));
         }
 
-        console.log(`[Webhook] Notificações de software enviadas: ${sucesso} sucesso, ${falha} falha`);
         return { sucesso, falha, ignorado: false };
     } catch (error) {
         console.error('[Webhook] Erro ao notificar software:', error);
@@ -633,5 +601,3 @@ window.webhookEstoque = {
     recarregarConfiguracoesWebhook,
     carregarConfiguracoesWebhook
 };
-
-console.log('[Webhook] Módulo de webhook de estoque carregado');

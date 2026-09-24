@@ -20,6 +20,58 @@
         injectProdutoChatWidget();
     });
 
+    if (document.querySelector('.sidebar')) prepararCelular();
+
+    // ---------- Celular (css/celular.css) ----------
+    // Menu lateral em gaveta: botão ☰ fixo no canto, sombra atrás da gaveta, fecha ao escolher uma tela.
+    function prepararCelular() {
+        if (document.getElementById('botaoMenuCelular')) return;
+        const botao = document.createElement('button');
+        botao.id = 'botaoMenuCelular';
+        botao.type = 'button';
+        botao.setAttribute('aria-label', 'Abrir menu');
+        botao.innerHTML = '<i class="fas fa-bars"></i>';
+        const sombra = document.createElement('div');
+        sombra.id = 'sombraMenuCelular';
+        document.body.append(botao, sombra);
+
+        const noCelular = () => window.matchMedia('(max-width: 768px)').matches;
+        const fechar = () => document.body.classList.remove('menu-celular-aberto');
+        botao.addEventListener('click', () => document.body.classList.add('menu-celular-aberto'));
+        sombra.addEventListener('click', fechar);
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fechar(); });
+        document.querySelector('.sidebar').addEventListener('click', (e) => {
+            if (!noCelular()) return;
+            // o botão de recolher (☰ dentro da gaveta) fecha; um link de tela também (a página vai trocar)
+            if (e.target.closest('#toggleSidebar') || e.target.closest('a[href]:not([href="#"])')) fechar();
+        }, true);
+
+        rotularTabelasEmCartoes();
+    }
+
+    // Tabelas com .tabela-cartoes viram cartões no celular: cada célula recebe o nome da coluna
+    // (data-label), inclusive as linhas que a tela desenha depois, ao carregar ou filtrar.
+    function rotularTabelasEmCartoes() {
+        const rotular = (tabela) => {
+            const titulos = [...tabela.querySelectorAll('thead th')].map(th => th.textContent.trim());
+            tabela.querySelectorAll('tbody tr').forEach(tr => {
+                [...tr.children].forEach((td, i) => {
+                    if (td.tagName === 'TD' && !td.hasAttribute('colspan') && td.dataset.label === undefined) {
+                        td.dataset.label = titulos[i] || '';
+                    }
+                });
+            });
+        };
+        const rotularTudo = () => document.querySelectorAll('table.tabela-cartoes').forEach(rotular);
+        rotularTudo();
+        let agendado = false;
+        new MutationObserver(() => {
+            if (agendado) return;
+            agendado = true;
+            requestAnimationFrame(() => { agendado = false; rotularTudo(); });
+        }).observe(document.body, { childList: true, subtree: true });
+    }
+
     async function iniciarSidebar() {
         try {
             ligarBotaoRecolher();

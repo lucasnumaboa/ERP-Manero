@@ -9,7 +9,6 @@ let podeEditar = false; // Controla se o usuário pode editar metas
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('Inicializando página de Metas...');
     
     // Verificar permissões
     await verificarPermissoes();
@@ -54,7 +53,6 @@ async function verificarPermissoes() {
         
         // Verificar se tem permissão de editar metas
         podeEditar = user.nivel_acesso === 'admin' || await hasPermission('metas_editar');
-        console.log('Permissão de edição de metas:', podeEditar);
     } catch (error) {
         console.error('Erro ao verificar permissões:', error);
     }
@@ -62,7 +60,6 @@ async function verificarPermissoes() {
 
 // Controlar visibilidade dos botões de edição baseado na permissão
 async function controlarBotoesEdicao() {
-    console.log('Controlando botões de edição. podeEditar:', podeEditar);
     
     // Botões que só aparecem com permissão de edição
     const botoesEdicao = [
@@ -145,7 +142,6 @@ function getMesAnoSelecionado() {
 async function carregarDashboard() {
     try {
         const { mes, ano } = getMesAnoSelecionado();
-        console.log(`Carregando dashboard para ${mes}/${ano}...`);
         
         const dados = await apiGet(`/api/metas/dashboard?mes=${mes}&ano=${ano}`);
         vendedoresMetas = dados || [];
@@ -308,8 +304,6 @@ async function salvarTodasMetas() {
             alert('Nenhum vendedor encontrado para salvar metas.');
             return;
         }
-        
-        console.log('Salvando metas:', metas);
         
         const resultado = await apiPost(`/api/metas/lote?mes=${mes}&ano=${ano}`, metas);
         
