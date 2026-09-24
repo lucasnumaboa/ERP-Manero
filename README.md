@@ -35,7 +35,7 @@ Sistema ERP completo para pequenas e médias empresas, com cliente desktop para 
 | **Vendas** | Pedidos, múltiplos itens, formas de pagamento, comissões, cobrança opcional da taxa de armazenagem por item |
 | **Compras** | Pedidos para fornecedores, aprovação, recebimento |
 | **Estoque** | Movimentações, alertas de estoque mínimo, download de imagens/vídeo do produto |
-| **Financeiro** | Contas a pagar/receber, caixa, fluxo financeiro |
+| **Financeiro** | Contas a pagar/receber e condições de pagamento |
 | **Controle Financeiro** | Visão consolidada de entradas e saídas |
 | **Orçamentos** | Orçamentos com desconto por quantidade, adicional por período, custo de entrega por km, itens avulsos e campos livres configuráveis |
 | **Propostas** | Propostas comerciais com validade e conversão em pedidos |
@@ -86,6 +86,14 @@ Sistema ERP completo para pequenas e médias empresas, com cliente desktop para 
 
 - **Pool de conexões MySQL**: respostas até 3,6× mais rápidas.
 - **Logo do login em WebP animado**: 1,2 MB em vez de 7 MB.
+- **Cache no frontend**: o servidor (`start_frontend.bat`, `-c0`) faz o navegador conferir cada arquivo e baixar só o que mudou; trocar de tela caiu de ~470 KB para ~7 KB.
+- **Endereço da API consultado uma vez por sessão**, em vez de antes de cada requisição.
+
+### Interface
+
+- **Menu lateral sem "piscar"**: é montado já filtrado pelas permissões do usuário (antes aparecia o menu completo por um instante).
+- **Avisos e confirmações no visual do ERP** (`js/avisos.js`) no lugar dos pop-ups do navegador.
+- **Botão de recolher o menu** e **nome do usuário** centralizados no `js/sidebar-template.js`.
 
 ---
 
@@ -227,6 +235,29 @@ start_erp.bat
 
 ---
 
+## Endereço da API no frontend
+
+O domínio da API fica **só** em `frontend/js/config.js` (`ERP_API_URL_PADRAO`). O `start_erp.bat` roda o `change_api_link.py`, que grava ali o `link_api` cadastrado no banco — assim um `localhost` vindo do PC de desenvolvimento vira o endereço publicado (Cloudflare) sem editar arquivo à mão.
+
+---
+
+## Testes
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest
+```
+
+A suíte (`tests/`) cria um banco separado (`erp_maneiro_teste`) com o `init_db.py` — então também confere que uma instalação nova funciona — e testa segurança, estoque, vendas, orçamentos e regras do frontend. O banco de produção não é tocado.
+
+Os testes rodam sozinhos antes de cada `git push` (gancho em `.githooks/pre-push`). Num clone novo, ative com:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+---
+
 ## Backup do banco
 
 `scripts/backup_banco.py` gera um dump compactado (`mysqldump`) em `backup/automatico/` e apaga os com mais de 30 dias.
@@ -259,6 +290,7 @@ ERP-Maneiro/
 │   └── helpers/          # Scraper Selenium
 ├── database/             # Scripts SQL (inclui tabelas de Orçamentos)
 ├── scripts/              # Rotinas de manutenção (backup do banco)
+├── tests/                # Testes automáticos (pytest)
 ├── spec.md               # Especificação das features implementadas
 ├── .env.example          # Template de configuração
 ├── init_db.py            # Setup do banco

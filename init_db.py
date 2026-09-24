@@ -864,6 +864,22 @@ tables = {
         )
     """,
 
+    # Histórico do chat com IA sobre cada produto (backend/routers/produto_chat_ia.py)
+    "chat_produto_mensagens": """
+        CREATE TABLE IF NOT EXISTS chat_produto_mensagens (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            produto_id INT NOT NULL,
+            usuario_id INT NOT NULL,
+            role ENUM('user', 'assistant') NOT NULL,
+            conteudo TEXT NOT NULL,
+            data_envio TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            INDEX (produto_id),
+            INDEX (usuario_id),
+            FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        )
+    """,
+
     # Módulo de Orçamentos
     "orcamento_config": """
         CREATE TABLE IF NOT EXISTS orcamento_config (

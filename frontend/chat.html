@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="css/permissions.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/submenu.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="css/theme-dark.css">
     <link rel="stylesheet" href="css/theme-light.css">
     <style>
@@ -560,6 +560,8 @@
             border-color: var(--border-color, #e0e0e0);
         }
     </style>
+    <script src="js/config.js"></script>
+    <script src="js/avisos.js"></script>
 </head>
 
 <body>
@@ -582,13 +584,9 @@
                 </div>
             </div>
             <nav class="sidebar-nav">
+                <!-- Preenchido pelo js/sidebar-template.js conforme as permissões do usuário -->
                 <ul>
-                    <li>
-                        <a href="homepage.html"><i class="fas fa-home"></i><span>Home</span></a>
-                    </li>
-                    <li class="logout">
-                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</a>
-                    </li>
+                    <li class="logout"><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Sair</span></a></li>
                 </ul>
             </nav>
         </aside>
@@ -707,7 +705,6 @@
     <script src="js/api_config.js"></script>
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/sidebar.js"></script>
     <script src="js/sidebar-template.js"></script>
     <script src="js/permissions.js"></script>
     <script src="js/chat.js"></script>

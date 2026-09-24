@@ -5,34 +5,103 @@
  */
 
 (function () {
-    document.addEventListener('DOMContentLoaded', async function () {
-        // Injeta o theme switch se não existir
-        injectThemeSwitch();
+    // Este script fica no fim do <body>, então o menu já existe no DOM: desenha agora, sem esperar
+    // o DOMContentLoaded. O CSS (.sidebar-nav:not(.menu-pronto)) esconde o menu até aqui, para o
+    // vendedor nunca ver, nem por um instante, opções que não tem permissão de usar.
+    if (document.querySelector('.sidebar-nav')) {
+        iniciarSidebar();
+    } else {
+        document.addEventListener('DOMContentLoaded', iniciarSidebar);
+    }
 
-        // Injeta o widget de chat com IA sobre produtos (não roda na tela de login)
+    document.addEventListener('DOMContentLoaded', function () {
+        injectThemeSwitch();
+        // Widget de chat com IA sobre produtos (não roda na tela de login)
         injectProdutoChatWidget();
+    });
+
+    async function iniciarSidebar() {
+        try {
+            ligarBotaoRecolher();
+            preencherUsuario(lerJson('erp_user_data'));
+        } catch (error) {
+            console.error('Erro ao preparar a barra lateral:', error);
+        }
 
         const sidebarNav = document.querySelector('.sidebar-nav');
-        if (!sidebarNav) return;
+        if (sidebarNav) {
+            try {
+                if (!sidebarNav.querySelector('.nav-group')) {
+                    const emCache = permissoesEmCache();
+                    renderizarMenu(sidebarNav, emCache || await getPermissionsForSidebar());
+                    if (emCache && !emCache.isAdmin) revalidarPermissoes(sidebarNav, emCache);
+                }
+            } catch (error) {
+                console.error('Erro ao montar o menu:', error);
+            } finally {
+                sidebarNav.classList.add('menu-pronto');
+            }
+        }
 
-        // Verifica se já tem a nova estrutura de grupos
-        if (sidebarNav.querySelector('.nav-group')) return;
+        // Os dados podem ter chegado junto com as permissões; se não, busca na API
+        const usuario = lerJson('erp_user_data') || (typeof getCurrentUser === 'function' ? await getCurrentUser() : null);
+        preencherUsuario(usuario);
+    }
 
-        // Obtém as permissões do usuário
-        const permissions = await getPermissionsForSidebar();
-
-        // Substitui o conteúdo da sidebar pela nova estrutura baseada em permissões
+    function renderizarMenu(sidebarNav, permissions) {
         sidebarNav.innerHTML = getSidebarTemplate(permissions);
-
-        // Remove grupos vazios (sem itens visíveis)
         removeEmptyGroups();
-
-        // Inicializa os grupos colapsáveis
         initSidebarGroups();
-
-        // Configura o botão de logout após o template ser renderizado
         setupLogoutButton();
-    });
+    }
+
+    // Permissões de grupo podem mudar enquanto o usuário está logado: busca as atuais em segundo
+    // plano e redesenha o menu só se algo mudou.
+    async function revalidarPermissoes(sidebarNav, emCache) {
+        if (typeof getUserPermissions !== 'function') return;
+        try {
+            const atuais = await getUserPermissions();
+            if (atuais && Object.keys(atuais).length && JSON.stringify(atuais) !== JSON.stringify(emCache)) {
+                renderizarMenu(sidebarNav, atuais);
+            }
+        } catch (error) {
+            console.error('Erro ao atualizar permissões do menu:', error);
+        }
+    }
+
+    function permissoesEmCache() {
+        const user = lerJson('erp_user_data');
+        if (user && user.nivel_acesso === 'admin') return { isAdmin: true };
+        return lerJson('erp_user_permissions');
+    }
+
+    function lerJson(chave) {
+        try {
+            return JSON.parse(localStorage.getItem(chave)) || null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function preencherUsuario(user) {
+        if (!user) return;
+        const nomesNivel = { admin: 'Administrador', usuario: 'Usuário', vendedor: 'Vendedor', comprador: 'Comprador', financeiro: 'Financeiro' };
+        const nome = document.getElementById('userName');
+        const nivel = document.getElementById('userRole');
+        if (nome) nome.textContent = user.nome || 'Usuário';
+        if (nivel) nivel.textContent = nomesNivel[user.nivel_acesso] || user.nivel_acesso || 'Usuário';
+    }
+
+    // Único ponto que liga o botão de recolher o menu (as telas não ligam mais por conta própria).
+    function ligarBotaoRecolher() {
+        const botao = document.getElementById('toggleSidebar');
+        if (!botao || botao.dataset.recolherLigado) return;
+        botao.dataset.recolherLigado = '1';
+        botao.addEventListener('click', function () {
+            document.querySelector('.sidebar')?.classList.toggle('collapsed');
+            document.querySelector('.main-content')?.classList.toggle('expanded');
+        });
+    }
 
     function setupLogoutButton() {
         const logoutBtn = document.getElementById('logoutBtn');

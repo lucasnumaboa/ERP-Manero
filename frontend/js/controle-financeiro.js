@@ -1,12 +1,12 @@
 /**
  * controle-financeiro.js
- * Gerencia categorias e lançamentos de controle financeiro na aba "Controle" do financeiro.html
+ * Gerencia categorias e lançamentos da tela Controle Financeiro (controle_financeiro.html)
  */
 
 (function () {
     'use strict';
 
-    const API_BASE = localStorage.getItem('api_base_url') || 'https://erp-api-call.autoservto.com.br';
+    const API_BASE = apiUrlAtual();
 
     // ──────────────────────────────────────────────────────────────
     // UTILITÁRIOS
@@ -130,7 +130,7 @@
     }
 
     async function excluirCategoria(id) {
-        if (!confirm('Deseja excluir esta categoria?')) return;
+        if (!await confirmarAcao('Deseja excluir esta categoria?')) return;
         try {
             const resp = await fetch(`${API_BASE}/api/controle-financeiro/categorias/${id}`, {
                 method: 'DELETE',
@@ -245,7 +245,7 @@
     }
 
     async function excluirLancamento(id) {
-        if (!confirm('Deseja excluir este lançamento?')) return;
+        if (!await confirmarAcao('Deseja excluir este lançamento?')) return;
         try {
             const resp = await fetch(`${API_BASE}/api/controle-financeiro/lancamentos/${id}`, {
                 method: 'DELETE',

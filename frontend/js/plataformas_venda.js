@@ -8,13 +8,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Verificar autenticação
     checkAuth();
-    
-    // Carregar dados do usuário
-    loadUserData();
-    
-    // Configurar sidebar toggle
-    setupSidebarToggle();
-    
+
     // Configurar logout
     document.getElementById('logoutBtn').addEventListener('click', logout);
     
@@ -52,42 +46,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 function checkAuth() {
     if (!isAuthenticated()) {
         window.location.href = 'index.html';
-    }
-}
-
-// Carrega os dados do usuário
-async function loadUserData() {
-    try {
-        const userData = await getCurrentUser();
-        if (userData) {
-            document.getElementById('userName').textContent = userData.nome || 'Usuário';
-            document.getElementById('userRole').textContent = formatRole(userData.nivel_acesso) || 'Usuário';
-        }
-    } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
-    }
-}
-
-function formatRole(role) {
-    const roles = {
-        'admin': 'Administrador',
-        'gerente': 'Gerente',
-        'vendedor': 'Vendedor'
-    };
-    return roles[role] || role;
-}
-
-// Sidebar toggle
-function setupSidebarToggle() {
-    const toggleBtn = document.getElementById('toggleSidebar');
-    const sidebar = document.querySelector('.sidebar');
-    const mainContent = document.querySelector('.main-content');
-    
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', function() {
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
-        });
     }
 }
 
@@ -242,7 +200,7 @@ async function salvarPlataforma() {
 
 // Excluir plataforma
 async function excluirPlataforma(id) {
-    if (!confirm('Tem certeza que deseja excluir esta plataforma de venda?')) {
+    if (!await confirmarAcao('Tem certeza que deseja excluir esta plataforma de venda?')) {
         return;
     }
     

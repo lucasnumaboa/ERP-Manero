@@ -287,7 +287,7 @@ async function salvarData() {
 }
 
 async function excluirData(id) {
-    if (!confirm('Tem certeza que deseja excluir esta data?')) {
+    if (!await confirmarAcao('Tem certeza que deseja excluir esta data?')) {
         return;
     }
 
@@ -314,7 +314,7 @@ async function importarCSV(input) {
 
     try {
         const token = localStorage.getItem('erp_token');
-        const apiUrl = localStorage.getItem('erp_api_url') || 'https://erp-api-call.autoservto.com.br';
+        const apiUrl = apiUrlAtual();
 
         const response = await fetch(`${apiUrl}/api/calendario/importar-csv`, {
             method: 'POST',
@@ -355,7 +355,7 @@ async function importarCSV(input) {
 // ============================================
 
 async function executarAgora() {
-    if (!confirm('Deseja executar a verificação de notificações agora?')) {
+    if (!await confirmarAcao('Deseja executar a verificação de notificações agora?')) {
         return;
     }
 

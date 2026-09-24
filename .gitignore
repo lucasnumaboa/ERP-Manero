@@ -106,3 +106,6 @@ last_api_url.json
 backend/.env
 .env.exemple
 backend/frontend/
+
+# Cache dos testes
+.pytest_cache/

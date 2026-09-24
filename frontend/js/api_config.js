@@ -4,31 +4,6 @@
  * sincronizando com o banco de dados quando possível.
  */
 
-// Função para obter a URL da API sempre do banco de dados
-async function getApiUrl() {
-    const defaultUrl = 'https://erp-api-call.autoservto.com.br';
-    
-    try {
-        // Sempre busca a URL da API do endpoint configuracoes
-        const response = await fetch(`${defaultUrl}/api/configuracoes/link_api`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            if (data && data.valor) {
-                return data.valor;
-            }
-        }
-    } catch (error) {
-        console.log('API não disponível para sincronização, usando URL padrão:', defaultUrl);
-    }
-    
-    // Se falhar, retorna a URL padrão
-    return defaultUrl;
-}
-
 // Função para sincronizar a URL da API com o banco de dados (mantida para compatibilidade)
 async function syncApiUrl() {
     try {

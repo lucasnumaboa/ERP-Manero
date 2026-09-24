@@ -1323,7 +1323,27 @@ async def excluir_pedido_venda(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Só é possível excluir pedidos com status 'Pendente'"
             )
-        
+
+        # Títulos já recebidos/pagos ou postagens não podem sumir junto com a venda
+        cursor.execute(
+            """SELECT
+                   (SELECT COUNT(*) FROM contas_receber WHERE pedido_venda_id = %s AND status NOT IN ('pendente', 'cancelado')) AS recebidos,
+                   (SELECT COUNT(*) FROM contas_pagar WHERE pedido_venda_id = %s AND status NOT IN ('pendente', 'cancelado')) AS pagos,
+                   (SELECT COUNT(*) FROM objetos_postagem WHERE pedido_id = %s) AS postagens""",
+            (pedido_id, pedido_id, pedido_id)
+        )
+        vinculos = cursor.fetchone()
+        if vinculos["recebidos"] or vinculos["pagos"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Esta venda já tem título recebido ou pago no financeiro. Estorne/cancele o título antes de excluir a venda."
+            )
+        if vinculos["postagens"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Esta venda tem postagem registrada. Remova a postagem antes de excluir a venda."
+            )
+
         # Obtém os itens do pedido
         cursor.execute(
             "SELECT produto_id, quantidade FROM itens_pedido_venda WHERE pedido_id = %s",
@@ -1355,12 +1375,11 @@ async def excluir_pedido_venda(
                 )
             )
         
-        # Exclui os itens do pedido
-        cursor.execute(
-            "DELETE FROM itens_pedido_venda WHERE pedido_id = %s",
-            (pedido_id,)
-        )
-        
+        # Exclui os itens e os títulos pendentes/cancelados gerados pela venda (a chave estrangeira impedia a exclusão)
+        cursor.execute("DELETE FROM itens_pedido_venda WHERE pedido_id = %s", (pedido_id,))
+        cursor.execute("DELETE FROM contas_receber WHERE pedido_venda_id = %s", (pedido_id,))
+        cursor.execute("DELETE FROM contas_pagar WHERE pedido_venda_id = %s", (pedido_id,))
+
         # Exclui o pedido
         cursor.execute(
             "DELETE FROM pedidos_venda WHERE id = %s",

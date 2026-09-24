@@ -311,3 +311,32 @@ body {
     background-color: rgba(231, 76, 60, 0.1);
     color: #e74c3c;
 }
+
+/* Menu lateral fica escondido até o js/sidebar-template.js desenhar a versão filtrada pelas
+   permissões do usuário; enquanto isso aparece só um esqueleto (nunca opções sem permissão). */
+.sidebar-nav:not(.menu-pronto) > * {
+    visibility: hidden;
+}
+
+.sidebar-nav:not(.menu-pronto) {
+    min-height: 260px;
+    background-image: repeating-linear-gradient(to bottom,
+            transparent 0 14px,
+            rgba(136, 146, 176, 0.16) 14px 36px,
+            transparent 36px 44px);
+    background-origin: content-box;
+    background-clip: content-box;
+    padding-inline: 16px;
+    animation: esqueleto-menu 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes esqueleto-menu {
+    from { opacity: 0.55; }
+    to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sidebar-nav:not(.menu-pronto) {
+        animation: none;
+    }
+}

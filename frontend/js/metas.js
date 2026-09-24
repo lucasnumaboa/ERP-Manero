@@ -451,7 +451,7 @@ async function salvarFaixa(event) {
 }
 
 async function deletarFaixa(id) {
-    if (!confirm('Tem certeza que deseja excluir esta faixa de premiação?')) return;
+    if (!await confirmarAcao('Tem certeza que deseja excluir esta faixa de premiação?')) return;
     
     try {
         await apiDelete(`/api/metas/faixas/${id}`);
@@ -551,7 +551,7 @@ function renderizarPremiacoes() {
 }
 
 async function pagarPremiacao(id) {
-    if (!confirm('Confirmar pagamento desta premiação?')) return;
+    if (!await confirmarAcao('Confirmar pagamento desta premiação?')) return;
     
     try {
         const hoje = new Date().toISOString().split('T')[0];
@@ -569,7 +569,7 @@ async function pagarPremiacao(id) {
 }
 
 async function deletarPremiacao(id) {
-    if (!confirm('Tem certeza que deseja excluir esta premiação?')) return;
+    if (!await confirmarAcao('Tem certeza que deseja excluir esta premiação?')) return;
     
     try {
         await apiDelete(`/api/metas/premiacoes/${id}`);

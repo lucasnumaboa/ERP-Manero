@@ -129,7 +129,7 @@ function cancelarEdicao() {
 }
 
 async function excluirFlag(id) {
-    if (!confirm('Tem certeza que deseja excluir esta flag?')) return;
+    if (!await confirmarAcao('Tem certeza que deseja excluir esta flag?')) return;
 
     try {
         await apiDelete(`/api/olx/flags/${id}`);

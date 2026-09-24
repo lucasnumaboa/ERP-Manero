@@ -19,8 +19,8 @@ function montarUrlsImagem(caminhoImagem) {
     const thumbRelPath = [...partes, 'thumbs', nomeBase].join('/');
 
     return {
-        original: `https://erp-api-call.autoservto.com.br/uploads/${relPath}`,
-        thumb: `https://erp-api-call.autoservto.com.br/uploads/${thumbRelPath}`
+        original: `${apiUrlAtual()}/uploads/${relPath}`,
+        thumb: `${apiUrlAtual()}/uploads/${thumbRelPath}`
     };
 }
 
@@ -37,19 +37,11 @@ document.addEventListener('DOMContentLoaded', function () {
         logout();
     });
 
-    // Configura o botão de toggle do sidebar
-    document.getElementById('toggleSidebar').addEventListener('click', function () {
-        document.querySelector('.sidebar').classList.toggle('collapsed');
-        document.querySelector('.main-content').classList.toggle('expanded');
-    });
-
-    // Carrega os dados do usuário
-    loadUserData();
-
     // Vendedores usam mais a visão em grade (mais visual, foco na foto/preço) do que a tabela
     // administrativa padrão — troca o modo de visualização inicial pra eles.
+    // No banco o nível dos vendedores é 'usuario' (o "Vendedores" é o grupo), então vale para todo não-admin.
     const userDataInicial = getUserData();
-    if (userDataInicial && userDataInicial.nivel_acesso === 'vendedor') {
+    if (userDataInicial && userDataInicial.nivel_acesso !== 'admin') {
         document.querySelectorAll('.view-mode-btn').forEach(btn => btn.classList.remove('active'));
         const btnGrid = document.querySelector('.view-mode-btn[data-view="grid"]');
         if (btnGrid) btnGrid.classList.add('active');
@@ -259,26 +251,6 @@ async function checkMovimentacaoPermission() {
     } catch (error) {
         console.error('Erro ao verificar permissão de movimentação:', error);
     }
-}
-
-// Carrega os dados do usuário do localStorage
-function loadUserData() {
-    const userData = getUserData();
-    if (userData) {
-        document.getElementById('userName').textContent = userData.nome || 'Usuário';
-        document.getElementById('userRole').textContent = formatRole(userData.nivel_acesso) || 'Usuário';
-    }
-}
-
-// Formata o nível de acesso para exibição
-function formatRole(role) {
-    const roles = {
-        'admin': 'Administrador',
-        'vendedor': 'Vendedor',
-        'comprador': 'Comprador',
-        'financeiro': 'Financeiro'
-    };
-    return roles[role] || role;
 }
 
 // Carrega a lista de produtos em estoque da API
@@ -1113,6 +1085,7 @@ async function saveMovimentacao() {
 
                 // Notifica via webhook sobre a movimentação manual
                 if (window.webhookEstoque) {
+    // Isso é importante para que o usuário possa continuar testando a interface
                     const tipoMovimento = movimentacao.tipo === 'entrada' ? 'entrada' : 'saida';
                     console.log(`[Estoque] Notificando ${tipoMovimento} manual via webhook...`);
                     window.webhookEstoque.notificarMovimentacaoManual(tipoMovimento, movimentacao.produto_id, movimentacao.quantidade, movimentacao.motivo);

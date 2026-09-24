@@ -6,20 +6,6 @@ function escapeHtml(valor) {
     return String(valor).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-// URL da API de backend - sempre busca do banco de dados
-async function getApiUrl() {
-    try {
-        const response = await fetch('/api/configuracoes/link_api');
-        if (response.ok) {
-            const data = await response.json();
-            return data.config?.api_url || 'https://erp-api-call.autoservto.com.br';
-        }
-    } catch (error) {
-        console.warn('Erro ao buscar URL da API:', error);
-    }
-    return 'https://erp-api-call.autoservto.com.br';
-}
-
 // Variável para controlar se o modal de sessão expirada já está sendo exibido
 let sessionExpiredModalShown = false;
 // Variável para controlar se já estamos redirecionando para login
@@ -318,7 +304,6 @@ async function getUserPermissions() {
             ...getAuthHeader(),
             'Content-Type': 'application/json'
         };
-        console.log('Headers da requisição:', headers);
         
         const response = await fetch(url, {
             method: 'GET',

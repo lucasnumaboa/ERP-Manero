@@ -15,13 +15,7 @@ function formatarMoeda(valor) {
 document.addEventListener('DOMContentLoaded', function() {
     // Verifica permissões antes de inicializar o dashboard
     checkDashboardPermissions();
-    
-    // Carrega os dados do usuário
-    loadUserData();
-    
-    // Configura o toggle do sidebar
-    setupSidebarToggle();
-    
+
     // Configura o filtro de mês/ano
     setupDateFilter();
 });
@@ -76,42 +70,6 @@ async function initDashboard(monthYear = null) {
         console.log('Dashboard inicializado com sucesso!');
     } catch (error) {
         console.error('Erro ao inicializar dashboard:', error);
-    }
-}
-
-// Carrega os dados do usuário atual
-async function loadUserData() {
-    try {
-        const user = await getCurrentUser();
-        if (user) {
-            // Atualiza o nome e função do usuário na sidebar
-            const userNameElement = document.getElementById('userName');
-            const userRoleElement = document.getElementById('userRole');
-            
-            if (userNameElement) {
-                userNameElement.textContent = user.nome;
-            }
-            
-            if (userRoleElement) {
-                userRoleElement.textContent = user.nivel_acesso;
-            }
-        }
-    } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
-    }
-}
-
-// Configura o toggle do sidebar
-function setupSidebarToggle() {
-    const toggleBtn = document.getElementById('toggleSidebar');
-    const sidebar = document.querySelector('.sidebar');
-    const mainContent = document.querySelector('.main-content');
-    
-    if (toggleBtn && sidebar && mainContent) {
-        toggleBtn.addEventListener('click', function() {
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
-        });
     }
 }
 
@@ -342,8 +300,6 @@ function updateDashboardCards(data) {
         comissaoPagaTotalValue.textContent = formatarMoeda(data.comissao_paga_total || 0);
     }
 }
-
-
 
 // Função para buscar e atualizar dados de valorização do estoque
 async function updateValorizacaoEstoque() {

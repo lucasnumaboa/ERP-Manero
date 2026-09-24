@@ -9,9 +9,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    // Carrega os dados do usuário
-    loadUserData();
-
     // Carrega a lista de contas a receber
     carregarTodasAsContas();
 
@@ -28,30 +25,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btnAplicarFiltros').addEventListener('click', aplicarFiltrosReceber);
     document.getElementById('btnLimparFiltros').addEventListener('click', limparFiltrosReceber);
 });
-
-// Carrega os dados do usuário
-async function loadUserData() {
-    try {
-        const userData = await getCurrentUser();
-        if (userData) {
-            document.getElementById('userName').textContent = userData.nome || 'Usuário';
-            document.getElementById('userRole').textContent = formatRole(userData.nivel_acesso) || 'Usuário';
-        }
-    } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
-    }
-}
-
-// Formata o nível de acesso para exibição
-function formatRole(role) {
-    const roles = {
-        'admin': 'Administrador',
-        'vendedor': 'Vendedor',
-        'comprador': 'Comprador',
-        'financeiro': 'Financeiro'
-    };
-    return roles[role] || role;
-}
 
 // Carrega todas as contas a receber da API
 async function carregarTodasAsContas() {
@@ -504,7 +477,7 @@ async function deleteConta(contaId) {
         return;
     }
     
-    if (!confirm('Tem certeza que deseja excluir esta conta a receber?')) {
+    if (!await confirmarAcao('Tem certeza que deseja excluir esta conta a receber?')) {
         return;
     }
     

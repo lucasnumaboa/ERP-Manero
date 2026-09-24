@@ -8,13 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Verificar autenticação
     checkAuth();
-    
-    // Carregar dados do usuário
-    loadUserData();
-    
-    // Configurar sidebar toggle
-    setupSidebarToggle();
-    
+
     // Configurar logout
     document.getElementById('logoutBtn').addEventListener('click', logout);
     
@@ -62,40 +56,6 @@ function checkAuth() {
     if (!isAuthenticated()) {
         window.location.href = 'index.html';
     }
-}
-
-// Carrega os dados do usuário
-async function loadUserData() {
-    try {
-        const userData = await getCurrentUser();
-        if (userData) {
-            document.getElementById('userName').textContent = userData.nome || 'Usuário';
-            document.getElementById('userRole').textContent = formatRole(userData.nivel_acesso) || 'Usuário';
-        }
-    } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
-    }
-}
-
-function formatRole(role) {
-    const roles = {
-        'admin': 'Administrador',
-        'gerente': 'Gerente',
-        'vendedor': 'Vendedor'
-    };
-    return roles[role] || role;
-}
-
-// Funções para manipulação do sidebar
-function setupSidebarToggle() {
-    const toggleBtn = document.getElementById('toggleSidebar');
-    const sidebar = document.querySelector('.sidebar');
-    const mainContent = document.querySelector('.main-content');
-    
-    toggleBtn.addEventListener('click', function() {
-        sidebar.classList.toggle('collapsed');
-        mainContent.classList.toggle('expanded');
-    });
 }
 
 // Funções para carregar dados
@@ -165,9 +125,9 @@ async function renderizarCondicoes(condicoes) {
     });
     
     document.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', async function() {
             const id = this.getAttribute('data-id');
-            if (confirm('Tem certeza que deseja excluir esta condição de pagamento?')) {
+            if (await confirmarAcao('Tem certeza que deseja excluir esta condição de pagamento?')) {
                 excluirCondicao(id);
             }
         });

@@ -313,7 +313,7 @@ async function reavaliarProdutos() {
     const originalText = btnReavaliar.innerHTML;
     
     // Confirmar ação
-    if (!confirm('Isso irá resetar e reavaliar todos os produtos. Deseja continuar?')) {
+    if (!await confirmarAcao('Isso irá resetar e reavaliar todos os produtos. Deseja continuar?')) {
         return;
     }
     

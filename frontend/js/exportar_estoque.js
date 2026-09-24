@@ -18,15 +18,6 @@ document.addEventListener('DOMContentLoaded', function() {
         logout();
     });
 
-    // Configura o botão de toggle do sidebar
-    document.getElementById('toggleSidebar').addEventListener('click', function() {
-        document.querySelector('.sidebar').classList.toggle('collapsed');
-        document.querySelector('.main-content').classList.toggle('expanded');
-    });
-
-    // Carrega os dados do usuário
-    loadUserData();
-
     // Carrega as categorias
     loadCategorias();
 
@@ -36,26 +27,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Configura os eventos
     setupEventListeners();
 });
-
-// Carrega os dados do usuário do localStorage
-function loadUserData() {
-    const userData = getUserData();
-    if (userData) {
-        document.getElementById('userName').textContent = userData.nome || 'Usuário';
-        document.getElementById('userRole').textContent = formatRole(userData.nivel_acesso) || 'Usuário';
-    }
-}
-
-// Formata o nível de acesso para exibição
-function formatRole(role) {
-    const roles = {
-        'admin': 'Administrador',
-        'vendedor': 'Vendedor',
-        'comprador': 'Comprador',
-        'financeiro': 'Financeiro'
-    };
-    return roles[role] || role;
-}
 
 // Carrega as categorias para o filtro
 async function loadCategorias() {
@@ -216,7 +187,7 @@ async function getApiBaseUrlCached() {
     }
     
     // Último fallback
-    apiBaseUrlCache = 'https://erp-api-call.autoservto.com.br';
+    apiBaseUrlCache = apiUrlAtual();
     return apiBaseUrlCache;
 }
 
@@ -229,7 +200,7 @@ async function getImageUrlAsync(caminhoImagem) {
 
 // Obtém a URL da imagem (versão síncrona usando cache)
 function getImageUrl(caminhoImagem) {
-    const baseUrl = apiBaseUrlCache || 'https://erp-api-call.autoservto.com.br';
+    const baseUrl = apiBaseUrlCache || apiUrlAtual();
     // Remove 'uploads/' se já estiver no caminho, mantém o resto
     return `${baseUrl}/uploads/${caminhoImagem.replace('uploads/', '')}`;
 }
@@ -237,7 +208,7 @@ function getImageUrl(caminhoImagem) {
 // Obtém a URL da imagem para download no ZIP
 // Usa o mesmo formato que funciona no estoque.js: /uploads/produtos/{nomeArquivo}
 function getImageDownloadUrl(caminhoImagem) {
-    const baseUrl = apiBaseUrlCache || 'https://erp-api-call.autoservto.com.br';
+    const baseUrl = apiBaseUrlCache || apiUrlAtual();
     // Extrai apenas o nome do arquivo
     const nomeArquivo = caminhoImagem.split('/').pop();
     return `${baseUrl}/uploads/produtos/${nomeArquivo}`;

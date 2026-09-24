@@ -39,7 +39,6 @@ MODULOS = {
         "leitura": ["financeiro_visualizar", "dashboard_visualizar", "vendas_visualizar"],
         "escrita": ["financeiro_editar", "vendas_editar"],
     },
-    "caixa": {"leitura": ["financeiro_visualizar"], "escrita": ["financeiro_editar"]},
     "controle_financeiro": {"leitura": ["financeiro_visualizar"], "escrita": ["financeiro_editar"]},
     "condicoes_pagamento": {"leitura": None, "escrita": ["financeiro_editar"]},
     "dashboard": {"leitura": ["dashboard_visualizar"], "escrita": ["dashboard_editar"]},

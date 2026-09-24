@@ -10,34 +10,9 @@ document.addEventListener('DOMContentLoaded', function () {
         logout();
     });
 
-    document.getElementById('toggleSidebar').addEventListener('click', function () {
-        document.querySelector('.sidebar').classList.toggle('collapsed');
-        document.querySelector('.main-content').classList.toggle('expanded');
-    });
-
-    loadUserData();
     loadDepositos();
     setupActionButtons();
 });
-
-// Carrega os dados do usuário do localStorage
-function loadUserData() {
-    const userData = getUserData();
-    if (userData) {
-        document.getElementById('userName').textContent = userData.nome || 'Usuário';
-        document.getElementById('userRole').textContent = formatRole(userData.nivel_acesso) || 'Usuário';
-    }
-}
-
-function formatRole(role) {
-    const roles = {
-        'admin': 'Administrador',
-        'vendedor': 'Vendedor',
-        'comprador': 'Comprador',
-        'financeiro': 'Financeiro'
-    };
-    return roles[role] || role;
-}
 
 // Carrega a lista de depósitos da API
 async function loadDepositos() {
@@ -204,7 +179,7 @@ async function saveDeposito() {
 
 // Marca um depósito como padrão
 async function tornarDepositoPadrao(depositoId) {
-    if (!confirm('Tornar este depósito o padrão do sistema? Produtos sem depósito definido passarão a usar este.')) {
+    if (!await confirmarAcao('Tornar este depósito o padrão do sistema? Produtos sem depósito definido passarão a usar este.')) {
         return;
     }
 
@@ -220,7 +195,7 @@ async function tornarDepositoPadrao(depositoId) {
 
 // Exclui um depósito
 async function deleteDeposito(depositoId) {
-    if (!confirm('Tem certeza que deseja excluir este depósito?')) {
+    if (!await confirmarAcao('Tem certeza que deseja excluir este depósito?')) {
         return;
     }
 

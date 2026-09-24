@@ -26,7 +26,6 @@ import routers.objetos_postagem as objetos_postagem
 import routers.propostas as propostas
 import routers.contas_pagar as contas_pagar
 import routers.contas_receber as contas_receber
-import routers.caixa as caixa
 import routers.relatorios as relatorios
 import routers.clientes as clientes
 import routers.dashboard as dashboard
@@ -184,7 +183,6 @@ app.include_router(objetos_postagem.router, prefix="/api/postagens", tags=["Post
 app.include_router(propostas.router, prefix="/api/propostas", tags=["Propostas"], dependencies=permissao_modulo("propostas"))
 app.include_router(contas_pagar.router, prefix="/api/contas-pagar", tags=["Contas a Pagar"], dependencies=permissao_modulo("contas_pagar"))
 app.include_router(contas_receber.router, prefix="/api/contas-receber", tags=["Contas a Receber"], dependencies=permissao_modulo("contas_receber"))
-app.include_router(caixa.router, prefix="/api/caixa", tags=["Caixa"], dependencies=permissao_modulo("caixa"))
 app.include_router(relatorios.router, prefix="/api/relatorios", tags=["Relatórios"], dependencies=permissao_modulo("relatorios"))
 app.include_router(clientes.router, prefix="/api/clientes", tags=["Clientes"], dependencies=permissao_modulo("clientes"))
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"], dependencies=permissao_modulo("dashboard"))

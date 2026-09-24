@@ -1,0 +1,9 @@
+#!/bin/sh
+# Roda a suíte de testes antes de cada "git push"; se algum teste falhar, o envio é cancelado.
+# Os testes usam um banco separado (erp_maneiro_teste) e não tocam no banco de produção.
+echo "Rodando os testes antes de enviar ao GitHub..."
+if ! python -m pytest; then
+    echo ""
+    echo "Testes falharam: envio cancelado. Corrija e tente de novo."
+    exit 1
+fi

@@ -269,7 +269,7 @@
     };
 
     window.limparChat = async function () {
-        if (!confirm('Deseja realmente limpar todo o histórico de mensagens?')) return;
+        if (!await confirmarAcao('Deseja realmente limpar todo o histórico de mensagens?')) return;
 
         try {
             await apiDelete('/api/chat/mensagens');

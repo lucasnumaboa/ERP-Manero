@@ -13,15 +13,6 @@ document.addEventListener('DOMContentLoaded', function () {
         logout();
     });
 
-    // Configura o botão de toggle do sidebar
-    document.getElementById('toggleSidebar').addEventListener('click', function () {
-        document.querySelector('.sidebar').classList.toggle('collapsed');
-        document.querySelector('.main-content').classList.toggle('expanded');
-    });
-
-    // Carrega os dados do usuário
-    loadUserData();
-
     // Carrega a lista de compras
     loadCompras();
 
@@ -76,26 +67,6 @@ function resetarAbasModalCompras() {
     // Ativar primeira aba
     if (tabs.length > 0) tabs[0].classList.add('active');
     if (contents.length > 0) contents[0].classList.add('active');
-}
-
-// Carrega os dados do usuário do localStorage
-function loadUserData() {
-    const userData = getUserData();
-    if (userData) {
-        document.getElementById('userName').textContent = userData.nome || 'Usuário';
-        document.getElementById('userRole').textContent = formatRole(userData.nivel_acesso) || 'Usuário';
-    }
-}
-
-// Formata o nível de acesso para exibição
-function formatRole(role) {
-    const roles = {
-        'admin': 'Administrador',
-        'vendedor': 'Vendedor',
-        'comprador': 'Comprador',
-        'financeiro': 'Financeiro'
-    };
-    return roles[role] || role;
 }
 
 // Busca o nome do fornecedor pelo ID
@@ -394,7 +365,7 @@ async function displayCompras(compras) {
             if (novoStatus === statusAtual) return;
 
             // Confirmação antes de alterar
-            if (!confirm(`Deseja alterar o status da compra #${compraId} para "${formatStatus(novoStatus)}"?`)) {
+            if (!await confirmarAcao(`Deseja alterar o status da compra #${compraId} para "${formatStatus(novoStatus)}"?`)) {
                 this.value = statusAtual;
                 return;
             }
@@ -622,8 +593,6 @@ function setupActionButtons() {
     document.getElementById('btnNovaCompra').addEventListener('click', function () {
         openCompraModal();
     });
-
-
 
     // Configura o botão de consultar estoque
     document.getElementById('btnConsultarEstoque').addEventListener('click', function () {
@@ -1437,7 +1406,7 @@ function editCompra(compraId) {
 
 // Exclui uma compra
 async function deleteCompra(compraId) {
-    if (!confirm('Tem certeza que deseja excluir esta compra?')) {
+    if (!await confirmarAcao('Tem certeza que deseja excluir esta compra?')) {
         return;
     }
 
@@ -1913,7 +1882,7 @@ async function executarFabricacao() {
         document.getElementById('fabricar_produto_id').selectedIndex
     ].textContent;
 
-    if (!confirm(`Confirma a fabricação de ${quantidade} unidade(s) de:\n\n${produtoNome}?\n\nOs componentes serão consumidos do estoque.`)) {
+    if (!await confirmarAcao(`Confirma a fabricação de ${quantidade} unidade(s) de:\n\n${produtoNome}?\n\nOs componentes serão consumidos do estoque.`)) {
         return;
     }
 

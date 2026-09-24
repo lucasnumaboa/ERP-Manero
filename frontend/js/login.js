@@ -50,33 +50,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Obtém a URL da API sempre do banco, sem cache local
-    async function getApiUrl() {
-        const defaultUrl = 'https://erp-api-call.autoservto.com.br';
-
-        try {
-            // Sempre tenta buscar a URL da API do endpoint configuracoes
-            const response = await fetch(`${defaultUrl}/api/configuracoes/link_api`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                if (data && data.valor) {
-                    return data.valor;
-                }
-            }
-        } catch (error) {
-            console.warn('Erro ao obter URL da API do servidor, usando fallback:', error);
-        }
-
-        // Se falhar, retorna a URL padrão
-        return defaultUrl;
-    }
-
-
-
     // Verificar e sincronizar a URL da API ao carregar a página
     checkApiConnection();
 

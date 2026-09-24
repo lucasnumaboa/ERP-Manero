@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/modulos.css">
     <link rel="stylesheet" href="css/submenu.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="css/theme-dark.css">
     <link rel="stylesheet" href="css/theme-light.css">
     <style>
@@ -155,6 +155,8 @@
         body.theme-light .page-header p { color:#666 !important; }
         body.theme-light .content { background:#f5f5f5 !important; }
     </style>
+    <script src="js/config.js"></script>
+    <script src="js/avisos.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -171,16 +173,9 @@
                 </div>
             </div>
             <nav class="sidebar-nav">
+                <!-- Preenchido pelo js/sidebar-template.js conforme as permissões do usuário -->
                 <ul>
-                    <li><a href="homepage.html"><i class="fas fa-home"></i> Home</a></li>
-                    <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-                </ul>
-                <ul>
-                    <li><a href="produtos.html"><i class="fas fa-box"></i> Produtos</a></li>
-                    <li><a href="produtos_3d.html"><i class="fas fa-cube"></i> Produtos 3D</a></li>
-                    <li class="active"><a href="filamentos_3d.html"><i class="fas fa-layer-group"></i> Filamentos 3D</a></li>
-                    <li><a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a></li>
-                    <li class="logout"><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                    <li class="logout"><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Sair</span></a></li>
                 </ul>
             </nav>
         </aside>
@@ -382,7 +377,6 @@
 
     <script src="js/auth.js"></script>
     <script src="js/api.js"></script>
-    <script src="js/sidebar.js"></script>
     <script src="js/sidebar-template.js"></script>
     <script src="js/permissions.js"></script>
     <script src="js/setupModals.js"></script>

@@ -253,7 +253,7 @@ async function editarPesquisa(id) {
 }
 
 async function excluirPesquisa(id) {
-    if (!confirm('Tem certeza que deseja excluir esta pesquisa?')) return;
+    if (!await confirmarAcao('Tem certeza que deseja excluir esta pesquisa?')) return;
 
     try {
         await apiDelete(`/api/olx/pesquisas/${id}`);

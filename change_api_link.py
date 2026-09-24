@@ -122,8 +122,11 @@ def update_config_api_html(api_url):
         pattern = r"(let currentApiUrl = localStorage\.getItem\('api_base_url'\) \|\| )'[^']*'"
         
         # Substitui o valor padrão pelo valor do banco de dados
-        updated_content = re.sub(pattern, f"\\1'{api_url}'", content)
-        
+        updated_content, trocas = re.subn(pattern, f"\\1'{api_url}'", content)
+        if not trocas:
+            print("config_api.html já usa o endereço de js/config.js: nada a trocar aqui.")
+            return True
+
         # Escreve o conteúdo atualizado de volta no arquivo
         with open(config_file_path, 'w', encoding='utf-8') as file:
             file.write(updated_content)
@@ -132,6 +135,25 @@ def update_config_api_html(api_url):
         return True
     except Exception as e:
         print(f"Erro ao atualizar o arquivo config_api.html: {e}")
+        return False
+
+def update_config_js(api_url):
+    """Grava o link_api do banco em frontend/js/config.js, o único lugar do frontend com o endereço da API."""
+    config_js = Path(__file__).parent / "frontend" / "js" / "config.js"
+    try:
+        with open(config_js, encoding="utf-8", newline="") as f:
+            content = f.read()
+        updated, trocas = re.subn(r"(const ERP_API_URL_PADRAO = )'[^']*'", f"\\1'{api_url}'", content)
+        if not trocas:
+            print("ERRO: não encontrei ERP_API_URL_PADRAO em js/config.js")
+            return False
+        if updated != content:
+            with open(config_js, "w", encoding="utf-8", newline="") as f:
+                f.write(updated)
+        print(f"js/config.js atualizado: {api_url}")
+        return True
+    except Exception as e:
+        print(f"Erro ao atualizar js/config.js: {e}")
         return False
 
 def update_js_files(api_url):
@@ -153,8 +175,8 @@ def update_js_files(api_url):
     
     for js_file in js_files:
         try:
-            # Lê o conteúdo do arquivo
-            with open(js_file, 'r', encoding='utf-8') as file:
+            # Lê o conteúdo do arquivo (newline='' preserva as quebras de linha originais)
+            with open(js_file, 'r', encoding='utf-8', newline='') as file:
                 content = file.read()
             
             # Prepara as URLs sem protocolo para substituição em strings
@@ -182,8 +204,10 @@ def update_js_files(api_url):
             updated_content = updated_content.replace(f"'{last_url_without_protocol}/uploads/", f"'{api_url_without_protocol}/uploads/")
             updated_content = updated_content.replace(f"`{last_url_without_protocol}/uploads/", f"`{api_url_without_protocol}/uploads/")
             
-            # Escreve o conteúdo atualizado de volta no arquivo
-            with open(js_file, 'w', encoding='utf-8') as file:
+            # Só regrava o arquivo se algo mudou
+            if updated_content == content:
+                continue
+            with open(js_file, 'w', encoding='utf-8', newline='') as file:
                 file.write(updated_content)
             
             updated_count += 1
@@ -195,8 +219,8 @@ def update_js_files(api_url):
     # Salva a nova URL como a última utilizada
     save_last_url(api_url)
     
-    print(f"Total de {updated_count} arquivos JS atualizados com sucesso.")
-    return updated_count > 0
+    print(f"Total de {updated_count} arquivos JS com o endereço trocado.")
+    return True
 
 def main():
     """Função principal que coordena a atualização do link da API."""
@@ -204,8 +228,11 @@ def main():
     api_url = get_api_link_from_db()
     print(f"Link da API obtido: {api_url}")
     
+    # Grava o endereço no js/config.js (fonte única do frontend), independente da URL anterior
+    config_js_updated = update_config_js(api_url)
+
     # Atualiza o arquivo config_api.html
-    config_updated = update_config_api_html(api_url)
+    config_updated = update_config_api_html(api_url) and config_js_updated
     
     # Atualiza todos os arquivos JS na pasta frontend/js
     js_files_updated = update_js_files(api_url)

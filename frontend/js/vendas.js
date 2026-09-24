@@ -1,5 +1,4 @@
 // Variáveis globais
-// const API_URL = 'https://erp-api-call.autoservto.com.br'; (duplicada, já definida em auth.js)
 let vendas = [];
 let itensVenda = [];
 let vendaAtual = null;
@@ -132,17 +131,10 @@ function limparMultiSelect(containerId, tipo) {
     atualizarTextoMultiSelect(tipo);
 }
 
-
 document.addEventListener('DOMContentLoaded', function () {
     console.log('DOM carregado - iniciando configuração da página de vendas');
     // Verificar autenticação
     checkAuth();
-
-    // Carregar dados do usuário
-    loadUserData();
-
-    // Configurar sidebar toggle
-    setupSidebarToggle();
 
     // Configurar logout
     document.getElementById('logoutBtn').addEventListener('click', logout);
@@ -324,42 +316,7 @@ function checkAuth() {
     }
 }
 
-// Carrega os dados do usuário usando a função do auth.js
-async function loadUserData() {
-    try {
-        const userData = await getCurrentUser();
-        if (userData) {
-            document.getElementById('userName').textContent = userData.nome || 'Usuário';
-            document.getElementById('userRole').textContent = formatRole(userData.nivel_acesso) || 'Usuário';
-        }
-    } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
-    }
-}
-
-function formatRole(role) {
-    const roles = {
-        'admin': 'Administrador',
-        'gerente': 'Gerente',
-        'vendedor': 'Vendedor'
-    };
-    return roles[role] || role;
-}
-
 // Logout e cabeçalhos de autenticação são tratados em auth.js
-
-
-// Funções para manipulação do sidebar
-function setupSidebarToggle() {
-    const toggleBtn = document.getElementById('toggleSidebar');
-    const sidebar = document.querySelector('.sidebar');
-    const mainContent = document.querySelector('.main-content');
-
-    toggleBtn.addEventListener('click', function () {
-        sidebar.classList.toggle('collapsed');
-        mainContent.classList.toggle('expanded');
-    });
-}
 
 // Funções para carregar dados
 async function carregarVendas() {
@@ -1008,7 +965,7 @@ async function renderizarVendas(vendas) {
             if (novoStatus === statusAtual) return;
 
             // Confirmação antes de alterar
-            if (!confirm(`Deseja alterar o status da venda #${vendaId} para "${novoStatus}"?`)) {
+            if (!await confirmarAcao(`Deseja alterar o status da venda #${vendaId} para "${novoStatus}"?`)) {
                 // Reverter para o status original se cancelar
                 this.value = statusAtual;
                 return;
@@ -1555,8 +1512,8 @@ function visualizarVenda(id) {
     });
 }
 
-function excluirVenda(id) {
-    if (confirm(`Tem certeza que deseja excluir a venda #${id}?`)) {
+async function excluirVenda(id) {
+    if (await confirmarAcao(`Tem certeza que deseja excluir a venda #${id}?`)) {
         excluirVendaAPI(id);
     }
 }
@@ -2411,7 +2368,7 @@ async function saveCliente() {
     const clienteExistente = todosClientesVendas.find(c => (c.nome || '').trim().toLowerCase() === nomeNormalizado);
 
     if (clienteExistente) {
-        if (confirm(`Já existe um cliente com o nome "${clienteExistente.nome}". Deseja selecioná-lo?`)) {
+        if (await confirmarAcao(`Já existe um cliente com o nome "${clienteExistente.nome}". Deseja selecioná-lo?`)) {
             closeClienteModal();
             console.log('Selecionando cliente existente:', clienteExistente);
 
@@ -2516,7 +2473,7 @@ async function saveCliente() {
 // Função para criar contas a receber
 async function criarContasReceber(vendaId, vendaCodigo) {
     // Confirma com o usuário
-    const confirmar = confirm(`Deseja criar o contas a receber para o pedido ${vendaCodigo}?`);
+    const confirmar = await confirmarAcao(`Deseja criar o contas a receber para o pedido ${vendaCodigo}?`);
     if (!confirmar) {
         return;
     }
@@ -2557,7 +2514,7 @@ async function criarContasReceber(vendaId, vendaCodigo) {
 // Função para criar contas a pagar
 async function criarContasPagar(vendaId, vendaCodigo, vendedorId) {
     // Confirma com o usuário
-    const confirmar = confirm(`Deseja criar o contas a pagar para o pedido ${vendaCodigo}?`);
+    const confirmar = await confirmarAcao(`Deseja criar o contas a pagar para o pedido ${vendaCodigo}?`);
     if (!confirmar) {
         return;
     }
@@ -2790,7 +2747,7 @@ async function processarDevolucao() {
     }
 
     // Confirma a ação
-    const confirmar = confirm('Tem certeza que deseja processar a devolução desta venda?\n\nEsta ação não pode ser desfeita.');
+    const confirmar = await confirmarAcao('Tem certeza que deseja processar a devolução desta venda?\n\nEsta ação não pode ser desfeita.');
     if (!confirmar) {
         return;
     }
@@ -3120,7 +3077,6 @@ function calcularCRC16(payload) {
     crc &= 0xFFFF;
     return crc.toString(16).toUpperCase().padStart(4, '0');
 }
-
 
 // Fecha o modal de PIX QR Code
 function fecharModalPixQrcode() {

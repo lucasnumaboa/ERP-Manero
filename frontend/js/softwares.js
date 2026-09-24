@@ -462,7 +462,7 @@ function fecharModalAtualizar() {
 }
 
 async function excluirSoftware(softwareId, nomeArquivo) {
-    if (!confirm(`Tem certeza que deseja excluir o software "${nomeArquivo}"?\n\nEsta ação não pode ser desfeita.`)) {
+    if (!await confirmarAcao(`Tem certeza que deseja excluir o software "${nomeArquivo}"?\n\nEsta ação não pode ser desfeita.`)) {
         return;
     }
 

@@ -12,41 +12,12 @@ document.addEventListener('DOMContentLoaded', function() {
         logout();
     });
 
-    // Configura o botão de toggle do sidebar
-    document.getElementById('toggleSidebar').addEventListener('click', function() {
-        document.querySelector('.sidebar').classList.toggle('collapsed');
-        document.querySelector('.main-content').classList.toggle('expanded');
-    });
-
-    // Carrega os dados do usuário
-    loadUserData();
-
     // Carrega a lista de categorias
     loadCategorias();
 
     // Configura os botões de ação
     setupActionButtons();
 });
-
-// Carrega os dados do usuário do localStorage
-function loadUserData() {
-    const userData = getUserData();
-    if (userData) {
-        document.getElementById('userName').textContent = userData.nome || 'Usuário';
-        document.getElementById('userRole').textContent = formatRole(userData.nivel_acesso) || 'Usuário';
-    }
-}
-
-// Formata o nível de acesso para exibição
-function formatRole(role) {
-    const roles = {
-        'admin': 'Administrador',
-        'vendedor': 'Vendedor',
-        'comprador': 'Comprador',
-        'financeiro': 'Financeiro'
-    };
-    return roles[role] || role;
-}
 
 // Carrega a lista de categorias da API
 async function loadCategorias() {
@@ -160,9 +131,7 @@ function setupActionButtons() {
     document.getElementById('btnNovaCategoria').addEventListener('click', function() {
         openCategoriaModal();
     });
-    
 
-    
     // Filtro de Status
     document.getElementById('filtroStatus').addEventListener('change', function() {
         loadCategorias();
@@ -337,7 +306,7 @@ async function deleteCategoria(categoriaId) {
             return;
         }
         
-        if (!confirm('Tem certeza que deseja excluir esta categoria?')) {
+        if (!await confirmarAcao('Tem certeza que deseja excluir esta categoria?')) {
             console.log('Exclusão cancelada pelo usuário');
             return;
         }

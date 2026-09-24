@@ -14,6 +14,7 @@ if %errorlevel% neq 0 (
 
 :: Inicia o servidor HTTP na porta 3000
 echo Iniciando o servidor HTTP na porta 3000...
-call npx http-server -p 3000 -c-1
+:: -c0: o navegador confere cada arquivo e só baixa de novo o que mudou (resposta 304)
+call npx http-server -p 3000 -c0
 
 echo Frontend encerrado.

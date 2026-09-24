@@ -9,9 +9,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    // Carrega os dados do usuário
-    loadUserData();
-
     // Carrega a lista de contas a pagar
     carregarTodasAsContas();
 
@@ -28,30 +25,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btnAplicarFiltros').addEventListener('click', aplicarFiltrosPagar);
     document.getElementById('btnLimparFiltros').addEventListener('click', limparFiltrosPagar);
 });
-
-// Carrega os dados do usuário
-async function loadUserData() {
-    try {
-        const userData = await getCurrentUser();
-        if (userData) {
-            document.getElementById('userName').textContent = userData.nome || 'Usuário';
-            document.getElementById('userRole').textContent = formatRole(userData.nivel_acesso) || 'Usuário';
-        }
-    } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
-    }
-}
-
-// Formata o nível de acesso para exibição
-function formatRole(role) {
-    const roles = {
-        'admin': 'Administrador',
-        'vendedor': 'Vendedor',
-        'comprador': 'Comprador',
-        'financeiro': 'Financeiro'
-    };
-    return roles[role] || role;
-}
 
 // Carrega todas as contas a pagar da API
 async function carregarTodasAsContas() {
@@ -551,7 +524,7 @@ async function deleteConta(contaId) {
         return;
     }
     
-    if (!confirm('Tem certeza que deseja cancelar esta conta a pagar?')) {
+    if (!await confirmarAcao('Tem certeza que deseja cancelar esta conta a pagar?')) {
         return;
     }
     

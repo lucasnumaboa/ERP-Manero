@@ -34,7 +34,7 @@ async function abrirAnalisePreco() {
             exibirResultadosAnalise(response);
         } else {
             // Não existem dados, pergunta se quer iniciar
-            if (confirm('Nenhuma análise de preço encontrada.\n\nDeseja iniciar uma nova pesquisa?\n\nIsso pode levar alguns minutos dependendo da quantidade de produtos.')) {
+            if (await confirmarAcao('Nenhuma análise de preço encontrada.\n\nDeseja iniciar uma nova pesquisa?\n\nIsso pode levar alguns minutos dependendo da quantidade de produtos.')) {
                 iniciarNovaAnalisePreco();
             } else {
                 // Volta para mensagem inicial
@@ -46,7 +46,7 @@ async function abrirAnalisePreco() {
         document.getElementById('loading').style.display = 'none';
 
         // Pergunta se quer iniciar nova análise
-        if (confirm('Erro ao carregar análises.\n\nDeseja iniciar uma nova pesquisa?')) {
+        if (await confirmarAcao('Erro ao carregar análises.\n\nDeseja iniciar uma nova pesquisa?')) {
             iniciarNovaAnalisePreco();
         } else {
             document.getElementById('mensagemInicial').style.display = 'block';
@@ -373,7 +373,7 @@ async function confirmarReplicarSugestao() {
         });
     });
 
-    if (!confirm(`Deseja realmente atualizar o preço de ${produtos.length} produto(s)?`)) {
+    if (!await confirmarAcao(`Deseja realmente atualizar o preço de ${produtos.length} produto(s)?`)) {
         return;
     }
 

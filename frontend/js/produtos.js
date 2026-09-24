@@ -35,15 +35,6 @@ document.addEventListener('DOMContentLoaded', function () {
         logout();
     });
 
-    // Configura o botão de toggle do sidebar
-    document.getElementById('toggleSidebar').addEventListener('click', function () {
-        document.querySelector('.sidebar').classList.toggle('collapsed');
-        document.querySelector('.main-content').classList.toggle('expanded');
-    });
-
-    // Carrega os dados do usuário
-    loadUserData();
-
     // NÃO carrega produtos automaticamente - usuário deve clicar em pesquisar
     // Mostra mensagem inicial
     document.getElementById('produtosTableBody').innerHTML = '<tr><td colspan="9" class="text-center">Clique no botão de pesquisa (lupa) para carregar os produtos</td></tr>';
@@ -75,6 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
 function configurarAbasModalProdutos() {
     const tabs = document.querySelectorAll('#produtoModal .modal-tab');
     const contents = document.querySelectorAll('#produtoModal .modal-tab-content');
+    // Usuário deve clicar na lupa para pesquisar
 
     tabs.forEach(tab => {
         tab.addEventListener('click', function () {
@@ -102,26 +94,6 @@ function resetarAbasModalProdutos() {
     // Ativar primeira aba
     if (tabs.length > 0) tabs[0].classList.add('active');
     if (contents.length > 0) contents[0].classList.add('active');
-}
-
-// Carrega os dados do usuário do localStorage
-function loadUserData() {
-    const userData = getUserData();
-    if (userData) {
-        document.getElementById('userName').textContent = userData.nome || 'Usuário';
-        document.getElementById('userRole').textContent = formatRole(userData.nivel_acesso) || 'Usuário';
-    }
-}
-
-// Formata o nível de acesso para exibição
-function formatRole(role) {
-    const roles = {
-        'admin': 'Administrador',
-        'vendedor': 'Vendedor',
-        'comprador': 'Comprador',
-        'financeiro': 'Financeiro'
-    };
-    return roles[role] || role;
 }
 
 // Variável global para armazenar todos os produtos
@@ -199,7 +171,7 @@ function displayProdutos(produtos) {
             // Pega apenas a primeira imagem se houver múltiplas (separadas por vírgula)
             const primeiraImagem = produto.caminho_imagem.split(',')[0].trim();
             if (primeiraImagem) {
-                imagemHtml = `<img src="https://erp-api-call.autoservto.com.br/uploads/${primeiraImagem.replace('uploads/', '')}" alt="${escapeHtml(produto.nome)}" class="produto-thumbnail" style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">`;
+                imagemHtml = `<img src="${apiUrlAtual()}/uploads/${primeiraImagem.replace('uploads/', '')}" alt="${escapeHtml(produto.nome)}" class="produto-thumbnail" style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">`;
             }
         }
 
@@ -675,6 +647,7 @@ function setupActionButtons() {
             input.addEventListener('input', function () {
                 // Remove pontos
                 let val = this.value.replace(/\./g, '');
+    // Os filtros são lidos quando o usuário clica em pesquisar (filtrarProdutos())
                 // Mantém apenas dígitos e vírgula
                 val = val.replace(/[^0-9,]/g, '');
                 // Garante apenas uma vírgula e até 2 dígitos decimais
@@ -795,7 +768,7 @@ function carregarVideoProduto(caminhoVideo) {
 
     if (!caminhoVideo) return;
 
-    const apiUrl = "https://erp-api-call.autoservto.com.br";
+    const apiUrl = apiUrlAtual();
     const videoUrl = `${apiUrl}/uploads/${caminhoVideo.trim().replace('uploads/', '')}`;
 
     const wrapper = document.createElement('div');
@@ -821,7 +794,7 @@ async function carregarImagensProduto(caminhoImagem) {
     previewDiv.innerHTML = '';
 
     try {
-        const apiUrl = "https://erp-api-call.autoservto.com.br";
+        const apiUrl = apiUrlAtual();
 
         // Verifica se há múltiplas imagens separadas por vírgula
         const caminhos = caminhoImagem.split(',');
@@ -1375,7 +1348,7 @@ function gerarProximoCodigoProduto() {
         const token = getToken();
 
         // Busca todos os produtos para determinar o próximo código
-        fetch('https://erp-api-call.autoservto.com.br/api/produtos', {
+        fetch(`${apiUrlAtual()}/api/produtos`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -1440,18 +1413,7 @@ function gerarProximoCodigoProduto() {
     }
 }
 
-
-
 // Gera um relatório de erros em Excel
-
-
-
-
-
-
-
-
-
 
 // Exclui um produto
 async function deleteProduto(produtoId) {
@@ -1463,7 +1425,7 @@ async function deleteProduto(produtoId) {
             return;
         }
 
-        if (!confirm('Tem certeza que deseja excluir este produto?')) {
+        if (!await confirmarAcao('Tem certeza que deseja excluir este produto?')) {
             console.log('Exclusão cancelada pelo usuário');
             return;
         }
@@ -1925,7 +1887,7 @@ async function salvarConsumoItem() {
 
 // Remove um item de consumo
 async function removerConsumoItem(consumoId) {
-    if (!confirm('Deseja realmente remover este componente?')) {
+    if (!await confirmarAcao('Deseja realmente remover este componente?')) {
         return;
     }
 

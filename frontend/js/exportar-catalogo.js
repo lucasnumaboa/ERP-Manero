@@ -130,7 +130,7 @@ async function getApiBaseUrlCatalogo() {
     } catch (e) {
         console.log('Usando URL padrão para catálogo');
     }
-    return 'https://erp-api-call.autoservto.com.br';
+    return apiUrlAtual();
 }
 
 // Renderiza os produtos no modal
@@ -284,7 +284,7 @@ async function iniciarGeracaoCatalogo() {
     }
 
     // Pergunta se deseja alterar os preços
-    if (confirm('Deseja alterar o preço dos produtos antes de gerar o catálogo?')) {
+    if (await confirmarAcao('Deseja alterar o preço dos produtos antes de gerar o catálogo?')) {
         abrirAlterarPrecosModal();
     } else {
         // Gera PDF diretamente sem alteração de preços

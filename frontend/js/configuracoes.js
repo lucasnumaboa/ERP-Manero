@@ -2,8 +2,6 @@
 // API_URL é definido no arquivo api.js
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Configurar sidebar toggle
-    setupSidebarToggle();
 
     // Configurar logout
     document.getElementById('logoutBtn').addEventListener('click', logout);
@@ -103,18 +101,6 @@ function getAuthHeader() {
         };
     }
     return {};
-}
-
-// Funções para manipulação do sidebar
-function setupSidebarToggle() {
-    const toggleBtn = document.getElementById('toggleSidebar');
-    const sidebar = document.querySelector('.sidebar');
-    const mainContent = document.querySelector('.main-content');
-
-    toggleBtn.addEventListener('click', function () {
-        sidebar.classList.toggle('collapsed');
-        mainContent.classList.toggle('expanded');
-    });
 }
 
 // Funções para abas
@@ -633,8 +619,8 @@ async function abrirModalEditarConfiguracao(chave) {
 }
 
 // Função para confirmar exclusão de configuração
-function confirmarExclusaoConfiguracao(configChave) {
-    if (confirm('Tem certeza que deseja excluir esta configuração?')) {
+async function confirmarExclusaoConfiguracao(configChave) {
+    if (await confirmarAcao('Tem certeza que deseja excluir esta configuração?')) {
         excluirConfiguracao(configChave);
     }
 }
@@ -742,7 +728,6 @@ async function excluirConfiguracao(configChave) {
         alert('Erro ao excluir configuração. Por favor, tente novamente.');
     }
 }
-
 
 // ============================================
 // CONFIGURAÇÕES DE INTELIGÊNCIA ARTIFICIAL
@@ -1123,7 +1108,7 @@ function restaurarBackup() {
 // Configurações de usuários
 async function carregarUsuarios() {
     try {
-        const apiBaseUrl = localStorage.getItem('api_base_url') || 'https://erp-api-call.autoservto.com.br';
+        const apiBaseUrl = apiUrlAtual();
         const response = await fetch(`${apiBaseUrl}/api/usuarios/`, {
             method: 'GET',
             headers: getAuthHeader()
@@ -1151,7 +1136,7 @@ async function carregarUsuarios() {
 // Carregar lista de grupos
 async function carregarGrupos() {
     try {
-        const apiBaseUrl = localStorage.getItem('api_base_url') || 'https://erp-api-call.autoservto.com.br';
+        const apiBaseUrl = apiUrlAtual();
         const response = await fetch(`${apiBaseUrl}/api/configuracoes/grupo_usuario`, {
             method: 'GET',
             headers: getAuthHeader()
@@ -1227,7 +1212,7 @@ function preencherTabelaGrupos(grupos) {
 // Abrir modal para editar grupo
 async function editarGrupo(id) {
     try {
-        const apiBaseUrl = localStorage.getItem('api_base_url') || 'https://erp-api-call.autoservto.com.br';
+        const apiBaseUrl = apiUrlAtual();
         const response = await fetch(`${apiBaseUrl}/api/configuracoes/grupo_usuario/${id}`, {
             method: 'GET',
             headers: getAuthHeader()
@@ -1286,12 +1271,12 @@ async function editarGrupo(id) {
 
 // Excluir grupo
 async function excluirGrupo(id) {
-    if (!confirm('Tem certeza que deseja excluir este grupo?')) {
+    if (!await confirmarAcao('Tem certeza que deseja excluir este grupo?')) {
         return;
     }
 
     try {
-        const apiBaseUrl = localStorage.getItem('api_base_url') || 'https://erp-api-call.autoservto.com.br';
+        const apiBaseUrl = apiUrlAtual();
         const response = await fetch(`${apiBaseUrl}/api/configuracoes/grupo_usuario/${id}`, {
             method: 'DELETE',
             headers: getAuthHeader()
@@ -1359,7 +1344,7 @@ async function salvarGrupo() {
     };
 
     try {
-        const apiBaseUrl = localStorage.getItem('api_base_url') || 'https://erp-api-call.autoservto.com.br';
+        const apiBaseUrl = apiUrlAtual();
         const isEdit = form.dataset.mode === 'edit';
         const url = isEdit
             ? `${apiBaseUrl}/api/configuracoes/grupo_usuario/${form.dataset.grupoId}`
@@ -1505,15 +1490,15 @@ async function atualizarUsuario(userId, usuarioData) {
     }
 }
 
-function confirmarExclusaoUsuario(userId) {
-    if (confirm(`Tem certeza que deseja excluir o usuário #${userId}?`)) {
+async function confirmarExclusaoUsuario(userId) {
+    if (await confirmarAcao(`Tem certeza que deseja excluir o usuário #${userId}?`)) {
         excluirUsuario(userId);
     }
 }
 
 async function excluirUsuario(userId) {
     try {
-        const apiBaseUrl = localStorage.getItem('api_base_url') || 'https://erp-api-call.autoservto.com.br';
+        const apiBaseUrl = apiUrlAtual();
         const response = await fetch(`${apiBaseUrl}/api/usuarios/${userId}`, {
             method: 'DELETE',
             headers: getAuthHeader()

@@ -12,15 +12,6 @@ document.addEventListener('DOMContentLoaded', function() {
         logout();
     });
 
-    // Configura o botão de toggle do sidebar
-    document.getElementById('toggleSidebar').addEventListener('click', function() {
-        document.querySelector('.sidebar').classList.toggle('collapsed');
-        document.querySelector('.main-content').classList.toggle('expanded');
-    });
-
-    // Carrega os dados do usuário
-    loadUserData();
-
     // Carrega a lista de vendedores
     loadVendedores();
 
@@ -70,30 +61,6 @@ function resetarAbasModalVendedores() {
     // Ativar primeira aba
     if (tabs.length > 0) tabs[0].classList.add('active');
     if (contents.length > 0) contents[0].classList.add('active');
-}
-
-// Carrega os dados do usuário usando a função do auth.js
-async function loadUserData() {
-    try {
-        const userData = await getCurrentUser();
-        if (userData) {
-            document.getElementById('userName').textContent = userData.nome || 'Usuário';
-            document.getElementById('userRole').textContent = formatRole(userData.nivel_acesso) || 'Usuário';
-        }
-    } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
-    }
-}
-
-// Formata o nível de acesso para exibição
-function formatRole(role) {
-    const roles = {
-        'admin': 'Administrador',
-        'vendedor': 'Vendedor',
-        'comprador': 'Comprador',
-        'financeiro': 'Financeiro'
-    };
-    return roles[role] || role;
 }
 
 // Carrega a lista de vendedores da API
@@ -490,7 +457,7 @@ async function deleteVendedor(vendedorId) {
         return;
     }
     
-    if (!confirm('Tem certeza que deseja excluir este vendedor?')) {
+    if (!await confirmarAcao('Tem certeza que deseja excluir este vendedor?')) {
         return;
     }
     

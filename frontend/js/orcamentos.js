@@ -161,7 +161,7 @@ async function adicionarPeriodo() {
 }
 
 async function excluirPeriodo(id) {
-    if (!confirm('Excluir este período?')) return;
+    if (!await confirmarAcao('Excluir este período?')) return;
     try {
         await orcFetch(`/api/orcamentos/config/periodos/${id}`, { method: 'DELETE' });
         regras.periodos = regras.periodos.filter(p => p.id !== id);
@@ -216,7 +216,7 @@ async function adicionarConfigProduto() {
 }
 
 async function excluirConfigProduto(id) {
-    if (!confirm('Excluir este produto/estilo?')) return;
+    if (!await confirmarAcao('Excluir este produto/estilo?')) return;
     try {
         await orcFetch(`/api/orcamentos/config/produtos-config/${id}`, { method: 'DELETE' });
         regras.produtos_config = regras.produtos_config.filter(p => p.id !== id);
@@ -278,7 +278,7 @@ async function adicionarCampo() {
 }
 
 async function excluirCampo(id) {
-    if (!confirm('Excluir este campo?')) return;
+    if (!await confirmarAcao('Excluir este campo?')) return;
     try {
         await orcFetch(`/api/orcamentos/config/campos/${id}`, { method: 'DELETE' });
         regras.campos = regras.campos.filter(c => c.id !== id);
@@ -364,7 +364,7 @@ async function adicionarDesconto() {
 }
 
 async function excluirDesconto(id) {
-    if (!confirm('Excluir esta regra?')) return;
+    if (!await confirmarAcao('Excluir esta regra?')) return;
     try {
         await orcFetch(`/api/orcamentos/config/descontos/${id}`, { method: 'DELETE' });
         regras.descontos = regras.descontos.filter(d => d.id !== id);
@@ -850,7 +850,7 @@ function fecharModalDetalhe() {
 }
 
 async function excluirOrcamento(id) {
-    if (!confirm('Excluir este orçamento permanentemente?')) return;
+    if (!await confirmarAcao('Excluir este orçamento permanentemente?')) return;
     try {
         await orcFetch(`/api/orcamentos/${id}`, { method: 'DELETE' });
         showToast('Orçamento excluído!', 'success');

@@ -1431,7 +1431,7 @@ async function editarProduto(id) {
 
 // Excluir arquivo
 async function excluirArquivo(produtoId, arquivoId) {
-    if (!confirm('Deseja excluir este arquivo?')) return;
+    if (!await confirmarAcao('Deseja excluir este arquivo?')) return;
 
     try {
         await apiDelete(`/api/produtos-3d/${produtoId}/arquivo/${arquivoId}`);
@@ -1444,7 +1444,7 @@ async function excluirArquivo(produtoId, arquivoId) {
 
 // Excluir produto
 async function excluirProduto(id) {
-    if (!confirm('Deseja excluir este produto 3D e todos os seus arquivos?')) return;
+    if (!await confirmarAcao('Deseja excluir este produto 3D e todos os seus arquivos?')) return;
 
     try {
         await apiDelete(`/api/produtos-3d/${id}`);
@@ -1978,7 +1978,7 @@ async function editarCategoria(id, nomeAtual) {
 
 // Excluir categoria
 async function excluirCategoria(id) {
-    if (!confirm('Deseja excluir esta categoria? Esta ação não poderá ser desfeita.')) return;
+    if (!await confirmarAcao('Deseja excluir esta categoria? Esta ação não poderá ser desfeita.')) return;
 
     try {
         await apiDelete(`/api/produtos-3d/categorias/${id}`);
@@ -2080,7 +2080,7 @@ function updateUploadStats(imagesComplete, imagesTotal, videosComplete, videosTo
 function uploadFormDataWithProgress(endpoint, method, formData, onProgress) {
     return new Promise((resolve, reject) => {
         const token = localStorage.getItem('erp_token');
-        const apiBaseUrl = localStorage.getItem('api_base_url') || 'https://erp-api-call.autoservto.com.br';
+        const apiBaseUrl = apiUrlAtual();
 
         const xhr = new XMLHttpRequest();
         xhr.open(method, `${apiBaseUrl}${endpoint}`, true);
@@ -2135,7 +2135,7 @@ function uploadFormDataWithProgress(endpoint, method, formData, onProgress) {
 
 async function apiPostFormData(endpoint, formData) {
     const token = localStorage.getItem('erp_token');
-    const apiBaseUrl = localStorage.getItem('api_base_url') || 'https://erp-api-call.autoservto.com.br';
+    const apiBaseUrl = apiUrlAtual();
 
     const response = await fetch(`${apiBaseUrl}${endpoint}`, {
         method: 'POST',
@@ -2155,7 +2155,7 @@ async function apiPostFormData(endpoint, formData) {
 
 async function apiPutFormData(endpoint, formData) {
     const token = localStorage.getItem('erp_token');
-    const apiBaseUrl = localStorage.getItem('api_base_url') || 'https://erp-api-call.autoservto.com.br';
+    const apiBaseUrl = apiUrlAtual();
 
     const response = await fetch(`${apiBaseUrl}${endpoint}`, {
         method: 'PUT',

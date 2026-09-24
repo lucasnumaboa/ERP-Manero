@@ -7,26 +7,7 @@
 
 // URL base da API - sempre obtida do banco de dados
 async function getApiBaseUrl() {
-    const defaultUrl = 'https://erp-api-call.autoservto.com.br';
-    
-    try {
-        // Sempre busca a URL da API do endpoint configuracoes
-        const response = await fetch(`${defaultUrl}/api/configuracoes/link_api`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            if (data && data.valor) {
-                return data.valor;
-            }
-        }
-    } catch (error) {
-        console.warn('Erro ao obter URL da API do banco, usando padrão:', error);
-    }
-    
-    return defaultUrl;
+    return getApiUrl();
 }
 
 // Função para obter a URL base atual (mantida para compatibilidade)

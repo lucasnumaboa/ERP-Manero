@@ -7,7 +7,7 @@
 (function () {
     'use strict';
 
-    const API_BASE = localStorage.getItem('api_base_url') || 'https://erp-api-call.autoservto.com.br';
+    const API_BASE = apiUrlAtual();
 
     function getToken() {
         return localStorage.getItem('erp_token') || sessionStorage.getItem('erp_token') || '';
@@ -328,7 +328,7 @@
     };
 
     window.excluirFilamento = async function (id) {
-        if (!confirm('Deseja excluir este filamento?')) return;
+        if (!await confirmarAcao('Deseja excluir este filamento?')) return;
         try {
             const resp = await fetch(`${API_BASE}/api/filamentos-3d/filamentos/${id}`, { method: 'DELETE', headers: authHeaders() });
             if (!resp.ok && resp.status !== 204) throw new Error('Erro');
@@ -361,7 +361,7 @@
     };
 
     window.excluirCompra = async function (id) {
-        if (!confirm('Excluir esta compra? O estoque NÃO será restaurado.')) return;
+        if (!await confirmarAcao('Excluir esta compra? O estoque NÃO será restaurado.')) return;
         try {
             const resp = await fetch(`${API_BASE}/api/filamentos-3d/compras/${id}`, { method: 'DELETE', headers: authHeaders() });
             if (!resp.ok && resp.status !== 204) throw new Error('Erro');
@@ -417,7 +417,7 @@
 
     async function efetivar() {
         if (!ultimoCalculo) { showMsg('Calcule antes de efetivar', false); return; }
-        if (!confirm('Deseja efetivar? Isso irá deduzir as gramas do estoque.')) return;
+        if (!await confirmarAcao('Deseja efetivar? Isso irá deduzir as gramas do estoque.')) return;
         try {
             const resp = await fetch(`${API_BASE}/api/filamentos-3d/efetivar`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ itens: ultimoCalculo.itens }) });
             if (!resp.ok) { const err = await resp.json(); throw new Error(err.detail || 'Erro'); }
