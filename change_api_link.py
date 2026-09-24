@@ -242,5 +242,13 @@ def main():
     else:
         print("Houve problemas ao atualizar a configuração da API em alguns arquivos.")
 
+    # Por último: o endereço pode ter mudado o js/config.js, e a versão de cada CSS/JS nos HTML
+    # precisa refletir o conteúdo atual (senão o navegador segue com a cópia guardada pela Cloudflare).
+    try:
+        from versionar_frontend import versionar
+        print(f"Versões de CSS/JS atualizadas em {versionar()} arquivo(s).")
+    except Exception as e:
+        print(f"Não foi possível atualizar as versões de CSS/JS: {e}")
+
 if __name__ == "__main__":
     main()

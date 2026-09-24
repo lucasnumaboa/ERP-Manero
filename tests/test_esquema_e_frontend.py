@@ -128,10 +128,10 @@ def test_sem_console_log_nos_scripts():
 def test_telas_funcionam_no_celular_e_como_app():
     for pagina in APP:
         html = pagina.read_text(encoding="utf-8")
-        assert 'href="css/celular.css"' in html, f"{pagina.name} sem css/celular.css"
+        assert re.search(r'href="css/celular\.css(\?v=\w+)?"', html), f"{pagina.name} sem css/celular.css"
         # celular.css precisa ser o último CSS do <head> para valer sobre os estilos da tela
         cabeca = html.split("</head>")[0]
-        assert cabeca.rstrip().rsplit("<link", 1)[1].startswith(' rel="stylesheet" href="css/celular.css"'), pagina.name
+        assert cabeca.rstrip().rsplit("<link", 1)[1].startswith(' rel="stylesheet" href="css/celular.css'), pagina.name
     for pagina in PAGINAS:
         if pagina.name != "offline.html":
             assert 'rel="manifest"' in pagina.read_text(encoding="utf-8"), f"{pagina.name} sem manifest"
@@ -147,3 +147,16 @@ def test_relatorios_e_produtos_sem_estilo_no_html():
         # só estado liga/desliga do JS (display) pode ficar inline
         outros = [s for s in re.findall(r'\sstyle="([^"]*)"', html) if s.replace(" ", "") not in ("display:none;", "display:block;")]
         assert not outros, f"{nome}: style inline {outros[:5]}"
+
+
+def test_versao_dos_css_js_nos_html_em_dia():
+    """A Cloudflare guarda CSS/JS no navegador por 4h: sem a versão certa no endereço, o celular mistura
+    arquivo novo com velho. Depois de editar CSS/JS: python versionar_frontend.py"""
+    import sys
+    sys.path.insert(0, str(FRONTEND.parent))
+    from versionar_frontend import REF_HTML, REF_JS, CARREGAM_OUTROS, carimbar
+    desatualizados = [p.name for p in PAGINAS if carimbar(p.read_text(encoding="utf-8"), REF_HTML) != p.read_text(encoding="utf-8")]
+    desatualizados += [r for r in CARREGAM_OUTROS if carimbar((FRONTEND / r).read_text(encoding="utf-8"), REF_JS) != (FRONTEND / r).read_text(encoding="utf-8")]
+    assert not desatualizados, f"rode python versionar_frontend.py (versões velhas em: {desatualizados})"
+    sem_versao = [f"{p.name}: {m.group(2)}" for p in PAGINAS for m in re.finditer(r'(?:src|href)="((?:css|js)/[^"?]+)(")', p.read_text(encoding="utf-8"))]
+    assert not sem_versao, sem_versao

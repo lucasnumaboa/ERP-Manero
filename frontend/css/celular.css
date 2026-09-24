@@ -17,9 +17,11 @@
         overflow-x: hidden;
     }
 
-    /* ---------- Menu em gaveta ---------- */
-    .sidebar,
-    .sidebar.collapsed {
+    /* ---------- Menu em gaveta ----------
+       Só vale depois que o sidebar-template.js criou o botão ☰ (body.tem-menu-celular): se um script
+       antigo vier do cache, a barra de ícones de antes continua na tela em vez de sumir. */
+    body.tem-menu-celular .sidebar,
+    body.tem-menu-celular .sidebar.collapsed {
         width: 260px;
         transform: translateX(-100%);
         transition: transform 0.25s ease;
@@ -33,25 +35,25 @@
     }
 
     /* dentro da gaveta o menu aparece completo (sem o modo "só ícones") */
-    .sidebar .sidebar-header .logo-img,
-    .sidebar .user-info,
-    .sidebar .sidebar-nav a span {
+    body.tem-menu-celular .sidebar .sidebar-header .logo-img,
+    body.tem-menu-celular .sidebar .user-info,
+    body.tem-menu-celular .sidebar .sidebar-nav a span {
         display: initial;
     }
 
-    .sidebar .user-info {
+    body.tem-menu-celular .sidebar .user-info {
         display: block;
     }
 
-    .sidebar .sidebar-user {
+    body.tem-menu-celular .sidebar .sidebar-user {
         justify-content: flex-start;
     }
 
-    .sidebar .user-avatar {
+    body.tem-menu-celular .sidebar .user-avatar {
         margin-right: 12px;
     }
 
-    .sidebar .sidebar-nav i {
+    body.tem-menu-celular .sidebar .sidebar-nav i {
         margin-right: 10px;
     }
 
@@ -94,9 +96,9 @@
         display: none;
     }
 
-    /* ---------- Conteúdo em largura total ---------- */
-    .main-content,
-    .main-content.expanded {
+    /* ---------- Conteúdo em largura total (a gaveta não ocupa espaço) ---------- */
+    body.tem-menu-celular .main-content,
+    body.tem-menu-celular .main-content.expanded {
         margin-left: 0 !important;
         width: 100% !important;
         max-width: 100vw;

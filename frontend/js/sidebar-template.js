@@ -33,7 +33,12 @@
         botao.innerHTML = '<i class="fas fa-bars"></i>';
         const sombra = document.createElement('div');
         sombra.id = 'sombraMenuCelular';
-        document.body.append(botao, sombra);
+        document.body.append(botao);
+        // A sombra fica ao lado do menu, dentro do mesmo container: o .app-container tem z-index próprio,
+        // e uma sombra solta no <body> ficaria por cima da gaveta (todo toque no menu fechava a gaveta).
+        const sidebar = document.querySelector('.sidebar');
+        sidebar.parentElement.insertBefore(sombra, sidebar);
+        document.body.classList.add('tem-menu-celular');
 
         const noCelular = () => window.matchMedia('(max-width: 768px)').matches;
         const fechar = () => document.body.classList.remove('menu-celular-aberto');
@@ -546,7 +551,7 @@
 
         const script = document.createElement('script');
         script.id = 'produtoChatWidgetScript';
-        script.src = 'js/produto-chat-widget.js';
+        script.src = 'js/produto-chat-widget.js?v=afa41de59e';
         document.body.appendChild(script);
     }
 })();
