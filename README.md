@@ -81,6 +81,9 @@ Sistema ERP completo para pequenas e médias empresas, com cliente desktop para 
 - **"Lembrar e-mail"**: o login não guarda mais a senha no navegador.
 - **Estoque sem venda dupla**: a baixa só acontece se houver saldo no momento da gravação, mesmo com vendas simultâneas.
 - **Códigos sem repetição**: pedidos, compras, contas e orçamentos usam o maior número + 1 com trava, e o banco recusa código repetido.
+- **IA pelo servidor**: descrição de produto, Produtos 3D e demais telas pedem o texto ao backend (`/api/ia/gerar`); a chave do provedor não vai mais para o navegador, e em Configurações ela aparece mascarada (deixar o campo vazio mantém a salva).
+- **Sessão renovada enquanto o usuário usa o sistema**: o token é trocado por um novo (`/token/renovar`) quando faltam menos de 10 minutos; a desconexão por inatividade continua valendo.
+- **Início automático**: o ERP volta sozinho quando o PC reinicia ou quando um processo cai (veja *Início automático* abaixo).
 
 ### Desempenho
 
@@ -232,6 +235,16 @@ start_erp.bat
 - **Senha:** `admin123`
 
 > ⚠️ Altere a senha após o primeiro acesso.
+
+### Início automático (sem administrador)
+
+```bash
+python instalar_inicio_automatico.py
+```
+
+Cria a tarefa agendada **ERP Maneiro - Vigia** (a cada 5 minutos) e um atalho na pasta Inicializar. As duas rodam o `vigia_erp.py`, sem janela: se a porta 8000 (backend) ou 3000 (frontend) não responder, ele sobe o `start_backend.bat` / `start_frontend.bat` (rodando o `change_api_link.py` antes do frontend) e grava em `log/vigia_<data>.log`. Assim o ERP volta sozinho depois de reiniciar o PC ou se algum processo cair. Para desfazer: `python instalar_inicio_automatico.py --remover`.
+
+Funciona com o usuário logado no Windows. Para subir antes do login, use `instalar_servico.py` como administrador, com o NSSM instalado.
 
 ---
 

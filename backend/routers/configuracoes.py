@@ -7,6 +7,22 @@ from auth import get_current_user
 import os
 import socket
 import json
+import re
+
+# Chaves de API não saem do servidor: a tela recebe só uma versão mascarada para exibir.
+SEGREDO = re.compile(r"(^apikey_|_apikey$|api_key|secret|senha|password)", re.I)
+MASCARA = "…"
+
+
+def _mascarar(chave, valor):
+    if not valor or not SEGREDO.search(chave):
+        return valor
+    return f"{valor[:10]}{MASCARA}{valor[-4:]}" if len(valor) > 16 else MASCARA
+
+
+def _e_mascara(chave, valor):
+    """Valor mascarado reenviado pela tela sem alteração: não sobrescreve a chave verdadeira."""
+    return bool(SEGREDO.search(chave)) and isinstance(valor, str) and MASCARA in valor
 
 # Modelos Pydantic para as requisições
 class ConfigUpdate(BaseModel):
@@ -323,8 +339,8 @@ async def get_all_configs(current_user = Depends(get_current_user)):
     with get_db_cursor() as cursor:
         cursor.execute("SELECT chave, valor, descricao FROM configuracoes")
         configs = cursor.fetchall()
-        
-        return configs
+
+        return [{**c, "valor": _mascarar(c["chave"], c["valor"])} for c in configs]
 
 @router.put("/configuracoes/{chave}")
 @router.post("/configuracoes/{chave}")
@@ -352,6 +368,9 @@ async def update_config(
             detail="Permissão negada. Apenas administradores podem alterar configurações."
         )
         
+    if _e_mascara(chave, config_data.valor):
+        return {"message": f"Configuração '{chave}' mantida (valor mascarado não altera a chave salva)", "chave": chave}
+
     # Verifica se o valor foi fornecido
     if config_data.valor is None:
         raise HTTPException(
@@ -428,6 +447,8 @@ async def update_configs_batch(
     
     with get_db_cursor(commit=True) as cursor:
         for chave, valor in batch_data.configuracoes.items():
+            if _e_mascara(chave, valor):
+                continue
             try:
                 # Verifica se a configuração existe
                 cursor.execute("SELECT id FROM configuracoes WHERE chave = %s", (chave,))
@@ -480,7 +501,10 @@ async def create_config(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Permissão negada. Apenas administradores podem criar configurações."
         )
-    
+
+    if _e_mascara(chave, config_data.valor):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Informe a chave completa, não a versão mascarada.")
+
     with get_db_cursor(commit=True) as cursor:
         # Verifica se a configuração já existe
         cursor.execute("SELECT id FROM configuracoes WHERE chave = %s", (chave,))

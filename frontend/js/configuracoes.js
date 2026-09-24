@@ -846,7 +846,7 @@ async function carregarConfiguracoesIA() {
         if (providerSelect) providerSelect.value = provider;
 
         const apikeyInput = document.getElementById('ia_apikey_openrouter');
-        if (apikeyInput) apikeyInput.value = getConfig('apikey_openrouter');
+        mostrarChaveSalva(apikeyInput, getConfig('apikey_openrouter'));
 
         const modelInput = document.getElementById('ia_model_openrouter');
         if (modelInput) modelInput.value = getConfig('model_openrouter', 'openai/gpt-oss-20b:free');
@@ -858,7 +858,7 @@ async function carregarConfiguracoesIA() {
         if (ollamaModelInput) ollamaModelInput.value = getConfig('ollama_model', 'llama3');
 
         const ollamaApikeyInput = document.getElementById('ia_ollama_apikey');
-        if (ollamaApikeyInput) ollamaApikeyInput.value = getConfig('ollama_apikey');
+        mostrarChaveSalva(ollamaApikeyInput, getConfig('ollama_apikey'));
 
         const lmUrlInput = document.getElementById('ia_lmstudio_url');
         if (lmUrlInput) lmUrlInput.value = getConfig('lmstudio_url', 'http://localhost:1234');
@@ -867,7 +867,7 @@ async function carregarConfiguracoesIA() {
         if (lmModelInput) lmModelInput.value = getConfig('lmstudio_model', 'default');
 
         const lmApikeyInput = document.getElementById('ia_lmstudio_apikey');
-        if (lmApikeyInput) lmApikeyInput.value = getConfig('lmstudio_apikey');
+        mostrarChaveSalva(lmApikeyInput, getConfig('lmstudio_apikey'));
 
         // Preencher campo think em ambos os providers (mesma chave no banco)
         const thinkValue = getConfig('ia_think', 'on');
@@ -1875,3 +1875,11 @@ document.addEventListener('DOMContentLoaded', function () {
     // Configura os eventos do webhook
     setupWebhookEvents();
 });
+
+// O servidor só devolve a chave mascarada: o campo fica vazio (salvar vazio mantém a chave atual)
+// e a versão mascarada aparece como dica.
+function mostrarChaveSalva(input, mascarada) {
+    if (!input) return;
+    input.value = '';
+    input.placeholder = mascarada ? `Chave salva: ${mascarada} (deixe vazio para manter)` : 'Nenhuma chave salva';
+}

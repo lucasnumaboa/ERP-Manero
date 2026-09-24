@@ -10,7 +10,7 @@ cd backend
 python -c "import fastapi, uvicorn, mysql.connector, jose, passlib, dotenv, multipart, PIL, httpx" >nul 2>&1
 if %errorlevel% neq 0 (
     echo Instalando dependencias...
-    python -m pip install -r ..equirements.txt
+    python -m pip install -r ..\requirements.txt
 )
 
 :: Inicia o servidor usando o script start.py

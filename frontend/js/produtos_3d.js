@@ -297,16 +297,8 @@ async function gerarDescricaoIA3D() {
     btnGerarIA.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
 
     try {
-        // Carregar configurações de IA
-        const configuracoes = await apiGet('/api/configuracoes/configuracoes/');
-        const apiKey = configuracoes.find(c => c.chave === 'apikey_openrouter')?.valor;
-        const model = configuracoes.find(c => c.chave === 'model_openrouter')?.valor || 'openai/gpt-oss-20b:free';
-        const dadosFixos = configuracoes.find(c => c.chave === 'descricao_produto_dados_fixos')?.valor ||
-            '- 30 dias de garantia\n- Entrego em Salto SP\n- Somente venda';
-
-        if (!apiKey) {
-            throw new Error('API Key do OpenRouter não configurada. Verifique as configurações do sistema.');
-        }
+        // Texto fixo do início da descrição; a IA é chamada pelo servidor (js/ia.js), sem a chave no navegador
+        const { dados_fixos: dadosFixos } = await apiGet('/api/ia/dados-descricao');
 
         // Criar prompt para IA com título, categoria e subcategoria
         // Inclui categoria principal
@@ -355,52 +347,7 @@ Responda APENAS com a descrição pronta, sem explicações adicionais.`;
 
         console.log('[IA Descrição 3D] Gerando descrição para:', tituloProduto);
 
-        // Ler configuração de reasoning
-        const iaThink = configuracoes.find(c => c.chave === 'ia_think')?.valor || 'on'; // off|low|medium|high|on
-        const iaThinkTokens = parseInt(configuracoes.find(c => c.chave === 'ia_think_tokens')?.valor || '0', 10);
-
-        // Montar payload base
-        const payload3D = {
-            model: model,
-            messages: [{ role: 'user', content: prompt }],
-            stream: false,
-            temperature: 0.7,
-            max_tokens: 2000
-        };
-
-        // Aplicar reasoning (OpenRouter: objeto com effort; 'off' usa budget_tokens=0)
-        if (iaThink !== 'on') {
-            if (iaThink === 'off') {
-                payload3D.reasoning = { effort: 'low' };
-                payload3D.budget_tokens = 0;
-            } else {
-                const reasoning = { effort: iaThink };
-                if (iaThinkTokens > 0) reasoning.max_tokens = iaThinkTokens;
-                payload3D.reasoning = reasoning;
-            }
-        } else if (iaThinkTokens > 0) {
-            payload3D.reasoning = { max_tokens: iaThinkTokens };
-        }
-
-        // Chamar OpenRouter
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`,
-                'HTTP-Referer': window.location.origin,
-                'X-Title': 'ERP Maneiro - Descrição Produto 3D'
-            },
-            body: JSON.stringify(payload3D)
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`Erro da API: ${errorData.error?.message || response.statusText}`);
-        }
-
-        const data = await response.json();
-        const descricaoGerada = data.choices[0]?.message?.content?.trim();
+        const descricaoGerada = (await chamarIA(prompt, 1000, 2, 2000))?.trim();
 
         if (!descricaoGerada || descricaoGerada.length < 20) {
             throw new Error('A IA retornou uma descrição vazia ou muito curta. Tente novamente.');

@@ -53,3 +53,19 @@ def test_falha_do_provedor_volta_com_a_mensagem_dele(cliente_api, vendedor, monk
     r = cliente_api.post("/api/ia/gerar", json={"prompt": "oi"}, headers=vendedor["headers"])
     assert r.status_code == 424  # não pode ser 502/503: a Cloudflare esconde a mensagem
     assert "unavailable for free" in r.json()["detail"]
+
+
+def test_chave_de_api_sai_mascarada_e_mascara_nao_sobrescreve(cliente_api, admin):
+    real = "sk-or-v1-" + "a" * 40 + "wxyz"
+    sql("UPDATE configuracoes SET valor=%s WHERE chave='apikey_openrouter'", (real,))
+    configs = cliente_api.get("/api/configuracoes/configuracoes/", headers=admin["headers"]).json()
+    exibida = next(c["valor"] for c in configs if c["chave"] == "apikey_openrouter")
+    assert exibida != real and exibida.startswith("sk-or-v1-a") and exibida.endswith("wxyz")
+    assert next(c["valor"] for c in configs if c["chave"] == "ia_think_tokens") is not None  # número não é mascarado
+
+    cliente_api.put("/api/configuracoes/configuracoes/apikey_openrouter", json={"valor": exibida}, headers=admin["headers"])
+    assert sql("SELECT valor FROM configuracoes WHERE chave='apikey_openrouter'")[0]["valor"] == real
+
+    nova = "sk-or-v1-" + "b" * 44
+    cliente_api.put("/api/configuracoes/configuracoes/apikey_openrouter", json={"valor": nova}, headers=admin["headers"])
+    assert sql("SELECT valor FROM configuracoes WHERE chave='apikey_openrouter'")[0]["valor"] == nova

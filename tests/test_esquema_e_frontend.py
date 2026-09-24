@@ -99,8 +99,8 @@ def test_sem_css_repetido_na_mesma_pagina():
 
 
 def test_chave_de_ia_nao_vai_para_telas_de_vendedor():
-    # Só as telas de admin (Configurações e Produtos 3D) ainda falam direto com o provedor.
-    permitidos = {"configuracoes.js", "produtos_3d.js"}
+    # Nenhuma tela fala direto com o provedor de IA; a chamada é feita pelo backend.
+    permitidos = {"configuracoes.js"}  # tela de admin onde a chave é cadastrada (recebe só a versão mascarada)
     problemas = [js.name for js in SCRIPTS if js.name not in permitidos
                  and re.search(r"openrouter\.ai|apikey_openrouter", js.read_text(encoding="utf-8"))]
     assert not problemas, f"chave/provedor de IA no navegador: {problemas}"

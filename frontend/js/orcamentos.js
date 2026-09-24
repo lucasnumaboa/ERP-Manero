@@ -85,6 +85,7 @@ async function orcFetch(endpoint, options = {}) {
         showSessionExpiredModal();
         throw new Error('Não autorizado');
     }
+    renovarTokenSeNecessario();
     if (resp.status === 204) return null;
     if (!resp.ok) {
         const err = await resp.json().catch(() => ({}));

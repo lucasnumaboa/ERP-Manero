@@ -169,6 +169,20 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     )
     
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@app.post("/token/renovar", response_model=Token)
+async def renovar_token(current_user=Depends(get_current_user)):
+    """
+    Emite um token novo para quem está com a sessão ativa: o token vence 30 min após emitido,
+    e sem isso quem usa o sistema o dia todo era desconectado. A desconexão por inatividade
+    continua valendo (get_current_user recusa quem o timeout_manager desconectou).
+    """
+    novo = create_access_token(
+        data={"sub": current_user.email, "nivel": current_user.nivel_acesso},
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    return {"access_token": novo, "token_type": "bearer"}
 # A função get_current_user foi movida para o módulo auth.py
 
 # Incluir as rotas dos módulos

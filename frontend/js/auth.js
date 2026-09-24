@@ -184,6 +184,7 @@ async function fetchWithAuth(url, options = {}) {
         // Qualquer requisição autenticada bem-sucedida (não-401) atualiza o
         // last_access no backend, então reinicia o contador de sessão exibido.
         resetSessionTimer();
+        renovarTokenSeNecessario();
 
         return response;
     } catch (error) {
@@ -194,6 +195,43 @@ async function fetchWithAuth(url, options = {}) {
         console.error('Erro na requisição:', error);
         throw error;
     }
+}
+
+// O token de login vence 30 min depois de emitido. Enquanto o usuário usa o sistema, pede um novo
+// quando faltam menos de 10 min; quem fica inativo continua sendo desconectado pelo backend.
+const RENOVAR_TOKEN_ANTES_MS = 10 * 60 * 1000;
+let _renovacaoTokenEmAndamento = null;
+
+function expiracaoDoToken(token) {
+    try {
+        let parte = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+        parte += '='.repeat((4 - parte.length % 4) % 4);
+        return JSON.parse(atob(parte)).exp * 1000;
+    } catch (e) {
+        return null;
+    }
+}
+
+function renovarTokenSeNecessario() {
+    const token = localStorage.getItem('erp_token');
+    const expira = token && expiracaoDoToken(token);
+    if (!expira || _renovacaoTokenEmAndamento || expira - Date.now() > RENOVAR_TOKEN_ANTES_MS) return;
+
+    _renovacaoTokenEmAndamento = (async () => {
+        try {
+            const base = await getApiUrl();
+            const resposta = await fetch(`${base}/token/renovar`, { method: 'POST', headers: getAuthHeader() });
+            if (resposta.ok) {
+                const dados = await resposta.json();
+                localStorage.setItem('erp_token', dados.access_token);
+                localStorage.setItem('erp_token_type', dados.token_type);
+            }
+        } catch (e) {
+            console.warn('Não foi possível renovar o login agora; tenta de novo na próxima ação.', e);
+        } finally {
+            _renovacaoTokenEmAndamento = null;
+        }
+    })();
 }
 
 // Obtém dados do usuário atual

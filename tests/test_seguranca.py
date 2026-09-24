@@ -64,3 +64,21 @@ def test_nome_com_html_e_guardado_como_texto(cliente_api, novo_produto, admin):
     malicioso = '<img src=x onerror="alert(1)">'
     r = cliente_api.put(f"/api/produtos/{produto['id']}", json={"nome": malicioso}, headers=admin["headers"])
     assert r.status_code == 200 and r.json()["nome"] == malicioso  # a proteção é no frontend (escapeHtml)
+
+
+def test_token_se_renova_para_quem_esta_ativo(cliente_api, admin):
+    from jose import jwt as _jwt
+    antigo = admin["headers"]["Authorization"].split()[1]
+    r = cliente_api.post("/token/renovar", headers=admin["headers"])
+    assert r.status_code == 200
+    novo = r.json()["access_token"]
+    exp = lambda t: _jwt.get_unverified_claims(t)["exp"]
+    assert exp(novo) >= exp(antigo)
+    assert cliente_api.get("/api/usuarios/me", headers={"Authorization": f"Bearer {novo}"}).status_code == 200
+
+
+def test_quem_foi_desconectado_por_inatividade_nao_renova(cliente_api, grupo_vendedores):
+    from conftest import _criar_usuario
+    usuario = _criar_usuario(cliente_api, "Teste Inativo", "usuario", grupo_vendedores)
+    sql("UPDATE usuarios SET connected=0 WHERE id=%s", (usuario["id"],))  # o que o timeout_manager faz
+    assert cliente_api.post("/token/renovar", headers=usuario["headers"]).status_code == 401
