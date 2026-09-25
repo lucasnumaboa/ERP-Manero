@@ -1,0 +1,141 @@
+/* App do Assistente: tela de login e aviso de instalação (o chat em si vem do produto-chat-widget.js) */
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    height: 100%;
+    background: #1b2333;
+    color: #e6e9f0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* no app o painel do chat ocupa a tela toda e respeita a área do entalhe/barra do celular */
+#pcwPainel {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+#pcwPainel input,
+#pcwPainel textarea {
+    font-size: 16px !important;   /* evita o zoom automático do iPhone ao tocar no campo */
+}
+
+.login {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+}
+
+.login[hidden] {
+    display: none;
+}
+
+.login-icone {
+    width: 88px;
+    height: 88px;
+    border-radius: 22px;
+}
+
+.login h1 {
+    font-size: 1.4rem;
+    margin: 18px 0 6px;
+}
+
+.login-sub {
+    color: #8892b0;
+    margin: 0 0 22px;
+    font-size: 14px;
+}
+
+.login form {
+    width: 100%;
+    max-width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.login input {
+    width: 100%;
+    padding: 13px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: #111826;
+    color: #e6e9f0;
+    font-size: 16px;
+}
+
+.login button {
+    padding: 13px;
+    border: none;
+    border-radius: 12px;
+    background: #3f8efc;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.login button:disabled {
+    opacity: 0.6;
+}
+
+.login-erro {
+    color: #ff7675;
+    font-size: 14px;
+    margin: 0;
+}
+
+.aviso-instalar {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: #232d42;
+    border: 1px solid rgba(63, 142, 252, 0.5);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.aviso-instalar[hidden] {
+    display: none;
+}
+
+.aviso-instalar span {
+    flex: 1;
+}
+
+.aviso-instalar button {
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+#botaoInstalar {
+    background: #3f8efc;
+    color: #fff;
+    padding: 8px 14px;
+    font-weight: 600;
+}
+
+#fecharAvisoInstalar {
+    background: none;
+    color: #8892b0;
+    font-size: 15px;
+    padding: 4px;
+}

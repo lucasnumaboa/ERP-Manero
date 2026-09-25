@@ -1,4 +1,5 @@
 """init_db.py em dia com o banco de produção e regras que não podem voltar no frontend."""
+import json
 import re
 import shutil
 import subprocess
@@ -154,9 +155,24 @@ def test_versao_dos_css_js_nos_html_em_dia():
     arquivo novo com velho. Depois de editar CSS/JS: python versionar_frontend.py"""
     import sys
     sys.path.insert(0, str(FRONTEND.parent))
-    from versionar_frontend import REF_HTML, REF_JS, CARREGAM_OUTROS, carimbar
-    desatualizados = [p.name for p in PAGINAS if carimbar(p.read_text(encoding="utf-8"), REF_HTML) != p.read_text(encoding="utf-8")]
-    desatualizados += [r for r in CARREGAM_OUTROS if carimbar((FRONTEND / r).read_text(encoding="utf-8"), REF_JS) != (FRONTEND / r).read_text(encoding="utf-8")]
+    from versionar_frontend import REF_HTML, REF_JS, CARREGAM_OUTROS, carimbar, paginas
+    ler = lambda arquivo: arquivo.read_text(encoding="utf-8")
+    desatualizados = [p.name for p in paginas() if carimbar(ler(p), REF_HTML, p.parent) != ler(p)]
+    desatualizados += [r for r, base in CARREGAM_OUTROS.items() if carimbar(ler(FRONTEND / r), REF_JS, base) != ler(FRONTEND / r)]
     assert not desatualizados, f"rode python versionar_frontend.py (versões velhas em: {desatualizados})"
-    sem_versao = [f"{p.name}: {m.group(2)}" for p in PAGINAS for m in re.finditer(r'(?:src|href)="((?:css|js)/[^"?]+)(")', p.read_text(encoding="utf-8"))]
+    sem_versao = [f"{p.name}: {m.group(1)}" for p in paginas()
+                  for m in re.finditer(r'(?:src|href)="((?!https?:|//)[^"?]+\.(?:css|js))"', ler(p))]
     assert not sem_versao, sem_versao
+
+
+def test_app_do_assistente_instalavel_e_com_login_proprio():
+    app = FRONTEND / "assistente"
+    html = (app / "index.html").read_text(encoding="utf-8")
+    assert "data-login-proprio" in html and 'data-assistente="app"' in html
+    assert 'rel="manifest" href="manifest.webmanifest"' in html
+    manifesto = json.loads((app / "manifest.webmanifest").read_text(encoding="utf-8"))
+    assert manifesto["id"] == "/assistente/" and manifesto["display"] == "standalone"
+    for icone in manifesto["icons"]:
+        assert (app / icone["src"]).resolve().is_file(), icone["src"]
+    # o auth.js não pode mandar esta página embora: ela faz o próprio login
+    assert "data-login-proprio" in (FRONTEND / "js" / "auth.js").read_text(encoding="utf-8")

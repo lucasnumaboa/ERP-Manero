@@ -551,7 +551,7 @@
 
         const script = document.createElement('script');
         script.id = 'produtoChatWidgetScript';
-        script.src = 'js/produto-chat-widget.js?v=82c3beb715';
+        script.src = 'js/produto-chat-widget.js?v=afb894e20a';
         document.body.appendChild(script);
     }
 })();

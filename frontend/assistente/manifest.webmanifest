@@ -1,0 +1,18 @@
+{
+  "id": "/assistente/",
+  "name": "Assistente Maneiro",
+  "short_name": "Assistente",
+  "description": "Chat com a IA do ERP Maneiro: pergunte por texto ou áudio sobre produtos, estoque e preços.",
+  "lang": "pt-BR",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1b2333",
+  "theme_color": "#232d42",
+  "icons": [
+    { "src": "../img/app/chat-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "../img/app/chat-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "../img/app/chat-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

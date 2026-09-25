@@ -16,10 +16,17 @@ import re
 from pathlib import Path
 
 FRONTEND = Path(__file__).resolve().parent / "frontend"
-REF_HTML = re.compile(r'((?:src|href)=")((?:css|js)/[\w./-]+?\.(?:css|js))(?:\?v=[0-9a-f]+)?(")')
-# scripts carregados por outro script (não aparecem no HTML)
-REF_JS = re.compile(r"""(['"])((?:css|js)/[\w./-]+?\.(?:css|js))(?:\?v=[0-9a-f]+)?(['"])""")
-CARREGAM_OUTROS = ["js/sidebar-template.js"]
+# endereços locais de .css/.js (relativos à página, ex.: js/x.js, ../js/x.js, app.css); links externos ficam de fora
+_CAMINHO = r"((?!https?:|//)[\w./-]+?\.(?:css|js))"
+REF_HTML = re.compile(r'((?:src|href)=")' + _CAMINHO + r'(?:\?v=[0-9a-f]+)?(")')
+# scripts carregados por outro script (não aparecem no HTML): arquivo -> pasta da página que o usa
+REF_JS = re.compile(r"""(['"])""" + _CAMINHO + r"""(?:\?v=[0-9a-f]+)?(['"])""")
+CARREGAM_OUTROS = {"js/sidebar-template.js": FRONTEND}
+
+
+def paginas():
+    """Telas do ERP (raiz do frontend) e do app do Assistente (assistente/)."""
+    return sorted(FRONTEND.glob("*.html")) + sorted(FRONTEND.glob("assistente/*.html"))
 
 
 def impressao(arquivo: Path) -> str:
@@ -27,13 +34,18 @@ def impressao(arquivo: Path) -> str:
     return hashlib.md5(arquivo.read_bytes().replace(b"\r\n", b"\n")).hexdigest()[:10]
 
 
-def carimbar(texto: str, regex) -> str:
+def carimbar(texto: str, regex, base: Path = FRONTEND) -> str:
     def trocar(m):
-        alvo = FRONTEND / m.group(2)
-        if not alvo.exists():
+        alvo = (base / m.group(2)).resolve()
+        if not alvo.is_file() or FRONTEND not in alvo.parents:
             return m.group(0)
         return f"{m.group(1)}{m.group(2)}?v={impressao(alvo)}{m.group(3)}"
     return regex.sub(trocar, texto)
+
+
+def _ler(arquivo: Path) -> str:
+    with open(arquivo, encoding="utf-8", newline="") as f:
+        return f.read()
 
 
 def gravar_se_mudou(arquivo: Path, novo: str, antigo: str) -> bool:
@@ -47,15 +59,13 @@ def gravar_se_mudou(arquivo: Path, novo: str, antigo: str) -> bool:
 def versionar() -> int:
     alterados = 0
     # primeiro os scripts que carregam outros (a impressão deles muda junto)
-    for relativo in CARREGAM_OUTROS:
+    for relativo, base in CARREGAM_OUTROS.items():
         arquivo = FRONTEND / relativo
-        with open(arquivo, encoding="utf-8", newline="") as f:
-            antigo = f.read()
-        alterados += gravar_se_mudou(arquivo, carimbar(antigo, REF_JS), antigo)
-    for pagina in sorted(FRONTEND.glob("*.html")):
-        with open(pagina, encoding="utf-8", newline="") as f:
-            antigo = f.read()
-        alterados += gravar_se_mudou(pagina, carimbar(antigo, REF_HTML), antigo)
+        antigo = _ler(arquivo)
+        alterados += gravar_se_mudou(arquivo, carimbar(antigo, REF_JS, base), antigo)
+    for pagina in paginas():
+        antigo = _ler(pagina)
+        alterados += gravar_se_mudou(pagina, carimbar(antigo, REF_HTML, pagina.parent), antigo)
     return alterados
 
 

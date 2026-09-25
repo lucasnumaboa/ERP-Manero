@@ -59,8 +59,11 @@ function getApiUrl() {
 
 // App instalável (manifest.webmanifest + sw.js): no celular aparece "Adicionar à tela inicial" e o ERP
 // abre em tela cheia, como um aplicativo. O service worker não guarda telas em cache (ver sw.js).
+// O sw.js fica na raiz do frontend (ao lado das telas), achado a partir deste arquivo para funcionar também
+// no app do Assistente, que está numa subpasta (assistente/).
+const _URL_SERVICE_WORKER = document.currentScript ? new URL('../sw.js', document.currentScript.src).href : 'sw.js';
 if ('serviceWorker' in navigator && window.isSecureContext) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(() => { /* sem app instalável, o site segue normal */ });
+        navigator.serviceWorker.register(_URL_SERVICE_WORKER).catch(() => { /* sem app instalável, o site segue normal */ });
     });
 }

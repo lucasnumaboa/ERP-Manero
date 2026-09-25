@@ -502,6 +502,9 @@ async function initSessionTimer() {
 
 // Verifica autenticação em páginas protegidas
 document.addEventListener('DOMContentLoaded', function() {
+    // Páginas com login próprio (app do Assistente, em assistente/) cuidam disso sozinhas
+    if (document.body && document.body.hasAttribute('data-login-proprio')) return;
+
     // Não verifica autenticação na página de login
     if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
         if (isAuthenticated()) {

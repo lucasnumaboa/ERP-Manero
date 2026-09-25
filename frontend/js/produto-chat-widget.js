@@ -12,9 +12,17 @@
     // Este script é injetado dinamicamente (por sidebar-template.js) depois que o
     // DOMContentLoaded da página já disparou, então não dá pra esperar esse evento
     // aqui — a essa altura o DOM já está pronto, então só inicializa direto.
-    if (isAuthenticated()) {
-        criarBotaoFlutuante();
+    // No app do Assistente (assistente/index.html) o chat ocupa a tela toda e só começa depois do login,
+    // que a própria página faz e então chama window.assistenteProdutos.iniciar().
+    const MODO_APP = document.body.dataset.assistente === 'app';
+    window.assistenteProdutos = { iniciar };
+    iniciar();
+
+    function iniciar() {
+        if (!isAuthenticated() || document.getElementById('pcwPainel')) return;
+        if (!MODO_APP) criarBotaoFlutuante();
         criarPainel();
+        if (MODO_APP) abrirPainel();
     }
 
     function criarBotaoFlutuante() {
@@ -48,6 +56,20 @@
             'display: none', 'flex-direction: column', 'overflow: hidden',
             'font-family: inherit', 'border: 1px solid rgba(255,255,255,0.08)'
         ].join(';');
+        if (MODO_APP) {
+            painel.style.cssText += ';inset: 0; width: 100%; max-width: 100%; height: 100dvh; max-height: none; border-radius: 0; border: none; box-shadow: none;';
+        }
+
+        const botoesCabecalho = MODO_APP
+            ? `<button id="pcwSair" title="Sair" style="background:none;border:none;color:#8892b0;font-size:15px;cursor:pointer;padding:4px 6px;">
+                   <i class="fas fa-sign-out-alt"></i>
+               </button>`
+            : `<button id="pcwBaixarApp" title="Baixar o app do Assistente (fica na tela do celular, como um WhatsApp)" style="background:none;border:none;color:#8892b0;font-size:15px;cursor:pointer;padding:4px 6px;">
+                   <i class="fas fa-mobile-alt"></i>
+               </button>
+               <button id="pcwFechar" title="Fechar" style="background:none;border:none;color:#e6e9f0;font-size:16px;cursor:pointer;padding:4px 6px;">
+                   <i class="fas fa-times"></i>
+               </button>`;
 
         painel.innerHTML = `
             <style>
@@ -62,14 +84,12 @@
                 #pcwPainel .pcw-bolha p:last-child { margin-bottom:0; }
             </style>
             <div style="padding: 12px 14px; background: #232d42; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                <strong style="font-size: 14px;"><i class="fas fa-robot"></i> Assistente de produtos</strong>
+                <strong style="font-size: 14px;"><i class="fas fa-robot"></i> ${MODO_APP ? 'Assistente Maneiro' : 'Assistente de produtos'}</strong>
                 <span style="display:flex; gap:4px;">
                     <button id="pcwLimpar" title="Apagar esta conversa" style="background:none;border:none;color:#8892b0;font-size:14px;cursor:pointer;padding:4px 6px;">
                         <i class="fas fa-trash-alt"></i>
                     </button>
-                    <button id="pcwFechar" title="Fechar" style="background:none;border:none;color:#e6e9f0;font-size:16px;cursor:pointer;padding:4px 6px;">
-                        <i class="fas fa-times"></i>
-                    </button>
+                    ${botoesCabecalho}
                 </span>
             </div>
             <div style="padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.08);">
@@ -98,7 +118,13 @@
         `;
         document.body.appendChild(painel);
 
-        document.getElementById('pcwFechar').addEventListener('click', togglePainel);
+        if (MODO_APP) {
+            document.getElementById('pcwSair').addEventListener('click', () => logout());
+        } else {
+            document.getElementById('pcwFechar').addEventListener('click', togglePainel);
+            // o app fica em assistente/ (as telas do ERP estão todas na raiz do frontend)
+            document.getElementById('pcwBaixarApp').addEventListener('click', () => window.open(new URL('assistente/', location.href).href, '_blank'));
+        }
         document.getElementById('pcwLimpar').addEventListener('click', limparConversa);
         document.getElementById('pcwBusca').addEventListener('input', onBuscaProduto);
         document.getElementById('pcwSomenteComEstoque').addEventListener('change', onBuscaProduto);
@@ -120,12 +146,14 @@
 
     function togglePainel() {
         const painel = document.getElementById('pcwPainel');
-        const aberto = painel.style.display === 'flex';
-        painel.style.display = aberto ? 'none' : 'flex';
-        if (!aberto) {
-            if (!historicoCarregado) carregarHistorico();
-            document.getElementById('pcwInput').focus();
-        }
+        if (painel.style.display === 'flex') painel.style.display = 'none';
+        else abrirPainel();
+    }
+
+    function abrirPainel() {
+        document.getElementById('pcwPainel').style.display = 'flex';
+        if (!historicoCarregado) carregarHistorico();
+        if (!MODO_APP) document.getElementById('pcwInput').focus();   // no celular, não abre o teclado sozinho
     }
 
     function urlConversa() {

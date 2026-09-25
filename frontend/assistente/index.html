@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Assistente Maneiro</title>
+    <!-- App instalável só do chat (como um WhatsApp): mesmo login e mesma conversa do widget do ERP -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#232d42">
+    <link rel="icon" type="image/png" href="../img/app/chat-192.png">
+    <link rel="apple-touch-icon" href="../img/app/chat-apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Assistente">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="app.css?v=8968a281b9">
+    <script src="../js/config.js?v=10a6dfd4e3"></script>
+    <script src="../js/avisos.js?v=21d04a4fda"></script>
+</head>
+
+<body data-login-proprio data-assistente="app">
+    <main id="telaLogin" class="login" hidden>
+        <img src="../img/app/chat-192.png" alt="" class="login-icone">
+        <h1>Assistente Maneiro</h1>
+        <p class="login-sub">Entre com o mesmo e-mail e senha do ERP.</p>
+        <form id="formLogin" autocomplete="on">
+            <input type="email" id="loginEmail" placeholder="E-mail" autocomplete="username" required>
+            <input type="password" id="loginSenha" placeholder="Senha" autocomplete="current-password" required>
+            <button type="submit" id="loginEntrar">Entrar</button>
+            <p id="loginErro" class="login-erro" hidden></p>
+        </form>
+    </main>
+
+    <div id="avisoInstalar" class="aviso-instalar" hidden>
+        <span id="avisoInstalarTexto"></span>
+        <button type="button" id="botaoInstalar" hidden>Instalar</button>
+        <button type="button" id="fecharAvisoInstalar" aria-label="Fechar"><i class="fas fa-times"></i></button>
+    </div>
+
+    <script src="../js/auth.js?v=0bdde0a233"></script>
+    <script src="../js/api.js?v=fee2f98a38"></script>
+    <script src="../js/produto-chat-widget.js?v=afb894e20a"></script>
+    <script src="app.js?v=c2849d2fd1"></script>
+</body>
+
+</html>
