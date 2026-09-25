@@ -275,7 +275,23 @@
         const linhas = escapeHtml(texto).split('\n');
         let html = '', lista = false;
         const inline = s => s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/(^|[^*])\*([^*\s][^*]*?)\*(?!\*)/g, '$1<em>$2</em>');
+        let tabela = null;   // tabela em markdown (| a | b |), caso a IA use uma mesmo pedindo para não usar
+        const fecharTabela = () => {
+            if (!tabela) return;
+            const linhasTabela = tabela.filter(l => !/^\s*\|?\s*:?-{2,}/.test(l));
+            html += '<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:12px;margin:4px 0">' +
+                linhasTabela.map((l, i) => '<tr>' + l.replace(/^\s*\||\|\s*$/g, '').split('|')
+                    .map(c => `<${i ? 'td' : 'th'} style="border:1px solid rgba(255,255,255,0.12);padding:3px 6px;text-align:left">${inline(c.trim())}</${i ? 'td' : 'th'}>`).join('') + '</tr>').join('') +
+                '</table></div>';
+            tabela = null;
+        };
         for (const linha of linhas) {
+            if (/^\s*\|.*\|\s*$/.test(linha)) {
+                if (lista) { html += '</ul>'; lista = false; }
+                (tabela = tabela || []).push(linha);
+                continue;
+            }
+            fecharTabela();
             const item = linha.match(/^\s*(?:[-*•]|\d+[.)])\s+(.*)$/);
             if (item) {
                 if (!lista) { html += '<ul>'; lista = true; }
@@ -285,6 +301,7 @@
             if (lista) { html += '</ul>'; lista = false; }
             if (linha.trim()) html += `<p>${inline(linha.replace(/^#{1,6}\s+/, ''))}</p>`;
         }
+        fecharTabela();
         return html + (lista ? '</ul>' : '');
     }
 

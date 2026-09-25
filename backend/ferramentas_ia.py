@@ -94,8 +94,10 @@ def _produto_resumo(p):
 
 
 class ExecutorFerramentas:
-    def __init__(self):
+    def __init__(self, usuario_id=None, mensagem_id=None, pergunta=None):
         self.produtos_citados = {}   # id -> resumo, na ordem em que apareceram
+        # quem perguntou e qual pergunta: cada busca fica registrada para o relatório de demanda
+        self.usuario_id, self.mensagem_id, self.pergunta = usuario_id, mensagem_id, pergunta
 
     def executar(self, nome, argumentos):
         funcao = {
@@ -124,8 +126,8 @@ class ExecutorFerramentas:
         if categoria:
             condicoes.append("LOWER(c.nome) LIKE %s")
             params.append(f"%{str(categoria).lower()}%")
-        if somente_com_estoque:
-            condicoes.append("p.estoque_atual > 0")
+        # sempre busca no cadastro todo (com estoque primeiro): mesmo quando a IA pede só o que tem estoque,
+        # o relatório de demanda precisa saber se o produto existe no cadastro ou nem isso
         with get_db_cursor() as cursor:
             cursor.execute(
                 f"SELECT {_CAMPOS_LISTA} {_JUNCOES} WHERE {' AND '.join(condicoes)} "
@@ -133,14 +135,35 @@ class ExecutorFerramentas:
                 (*params, LIMITE_BUSCA + 1),
             )
             linhas = cursor.fetchall()
-        produtos = [_produto_resumo(p) for p in linhas[:LIMITE_BUSCA]]
+        cadastrados = [_produto_resumo(p) for p in linhas]
+        com_estoque = [p for p in cadastrados if (p["estoque_atual"] or 0) > 0]
+        produtos = (com_estoque if somente_com_estoque else cadastrados)[:LIMITE_BUSCA]
         self._citar(produtos)
-        return {
+        self._registrar_busca(termo, categoria, cadastrados, com_estoque)
+        resultado = {
             "encontrados": len(produtos),
             "tem_mais": len(linhas) > LIMITE_BUSCA,
-            "com_estoque": sum(1 for p in produtos if (p["estoque_atual"] or 0) > 0),
+            "com_estoque": len(com_estoque),
             "produtos": produtos,
         }
+        if somente_com_estoque:
+            resultado["cadastrados_sem_estoque"] = len(cadastrados) - len(com_estoque)
+        return resultado
+
+    def _registrar_busca(self, termo, categoria, cadastrados, com_estoque):
+        if self.usuario_id is None:
+            return
+        try:
+            with get_db_cursor(commit=True) as cursor:
+                cursor.execute(
+                    "INSERT INTO chat_buscas (mensagem_id, usuario_id, pergunta, termo, categoria, encontrados, com_estoque, produtos_ids) "
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                    (self.mensagem_id, self.usuario_id, (self.pergunta or "")[:500] or None, str(termo or "")[:200],
+                     (str(categoria)[:100] if categoria else None), len(cadastrados), len(com_estoque),
+                     ",".join(str(p["id"]) for p in cadastrados[:LIMITE_BUSCA])[:500] or None),
+                )
+        except Exception as e:  # o registro é para relatório: nunca atrapalha a resposta
+            print(f"[IA] Não foi possível registrar a busca: {e!r}")
 
     def detalhes_produto(self, produto_id=None, codigo=None):
         if produto_id is None and not codigo:

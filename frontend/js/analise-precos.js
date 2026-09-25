@@ -13,6 +13,7 @@ let statusCheckInterval = null;
 async function abrirAnalisePreco() {
     // Esconde todas as outras seções
     document.getElementById('mensagemInicial').style.display = 'none';
+    if (typeof esconderRelatorioDemanda === 'function') esconderRelatorioDemanda();
     document.getElementById('loading').style.display = 'none';
     document.getElementById('relatorioConteudo').style.display = 'none';
     document.getElementById('relatorioIAConteudo').style.display = 'none';
@@ -162,6 +163,7 @@ function formatarMoeda(valor) {
 async function iniciarNovaAnalisePreco() {
     // Esconde todas as seções
     document.getElementById('mensagemInicial').style.display = 'none';
+    if (typeof esconderRelatorioDemanda === 'function') esconderRelatorioDemanda();
     document.getElementById('loading').style.display = 'none';
     document.getElementById('relatorioConteudo').style.display = 'none';
     document.getElementById('relatorioIAConteudo').style.display = 'none';

@@ -11,6 +11,7 @@ A IA só responde com o que está cadastrado — não inventa. O histórico é p
 a conversa geral fica com produto_id NULL. As chamadas de ferramenta não são gravadas, só a pergunta e a resposta.
 """
 
+import re
 from datetime import datetime
 from typing import Optional
 
@@ -27,6 +28,10 @@ from routers.ia import ERRO_PROVEDOR, conversar_com_ferramentas
 router = APIRouter()
 
 HISTORICO_NO_CONTEXTO = 20
+# resposta que fala de estoque/disponibilidade sem ter consultado o banco: a IA é obrigada a consultar
+AFIRMA_SOBRE_ESTOQUE = re.compile(
+    r"n[ãa]o (encontrei|achei|tem|temos|h[áa]|possu|trabalhamos|consta)|sem estoque|indispon|esgotad|"
+    r"em estoque|dispon[ií]ve|cadastrad|c[óo]d(igo|\.)", re.IGNORECASE)
 
 
 class MensagemProdutoChat(BaseModel):
@@ -46,7 +51,8 @@ REGRAS = [
     "Use as ferramentas para consultar o banco sempre que a pergunta envolver produtos, estoque, preço ou",
     "categorias — nunca responda de memória nem invente produto, preço ou quantidade.",
     "Estoque: estoque_atual > 0 significa disponível; 0 significa cadastrado mas sem estoque no momento.",
-    "Ao citar produtos, mostre o código, o nome, o preço de venda e a quantidade em estoque de cada um.",
+    "Ao citar produtos, mostre o código, o nome, o preço de venda e a quantidade em estoque de cada um,",
+    "um produto por linha começando com hífen (não use tabelas).",
     "Se a ferramenta não achar nada, tente outra busca mais curta antes de dizer que não tem.",
     "Se a informação não estiver cadastrada, diga que não tem essa informação no sistema.",
     "Você só consulta: não ofereça avisar quando chegar, reservar, vender nem alterar cadastro.",
@@ -133,6 +139,7 @@ async def _responder(produto_id: Optional[int], conteudo: str, usuario_id: int):
             "INSERT INTO chat_produto_mensagens (produto_id, usuario_id, role, conteudo) VALUES (%s, %s, 'user', %s)",
             (produto_id, usuario_id, conteudo.strip())
         )
+        pergunta_id = cursor.lastrowid
     with get_db_cursor() as cursor:
         # as ÚLTIMAS mensagens (antes ia ASC LIMIT 20: numa conversa longa, a pergunta nova nem chegava na IA)
         cursor.execute(
@@ -145,9 +152,10 @@ async def _responder(produto_id: Optional[int], conteudo: str, usuario_id: int):
 
     mensagens = [{"role": "system", "content": _montar_prompt_sistema(produto)}]
     mensagens += [{"role": h["role"], "content": h["conteudo"]} for h in historico]
-    executor = ExecutorFerramentas()
+    executor = ExecutorFerramentas(usuario_id=usuario_id, mensagem_id=pergunta_id, pergunta=conteudo.strip())
     try:
-        resposta = await conversar_com_ferramentas(mensagens, FERRAMENTAS, executor.executar)
+        resposta = await conversar_com_ferramentas(mensagens, FERRAMENTAS, executor.executar,
+                                                   precisa_consultar=AFIRMA_SOBRE_ESTOQUE.search)
     except httpx.HTTPError as e:
         raise HTTPException(ERRO_PROVEDOR, f"Não foi possível falar com o provedor de IA: {e}")
     if not resposta:

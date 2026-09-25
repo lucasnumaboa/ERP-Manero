@@ -1431,3 +1431,43 @@ button.tab-btn-ia.aba-ia-ativa {
     color:#bdc3c7;
     margin-bottom:20px;
 }
+
+/* ---- Relatório "Pedem e não tem" (js/relatorio-demanda.js) ---- */
+.botao-flex-vermelho {
+    flex: 1;
+    min-width: 140px;
+    background-color: #c0392b;
+}
+
+.demanda-borda-vermelha {
+    border-left: 4px solid #e74c3c;
+}
+
+.demanda-situacao {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.demanda-situacao.sem-estoque {
+    background: rgba(243, 156, 18, 0.15);
+    color: #f39c12;
+}
+
+.demanda-situacao.nao-cadastrado {
+    background: rgba(231, 76, 60, 0.15);
+    color: #ff7675;
+}
+
+.demanda-exemplo {
+    font-style: italic;
+    color: var(--text-muted, #8892b0);
+}
+
+.demanda-produtos small {
+    display: block;
+    color: var(--text-muted, #8892b0);
+}

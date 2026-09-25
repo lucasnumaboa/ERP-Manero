@@ -862,6 +862,24 @@ tables = {
     """,
 
     # Histórico do chat com IA sobre cada produto (backend/routers/produto_chat_ia.py)
+    "chat_buscas": """
+        CREATE TABLE IF NOT EXISTS chat_buscas (
+            -- cada busca de produto feita pelo assistente de IA: base do relatório de demanda
+            -- (o que os clientes pedem e não tem). Sem chave estrangeira: a demanda fica mesmo se o usuário sair.
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            mensagem_id INT NULL,
+            usuario_id INT NOT NULL,
+            pergunta VARCHAR(500) NULL,
+            termo VARCHAR(200) NOT NULL,
+            categoria VARCHAR(100) NULL,
+            encontrados INT NOT NULL DEFAULT 0,
+            com_estoque INT NOT NULL DEFAULT 0,
+            produtos_ids VARCHAR(500) NULL,
+            data_busca TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            INDEX (data_busca),
+            INDEX (mensagem_id)
+        )
+    """,
     "chat_produto_mensagens": """
         CREATE TABLE IF NOT EXISTS chat_produto_mensagens (
             id INT AUTO_INCREMENT PRIMARY KEY,

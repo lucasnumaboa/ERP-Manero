@@ -961,3 +961,112 @@ async def relatorio_produtos_mensais(
         },
         produtos=produtos
     )
+
+
+# ===== Demanda: o que perguntam no assistente de IA e não tem =====
+
+def _chave_termo(termo: str) -> str:
+    """'RX 580', 'rx580' e 'Rx-580' contam como a mesma procura."""
+    import unicodedata
+    sem_acento = unicodedata.normalize("NFKD", (termo or "").lower()).encode("ascii", "ignore").decode()
+    return "".join(ch for ch in sem_acento if ch.isalnum())
+
+
+@router.get("/demanda")
+async def relatorio_demanda(
+    data_inicio: Optional[date] = None,
+    data_fim: Optional[date] = None,
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """
+    Perguntas feitas ao assistente de IA (chat de produtos) que terminaram sem produto em estoque.
+    Cada pergunta conta uma vez, mesmo que a IA tenha buscado várias vezes para respondê-la; ela é
+    "atendida" se alguma dessas buscas achou produto com estoque. Sem datas: últimos 30 dias.
+    """
+    from datetime import timedelta
+    data_fim = data_fim or date.today()
+    data_inicio = data_inicio or (data_fim - timedelta(days=30))
+    with get_db_cursor() as cursor:
+        cursor.execute(
+            "SELECT b.id, b.mensagem_id, b.usuario_id, u.nome AS usuario_nome, b.pergunta, b.termo, "
+            "b.encontrados, b.com_estoque, b.produtos_ids, b.data_busca "
+            "FROM chat_buscas b LEFT JOIN usuarios u ON u.id = b.usuario_id "
+            "WHERE b.data_busca >= %s AND b.data_busca < %s ORDER BY b.id",
+            (data_inicio, data_fim + timedelta(days=1))
+        )
+        buscas = cursor.fetchall()
+
+    # 1) junta as buscas de cada pergunta
+    perguntas = {}
+    for b in buscas:
+        chave = b["mensagem_id"] or f"busca-{b['id']}"
+        perguntas.setdefault(chave, []).append(b)
+
+    # 2) só as perguntas sem nada em estoque, agrupadas pelo termo da primeira busca
+    grupos = {}
+    atendidas = 0
+    for lista in perguntas.values():
+        if any(b["com_estoque"] > 0 for b in lista):
+            atendidas += 1
+            continue
+        primeira = lista[0]
+        chave = _chave_termo(primeira["termo"]) or primeira["termo"]
+        g = grupos.setdefault(chave, {"termos": {}, "vezes": 0, "usuarios": set(), "ultima": None,
+                                      "exemplos": [], "cadastrado": False, "produtos_ids": set(),
+                                      "alternativas_ids": set()})
+        g["vezes"] += 1
+        g["termos"][primeira["termo"]] = g["termos"].get(primeira["termo"], 0) + 1
+        g["usuarios"].add(primeira["usuario_nome"] or f"usuário {primeira['usuario_id']}")
+        g["ultima"] = max(filter(None, [g["ultima"], primeira["data_busca"]]), default=None)
+        if primeira["pergunta"] and primeira["pergunta"] not in g["exemplos"] and len(g["exemplos"]) < 3:
+            g["exemplos"].append(primeira["pergunta"])
+        # a IA costuma tentar de novo: "rx580 8gb veineda" -> "rx580" é o mesmo item; "ps4" -> "console" já é
+        # outra coisa (alternativa oferecida), e não prova que o PS4 existe no cadastro
+        for b in lista:
+            if b["encontrados"] <= 0:
+                continue
+            ids = {int(i) for i in (b["produtos_ids"] or "").split(",") if i.strip().isdigit()}
+            k = _chave_termo(b["termo"])
+            if k and (k in chave or chave in k):
+                g["cadastrado"] = True
+                g["produtos_ids"].update(ids)
+            else:
+                g["alternativas_ids"].update(ids)
+
+    # nomes dos produtos cadastrados (sem estoque) de cada procura
+    todos_ids = sorted({i for g in grupos.values() for i in g["produtos_ids"] | g["alternativas_ids"]})
+    nomes = {}
+    if todos_ids:
+        marcadores = ", ".join(["%s"] * len(todos_ids))
+        with get_db_cursor() as cursor:
+            cursor.execute(f"SELECT id, codigo, nome FROM produtos WHERE id IN ({marcadores})", tuple(todos_ids))
+            nomes = {p["id"]: p for p in cursor.fetchall()}
+
+    itens = []
+    for g in grupos.values():
+        produtos = [nomes[i] for i in sorted(g["produtos_ids"]) if i in nomes]
+        alternativas = [nomes[i] for i in sorted(g["alternativas_ids"] - g["produtos_ids"]) if i in nomes]
+        itens.append({
+            "procurado": max(g["termos"], key=g["termos"].get),   # a forma mais usada de escrever
+            "vezes": g["vezes"],
+            "vendedores": sorted(g["usuarios"]),
+            "situacao": "sem_estoque" if g["cadastrado"] else "nao_cadastrado",
+            "produtos": [{"codigo": p["codigo"], "nome": p["nome"]} for p in produtos[:5]],
+            "total_produtos": len(produtos),
+            "alternativas": [{"codigo": p["codigo"], "nome": p["nome"]} for p in alternativas[:3]],
+            "total_alternativas": len(alternativas),
+            "ultima_vez": g["ultima"].isoformat() if g["ultima"] else None,
+            "exemplos": g["exemplos"],
+        })
+    itens.sort(key=lambda i: (i["vezes"], i["ultima_vez"] or ""), reverse=True)
+
+    return {
+        "periodo": {"data_inicio": data_inicio.isoformat(), "data_fim": data_fim.isoformat()},
+        "resumo": {
+            "perguntas": len(perguntas),
+            "atendidas": atendidas,
+            "sem_estoque": sum(i["vezes"] for i in itens if i["situacao"] == "sem_estoque"),
+            "nao_cadastrado": sum(i["vezes"] for i in itens if i["situacao"] == "nao_cadastrado"),
+        },
+        "itens": itens,
+    }

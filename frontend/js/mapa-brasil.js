@@ -383,6 +383,7 @@ async function gerarRelatorioRegiao() {
     document.getElementById('relatorioConteudo').style.display = 'none';
     document.getElementById('relatorioIAConteudo').style.display = 'none';
     document.getElementById('mensagemInicial').style.display = 'none';
+    if (typeof esconderRelatorioDemanda === 'function') esconderRelatorioDemanda();
     
     // Mostra o relatório de região
     document.getElementById('relatorioRegiaoConteudo').style.display = 'block';

@@ -108,7 +108,7 @@ def ia_de_mentira(monkeypatch):
     import routers.produto_chat_ia as chat
     recebidas = []
 
-    async def falsa(mensagens, ferramentas, executar, max_tokens=2000):
+    async def falsa(mensagens, ferramentas, executar, max_tokens=2000, **kwargs):
         recebidas.append(mensagens)
         executar("buscar_produtos", {"termo": "testeia"})
         return f"resposta {len(recebidas)}"
@@ -148,3 +148,128 @@ def test_conversa_do_produto_leva_os_dados_e_so_as_ultimas_mensagens(cliente_api
     # a conversa do produto não se mistura com a geral
     assert all(m["conteudo"] != "pergunta nova" for m in cliente_api.get("/api/produto-chat/geral/mensagens", headers=h).json())
     assert cliente_api.post("/api/produto-chat/999999999/enviar", json={"conteudo": "oi"}, headers=h).status_code == 404
+
+
+# ---------- relatório "pedem e não tem" (chat_buscas + /api/relatorios/demanda) ----------
+
+def test_buscas_do_assistente_viram_relatorio_de_demanda(cliente_api, admin, vendedor, novo_produto):
+    from ferramentas_ia import ExecutorFerramentas
+    novo_produto(estoque=0, nome="Placa Demanda ZQX580 sem estoque")
+    novo_produto(estoque=2, nome="Fonte Demanda ZQW500 com estoque")
+    sql("DELETE FROM chat_buscas")
+
+    # pergunta 1: a IA buscou duas vezes (escritas diferentes), nada em estoque -> conta 1 vez
+    ex = ExecutorFerramentas(usuario_id=vendedor["id"], mensagem_id=900001, pergunta="tem a placa zqx580?")
+    ex.executar("buscar_produtos", {"termo": "zqx580"})
+    ex.executar("buscar_produtos", {"termo": "zqx 580", "somente_com_estoque": True})
+    # pergunta 2: outra pessoa, mesma coisa com espaço -> soma no mesmo item
+    ExecutorFerramentas(usuario_id=admin["id"], mensagem_id=900002, pergunta="ZQX 580 chegou?").executar(
+        "buscar_produtos", {"termo": "ZQX 580"})
+    # pergunta 3: nem existe no cadastro
+    ExecutorFerramentas(usuario_id=vendedor["id"], mensagem_id=900003, pergunta="tem hoverboard?").executar(
+        "buscar_produtos", {"termo": "hoverboardzz"})
+    # pergunta 4: tinha em estoque -> atendida, não entra na lista
+    ExecutorFerramentas(usuario_id=vendedor["id"], mensagem_id=900004, pergunta="tem fonte zqw500?").executar(
+        "buscar_produtos", {"termo": "zqw500"})
+    # sem usuário (uso interno) não registra nada
+    ExecutorFerramentas().executar("buscar_produtos", {"termo": "zqx580"})
+
+    linhas = sql("SELECT termo, encontrados, com_estoque FROM chat_buscas ORDER BY id")
+    assert len(linhas) == 5
+    assert linhas[1]["encontrados"] == 1 and linhas[1]["com_estoque"] == 0   # busca "só com estoque" ainda sabe que existe
+
+    r = cliente_api.get("/api/relatorios/demanda", headers=admin["headers"])
+    assert r.status_code == 200, r.text
+    dados = r.json()
+    assert dados["resumo"] == {"perguntas": 4, "atendidas": 1, "sem_estoque": 2, "nao_cadastrado": 1}
+    placa, hover = dados["itens"]
+    assert placa["vezes"] == 2 and placa["situacao"] == "sem_estoque"
+    assert placa["produtos"][0]["nome"] == "Placa Demanda ZQX580 sem estoque"
+    assert set(placa["vendedores"]) == {"Teste Vendedor", "Teste Admin"}
+    assert placa["exemplos"][0] == "tem a placa zqx580?"
+    assert hover["situacao"] == "nao_cadastrado" and hover["produtos"] == []
+
+    # fora do período: vazio
+    vazio = cliente_api.get("/api/relatorios/demanda?data_inicio=2020-01-01&data_fim=2020-01-31", headers=admin["headers"]).json()
+    assert vazio["resumo"]["perguntas"] == 0 and vazio["itens"] == []
+    assert cliente_api.get("/api/relatorios/demanda").status_code == 401
+
+
+def test_pergunta_no_chat_registra_as_buscas_com_a_pergunta(cliente_api, vendedor, novo_produto, monkeypatch):
+    import routers.produto_chat_ia as chat
+    novo_produto(estoque=0, nome="Item Registro TesteIA")
+
+    async def falsa(mensagens, ferramentas, executar, max_tokens=2000, **kwargs):
+        executar("buscar_produtos", {"termo": "registro testeia"})
+        return "ok"
+
+    monkeypatch.setattr(chat, "conversar_com_ferramentas", falsa)
+    r = cliente_api.post("/api/produto-chat/geral/enviar", json={"conteudo": "tem item registro?"}, headers=vendedor["headers"])
+    assert r.status_code == 200
+    busca = sql("SELECT * FROM chat_buscas ORDER BY id DESC LIMIT 1")[0]
+    pergunta = sql("SELECT id FROM chat_produto_mensagens WHERE usuario_id=%s AND role='user' ORDER BY id DESC LIMIT 1", (vendedor["id"],))[0]
+    assert busca["mensagem_id"] == pergunta["id"] and busca["pergunta"] == "tem item registro?"
+    assert busca["usuario_id"] == vendedor["id"] and busca["encontrados"] >= 1
+
+
+def test_resposta_de_memoria_sobre_estoque_obriga_a_consultar(monkeypatch):
+    """A IA disse "não encontrei PS5" sem buscar (e havia PS5 cadastrado): a rodada é refeita exigindo consulta."""
+    import re
+    from routers import ia
+    enviados = []
+
+    def resposta(corpo):
+        if corpo.get("tool_choice") == "required":
+            return {"choices": [{"message": {"content": "", "tool_calls": [
+                {"id": "c1", "type": "function", "function": {"name": "buscar_produtos", "arguments": '{"termo": "ps5"}'}}]}}]}
+        if any(m.get("role") == "tool" for m in corpo["messages"]):
+            return {"choices": [{"message": {"content": "Tem PS5 cadastrado, sem estoque."}}]}
+        return {"choices": [{"message": {"content": "Não encontrei PS5 no sistema."}}]}
+
+    class Cliente:
+        def __init__(self, *a, **k): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self, *a): return False
+        async def post(self, url, headers=None, content=None):
+            corpo = json.loads(content)
+            enviados.append(corpo)
+            return _Resposta(resposta(corpo))
+
+    monkeypatch.setattr(ia.httpx, "AsyncClient", Cliente)
+    monkeypatch.setattr(ia, "_configuracoes", lambda chaves: {"ia_provider": "openrouter", "apikey_openrouter": "x"})
+    regra = re.compile(r"n[ãa]o encontrei", re.I).search
+    ferramentas = [{"type": "function", "function": {"name": "buscar_produtos"}}]
+    texto = asyncio.run(ia.conversar_com_ferramentas([{"role": "user", "content": "tem ps5?"}], ferramentas,
+                                                     lambda n, a: {"encontrados": 1}, precisa_consultar=regra))
+    assert texto == "Tem PS5 cadastrado, sem estoque."
+    assert [c.get("tool_choice") for c in enviados] == [None, "required", None]
+
+    # conversa sem afirmação sobre estoque ("bom dia") não é forçada a consultar
+    enviados.clear()
+    monkeypatch.setattr(ia.httpx, "AsyncClient", Cliente)
+    resposta = lambda corpo: {"choices": [{"message": {"content": "Bom dia! Como posso ajudar?"}}]}  # noqa: F811
+    assert asyncio.run(ia.conversar_com_ferramentas([{"role": "user", "content": "bom dia"}], ferramentas,
+                                                    lambda n, a: {}, precisa_consultar=regra)) == "Bom dia! Como posso ajudar?"
+    assert len(enviados) == 1
+
+
+def test_busca_mais_ampla_e_alternativa_nao_prova_que_existe(cliente_api, admin, vendedor, novo_produto):
+    """Pediram PS4, a IA tentou "ps4" (nada) e depois "console" (achou outros): PS4 continua "não cadastrado"."""
+    from ferramentas_ia import ExecutorFerramentas
+    novo_produto(estoque=0, nome="Console Alternativa QQV")
+    sql("DELETE FROM chat_buscas")
+    ex = ExecutorFerramentas(usuario_id=vendedor["id"], mensagem_id=910001, pergunta="tem ps4 qqv?")
+    ex.executar("buscar_produtos", {"termo": "ps4qqv"})
+    ex.executar("buscar_produtos", {"termo": "console alternativa qqv"})
+    item = cliente_api.get("/api/relatorios/demanda", headers=admin["headers"]).json()["itens"][0]
+    assert item["procurado"] == "ps4qqv" and item["situacao"] == "nao_cadastrado"
+    assert item["produtos"] == [] and item["alternativas"][0]["nome"] == "Console Alternativa QQV"
+
+    # já uma nova tentativa com o mesmo item escrito de outro jeito conta como cadastrado
+    novo_produto(estoque=0, nome="Placa QQK580")
+    sql("DELETE FROM chat_buscas")
+    ex = ExecutorFerramentas(usuario_id=vendedor["id"], mensagem_id=910002, pergunta="tem qqk580 8gb branca?")
+    ex.executar("buscar_produtos", {"termo": "qqk580 8gb branca"})
+    ex.executar("buscar_produtos", {"termo": "qqk580"})
+    item = cliente_api.get("/api/relatorios/demanda", headers=admin["headers"]).json()["itens"][0]
+    assert item["situacao"] == "sem_estoque" and item["produtos"][0]["nome"] == "Placa QQK580"

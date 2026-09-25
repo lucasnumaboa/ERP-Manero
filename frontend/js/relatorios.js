@@ -159,6 +159,7 @@ async function gerarRelatorio() {
     document.getElementById('relatorioAnalisePrecoConteudo').style.display = 'none';
     document.getElementById('relatorioProdutosConteudo').style.display = 'none';
     document.getElementById('mensagemInicial').style.display = 'none';
+    if (typeof esconderRelatorioDemanda === 'function') esconderRelatorioDemanda();
 
     try {
         // Busca dados da API
@@ -185,6 +186,7 @@ async function gerarRelatorio() {
         document.getElementById('loading').style.display = 'none';
         document.getElementById('relatorioConteudo').style.display = 'block';
         document.getElementById('mensagemInicial').style.display = 'none';
+        if (typeof esconderRelatorioDemanda === 'function') esconderRelatorioDemanda();
 
     } catch (error) {
         console.error('Erro ao gerar relatório:', error);
@@ -591,6 +593,7 @@ async function gerarRelatorioEstoque() {
     document.getElementById('relatorioAnalisePrecoConteudo').style.display = 'none';
     document.getElementById('relatorioProdutosConteudo').style.display = 'none';
     document.getElementById('mensagemInicial').style.display = 'none';
+    if (typeof esconderRelatorioDemanda === 'function') esconderRelatorioDemanda();
 
     try {
         // Busca dados da API (não precisa de datas)
@@ -804,6 +807,7 @@ async function gerarRelatorioIA() {
     document.getElementById('relatorioAnalisePrecoConteudo').style.display = 'none';
     document.getElementById('relatorioProdutosConteudo').style.display = 'none';
     document.getElementById('mensagemInicial').style.display = 'none';
+    if (typeof esconderRelatorioDemanda === 'function') esconderRelatorioDemanda();
 
     // Resetar progresso
     atualizarProgresso(0, 5);
@@ -1038,6 +1042,7 @@ async function gerarRelatorioIA() {
         document.getElementById('relatorioConteudo').style.display = 'none';
         document.getElementById('relatorioIAConteudo').style.display = 'block';
         document.getElementById('mensagemInicial').style.display = 'none';
+        if (typeof esconderRelatorioDemanda === 'function') esconderRelatorioDemanda();
 
     } catch (error) {
         console.error('Erro ao gerar relatório por IA:', error);
@@ -1098,6 +1103,7 @@ async function gerarRelatorioProdutos() {
     document.getElementById('relatorioAnalisePrecoConteudo').style.display = 'none';
     document.getElementById('relatorioProdutosConteudo').style.display = 'none';
     document.getElementById('mensagemInicial').style.display = 'none';
+    if (typeof esconderRelatorioDemanda === 'function') esconderRelatorioDemanda();
 
     try {
         // Pega os filtros ANTES de recarregar categorias

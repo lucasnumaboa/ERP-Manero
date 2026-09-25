@@ -112,12 +112,17 @@ async def gerar_texto(prompt: str, max_tokens: int = 4000, temperatura: float = 
 MAX_RODADAS_FERRAMENTAS = 6
 
 
-async def conversar_com_ferramentas(mensagens: list, ferramentas: list, executar, max_tokens: int = 2000) -> str:
+async def conversar_com_ferramentas(mensagens: list, ferramentas: list, executar, max_tokens: int = 2000,
+                                    precisa_consultar=None) -> str:
     """
     Conversa em que o modelo pode chamar ferramentas (function calling, o mesmo conceito das ferramentas MCP):
     ele pede, por exemplo, buscar_produtos({"termo": "rx580"}), o servidor executa `executar(nome, argumentos)`
     no banco e devolve o resultado, e o modelo segue até ter a resposta. `ferramentas` no formato OpenAI
     ([{"type": "function", "function": {name, description, parameters}}]). Devolve o texto final.
+
+    precisa_consultar(texto) -> bool: se o modelo responder sem chamar nenhuma ferramenta e a resposta cair
+    nessa regra (ex.: afirma que "não tem" um produto), a rodada é refeita obrigando uma consulta — modelos às
+    vezes respondem de memória e erram (disseram "não encontrei PS5" sem buscar, e havia PS5 cadastrado).
     """
     cfg = _configuracoes(CHAVES_IA)
     provedor = cfg.get("ia_provider") or "openrouter"
@@ -158,12 +163,16 @@ async def conversar_com_ferramentas(mensagens: list, ferramentas: list, executar
     else:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Provedor de IA desconhecido: {provedor}")
 
+    consultou = False
+    obrigar = False
     async with httpx.AsyncClient(timeout=180.0) as cliente:
         for rodada in range(MAX_RODADAS_FERRAMENTAS + 1):
             ultima = rodada == MAX_RODADAS_FERRAMENTAS  # na última rodada não oferece ferramenta: tem que responder
             corpo = {**base, "messages": mensagens, "stream": False}
             if not ultima:
                 corpo["tools"] = ferramentas
+                if obrigar and provedor != "ollama":
+                    corpo["tool_choice"] = "required"
             if provedor != "ollama":
                 corpo.update({"temperature": 0.3, "max_tokens": max_tokens})
             r = await cliente.post(url, headers=cabecalhos, content=json.dumps(corpo, ensure_ascii=False).encode("utf-8"))
@@ -173,7 +182,14 @@ async def conversar_com_ferramentas(mensagens: list, ferramentas: list, executar
             msg = dados.get("message", {}) if provedor == "ollama" else dados["choices"][0]["message"]
             chamadas = msg.get("tool_calls") or []
             if not chamadas:
-                return (msg.get("content") or "").strip()
+                texto = (msg.get("content") or "").strip()
+                if (not consultou and not obrigar and not ultima and ferramentas
+                        and precisa_consultar and precisa_consultar(texto)):
+                    obrigar = True   # respondeu de memória sobre estoque/produto: refaz consultando
+                    continue
+                return texto
+            consultou = True
+            obrigar = False
 
             # devolve ao modelo o próprio pedido (com o raciocínio, se veio) e o resultado de cada ferramenta
             pedido = {"role": "assistant", "content": msg.get("content") or "", "tool_calls": chamadas}
