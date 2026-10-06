@@ -1035,10 +1035,13 @@ try:
         ('Papelaria', 'Material de escritório e papelaria')
     ]
     
-    cursor.executemany("""
-        INSERT INTO categorias_produtos (nome, descricao)
-        VALUES (%s, %s)
-    """, categorias)
+    # init_db roda a cada início do container (docker-entrypoint.sh): só cria em instalação vazia
+    cursor.execute("SELECT COUNT(*) FROM categorias_produtos")
+    if cursor.fetchone()[0] == 0:
+        cursor.executemany("""
+            INSERT INTO categorias_produtos (nome, descricao)
+            VALUES (%s, %s)
+        """, categorias)
     conn.commit()
     print("Categorias de produtos criadas com sucesso!")
 except mysql.connector.Error as err:
@@ -1046,10 +1049,12 @@ except mysql.connector.Error as err:
 
 # Insere o depósito padrão
 try:
-    cursor.execute("""
-        INSERT INTO depositos (nome, descricao, padrao, ativo)
-        VALUES ('Depósito Padrão', 'Depósito padrão do sistema', TRUE, TRUE)
-    """)
+    cursor.execute("SELECT COUNT(*) FROM depositos WHERE padrao = TRUE")
+    if cursor.fetchone()[0] == 0:
+        cursor.execute("""
+            INSERT INTO depositos (nome, descricao, padrao, ativo)
+            VALUES ('Depósito Padrão', 'Depósito padrão do sistema', TRUE, TRUE)
+        """)
     conn.commit()
     print("Depósito padrão criado com sucesso!")
 except mysql.connector.Error as err:
@@ -1063,7 +1068,7 @@ try:
     cursor.execute("""
         INSERT INTO configuracoes (chave, valor, descricao)
         VALUES ('timeout_time', '15', 'Tempo limite de inatividade do usuário em minutos')
-        ON DUPLICATE KEY UPDATE valor = VALUES(valor), descricao = VALUES(descricao)
+        ON DUPLICATE KEY UPDATE descricao = VALUES(descricao)
     """)
     conn.commit()
     print("Configuração de timeout criada/atualizada com sucesso!")
@@ -1096,11 +1101,13 @@ try:
     ]
     configuracoes_producao.extend(configuracoes_ia)
     
+    # valor padrão só para chave que ainda não existe: rodar de novo não pode apagar a chave da IA,
+    # trocar o modelo nem o link_api que o admin configurou
     for chave, valor, descricao in configuracoes_producao:
         cursor.execute("""
             INSERT INTO configuracoes (chave, valor, descricao)
             VALUES (%s, %s, %s)
-            ON DUPLICATE KEY UPDATE valor = VALUES(valor), descricao = VALUES(descricao)
+            ON DUPLICATE KEY UPDATE descricao = VALUES(descricao)
         """, (chave, valor, descricao))
     
     conn.commit()
@@ -1223,7 +1230,7 @@ try:
         cursor.execute("""
             INSERT INTO condicoes_pagamento (codigo, nome, prazo_dias, numero_parcelas)
             VALUES (%s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE nome = VALUES(nome), prazo_dias = VALUES(prazo_dias), numero_parcelas = VALUES(numero_parcelas)
+            ON DUPLICATE KEY UPDATE codigo = codigo  -- já existe: mantém como o admin deixou
         """, (codigo, nome, prazo_dias, numero_parcelas))
     
     conn.commit()
@@ -1263,18 +1270,14 @@ try:
         ('Meta 150%', 'percentual', 150.00, None, 5.0, 300, 'Atingiu 150% ou mais da meta - Bônus de 5% + R$ 300', 8),
     ]
     
+    # sem chave única no nome: confere antes, senão cada início do container duplicava as faixas
     for nome, tipo_meta, valor_min, valor_max, bonus_pct, bonus_fixo, descricao, ordem in faixas_premiacao:
+        cursor.execute("SELECT COUNT(*) FROM faixas_premiacao WHERE nome = %s AND tipo_meta = %s", (nome, tipo_meta))
+        if cursor.fetchone()[0]:
+            continue
         cursor.execute("""
             INSERT INTO faixas_premiacao (nome, tipo_meta, valor_minimo, valor_maximo, bonus_percentual, bonus_fixo, descricao, ordem)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE 
-                tipo_meta = VALUES(tipo_meta),
-                valor_minimo = VALUES(valor_minimo),
-                valor_maximo = VALUES(valor_maximo),
-                bonus_percentual = VALUES(bonus_percentual),
-                bonus_fixo = VALUES(bonus_fixo),
-                descricao = VALUES(descricao),
-                ordem = VALUES(ordem)
         """, (nome, tipo_meta, valor_min, valor_max, bonus_pct, bonus_fixo, descricao, ordem))
     
     conn.commit()

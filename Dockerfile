@@ -24,8 +24,8 @@ COPY frontend/ ./frontend/
 COPY init_db.py .
 COPY docker-entrypoint.sh .
 
-# Make entrypoint executable
-RUN chmod +x docker-entrypoint.sh
+# Make entrypoint executable (e tira o \r se o git do Windows tiver trocado as quebras de linha para CRLF)
+RUN sed -i 's/\r$//' docker-entrypoint.sh && chmod +x docker-entrypoint.sh
 
 # Expose the API port
 EXPOSE 8000
