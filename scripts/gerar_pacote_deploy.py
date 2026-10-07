@@ -2,13 +2,17 @@
 Gera a pasta deploy/ com tudo para instalar uma cópia do ERP (com o banco da produção) no Docker de outro PC:
 código (versão atual do git), banco exportado agora, fotos/vídeos, .env pronto e o instalador (INSTALAR.bat).
 
-Uso (no PC da produção, pasta C:\\ERP):  python scripts/gerar_pacote_deploy.py [--sem-fotos]
+Uso (no PC da produção, pasta C:\\ERP):  python scripts/gerar_pacote_deploy.py [--imagens] [--sem-fotos]
+
+--imagens: baixa as bases do Docker Hub, monta o backend e o frontend aqui e salva tudo em deploy/imagens;
+aí o outro PC instala sem internet e sem montar nada (o pacote fica ~1 GB maior).
 
 Rodar de novo atualiza o pacote: banco novo, código novo e só as fotos que mudaram. O deploy/erp/.env de uma
 geração anterior é mantido (as senhas do banco da cópia já instalada continuam valendo).
 A pasta deploy/ fica fora do git: tem senhas, a chave da IA e os dados dos clientes.
 """
 import argparse
+import gzip
 import io
 import os
 import re
@@ -94,6 +98,30 @@ def apontar_tela_para_api_local(destino: Path):
     subprocess.run([sys.executable, str(destino / "versionar_frontend.py")], cwd=destino, check=True, capture_output=True)
 
 
+IMAGENS = ["mysql:8.0", "erp-maneiro-backend:latest", "erp-maneiro-frontend:latest"]
+
+
+def montar_imagens(erp: Path, pasta: Path) -> Path:
+    """Monta as imagens com o código do pacote (a tela já aponta para a API local) e salva compactadas."""
+    for base in ("mysql:8.0", "python:3.11-slim", "nginx:alpine"):
+        subprocess.run(["docker", "pull", "-q", base], check=True)
+    r = subprocess.run(["docker", "compose", "build"], cwd=erp, capture_output=True, text=True,
+                       encoding="utf-8", errors="replace")
+    if r.returncode != 0:
+        raise SystemExit(f"docker compose build falhou:\n{r.stderr[-3000:]}")
+    pasta.mkdir(parents=True, exist_ok=True)
+    destino = pasta / "erp-imagens.tar.gz"
+    temporario = pasta / "erp-imagens.tmp"
+    with subprocess.Popen(["docker", "save", *IMAGENS], stdout=subprocess.PIPE) as proc, \
+            gzip.open(temporario, "wb", compresslevel=6) as saida:
+        shutil.copyfileobj(proc.stdout, saida, length=1024 * 1024)
+    if proc.returncode != 0:
+        temporario.unlink(missing_ok=True)
+        raise SystemExit("docker save falhou")
+    temporario.replace(destino)
+    return destino
+
+
 def copiar_instalador():
     for arquivo in MODELOS.iterdir():
         dados = arquivo.read_bytes().replace(b"\r\n", b"\n")
@@ -112,6 +140,7 @@ def tamanho(pasta: Path) -> str:
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--sem-fotos", action="store_true", help="não copia frontend/uploads (~1,2 GB)")
+    parser.add_argument("--imagens", action="store_true", help="leva as imagens do Docker prontas (instala sem internet)")
     args = parser.parse_args()
 
     pendentes = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"], cwd=RAIZ,
@@ -132,6 +161,11 @@ def main():
         passo("Fotos e vídeos (só o que é novo ou mudou)")
         copiados, total = espelhar_uploads(DEPLOY / "uploads")
         print(f"   {copiados} de {total} arquivo(s) copiado(s)")
+
+    if args.imagens:
+        passo("Imagens do Docker (baixando as bases e montando o ERP; leva alguns minutos)")
+        arquivo = montar_imagens(DEPLOY / "erp", DEPLOY / "imagens")
+        print(f"   {arquivo.name} ({arquivo.stat().st_size / 1024 / 1024:.0f} MB)")
 
     passo("Instalador")
     copiar_instalador()

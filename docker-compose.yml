@@ -24,6 +24,8 @@ services:
 
   # FastAPI Backend
   backend:
+    # nome fixo: o pacote de instalação (deploy/imagens) leva esta imagem pronta, sem precisar montar
+    image: erp-maneiro-backend:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -48,6 +50,7 @@ services:
 
   # Nginx Frontend
   frontend:
+    image: erp-maneiro-frontend:latest
     build:
       context: .
       dockerfile: Dockerfile.frontend

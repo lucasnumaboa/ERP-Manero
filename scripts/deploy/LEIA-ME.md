@@ -9,7 +9,7 @@ Tudo o que precisa para rodar uma cópia do ERP, com o banco da produção, em o
 3. Dê dois cliques em **`INSTALAR.bat`**.
 4. No fim ele abre **http://localhost:3000**. Entre com os **mesmos e-mails e senhas da produção**.
 
-A primeira instalação leva alguns minutos (o Docker baixa as imagens do MySQL, Python e Nginx).
+Com a pasta `imagens\` no pacote, a instalação **não precisa de internet**: os programas (MySQL, API e tela do ERP) já vão prontos. Sem ela, o Docker baixa e monta tudo na primeira vez (alguns minutos, com internet).
 
 ## O que tem aqui
 
@@ -20,6 +20,7 @@ A primeira instalação leva alguns minutos (o Docker baixa as imagens do MySQL,
 | `erp\` | o código do ERP, já configurado para este tipo de cópia (`.env` pronto e tela apontando para `http://localhost:8000`) |
 | `banco\` | o banco exportado da produção (`.sql`) |
 | `uploads\` | fotos e vídeos dos produtos |
+| `imagens\` | os programas prontos para o Docker (MySQL 8.0, API e tela do ERP), carregados sem internet |
 | `instalar.ps1` | o script que os `.bat` chamam |
 
 ## Bom saber
@@ -41,4 +42,4 @@ A primeira instalação leva alguns minutos (o Docker baixa as imagens do MySQL,
 
 ## Atualizar a cópia com dados mais novos
 
-No PC da produção, rode `python scripts\gerar_pacote_deploy.py` (pasta `C:\ERP`): ele gera esta pasta de novo com o banco do momento. Copie a pasta `banco\` nova para o outro PC e dê dois cliques em `ATUALIZAR_BANCO.bat`.
+No PC da produção, rode `python scripts\gerar_pacote_deploy.py --imagens` (pasta `C:\ERP`): ele gera esta pasta de novo com o banco do momento. Copie a pasta `banco\` nova para o outro PC e dê dois cliques em `ATUALIZAR_BANCO.bat`.
