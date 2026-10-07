@@ -1,5 +1,7 @@
 # Rodar uma cópia do ERP em outro PC (Docker) com o banco da produção
 
+> **Jeito mais fácil:** no PC da produção rode `python scripts/gerar_pacote_deploy.py`. Ele monta a pasta `deploy/` com o código, o banco exportado na hora, as fotos, o `.env` pronto e um instalador: no outro PC é só copiar a pasta e dar dois cliques em `INSTALAR.bat` (veja o `LEIA-ME.md` dentro dela). O passo a passo abaixo é o mesmo processo feito à mão.
+
 Passo a passo para clonar o repositório em outro computador, subir o ERP no Docker e importar uma cópia do banco de produção. A cópia é **independente**: o que for feito nela não volta para a produção.
 
 O que você precisa levar deste PC para o outro (por pendrive, Google Drive etc., **nunca pelo GitHub**):
