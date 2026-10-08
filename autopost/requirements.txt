@@ -1,0 +1,6 @@
+pywebview==6.2
+selenium==4.33.0
+undetected-chromedriver==3.5.5
+setuptools>=70        # undetected-chromedriver ainda importa distutils (removido do Python 3.12)
+requests>=2.31
+pillow>=10

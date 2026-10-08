@@ -74,6 +74,7 @@ Sistema ERP completo para pequenas e médias empresas, com cliente desktop para 
 - **Filtro "apenas com estoque"** na listagem de Produtos.
 - **Limpeza de sidebar**: simplificação dos scripts de menu lateral, mantendo apenas o necessário.
 - **Taxa de armazenagem**: cada produto pode ter uma taxa (valor fixo por unidade ou % sobre o preço da venda), exibida em Estoque; na venda, marcando "cobrar taxa de armazenagem" no item, o valor entra no custo e já desconta do lucro nos relatórios.
+- **ERP AutoPost**: um app só para Facebook Marketplace e OLX, com escolha por produto, e o ERP passa a saber o que está anunciado. Quando o produto vende, o anúncio é tirado do ar (veja *ERP AutoPost* abaixo).
 - **Orçamentos**: nova tela em Vendas › Orçamentos para vendedores montarem orçamentos; configurações (preço/km, períodos, itens avulsos, campos, descontos) ficam com o admin.
 
 ### Segurança e confiabilidade
@@ -111,38 +112,15 @@ Sistema ERP completo para pequenas e médias empresas, com cliente desktop para 
 
 ---
 
-## Cliente AutoPost Facebook
+## ERP AutoPost (Facebook Marketplace + OLX)
 
-Aplicação desktop (`cliente_autopost_facebook/gui.py`) para automação de postagens no Facebook Marketplace.
+Aplicativo de Windows (`autopost/`, gera `ERP AutoPost.exe`) que anuncia os produtos do ERP no Facebook Marketplace e na OLX. Ele substitui os dois programas antigos.
 
-### Funcionalidades
+- **Por produto**: você escolhe se ele vai para o Facebook, para a OLX ou para os dois, e pode usar um preço só para os anúncios.
+- **Postagem**: fila com andamento ao vivo, botão Parar e pedido de login quando o site exigir. Um Chrome próprio guarda os logins.
+- **Controle no ERP**: o ERP registra o que está anunciado (tabela `anuncios`, API `/api/anuncios`). Quando o produto vende ou é desativado, o app tira do ar só aquele anúncio.
 
-- **Login integrado** com a API do ERP
-- **Seleção de produtos** por categoria (filtra ativos, com estoque e faturáveis)
-- **Edição de preços** personalizados antes de postar
-- **Automação Selenium** para publicar no Marketplace
-- **Postagem em grupos** (até 20 grupos automaticamente)
-- **Delay configurável** entre postagens (mínimo 15s)
-- **Adicionar contato** na descrição automaticamente
-- **Salva cookies** do Facebook para sessões futuras
-
-### Requisitos
-
-- Google Chrome instalado
-- Dependências: `ttkbootstrap`, `selenium`, `requests`, `Pillow`, `pyperclip`
-
-### Uso
-
-```bash
-cd cliente_autopost_facebook
-python gui.py
-```
-
-1. Configure a URL da API do ERP
-2. Faça login com suas credenciais
-3. Selecione a categoria do Facebook (Videogames, Eletrônicos, Celulares)
-4. Selecione os produtos desejados
-5. Clique em "Executar" e faça login no Facebook quando solicitado
+Detalhes, uso e como gerar o `.exe`: [autopost/README.md](autopost/README.md). A versão antiga do app do Facebook continua em `cliente_autopost_facebook/`.
 
 ---
 

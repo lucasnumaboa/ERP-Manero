@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ERP AutoPost</title>
+    <link rel="stylesheet" href="estilo.css">
+</head>
+
+<body>
+    <!-- ================= LOGIN ================= -->
+    <div id="telaLogin" class="login">
+        <form id="formLogin" class="login-cartao" autocomplete="on">
+            <img src="icone.png" alt="" class="login-logo">
+            <h1>ERP AutoPost</h1>
+            <p class="sub">Seus produtos no Facebook Marketplace e na OLX, num lugar só.</p>
+            <label>Endereço do ERP
+                <input id="loginApi" type="url" required>
+            </label>
+            <label>E-mail
+                <input id="loginEmail" type="email" autocomplete="username" required>
+            </label>
+            <label>Senha
+                <input id="loginSenha" type="password" autocomplete="current-password">
+            </label>
+            <label class="check"><input id="loginLembrar" type="checkbox"> Lembrar neste computador</label>
+            <button type="submit" class="botao primario grande" id="loginEntrar">Entrar</button>
+            <p id="loginErro" class="erro" hidden></p>
+            <p id="avisoChrome" class="aviso-chrome" hidden>O Google Chrome não está instalado: ele é necessário para publicar. Baixe em google.com/chrome.</p>
+            <p class="versao" id="versao"></p>
+        </form>
+    </div>
+
+    <!-- ================= APP ================= -->
+    <div id="app" class="app" hidden>
+        <aside class="menu">
+            <div class="marca"><img src="icone.png" alt=""><div><strong>AutoPost</strong><small>ERP Maneiro</small></div></div>
+            <nav>
+                <button class="nav ativo" data-pag="produtos"><span data-icone="caixa"></span>Produtos</button>
+                <button class="nav" data-pag="postar"><span data-icone="enviar"></span>Postar<b class="selo" id="seloFila" hidden></b></button>
+                <button class="nav" data-pag="anuncios"><span data-icone="lista"></span>Anúncios<b class="selo alerta" id="seloRemover" hidden></b></button>
+                <button class="nav" data-pag="contas"><span data-icone="chave"></span>Contas</button>
+                <button class="nav" data-pag="config"><span data-icone="engrenagem"></span>Configurações</button>
+            </nav>
+            <div class="rodando" id="indicadorRodando" hidden><span class="pulso"></span><span id="textoRodando">Postando...</span></div>
+            <div class="usuario">
+                <div><strong id="nomeUsuario"></strong><small id="emailUsuario"></small></div>
+                <button class="icone-botao" id="botaoSair" title="Sair"><span data-icone="sair"></span></button>
+            </div>
+        </aside>
+
+        <main>
+            <!-- ---------- PRODUTOS ---------- -->
+            <section class="pagina" id="pag-produtos">
+                <header class="cabecalho">
+                    <div>
+                        <h2>Produtos</h2>
+                        <p>Ligue <b class="cor-fb">Facebook</b> e <b class="cor-olx">OLX</b> em cada produto. O que estiver ligado e ainda não estiver no ar entra na fila.</p>
+                    </div>
+                    <button class="botao" id="botaoRecarregar"><span data-icone="recarregar"></span>Atualizar</button>
+                </header>
+                <div class="barra">
+                    <div class="busca"><span data-icone="busca"></span><input id="busca" type="search" placeholder="Buscar por nome ou código..."></div>
+                    <select id="filtroCategoria"><option value="">Todas as categorias</option></select>
+                    <div class="chips" id="filtroSituacao">
+                        <button class="chip ativo" data-filtro="todos">Todos</button>
+                        <button class="chip" data-filtro="fila">Na fila</button>
+                        <button class="chip" data-filtro="no_ar">No ar</button>
+                        <button class="chip" data-filtro="nenhum">Sem site</button>
+                    </div>
+                </div>
+                <div class="barra massa">
+                    <span id="contagemProdutos" class="discreto"></span>
+                    <span class="espaco"></span>
+                    <span class="discreto">Nos produtos da lista:</span>
+                    <button class="botao pequeno" data-massa="facebook" data-valor="1"><i class="logo-fb">f</i>Ligar Facebook</button>
+                    <button class="botao pequeno" data-massa="olx" data-valor="1"><i class="logo-olx">OLX</i>Ligar OLX</button>
+                    <button class="botao pequeno fantasma" data-massa="todos" data-valor="0">Desligar tudo</button>
+                </div>
+                <div class="lista" id="listaProdutos"></div>
+                <div class="rodape-fila" id="rodapeFila">
+                    <span id="resumoFila">Fila vazia</span>
+                    <button class="botao primario" data-ir="postar">Ir para a postagem <span data-icone="seta"></span></button>
+                </div>
+            </section>
+
+            <!-- ---------- POSTAR ---------- -->
+            <section class="pagina" id="pag-postar" hidden>
+                <header class="cabecalho">
+                    <div>
+                        <h2>Postar</h2>
+                        <p>O Chrome abre sozinho e publica um anúncio por vez. Você pode acompanhar aqui e parar quando quiser.</p>
+                    </div>
+                </header>
+                <div class="colunas">
+                    <div class="cartao">
+                        <h3>Fila</h3>
+                        <div id="filaVazia" class="vazio">Nada na fila. Ligue Facebook ou OLX nos produtos.</div>
+                        <div id="filaGrupos"></div>
+                        <label class="check"><input type="checkbox" id="republicar"> Publicar de novo os que já estão no ar</label>
+                        <div class="opcoes-resumo" id="opcoesResumo"></div>
+                        <div class="acoes">
+                            <button class="botao primario grande" id="botaoPostar"><span data-icone="play"></span>Começar a postar</button>
+                            <button class="botao perigo grande" id="botaoParar" hidden><span data-icone="parar"></span>Parar</button>
+                        </div>
+                    </div>
+                    <div class="cartao">
+                        <h3>Andamento</h3>
+                        <div class="progresso"><div id="barraProgresso"></div></div>
+                        <div class="numeros">
+                            <div><b id="numFeitos">0</b><small>de <span id="numTotal">0</span></small></div>
+                            <div class="ok"><b id="numOk">0</b><small>publicados</small></div>
+                            <div class="ruim"><b id="numFalhas">0</b><small>com erro</small></div>
+                        </div>
+                        <p class="atual" id="itemAtual">Parado.</p>
+                        <div class="log" id="log"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ---------- ANÚNCIOS ---------- -->
+            <section class="pagina" id="pag-anuncios" hidden>
+                <header class="cabecalho">
+                    <div>
+                        <h2>Anúncios</h2>
+                        <p>Tudo o que o AutoPost publicou. Quando um produto vende (estoque zerado), o anúncio dele aparece em "Para tirar do ar".</p>
+                    </div>
+                    <button class="botao perigo" id="botaoRemoverVendidos"><span data-icone="lixeira"></span>Tirar do ar os vendidos</button>
+                </header>
+                <div class="chips abas" id="abasAnuncios">
+                    <button class="chip ativo" data-aba="remover">Para tirar do ar <b id="qtdRemover">0</b></button>
+                    <button class="chip" data-aba="ativo">No ar</button>
+                    <button class="chip" data-aba="removido">Removidos</button>
+                </div>
+                <div class="lista" id="listaAnuncios"></div>
+            </section>
+
+            <!-- ---------- CONTAS ---------- -->
+            <section class="pagina" id="pag-contas" hidden>
+                <header class="cabecalho">
+                    <div>
+                        <h2>Contas</h2>
+                        <p>O AutoPost usa um Chrome próprio. Entre uma vez no Facebook e na OLX por ele e o login fica guardado.</p>
+                    </div>
+                </header>
+                <div class="contas">
+                    <div class="cartao conta fb">
+                        <div class="logo-grande logo-fb">f</div>
+                        <h3>Facebook Marketplace</h3>
+                        <p>Entre com a conta que vai publicar no Marketplace. Se ela participa de grupos de compra e venda, o AutoPost pode anunciar neles também.</p>
+                        <button class="botao primario" data-login="facebook">Abrir o Facebook para entrar</button>
+                    </div>
+                    <div class="cartao conta olx">
+                        <div class="logo-grande logo-olx">OLX</div>
+                        <h3>OLX</h3>
+                        <p>Entre com a conta da OLX que vai anunciar. Na hora de postar o AutoPost confere o login e, se precisar, pede para você entrar.</p>
+                        <button class="botao primario" data-login="olx">Abrir a OLX para entrar</button>
+                    </div>
+                </div>
+                <p class="discreto">Depois de entrar, é só fechar a janela do Chrome. Se o Chrome do AutoPost estiver aberto e travado, <a href="#" id="linkFecharChrome">feche por aqui</a>.</p>
+            </section>
+
+            <!-- ---------- CONFIGURAÇÕES ---------- -->
+            <section class="pagina" id="pag-config" hidden>
+                <header class="cabecalho">
+                    <div>
+                        <h2>Configurações</h2>
+                        <p>Ficam guardadas neste computador.</p>
+                    </div>
+                </header>
+                <form id="formConfig" class="cartao formulario">
+                    <h3>Entre um anúncio e outro</h3>
+                    <div class="linha">
+                        <label>Esperar no mínimo (segundos)<input type="number" id="cfgDelayMin" min="5" max="600"></label>
+                        <label>e no máximo (segundos)<input type="number" id="cfgDelayMax" min="5" max="900"></label>
+                    </div>
+                    <p class="discreto">O tempo é sorteado entre os dois: postar em ritmo de pessoa diminui a chance de bloqueio.</p>
+
+                    <h3><i class="logo-fb">f</i> Facebook</h3>
+                    <label class="check"><input type="checkbox" id="cfgGrupos"> Anunciar também nos grupos (até 20) ao publicar no Marketplace</label>
+                    <label>Contato no começo da descrição (opcional)<input type="text" id="cfgContato" placeholder="Ex.: (11) 99999-9999"></label>
+                    <label>Categoria do Facebook padrão<select id="cfgCategoriaPadrao"></select></label>
+                    <p class="discreto">Categoria do Facebook para cada categoria do ERP (vazio = a padrão):</p>
+                    <div id="cfgMapa" class="mapa"></div>
+
+                    <h3>Registro</h3>
+                    <p class="discreto">O passo a passo de cada publicação fica em <code id="cfgPastaLogs"></code>.</p>
+                    <button type="submit" class="botao primario">Salvar</button>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <!-- pedido de login durante a postagem -->
+    <div class="modal" id="modalLogin" hidden>
+        <div class="modal-cartao">
+            <div class="logo-grande" id="modalLogo"></div>
+            <h3 id="modalTitulo">Entre no site</h3>
+            <p>A janela do Chrome do AutoPost está aberta na página de login. Entre com sua conta e depois clique em <b>Continuar</b>.</p>
+            <div class="acoes">
+                <button class="botao primario grande" id="modalContinuar">Continuar</button>
+                <button class="botao fantasma" id="modalParar">Parar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- editar preço -->
+    <div class="modal" id="modalPreco" hidden>
+        <form class="modal-cartao" id="formPreco">
+            <h3>Preço do anúncio</h3>
+            <p id="precoProduto" class="discreto"></p>
+            <label>Preço nos anúncios (R$)<input type="number" step="1" min="0" id="precoValor" required></label>
+            <p class="discreto">Preço no ERP: <b id="precoErp"></b>. Muda só nos anúncios, não no ERP.</p>
+            <div class="acoes">
+                <button type="submit" class="botao primario">Usar este preço</button>
+                <button type="button" class="botao fantasma" id="precoVoltar">Voltar ao do ERP</button>
+                <button type="button" class="botao fantasma" id="precoCancelar">Cancelar</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="toasts" id="toasts"></div>
+    <script src="app.js"></script>
+</body>
+
+</html>

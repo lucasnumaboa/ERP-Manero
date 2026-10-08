@@ -862,6 +862,25 @@ tables = {
     """,
 
     # Histórico do chat com IA sobre cada produto (backend/routers/produto_chat_ia.py)
+    "anuncios": """
+        CREATE TABLE IF NOT EXISTS anuncios (
+            -- anúncios publicados pelo ERP AutoPost (autopost/) no Facebook e na OLX
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            produto_id INT NOT NULL,
+            plataforma VARCHAR(20) NOT NULL,
+            titulo VARCHAR(255) NOT NULL,
+            preco DECIMAL(10, 2) NULL,
+            link VARCHAR(500) NULL,
+            status VARCHAR(20) NOT NULL DEFAULT 'ativo',
+            observacao VARCHAR(500) NULL,
+            usuario_id INT NULL,
+            data_publicacao TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            data_remocao TIMESTAMP NULL,
+            INDEX (produto_id),
+            INDEX (status),
+            FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE
+        )
+    """,
     "chat_buscas": """
         CREATE TABLE IF NOT EXISTS chat_buscas (
             -- cada busca de produto feita pelo assistente de IA: base do relatório de demanda

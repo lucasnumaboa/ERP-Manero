@@ -43,6 +43,7 @@ import routers.controle_financeiro as controle_financeiro
 import routers.filamentos_3d as filamentos_3d
 import routers.depositos as depositos
 import routers.produto_chat_ia as produto_chat_ia
+import routers.anuncios as anuncios
 import routers.transcricao as transcricao
 import routers.orcamentos as orcamentos
 import routers.ia as ia
@@ -228,6 +229,7 @@ app.include_router(controle_financeiro.router, prefix="/api/controle-financeiro"
 app.include_router(filamentos_3d.router, prefix="/api/filamentos-3d", tags=["Filamentos 3D"], dependencies=permissao_modulo("filamentos_3d"))
 app.include_router(depositos.router, prefix="/api/depositos", tags=["Depósitos"], dependencies=permissao_modulo("depositos"))
 app.include_router(produto_chat_ia.router, prefix="/api/produto-chat", tags=["Chat IA do Produto"])
+app.include_router(anuncios.router, prefix="/api/anuncios", tags=["Anúncios (AutoPost)"])
 app.include_router(transcricao.router, prefix="/api/transcricao", tags=["Transcrição de Áudio"])
 app.include_router(orcamentos.router, prefix="/api/orcamentos", tags=["Orçamentos"], dependencies=permissao_modulo("orcamentos"))
 app.include_router(ia.router, prefix="/api/ia", tags=["IA"], dependencies=permissao_modulo("ia"))
