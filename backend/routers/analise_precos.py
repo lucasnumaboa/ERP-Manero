@@ -5,6 +5,7 @@ from datetime import datetime
 from database import get_db_cursor
 from auth import get_current_user
 from models import UserInDB
+from routers.ia import deepseek_requisicao
 import httpx
 import asyncio
 import time
@@ -95,10 +96,11 @@ async def chamar_ia_analise(produto_nome: str, preco_erp: float, fontes: List[di
                            ollama_apikey: str = '',
                            lmstudio_url: str = 'http://localhost:1234', lmstudio_model: str = 'default',
                            lmstudio_apikey: str = '',
-                           ia_think: str = 'yes') -> dict:
+                           ia_think: str = 'yes',
+                           deepseek_apikey: str = '', deepseek_model: str = '') -> dict:
     """
     Chama a IA para analisar se o preço é competitivo.
-    Suporta OpenRouter, Ollama e LM Studio.
+    Suporta OpenRouter, DeepSeek, Ollama e LM Studio.
     """
     try:
         fontes_texto = "\n".join([f"- {f['fonte']}: {f['info']}" for f in fontes])
@@ -184,7 +186,20 @@ Responda APENAS com o JSON, sem texto adicional."""
                     resposta_ia = data.get('message', {}).get('content', '')
                 else:
                     print(f"[Análise Preços] Erro da API Ollama: {response.status_code} - {response.text}")
-                    
+
+            elif provider == 'deepseek':
+                # ===== DEEPSEEK (direto, formato OpenAI) =====
+                url, headers, base = deepseek_requisicao({'apikey_deepseek': deepseek_apikey,
+                                                          'model_deepseek': deepseek_model, 'ia_think': ia_think})
+                payload = {**base, 'messages': [{'role': 'user', 'content': prompt}], 'stream': False,
+                           'temperature': 0.3, 'max_tokens': 500}
+                response = await client.post(url, headers=headers,
+                                             content=json_module.dumps(payload, ensure_ascii=False).encode('utf-8'))
+                if response.status_code == 200:
+                    resposta_ia = response.json()['choices'][0]['message']['content']
+                else:
+                    print(f"[Análise Preços] Erro da API DeepSeek: {response.status_code} - {response.text}")
+
             elif provider == 'lmstudio':
                 # ===== LM STUDIO (OpenAI-compatible) =====
                 payload = {
@@ -280,7 +295,7 @@ async def executar_analise_precos(usuario_id: int, usuario_telefone: str = None)
     try:
         # Buscar configurações de IA (incluindo provider)
         with get_db_cursor() as cursor:
-            cursor.execute("SELECT chave, valor FROM configuracoes WHERE chave IN ('ia_provider', 'apikey_openrouter', 'model_openrouter', 'ollama_model', 'ollama_url', 'ollama_apikey', 'lmstudio_model', 'lmstudio_url', 'lmstudio_apikey', 'webhook_url', 'webhook_ativo', 'ia_think')")
+            cursor.execute("SELECT chave, valor FROM configuracoes WHERE chave IN ('ia_provider', 'apikey_openrouter', 'model_openrouter', 'apikey_deepseek', 'model_deepseek', 'ollama_model', 'ollama_url', 'ollama_apikey', 'lmstudio_model', 'lmstudio_url', 'lmstudio_apikey', 'webhook_url', 'webhook_ativo', 'ia_think')")
             configs = cursor.fetchall()
             
         config_dict = {c['chave']: c['valor'] for c in configs}
@@ -293,6 +308,8 @@ async def executar_analise_precos(usuario_id: int, usuario_telefone: str = None)
         lmstudio_model = config_dict.get('lmstudio_model', 'default')
         lmstudio_url = config_dict.get('lmstudio_url', 'http://localhost:1234')
         lmstudio_apikey = config_dict.get('lmstudio_apikey', '')
+        deepseek_apikey = config_dict.get('apikey_deepseek', '')
+        deepseek_model = config_dict.get('model_deepseek', '')
         ia_think = config_dict.get('ia_think', 'yes')
         webhook_url = config_dict.get('webhook_url', '')
         webhook_ativo = config_dict.get('webhook_ativo', 'false') == 'true'
@@ -302,6 +319,10 @@ async def executar_analise_precos(usuario_id: int, usuario_telefone: str = None)
         if ia_provider == 'openrouter' and not apikey:
             print("[Análise Preços] API Key do OpenRouter não configurada")
             analise_em_andamento[usuario_id] = {"status": "erro", "mensagem": "API Key do OpenRouter não configurada"}
+            return
+        if ia_provider == 'deepseek' and not deepseek_apikey:
+            print("[Análise Preços] API Key da DeepSeek não configurada")
+            analise_em_andamento[usuario_id] = {"status": "erro", "mensagem": "API Key da DeepSeek não configurada"}
             return
         
         # Buscar produtos faturáveis com estoque > 0
@@ -346,7 +367,9 @@ async def executar_analise_precos(usuario_id: int, usuario_telefone: str = None)
                     lmstudio_url=lmstudio_url,
                     lmstudio_model=lmstudio_model,
                     lmstudio_apikey=lmstudio_apikey,
-                    ia_think=ia_think
+                    ia_think=ia_think,
+                    deepseek_apikey=deepseek_apikey,
+                    deepseek_model=deepseek_model
                 )
                 
                 # Salvar resultado no banco

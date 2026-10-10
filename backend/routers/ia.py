@@ -21,10 +21,34 @@ ERRO_PROVEDOR = status.HTTP_424_FAILED_DEPENDENCY
 DADOS_FIXOS_PADRAO = "- 30 dias de garantia\n- Entrego em Salto SP\n- Somente venda"
 CHAVES_IA = (
     "ia_provider", "apikey_openrouter", "model_openrouter",
+    "apikey_deepseek", "model_deepseek",
     "ollama_model", "ollama_url", "ollama_apikey",
     "lmstudio_model", "lmstudio_url", "lmstudio_apikey",
     "ia_think", "ia_think_tokens",
 )
+
+# DeepSeek direto (api-docs.deepseek.com): API no formato da OpenAI. "deepseek-flash" é o nome atual do modelo
+# Flash (os nomes antigos deepseek-v4-flash ainda são aceitos e caem nele).
+DEEPSEEK_URL = "https://api.deepseek.com/chat/completions"
+DEEPSEEK_MODELO_PADRAO = "deepseek-flash"
+
+
+def deepseek_requisicao(cfg: dict):
+    """Endereço, cabeçalhos e campos fixos de uma chamada à DeepSeek. O modo pensando vem ligado por padrão
+    (esforço high); ia_think = off/no desliga, low/medium/high ajustam o esforço (a DeepSeek aceita low e high)."""
+    chave = cfg.get("apikey_deepseek")
+    if not chave:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "API Key da DeepSeek não configurada. Peça ao administrador para configurar.")
+    pensar = (cfg.get("ia_think") or "on").lower()
+    base = {"model": cfg.get("model_deepseek") or DEEPSEEK_MODELO_PADRAO}
+    if pensar in ("off", "no"):
+        base["thinking"] = {"type": "disabled"}
+    elif pensar == "low":
+        base["reasoning_effort"] = "low"
+    elif pensar in ("medium", "high"):
+        base["reasoning_effort"] = "high"
+    cabecalhos = {"Authorization": f"Bearer {chave}", "Content-Type": "application/json; charset=utf-8"}
+    return DEEPSEEK_URL, cabecalhos, base
 
 
 class PedidoIA(BaseModel):
@@ -75,6 +99,14 @@ async def gerar_texto(prompt: str, max_tokens: int = 4000, temperatura: float = 
                                    content=json.dumps(corpo, ensure_ascii=False).encode("utf-8"))
             if r.status_code != 200:
                 _falha("OpenRouter", r)
+            return (r.json()["choices"][0]["message"].get("content") or "").strip()
+
+        if provedor == "deepseek":
+            url, cabecalhos, base = deepseek_requisicao(cfg)
+            corpo = {**base, "messages": mensagens, "stream": False, "temperature": temperatura, "max_tokens": max_tokens}
+            r = await cliente.post(url, headers=cabecalhos, content=json.dumps(corpo, ensure_ascii=False).encode("utf-8"))
+            if r.status_code != 200:
+                _falha("DeepSeek", r)
             return (r.json()["choices"][0]["message"].get("content") or "").strip()
 
         if provedor == "ollama":
@@ -144,6 +176,9 @@ async def conversar_com_ferramentas(mensagens: list, ferramentas: list, executar
         elif tokens_pensar > 0:
             base["reasoning"] = {"max_tokens": tokens_pensar}
         nome_provedor = "OpenRouter"
+    elif provedor == "deepseek":
+        url, cabecalhos, base = deepseek_requisicao(cfg)
+        nome_provedor = "DeepSeek"
     elif provedor == "lmstudio":
         url = f"{cfg.get('lmstudio_url') or 'http://localhost:1234'}/v1/chat/completions"
         cabecalhos = {"Content-Type": "application/json; charset=utf-8"}
@@ -195,6 +230,8 @@ async def conversar_com_ferramentas(mensagens: list, ferramentas: list, executar
             pedido = {"role": "assistant", "content": msg.get("content") or "", "tool_calls": chamadas}
             if msg.get("reasoning_details"):
                 pedido["reasoning_details"] = msg["reasoning_details"]
+            if msg.get("reasoning_content"):   # DeepSeek: no modo pensando com ferramentas, o raciocínio volta junto
+                pedido["reasoning_content"] = msg["reasoning_content"]
             mensagens.append(pedido)
             for chamada in chamadas:
                 funcao = chamada.get("function", {})

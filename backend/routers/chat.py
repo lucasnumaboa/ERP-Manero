@@ -5,6 +5,7 @@ from datetime import datetime
 from database import get_db_cursor
 from auth import get_current_user
 from models import UserInDB
+from routers.ia import deepseek_requisicao
 import httpx
 import json
 import re
@@ -148,6 +149,7 @@ def obter_configuracoes_ia():
             SELECT chave, valor FROM configuracoes 
             WHERE chave IN (
                 'ia_provider', 'apikey_openrouter', 'model_openrouter',
+                'apikey_deepseek', 'model_deepseek',
                 'ollama_model', 'ollama_url', 'ollama_apikey',
                 'lmstudio_model', 'lmstudio_url', 'lmstudio_apikey',
                 'ia_think'
@@ -249,7 +251,7 @@ Seja sempre cordial e profissional. Use emojis com moderação."""
 async def chamar_ia_chat(messages: list, ia_config: dict) -> str:
     """
     Chama a IA para responder no chat.
-    Suporta OpenRouter, Ollama e LM Studio.
+    Suporta OpenRouter, DeepSeek, Ollama e LM Studio.
     """
     provider = ia_config.get('ia_provider', 'openrouter')
     
@@ -288,7 +290,19 @@ async def chamar_ia_chat(messages: list, ia_config: dict) -> str:
                 else:
                     print(f"[Chat] Erro OpenRouter: {response.status_code} - {response.text}")
                     return f"❌ Erro ao comunicar com a IA (OpenRouter: {response.status_code})"
-            
+
+            elif provider == 'deepseek':
+                if not ia_config.get('apikey_deepseek'):
+                    return "❌ API Key da DeepSeek não configurada. Peça ao administrador para configurar nas configurações do sistema."
+                url, headers, base = deepseek_requisicao(ia_config)
+                payload = {**base, 'messages': messages, 'stream': False, 'temperature': 0.7, 'max_tokens': 1000}
+                response = await client.post(url, headers=headers,
+                                             content=json.dumps(payload, ensure_ascii=False).encode('utf-8'))
+                if response.status_code == 200:
+                    return response.json()['choices'][0]['message']['content']
+                print(f"[Chat] Erro DeepSeek: {response.status_code} - {response.text}")
+                return f"❌ Erro ao comunicar com a IA (DeepSeek: {response.status_code})"
+
             elif provider == 'ollama':
                 ollama_url = ia_config.get('ollama_url', 'http://localhost:11434')
                 ollama_model = ia_config.get('ollama_model', 'llama3')

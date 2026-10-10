@@ -1132,7 +1132,9 @@ try:
     
     # Configurações de providers de IA adicionais
     configuracoes_ia = [
-        ('ia_provider', 'openrouter', 'Provider de IA ativo (openrouter / ollama / lmstudio)'),
+        ('ia_provider', 'openrouter', 'Provider de IA ativo (openrouter / deepseek / ollama / lmstudio)'),
+        ('apikey_deepseek', '', 'Chave de API da DeepSeek (platform.deepseek.com), usada quando o provider é deepseek'),
+        ('model_deepseek', 'deepseek-flash', 'Modelo da DeepSeek (ex.: deepseek-flash, deepseek-v4-pro)'),
         ('ia_think', 'on', 'Nível de raciocínio da IA: off | low | medium | high | on. Use "off" para desabilitar o thinking.'),
         ('ia_think_tokens', '0', 'Budget máximo de tokens para raciocínio (0 = sem limite). Aplicado nas descrições de produtos.'),
         ('ollama_model', 'llama3', 'Modelo do Ollama'),

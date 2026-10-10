@@ -409,6 +409,7 @@
                                     <select id="ia_provider" name="ia_provider"
                                         style="width: 100%; padding: 10px 12px; border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 4px; font-size: 14px; background: rgba(10, 25, 47, 0.8); color: var(--text-primary, #e6f1ff);">
                                         <option value="openrouter">OpenRouter</option>
+                                        <option value="deepseek">DeepSeek</option>
                                         <option value="ollama">Ollama</option>
                                         <option value="lmstudio">LM Studio</option>
                                     </select>
@@ -435,6 +436,36 @@
                                             style="width: 100%; padding: 10px 12px; border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 4px; font-size: 14px; background: rgba(10, 25, 47, 0.8); color: var(--text-primary, #e6f1ff);">
                                         <span class="help-text">Nome do modelo de IA a ser utilizado no
                                             OpenRouter</span>
+                                    </div>
+                                </div>
+
+                                <!-- Campos DeepSeek (direto, api.deepseek.com) -->
+                                <div id="deepseek_fields" style="display: none;">
+                                    <div class="webhook-form-group">
+                                        <label for="ia_apikey_deepseek"><i class="fas fa-key"></i> API Key da DeepSeek</label>
+                                        <input type="password" id="ia_apikey_deepseek" name="apikey_deepseek"
+                                            autocomplete="off" placeholder="sk-..."
+                                            style="width: 100%; padding: 10px 12px; border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 4px; font-size: 14px; background: rgba(10, 25, 47, 0.8); color: var(--text-primary, #e6f1ff);">
+                                        <span class="help-text">Chave criada em platform.deepseek.com</span>
+                                    </div>
+                                    <div class="webhook-form-group">
+                                        <label for="ia_model_deepseek"><i class="fas fa-brain"></i> Modelo DeepSeek</label>
+                                        <input type="text" id="ia_model_deepseek" name="model_deepseek"
+                                            placeholder="deepseek-flash"
+                                            style="width: 100%; padding: 10px 12px; border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 4px; font-size: 14px; background: rgba(10, 25, 47, 0.8); color: var(--text-primary, #e6f1ff);">
+                                        <span class="help-text">deepseek-flash (rápido e barato) ou deepseek-v4-pro</span>
+                                    </div>
+                                    <div class="webhook-form-group">
+                                        <label for="ia_deepseek_think"><i class="fas fa-brain"></i> Reasoning (Nível de
+                                            Raciocínio)</label>
+                                        <select id="ia_deepseek_think" name="deepseek_think"
+                                            style="width: 100%; padding: 10px 12px; border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 4px; font-size: 14px; background: rgba(10, 25, 47, 0.8); color: var(--text-primary, #e6f1ff);">
+                                            <option value="on">on &mdash; ativado (padrão da DeepSeek)</option>
+                                            <option value="high">high &mdash; raciocínio intenso</option>
+                                            <option value="low">low &mdash; raciocínio leve</option>
+                                            <option value="off">off &mdash; sem raciocínio (mais rápido)</option>
+                                        </select>
+                                        <span class="help-text">"off" responde mais rápido; "on" pensa antes de responder.</span>
                                     </div>
                                 </div>
 
@@ -746,7 +777,7 @@
     <script src="js/setupModals.js?v=f3b8a1828f"></script>
     <script src="js/autopost-travamentos.js?v=cf11e346e3"></script>
     <script src="js/atualizacao-sistema.js?v=0deddc8904"></script>
-    <script src="js/configuracoes.js?v=1f7d2dbcbf"></script>
+    <script src="js/configuracoes.js?v=54e55232f7"></script>
     <script src="js/internal-animation.js?v=7d7314b65d"></script>
     <script src="js/theme-switcher.js?v=2435969ea2"></script>
 </body>

@@ -542,6 +542,7 @@ async function abrirModalEditarConfiguracao(chave) {
                                 ${config.chave === 'ia_provider' ? `
                                 <select id="valor" name="valor" class="form-control" required>
                                     <option value="openrouter" ${config.valor === 'openrouter' ? 'selected' : ''}>OpenRouter</option>
+                                    <option value="deepseek" ${config.valor === 'deepseek' ? 'selected' : ''}>DeepSeek</option>
                                     <option value="ollama" ${config.valor === 'ollama' ? 'selected' : ''}>Ollama</option>
                                     <option value="lmstudio" ${config.valor === 'lmstudio' ? 'selected' : ''}>LM Studio</option>
                                 </select>
@@ -739,6 +740,7 @@ async function excluirConfiguracao(configChave) {
 // Função para alternar campos visíveis baseado no provider selecionado
 function alternarCamposProvider(provider) {
     document.getElementById('openrouter_fields').style.display = provider === 'openrouter' ? 'block' : 'none';
+    document.getElementById('deepseek_fields').style.display = provider === 'deepseek' ? 'block' : 'none';
     document.getElementById('ollama_fields').style.display = provider === 'ollama' ? 'block' : 'none';
     document.getElementById('lmstudio_fields').style.display = provider === 'lmstudio' ? 'block' : 'none';
 }
@@ -769,6 +771,8 @@ function setupIAProviderForm() {
             { chave: 'ia_provider', valor: provider },
             { chave: 'apikey_openrouter', valor: document.getElementById('ia_apikey_openrouter').value },
             { chave: 'model_openrouter', valor: document.getElementById('ia_model_openrouter').value },
+            { chave: 'apikey_deepseek', valor: document.getElementById('ia_apikey_deepseek').value },
+            { chave: 'model_deepseek', valor: document.getElementById('ia_model_deepseek').value },
             { chave: 'ollama_url', valor: document.getElementById('ia_ollama_url').value },
             { chave: 'ollama_model', valor: document.getElementById('ia_ollama_model').value },
             { chave: 'ollama_apikey', valor: document.getElementById('ia_ollama_apikey').value },
@@ -779,7 +783,9 @@ function setupIAProviderForm() {
             {
                 chave: 'ia_think', valor: provider === 'lmstudio'
                     ? document.getElementById('ia_lmstudio_think').value
-                    : document.getElementById('ia_ollama_think').value
+                    : provider === 'deepseek'
+                        ? document.getElementById('ia_deepseek_think').value
+                        : document.getElementById('ia_ollama_think').value
             },
             { chave: 'ia_think_tokens', valor: document.getElementById('ia_think_tokens').value || '0' }
         ];
@@ -790,7 +796,7 @@ function setupIAProviderForm() {
 
             for (const config of configsParaSalvar) {
                 // Não sobrescreve apikeys com string vazia (preserva o valor existente no banco)
-                const isApikeyField = config.chave.endsWith('_apikey') || config.chave === 'apikey_openrouter';
+                const isApikeyField = config.chave.endsWith('_apikey') || config.chave.startsWith('apikey_');
                 if (isApikeyField && config.valor === '') {
                     sucessos++; // Conta como sucesso (não houve erro)
                     continue;
@@ -853,6 +859,10 @@ async function carregarConfiguracoesIA() {
         const modelInput = document.getElementById('ia_model_openrouter');
         if (modelInput) modelInput.value = getConfig('model_openrouter', 'openai/gpt-oss-20b:free');
 
+        mostrarChaveSalva(document.getElementById('ia_apikey_deepseek'), getConfig('apikey_deepseek'));
+        const deepseekModelInput = document.getElementById('ia_model_deepseek');
+        if (deepseekModelInput) deepseekModelInput.value = getConfig('model_deepseek', 'deepseek-flash');
+
         const ollamaUrlInput = document.getElementById('ia_ollama_url');
         if (ollamaUrlInput) ollamaUrlInput.value = getConfig('ollama_url', 'http://localhost:11434');
 
@@ -877,6 +887,8 @@ async function carregarConfiguracoesIA() {
         if (ollamaThinkSelect) ollamaThinkSelect.value = thinkValue;
         const lmThinkSelect = document.getElementById('ia_lmstudio_think');
         if (lmThinkSelect) lmThinkSelect.value = thinkValue;
+        const deepseekThinkSelect = document.getElementById('ia_deepseek_think');
+        if (deepseekThinkSelect) deepseekThinkSelect.value = ['on', 'high', 'low', 'off'].includes(thinkValue) ? thinkValue : 'on';
 
         // Preencher budget de tokens
         const thinkTokensInput = document.getElementById('ia_think_tokens');
