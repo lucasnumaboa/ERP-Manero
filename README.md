@@ -274,7 +274,16 @@ git config core.hooksPath .githooks
 python scripts/backup_banco.py
 ```
 
-Para rodar todo dia no Windows, agende esse comando no Agendador de Tarefas. Para ter uma cópia fora da máquina, defina `BACKUP_COPIA_DIR` no `backend/.env` apontando para uma pasta sincronizada (Google Drive, OneDrive etc.).
+Ele roda todo dia às 2h pela tarefa "ERP Maneiro - Backup diario do banco".
+
+Com `BACKUP_COPIA_DIR` no `backend/.env` (hoje `F:\ERP Maneiro`), o script também monta uma **pasta completa em outro disco**, atualizada todo dia:
+- `banco\`: os dumps;
+- `uploads\`: as fotos;
+- `config\`: os `.env`;
+- `projeto\`: o `C:\ERP` inteiro;
+- `LEIA-ME.md`: o passo a passo para levar o ERP para outro PC ([docs/levar-para-outro-pc.md](docs/levar-para-outro-pc.md)).
+
+`BACKUP_BANCOS_EXTRAS` acrescenta outros bancos (hoje `product_search_db`, do olx-porta3306). Para restaurar os bancos num PC novo: `python scripts/restaurar_backup.py "<pasta>anco"`.
 
 ---
 
