@@ -438,6 +438,9 @@ class Olx(Plataforma):
         """Publica um item na OLX"""
         from selenium.webdriver.common.by import By
 
+        # guarda o título: os campos de características (Marca, Modelo, VRAM...) são escolhidos por ele
+        self._current_titulo = item.get('titulo', '')
+
         # 1. Navegar para página de criação de anúncio
         self.log("Navegando para página de criação de anúncio...")
         self.scraper.go_to_page('https://www2.olx.com.br/desapega?lis=cta_header_home')
@@ -1549,34 +1552,70 @@ class Olx(Plataforma):
             self.log(f"Erro geral: {e}")
 
     def preencher_dropdowns_customizados(self):
-        """Preenche dropdowns customizados (não nativos)"""
+        """Preenche os dropdowns customizados da OLX (olx-core-singleselect: div[role=combobox])."""
+        import re
+
         from selenium.webdriver.common.by import By
-        from selenium.webdriver.common.action_chains import ActionChains
-        
+        from selenium.webdriver.common.keys import Keys
+
+        titulo = (getattr(self, "_current_titulo", "") or "").lower()
+
+        def _listbox_do(combobox):
+            """Opções do listbox que pertencem a este combobox (mesmo bloco olx-core-singleselect)."""
+            try:
+                bloco = combobox.find_element(
+                    By.XPATH, "./ancestor::div[contains(@class,'olx-core-singleselect')][1]")
+            except Exception:
+                return []
+            try:
+                return bloco.find_elements(By.CSS_SELECTOR, 'li[role="option"]')
+            except Exception:
+                return []
+
+        def _escolher(opcoes):
+            textos = [(o.text.strip(), o) for o in opcoes if o.text.strip()]
+            titulo_limpo = re.sub(r"[^a-z0-9]", "", titulo)
+            # 1) opção que aparece no título (ex.: "2gb" -> "2 GB")
+            for texto, opcao in textos:
+                limpo = re.sub(r"[^a-z0-9]", "", texto.lower())
+                if len(limpo) >= 2 and limpo in titulo_limpo:
+                    return opcao
+            for palavra in re.findall(r"[a-z0-9]{3,}", titulo):
+                for texto, opcao in textos:
+                    if palavra in re.sub(r"[^a-z0-9]", "", texto.lower()):
+                        return opcao
+            # 2) reserva: opções que valem em qualquer campo
+            for texto, opcao in textos:
+                if texto.lower() in ("outros", "usado"):
+                    return opcao
+            return None
+
         try:
-            # Buscar divs/spans com texto "Selecione"
-            selecione_elements = self.scraper.driver.find_elements(By.XPATH, 
-                '//div[text()="Selecione"] | //span[text()="Selecione"]')
-            
-            for elem in selecione_elements:
-                try:
-                    actions = ActionChains(self.scraper.driver)
-                    actions.move_to_element(elem).click().perform()
-                    time.sleep(1)
-                    
-                    # Tentar selecionar opções
-                    for opcao in ['Usado', 'Usado - Excelente', 'Outros']:
-                        opcao_elem = self.scraper.driver.find_elements(By.XPATH, f'//*[text()="{opcao}"]')
-                        if opcao_elem:
-                            opcao_elem[0].click()
-                            self.log(f"Dropdown: {opcao}")
-                            break
-                    
-                    time.sleep(0.5)
-                except Exception:
-                    continue
+            comboboxes = [
+                c for c in self.scraper.driver.find_elements(By.CSS_SELECTOR, 'div[role="combobox"]')
+                if c.is_displayed() and c.find_elements(By.CSS_SELECTOR, 'span[class*="placeholder"]')
+            ]
         except Exception:
-            pass
+            comboboxes = []
+
+        for combobox in comboboxes:
+            try:
+                self.scraper.driver.execute_script(
+                    "arguments[0].scrollIntoView({block:'center'});", combobox)
+                time.sleep(0.3)
+                combobox.click()
+                time.sleep(0.8)
+                opcao = _escolher(_listbox_do(combobox))
+                if opcao is None:
+                    self.log("Dropdown OLX: nenhuma opção adequada encontrada.")
+                    combobox.send_keys(Keys.ESCAPE)
+                    continue
+                self.log(f"Dropdown OLX: {opcao.text.strip()} escolhido.")
+                self.scraper.driver.execute_script("arguments[0].click();", opcao)
+                time.sleep(0.5)
+            except Exception as e:
+                self.log(f"Erro ao preencher dropdown OLX: {e}")
+                continue
 
     def preencher_dropdown_por_label(self, label_text, valor):
         """Preenche um dropdown encontrando-o pelo label próximo"""
