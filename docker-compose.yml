@@ -4,6 +4,9 @@ services:
     image: mysql:8.0
     container_name: erp-maneiro-db
     restart: unless-stopped
+    # Horário de Brasília: sem isto o MySQL do contêiner fica em UTC e as telas mostram 3 horas a mais.
+    # As colunas TIMESTAMP guardam o instante em UTC e convertem ao ler, então os dados já gravados ficam certos.
+    command: --default-time-zone=${DB_TIME_ZONE:--03:00}
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
       MYSQL_DATABASE: ${DB_NAME:-erp_maneiro}
@@ -37,6 +40,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-erp_password}
       DB_NAME: ${DB_NAME:-erp_maneiro}
       DB_PORT: 3306
+      # mesmo fuso do banco: datetime.now() do Python grava no horário que o MySQL espera
+      TZ: ${TZ:-America/Sao_Paulo}
       SECRET_KEY: ${SECRET_KEY:?Defina SECRET_KEY no arquivo .env (veja .env.docker)}
       # botão "Atualizar" em Configurações: quem atualiza é o serviço atualizador (abaixo)
       ERP_MODO: docker

@@ -34,6 +34,7 @@ def test_versao_publicada_sem_login_e_envio_manual_zera_a_versao(cliente_api, ad
     rota = f"/api/softwares/atualizacao/{quote(NOME)}"
     r = cliente_api.get(rota)
     assert r.status_code == 200, r.text
+    assert r.headers["cache-control"] == "no-store"   # o Cloudflare não pode guardar (o endereço termina em .exe)
     info = r.json()
     sha = hashlib.sha256(b"exe 1.2.0").hexdigest()
     assert (info["versao_app"], info["versao"], info["alteracoes"], info["tamanho"]) == ("1.2.0", 3, "Correção da OLX", 9)
@@ -99,6 +100,7 @@ class Erp:
 
     def get(self, url, **kwargs):
         self.pedidos.append(url)
+        self.parametros = kwargs.get("params")
         if "/api/softwares/atualizacao/" in url:
             return Resposta(dados=dict(self.info))
         return Resposta(conteudo=self.conteudo)
@@ -110,7 +112,7 @@ def test_so_oferece_quando_o_arquivo_e_outro_e_nao_e_mais_antigo(atualizador, tm
     assert atualizador.numeros("1.10.2") == (1, 10, 2) and atualizador.numeros(None) is None
     erp = Erp("1.2.0", b"exe 1.2.0")
     assert atualizador.verificar("https://erp/", "1.1.0", exe=exe, sessao=erp)["versao_app"] == "1.2.0"
-    assert erp.pedidos == ["https://erp/api/softwares/atualizacao/ERP%20AutoPost.exe"]
+    assert erp.pedidos == ["https://erp/api/softwares/atualizacao/ERP%20AutoPost.exe"] and "t" in erp.parametros
     assert atualizador.verificar("https://erp", "1.2.0", exe=exe, sessao=erp) is None    # mesma versão
     assert atualizador.verificar("https://erp", "1.3.0", exe=exe, sessao=erp) is None    # este é mais novo
     assert atualizador.verificar("https://erp", "1.1.0", exe=exe, sessao=Erp("1.2.0", b"exe 1.1.0")) is None   # mesmo arquivo
@@ -147,3 +149,15 @@ def test_arquivo_diferente_do_publicado_nao_troca(atualizador, tmp_path):
     a._thread.join(10)
     assert a.estado["etapa"] == "erro" and "diferente do publicado" in a.estado["erro"]
     assert exe.read_bytes() == b"exe 1.1.0" and not a.novo.exists() and not a.antigo.exists()
+
+
+def test_api_do_app_so_expoe_metodos_a_tela():
+    """O pywebview percorre os atributos públicos da Api; um objeto ali (a janela, na 1.2.1) travava o app ao abrir."""
+    import ast
+    arvore = ast.parse((Path(__file__).resolve().parent.parent / "autopost" / "api.py").read_text(encoding="utf-8"))
+    classe = next(n for n in arvore.body if isinstance(n, ast.ClassDef) and n.name == "Api")
+    publicos = {alvo.attr for n in ast.walk(classe) for alvo in getattr(n, "targets", [])
+                if isinstance(alvo, ast.Attribute) and isinstance(alvo.value, ast.Name) and alvo.value.id == "self"
+                and not alvo.attr.startswith("_")}
+    # os de sempre: dicionário de configuração e objetos criados só depois do login
+    assert publicos <= {"cfg", "erp", "executor", "usuario"}, publicos

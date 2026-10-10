@@ -40,7 +40,9 @@ def verificar(api_url, versao_atual, exe=None, sessao=None):
     exe = exe or executavel()
     if not exe:
         return None
-    r = (sessao or requests).get(f"{api_url.rstrip('/')}/api/softwares/atualizacao/{quote(NOME_EXE)}", timeout=15)
+    # t= e no-cache: um cache no caminho (o Cloudflare guarda o que termina em .exe) não pode responder com versão velha
+    r = (sessao or requests).get(f"{api_url.rstrip('/')}/api/softwares/atualizacao/{quote(NOME_EXE)}",
+                                 params={"t": int(time.time())}, headers={"Cache-Control": "no-cache"}, timeout=15)
     if r.status_code == 404:
         return None
     r.raise_for_status()

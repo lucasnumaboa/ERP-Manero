@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Response
 from fastapi.responses import FileResponse
 from typing import Optional
 from urllib.parse import quote
@@ -119,7 +119,7 @@ def _sha256(caminho):
 
 
 @router.get("/atualizacao/{nome_arquivo:path}")
-def versao_publicada(nome_arquivo: str):
+def versao_publicada(nome_arquivo: str, response: Response):
     """Versão publicada de um software, sem login: o AutoPost confere ao abrir se há outra para se atualizar.
     O endereço do arquivo leva o hash, então cada versão tem endereço próprio (o Cloudflare guarda os .exe)."""
     with get_db_cursor() as cursor:
@@ -135,6 +135,8 @@ def versao_publicada(nome_arquivo: str):
     if not software or not os.path.isfile(caminho):
         raise HTTPException(status_code=404, detail="Software não encontrado")
     sha = _sha256(caminho)
+    # o endereço termina em .exe e o Cloudflare guardava esta resposta: o app via a versão antiga por horas
+    response.headers["Cache-Control"] = "no-store"
     return {**software, "tamanho": os.path.getsize(caminho), "sha256": sha,
             "url": f"/softwares/{quote(nome_arquivo)}?v={sha[:12]}"}
 

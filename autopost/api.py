@@ -13,7 +13,7 @@ from erp import ErpCliente, ErroErp
 from navegador import chrome_instalado
 from tarefas import Executor
 
-VERSAO = "1.2.1"
+VERSAO = "1.2.2"
 
 CAMPOS_PRODUTO = ("id", "codigo", "nome", "descricao", "preco_venda", "estoque_atual", "categoria_id",
                   "categoria_nome", "caminho_imagem", "post_facebook", "post_olx", "faturavel", "comissao")
@@ -38,9 +38,11 @@ class Api:
         self.erp = None
         self.executor = None
         self.usuario = None
-        self.janela = None            # app.py preenche: a atualização fecha a janela ao abrir a versão nova
-        self.publicada = None         # versão nova achada no ERP
-        self.atualizacao = None
+        # Privados (com _): o pywebview percorre os atributos públicos da API para expor à tela e, ao ler as
+        # propriedades da janela enquanto ela abre, às vezes travava o app (AutoPost 1.2.1)
+        self._janela = None           # app.py preenche: a atualização fecha a janela ao abrir a versão nova
+        self._publicada = None        # versão nova achada no ERP
+        self._atualizacao = None
         atualizador.limpar_sobras()
 
     def _salvar_cfg(self):
@@ -253,35 +255,35 @@ class Api:
     @_seguro
     def verificar_atualizacao(self):
         api_url = self.erp.base_url if self.erp else self.cfg["api_url"]
-        self.publicada = atualizador.verificar(api_url, VERSAO)
-        if not self.publicada:
+        self._publicada = atualizador.verificar(api_url, VERSAO)
+        if not self._publicada:
             return {"nova": None, "atual": VERSAO}
-        return {"atual": VERSAO, "nova": {"versao": self.publicada.get("versao_app") or "",
-                                          "alteracoes": self.publicada.get("alteracoes") or "",
-                                          "tamanho": self.publicada.get("tamanho")}}
+        return {"atual": VERSAO, "nova": {"versao": self._publicada.get("versao_app") or "",
+                                          "alteracoes": self._publicada.get("alteracoes") or "",
+                                          "tamanho": self._publicada.get("tamanho")}}
 
     @_seguro
     def atualizar(self):
-        if not self.publicada:
+        if not self._publicada:
             return {"erro": "Nenhuma versão nova para instalar."}
         if self.executor and self.executor.ocupado():
             return {"erro": "Espere o robô terminar (ou clique em Parar) antes de atualizar."}
         api_url = self.erp.base_url if self.erp else self.cfg["api_url"]
-        self.atualizacao = atualizador.Atualizador(api_url)
-        self.atualizacao.iniciar(self.publicada)
+        self._atualizacao = atualizador.Atualizador(api_url)
+        self._atualizacao.iniciar(self._publicada)
         return {"ok": True}
 
     @_seguro
     def progresso_atualizacao(self):
-        return dict(self.atualizacao.estado) if self.atualizacao else {"etapa": "parado"}
+        return dict(self._atualizacao.estado) if self._atualizacao else {"etapa": "parado"}
 
     @_seguro
     def abrir_versao_nova(self):
-        if not (self.atualizacao and self.atualizacao.estado["etapa"] == "pronto"):
+        if not (self._atualizacao and self._atualizacao.estado["etapa"] == "pronto"):
             return {"erro": "A versão nova ainda não está pronta."}
-        self.atualizacao.abrir_novo()
-        if self.janela:
-            self.janela.destroy()
+        self._atualizacao.abrir_novo()
+        if self._janela:
+            self._janela.destroy()
         return {"ok": True}
 
     @_seguro
