@@ -219,8 +219,11 @@ class Construtor:
             self.softwares.mkdir(parents=True, exist_ok=True)
             destino = self.softwares / NOME_EXE
             if destino.is_file() and self.guardar:
+                # nome pela versão que está publicada, não pela do código (pode ter havido versões não publicadas)
+                publicada = self.sql("SELECT versao_app FROM softwares WHERE nome_arquivo = %s", (NOME_EXE,), um=True)
+                rotulo = (publicada or {}).get("versao_app") or f"anterior a {nova}"
                 self.guardar.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(destino, self.guardar / f"ERP AutoPost {anterior}.exe")
+                shutil.copy2(destino, self.guardar / f"ERP AutoPost {rotulo}.exe")
             temporario = destino.with_name(destino.name + ".novo")   # quem baixa agora não pega o arquivo pela metade
             shutil.copy2(exe, temporario)
             os.replace(temporario, destino)
