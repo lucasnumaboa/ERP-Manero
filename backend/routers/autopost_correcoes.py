@@ -273,13 +273,17 @@ async def analisar(diagnostico_id: int, pedido: PedidoAnalise, tarefas: Backgrou
 
 @router.post("/rodadas/{rodada_id}/aprovar")
 async def aprovar(rodada_id: int, usuario: UserInDB = Depends(somente_admin)):
-    """Libera a proposta para o construtor do servidor Windows aplicar, gerar o .exe e publicar."""
+    """Libera a proposta para o construtor do servidor Windows aplicar, gerar o .exe e publicar.
+    Uma rodada que falhou ao publicar (ex.: o GitHub recusou o envio) pode ser liberada de novo, sem nova análise."""
     with get_db_cursor(commit=True) as cursor:
-        cursor.execute("UPDATE autopost_correcoes SET status = 'aprovada', usuario_id = %s, "
-                       "log_texto = CONCAT('Aprovada por ', %s, '. Aguardando o construtor do servidor...\\n') "
-                       "WHERE id = %s AND status = 'proposta'", (usuario.id, usuario.nome, rodada_id))
+        # log_texto antes de status: o MySQL aplica o SET da esquerda para a direita
+        cursor.execute("UPDATE autopost_correcoes SET "
+                       "log_texto = CONCAT(IF(status = 'falhou', 'Nova tentativa. ', ''), 'Aprovada por ', %s, "
+                       "'. Aguardando o construtor do servidor...\\n'), "
+                       "status = 'aprovada', usuario_id = %s, erro = NULL "
+                       "WHERE id = %s AND status IN ('proposta', 'falhou')", (usuario.nome, usuario.id, rodada_id))
         if cursor.rowcount == 0:
-            raise HTTPException(status.HTTP_409_CONFLICT, "Só dá para aprovar uma proposta pronta.")
+            raise HTTPException(status.HTTP_409_CONFLICT, "Só dá para aprovar uma proposta pronta ou repetir uma que falhou.")
     return _rodada(_buscar_rodada(rodada_id))
 
 

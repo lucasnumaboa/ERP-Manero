@@ -83,6 +83,13 @@ def test_analisa_rejeita_refaz_e_aprova(cliente_api, admin, vendedor, travamento
     # com uma publicação em andamento, não começa outra análise
     assert cliente_api.post(f"{rota}/analisar", headers=admin["headers"], json={}).status_code == 409
 
+    # o construtor falhou (ex.: o GitHub recusou o envio): a mesma proposta pode ser liberada de novo
+    sql("UPDATE autopost_correcoes SET status = 'falhou', erro = 'git push: 403' WHERE id = %s", (segunda["id"],))
+    r = cliente_api.post(f"/api/autopost/correcoes/rodadas/{segunda['id']}/aprovar", headers=admin["headers"])
+    assert r.status_code == 200 and r.json()["status"] == "aprovada" and r.json()["erro"] is None
+    assert r.json()["log_texto"].startswith("Nova tentativa. Aprovada por")
+    assert cliente_api.post(f"/api/autopost/correcoes/rodadas/{primeira['id']}/aprovar", headers=admin["headers"]).status_code == 409
+
 
 def test_trecho_que_nao_existe_a_ia_refaz_e_se_nao_acertar_vira_erro(cliente_api, admin, travamento, ia):
     errada = _proposta(buscar="pagina.clicar('Avançar')")

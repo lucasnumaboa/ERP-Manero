@@ -140,6 +140,23 @@
         if (atual && r.log_texto && ['aprovada', 'aplicando', 'gerando', 'publicada', 'falhou'].includes(r.status)) {
             caixa.appendChild(elemento('pre', 'atualizacao-log', r.log_texto));
         }
+        if (atual && r.status === 'falhou' && Array.isArray(r.alteracoes) && r.alteracoes.length) {
+            // a proposta continua valendo: o problema foi na publicação (GitHub, geração do .exe...)
+            const acoes = elemento('div', 'atualizacao-acoes');
+            const repetir = Object.assign(elemento('button', 'btn-primary', 'Tentar publicar de novo'), { type: 'button' });
+            repetir.onclick = async () => {
+                repetir.disabled = true;
+                try {
+                    await pedir('POST', `/api/autopost/correcoes/rodadas/${r.id}/aprovar`);
+                    recarregar();
+                } catch (erro) {
+                    repetir.disabled = false;
+                    if (window.mostrarAviso) window.mostrarAviso(erro.message, 'erro');
+                }
+            };
+            acoes.appendChild(repetir);
+            caixa.appendChild(acoes);
+        }
         if (atual && r.status === 'proposta') {
             const instrucao = Object.assign(elemento('textarea', 'correcao-instrucao'), {
                 placeholder: 'Para rejeitar, diga o que a IA deve fazer diferente…', maxLength: 4000 });
