@@ -924,8 +924,16 @@ class Olx(Plataforma):
                     time.sleep(1)
                 continue
 
-            # 4) Preço (retry)
-            elif "hora de definir o preço" in page_text or "você precisa definir um preço" in page_text:
+            # 3c) "Venda com a garantia da OLX": aviso com só o Continuar. Vem depois do preço e a página ainda tem o
+            # texto da tela de preço, que a regra 4 confundia (perdia 1 min procurando o campo de preço)
+            elif ("garantia da olx" in page_text or "venda com a garantia" in page_text) and not self._olx_tem_campo_preco():
+                self.log("Tela: Venda com a garantia da OLX.")
+                self.clicar_continuar("após garantia da OLX")
+                continue
+
+            # 4) Preço (retry): só se o campo de preço está mesmo na tela
+            elif ("hora de definir o preço" in page_text or "você precisa definir um preço" in page_text) \
+                    and self._olx_tem_campo_preco():
                 price_retry_count += 1
                 if price_retry_count > 3:
                     self.log("AVISO: Preço não aceito após 3 tentativas no loop, ignorando tela...")
@@ -1702,6 +1710,19 @@ class Olx(Plataforma):
                 self.log(f"{rotulo}: tentei '{valor}' ({origem}), mas o campo ficou '{ficou or 'Selecione'}'.")
             self.relatar(memorias.get(campo["id"]), ficou == valor)
 
+    def _olx_tem_campo_preco(self):
+        """Mesmo critério do preencher_preco: algum campo de texto/número visível. A tela da garantia não tem nenhum."""
+        from selenium.webdriver.common.by import By
+
+        for el in self.scraper.driver.find_elements(
+                By.CSS_SELECTOR, 'input[type="text"], input[type="number"], input[inputmode="numeric"]'):
+            try:
+                if el.is_displayed():
+                    return True
+            except Exception:
+                continue
+        return False
+
     def ajuda_da_ia(self, etapa, tentativa=""):
         """Depois do Continuar do preço a OLX já publicou o anúncio: as telas seguintes oferecem garantia, frete grátis
         e destaque. A IA não mexe nelas (no teste real ela aceitou "Entregar grátis pela OLX"); as regras fixas do
@@ -1855,31 +1876,7 @@ class Olx(Plataforma):
         from selenium.webdriver.support.ui import WebDriverWait
 
         self.log(f"Procurando o anúncio na OLX: {titulo}")
-        self.scraper.go_to_page(URL_ANUNCIOS)
-        self.wait_for_olx_body_min_length(50, "meus anúncios", max_wait=60)
-        self.esperar(3)
-
-        # botão Excluir do card que tem este título: sobe a partir de cada botão até achar o título e confere
-        # que aquele bloco tem um botão Excluir só (senão seria a lista inteira)
-        botao = self.scraper.driver.execute_script("""
-            const alvo = arguments[0];
-            const limpa = t => (t || '').toLowerCase().replace(/\\s+/g, ' ').trim();
-            const botoes = [...document.querySelectorAll('button, a')].filter(b => limpa(b.innerText) === 'excluir'
-                || limpa(b.innerText).startsWith('excluir'));
-            for (const b of botoes) {
-                let bloco = b;
-                for (let i = 0; i < 12 && bloco; i++) {
-                    bloco = bloco.parentElement;
-                    if (!bloco) break;
-                    if (limpa(bloco.innerText).includes(alvo)) {
-                        const qtd = [...bloco.querySelectorAll('button, a')].filter(x => limpa(x.innerText).startsWith('excluir')).length;
-                        if (qtd === 1) return b;
-                        break;
-                    }
-                }
-            }
-            return null;
-        """, normalizar(titulo)[:60])
+        botao = self._olx_botao_excluir(titulo)
         if not botao:
             self.log("Anúncio não encontrado em Meus anúncios (já foi excluído ou o título mudou).")
             return False
@@ -1919,66 +1916,80 @@ class Olx(Plataforma):
         self.log("Anúncio excluído na OLX.")
         return True
 
-    def listar(self) -> list[dict]:
-        """Anúncios em "Meus anúncios › Publicados" (todas as páginas). Cada card é achado pelo botão Excluir."""
+    def _olx_paginas_de_anuncios(self):
+        """Abre Meus anúncios › Publicados e devolve, página por página, os cartões lidos (JS_LISTA_OLX)."""
         from selenium.webdriver.common.by import By
 
-        self.log("Lendo os anúncios publicados na OLX...")
         self.scraper.go_to_page(URL_ANUNCIOS)
         self.wait_for_olx_body_min_length(50, "meus anúncios", max_wait=60)
         self.esperar(3)
-        itens, vistos = [], set()
         for pagina in range(1, 21):
             for _ in range(6):   # a lista carrega rolando
                 self.scraper.driver.execute_script("window.scrollBy(0, 2500);")
                 self.esperar(1)
-            for item in self.scraper.driver.execute_script(JS_LISTA_OLX) or []:
-                if item["titulo"] not in vistos:
-                    vistos.add(item["titulo"])
-                    itens.append(item)
+            yield pagina, self.scraper.driver.execute_script(JS_LISTA_OLX) or []
             proxima = [b for b in self.scraper.driver.find_elements(
                 By.XPATH, '//a[contains(@aria-label,"róxima") or normalize-space(.)="Próxima"] | '
                           '//button[contains(@aria-label,"róxima") or normalize-space(.)="Próxima"]')
                 if b.is_displayed() and b.is_enabled() and b.get_attribute("aria-disabled") != "true"]
             if not proxima:
-                break
-            self._log(f"Página {pagina} lida ({len(itens)} anúncio(s) até agora); indo para a próxima...")  # progresso, não conta como repetição
+                return
+            self._log(f"Página {pagina} lida; indo para a próxima...")  # progresso, não conta como repetição
             self.scraper.driver.execute_script("arguments[0].click();", proxima[0])
             self.esperar(4)
+
+    def _olx_botao_excluir(self, titulo):
+        """Botão Excluir do cartão com exatamente este título (sem "contém": um texto qualquer da página batia)."""
+        alvo = normalizar(titulo)
+        for _, cartoes in self._olx_paginas_de_anuncios():
+            iguais = [c for c in cartoes if normalizar(c["titulo"]) == alvo]
+            if iguais:
+                if len(iguais) > 1:
+                    self.log(f"{len(iguais)} anúncios com este título na página; excluindo o primeiro.")
+                return iguais[0]["botao"]
+        return None
+
+    def listar(self) -> list[dict]:
+        """Anúncios em "Meus anúncios › Publicados" (todas as páginas)."""
+        self.log("Lendo os anúncios publicados na OLX...")
+        itens, vistos = [], set()
+        for _, cartoes in self._olx_paginas_de_anuncios():
+            for cartao in cartoes:
+                if cartao["link"] or cartao["titulo"] not in vistos:
+                    vistos.add(cartao["titulo"])
+                    itens.append({k: v for k, v in cartao.items() if k != "botao"})
         self.log(f"{len(itens)} anúncio(s) encontrado(s) na OLX.")
         return itens
 
 
-# Cards de "Meus anúncios": sobe a partir de cada botão Excluir até o bloco com foto e preço (sem pegar a lista
-# inteira, que teria mais de um Excluir). Título: link do anúncio, um título (h2/h3) ou a primeira linha com cara
-# de título.
+# Cartões de "Meus anúncios": o cartão é o MENOR bloco acima de cada botão Excluir que tem foto e preço (subir mais
+# pegava a página inteira quando havia um anúncio só, e o título virava "Vender na OLX", do rodapé). Título: o link do
+# anúncio (olx.com.br/vi/<número>). O status (PUBLICADO) fica fora do cartão: vem da aba aberta.
 JS_LISTA_OLX = r"""
 const limpa = t => (t || '').replace(/\s+/g, ' ').trim();
 const ehExcluir = b => /^excluir/i.test(limpa(b.innerText || b.getAttribute('aria-label')));
-const saida = [], vistos = new Set();
+const ehAnuncio = a => /olx\.com\.br\/(vi|d)\/|olx\.com\.br\/.*-\d{6,}/.test(a.href);
+const saida = [];
 for (const botao of [...document.querySelectorAll('button, a, [role=button]')].filter(ehExcluir)) {
-    let bloco = botao, card = null;
-    for (let i = 0; i < 15 && bloco.parentElement; i++) {
-        bloco = bloco.parentElement;
-        if ([...bloco.querySelectorAll('button, a, [role=button]')].filter(ehExcluir).length > 1) break;
-        if (bloco.querySelector('img') && /R\$/.test(bloco.innerText)) card = bloco;
-    }
-    if (!card) continue;
+    let card = botao.parentElement;
+    while (card && !(card.querySelector('img') && /R\$/.test(card.innerText || ''))) card = card.parentElement;
+    if (!card || [...card.querySelectorAll('button, a, [role=button]')].filter(ehExcluir).length !== 1) continue;
+    const links = [...card.querySelectorAll('a[href]')].filter(ehAnuncio);
+    const comTexto = links.find(a => limpa(a.innerText));
     const texto = card.innerText || '';
     const linhas = texto.split('\n').map(limpa).filter(Boolean);
-    const link = [...card.querySelectorAll('a[href]')].find(a => /olx\.com\.br\/.*\d{6,}/.test(a.href));
-    const cabecalho = card.querySelector('h2, h3, [data-testid*="title"], [class*="title"]');
-    let titulo = limpa(link && link.innerText) || limpa(cabecalho && cabecalho.innerText)
-        || linhas.find(l => l.length > 6 && !/R\$|excluir|editar|vend|visualiza|destac|publicad|expira|^\d/i.test(l)) || '';
-    if (!titulo || vistos.has(titulo)) continue;
-    vistos.add(titulo);
+    const titulo = limpa(comTexto && comTexto.innerText)
+        || linhas.find(l => l.length > 6 && !/R\$|excluir|editar|vend|garantia|entrega|destac|^\d/i.test(l)) || '';
+    if (!titulo) continue;
     const img = card.querySelector('img');
+    const aba = limpa((document.querySelector('[aria-selected="true"], [class*="active"]') || {}).innerText || '');
     saida.push({
-        titulo,
+        titulo, botao,
         preco: (texto.match(/R\$\s?[\d.]+(,\d{2})?/) || [''])[0],
-        status: linhas.find(l => /publicad|ativo|expirad|pendente|em análise|reprovad|vendid|inativ|pausad/i.test(l)) || '',
+        status: linhas.find(l => /publicad|ativo|expirad|pendente|em análise|reprovad|vendid|inativ|pausad/i.test(l))
+            || (/aguardando/i.test(aba) ? 'Aguardando publicação' : 'Publicado'),
         imagem: img ? img.currentSrc || img.src : '',
-        link: link ? link.href : '',
+        link: (comTexto || links[0] || {}).href || '',
         detalhes: linhas.slice(0, 6).join(' · ').slice(0, 300),
     });
 }

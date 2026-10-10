@@ -189,18 +189,16 @@ class Facebook(Plataforma):
         self.log(f"Procurando o anúncio no Marketplace: {titulo}")
         self.scraper.go_to_page(URL_VENDENDO)
         self.esperar(5)
-        alvo = normalizar(titulo)[:50]
+        alvo = normalizar(titulo)
         menu = None
-        # o botão de "..." de cada anúncio tem aria-label "Mais opções para <título>"
-        for _ in range(3):
-            for botao in self.scraper.driver.find_elements(By.XPATH, '//div[contains(@aria-label, "Mais opções para")][@role="button"]'):
-                try:
-                    rotulo = normalizar(botao.get_attribute("aria-label") or "").replace("mais opções para", "", 1).strip()
-                    if botao.is_displayed() and (alvo in rotulo or rotulo[:50] in alvo):
-                        menu = botao
-                        break
-                except Exception:
-                    continue
+        # só os cartões de anúncio (JS_LISTA_FACEBOOK) e o título inteiro: o "Mais opções para <pessoa>" das conversas
+        # e títulos parecidos ("PS5" x "Jogo PS5 ...") não podem bater
+        for _ in range(8):
+            for cartao in self.scraper.driver.execute_script(JS_LISTA_FACEBOOK) or []:
+                curto = normalizar(cartao["rotulo"])
+                if normalizar(cartao["titulo"]) == alvo or (len(curto) >= 60 and alvo.startswith(curto)):
+                    menu = cartao["botao"]
+                    break
             if menu:
                 break
             self.scraper.driver.execute_script("window.scrollBy(0, 1200);")
@@ -258,7 +256,8 @@ class Facebook(Plataforma):
         self.esperar(5)
         itens, antes = [], -1
         for _ in range(25):
-            itens = self.scraper.driver.execute_script(JS_LISTA_FACEBOOK) or []
+            itens = [{k: v for k, v in c.items() if k not in ("botao", "rotulo")}
+                     for c in self.scraper.driver.execute_script(JS_LISTA_FACEBOOK) or []]
             if len(itens) == antes:
                 break
             antes = len(itens)
@@ -268,26 +267,30 @@ class Facebook(Plataforma):
         return itens
 
 
-# Cada anúncio da página "Vendendo" tem um botão "Mais opções para <título>" (o mesmo que a exclusão usa); o card é
-# o bloco acima dele com foto e preço.
+# Cada anúncio da página "Vendendo" tem botões "Mais opções para <título>" (o título vem cortado em ~70 letras). O
+# cartão é o MENOR bloco acima do botão com foto e preço, e só vale se todos os botões desse tipo nele são do mesmo
+# anúncio: os "Mais opções para <pessoa>" das conversas sobem até a página inteira (com todos os botões) e ficam de
+# fora. O título inteiro é a linha do cartão que começa com o do botão.
 JS_LISTA_FACEBOOK = r"""
 const limpa = t => (t || '').replace(/\s+/g, ' ').trim();
+const rotuloDe = b => limpa((b.getAttribute('aria-label') || '').replace(/^Mais opções para /, ''));
 const saida = [], vistos = new Set();
 for (const botao of document.querySelectorAll('[aria-label^="Mais opções para "]')) {
-    const titulo = limpa(botao.getAttribute('aria-label').replace(/^Mais opções para /, ''));
-    if (!titulo || vistos.has(titulo)) continue;
-    vistos.add(titulo);
-    let card = botao;
-    for (let i = 0; i < 14 && card.parentElement; i++) {
-        card = card.parentElement;
-        if (card.querySelector('img') && /R\$|Grátis/.test(card.innerText)) break;
-    }
+    const rotulo = rotuloDe(botao);
+    let card = botao.parentElement;
+    while (card && !(card.querySelector('img') && /R\$|Grátis/.test(card.innerText || ''))) card = card.parentElement;
+    if (!card || !rotulo) continue;
+    const doCard = [...card.querySelectorAll('[aria-label^="Mais opções para "]')].map(rotuloDe);
+    if (doCard.some(r => r !== rotulo)) continue;
     const texto = card.innerText || '';
     const linhas = texto.split('\n').map(limpa).filter(Boolean);
+    const titulo = linhas.find(l => l.toLowerCase().startsWith(rotulo.toLowerCase())) || rotulo;
+    if (vistos.has(titulo)) continue;
+    vistos.add(titulo);
     const img = card.querySelector('img');
     const link = card.querySelector('a[href*="/marketplace/item/"]');
     saida.push({
-        titulo,
+        titulo, rotulo, botao,
         preco: (texto.match(/R\$\s?[\d.]+(,\d{2})?/) || [/Grátis/.test(texto) ? 'Grátis' : ''])[0],
         status: linhas.find(l => /^(vendido|pendente|ativo|em estoque|esgotado|reservado|indisponível|anúncio|listado|aguardando)/i.test(l)) || '',
         imagem: img ? img.currentSrc || img.src : '',
