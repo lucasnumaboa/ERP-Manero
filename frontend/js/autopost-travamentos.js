@@ -71,6 +71,9 @@
                 acoes.appendChild(b);
             }
             alvo.appendChild(acoes);
+            const correcao = elemento('div', 'correcao-ia');
+            alvo.appendChild(correcao);
+            mostrarCorrecao(item, correcao);
             alvo.dataset.carregado = '1';
             alvo.hidden = false;
             botao.textContent = 'Esconder detalhes';
@@ -78,6 +81,144 @@
             if (window.mostrarAviso) window.mostrarAviso(erro.message, 'erro');
         } finally {
             botao.disabled = false;
+        }
+    }
+
+    // ---------- Correção com IA (rotas /api/autopost/correcoes) ----------
+    // A IA propõe trechos para trocar no código do AutoPost; o admin aprova (o construtor do servidor aplica, gera o
+    // .exe, faz o commit e publica em Softwares) ou rejeita dizendo o que quer, e a IA refaz.
+    const ROTULO = {
+        analisando: 'A IA está analisando…', proposta: 'Proposta da IA', rejeitada: 'Rejeitada', erro: 'Erro na análise',
+        aprovada: 'Aprovada: aguardando o servidor', aplicando: 'Aplicando no código…', gerando: 'Gerando o .exe…',
+        publicada: 'Publicada', falhou: 'Falhou ao publicar'
+    };
+    const EM_ANDAMENTO = ['analisando', 'aprovada', 'aplicando', 'gerando'];
+
+    function blocoCodigo(classe, titulo, texto) {
+        const div = elemento('div', classe);
+        div.appendChild(elemento('small', '', titulo));
+        div.appendChild(elemento('pre', `atualizacao-log ${classe}`, texto));
+        return div;
+    }
+
+    function desenharRodada(r, atual, repositorio, recarregar) {
+        const caixa = elemento('div', `correcao-rodada${atual ? '' : ' antiga'}`);
+        const topo = elemento('div', 'correcao-topo');
+        topo.appendChild(elemento('span', `correcao-status ${r.status}`, ROTULO[r.status] || r.status));
+        topo.appendChild(elemento('span', '', `Rodada ${r.rodada} · ${quando(r.data_criacao)}`));
+        if (r.versao) topo.appendChild(elemento('span', '', `versão ${r.versao}`));
+        if (r.commit_sha) {
+            const link = Object.assign(elemento('a', '', `commit ${r.commit_sha.slice(0, 7)}`),
+                { href: `https://github.com/${repositorio}/commit/${r.commit_sha}`, target: '_blank', rel: 'noopener' });
+            topo.appendChild(link);
+        }
+        caixa.appendChild(topo);
+        if (r.instrucao) caixa.appendChild(elemento('p', 'correcao-pedido', `Você pediu: ${r.instrucao}`));
+        const a = r.analise && typeof r.analise === 'object' ? r.analise : null;
+        if (a) {
+            [['O que aconteceu', a.diagnostico], ['Causa', a.causa], ['Solução', a.solucao]].forEach(([rotulo, texto]) => {
+                if (!texto) return;
+                const p = elemento('p', 'correcao-texto');
+                p.appendChild(elemento('strong', '', `${rotulo}: `));
+                p.appendChild(document.createTextNode(texto));
+                caixa.appendChild(p);
+            });
+        }
+        if (atual && Array.isArray(r.alteracoes)) {
+            r.alteracoes.forEach((alt, i) => {
+                const bloco = elemento('div', 'correcao-alteracao');
+                bloco.appendChild(elemento('span', 'correcao-arquivo', `${i + 1}. ${alt.arquivo}`));
+                if (alt.motivo) bloco.appendChild(elemento('span', 'correcao-texto', alt.motivo));
+                const codigo = elemento('div', 'correcao-codigo');
+                codigo.appendChild(blocoCodigo('antes', 'Antes', alt.buscar));
+                codigo.appendChild(blocoCodigo('depois', 'Depois', alt.substituir));
+                bloco.appendChild(codigo);
+                caixa.appendChild(bloco);
+            });
+        }
+        if (r.erro) caixa.appendChild(elemento('p', 'travamento-erro', r.erro));
+        if (atual && r.log_texto && ['aprovada', 'aplicando', 'gerando', 'publicada', 'falhou'].includes(r.status)) {
+            caixa.appendChild(elemento('pre', 'atualizacao-log', r.log_texto));
+        }
+        if (atual && r.status === 'proposta') {
+            const instrucao = Object.assign(elemento('textarea', 'correcao-instrucao'), {
+                placeholder: 'Para rejeitar, diga o que a IA deve fazer diferente…', maxLength: 4000 });
+            const acoes = elemento('div', 'atualizacao-acoes');
+            const aprovar = elemento('button', 'btn-primary', 'Aprovar e publicar');
+            const rejeitar = elemento('button', 'btn-secondary', 'Rejeitar e pedir outra');
+            aprovar.type = rejeitar.type = 'button';
+            aprovar.onclick = async () => {
+                aprovar.disabled = rejeitar.disabled = true;
+                try {
+                    await pedir('POST', `/api/autopost/correcoes/rodadas/${r.id}/aprovar`);
+                    recarregar();
+                } catch (erro) {
+                    aprovar.disabled = rejeitar.disabled = false;
+                    if (window.mostrarAviso) window.mostrarAviso(erro.message, 'erro');
+                }
+            };
+            rejeitar.onclick = async () => {
+                const texto = instrucao.value.trim();
+                if (texto.length < 3) {
+                    if (window.mostrarAviso) window.mostrarAviso('Escreva o que a IA deve fazer diferente.', 'erro');
+                    instrucao.focus();
+                    return;
+                }
+                aprovar.disabled = rejeitar.disabled = true;
+                try {
+                    await pedir('POST', `/api/autopost/correcoes/rodadas/${r.id}/rejeitar`, { instrucao: texto });
+                    recarregar();
+                } catch (erro) {
+                    aprovar.disabled = rejeitar.disabled = false;
+                    if (window.mostrarAviso) window.mostrarAviso(erro.message, 'erro');
+                }
+            };
+            acoes.appendChild(aprovar);
+            acoes.appendChild(rejeitar);
+            caixa.appendChild(instrucao);
+            caixa.appendChild(acoes);
+        }
+        return caixa;
+    }
+
+    async function mostrarCorrecao(item, alvo) {
+        clearTimeout(alvo.espera);
+        let dados;
+        try {
+            dados = await pedir('GET', `/api/autopost/correcoes/${item.id}`);
+        } catch (erro) {
+            alvo.innerHTML = '';
+            alvo.appendChild(elemento('p', 'travamento-erro', erro.message));
+            return;
+        }
+        const recarregar = () => mostrarCorrecao(item, alvo);
+        alvo.innerHTML = '';
+        alvo.appendChild(elemento('h4', '', 'Correção com IA'));
+        const rodadas = dados.rodadas || [];
+        const ultima = rodadas[rodadas.length - 1];
+        rodadas.slice().reverse().forEach(r => alvo.appendChild(desenharRodada(r, r === ultima, dados.repositorio, recarregar)));
+        if (!ultima || ['erro', 'falhou', 'publicada'].includes(ultima.status)) {
+            const instrucao = Object.assign(elemento('textarea', 'correcao-instrucao'), {
+                placeholder: 'Opcional: alguma orientação para a IA (ex.: "o botão Continuar mudou de nome")', maxLength: 4000 });
+            const acoes = elemento('div', 'atualizacao-acoes');
+            const analisar = elemento('button', 'btn-primary', ultima ? 'Analisar de novo com IA' : 'Analisar com IA');
+            analisar.type = 'button';
+            analisar.onclick = async () => {
+                analisar.disabled = true;
+                try {
+                    await pedir('POST', `/api/autopost/correcoes/${item.id}/analisar`, { instrucao: instrucao.value.trim() || null });
+                    recarregar();
+                } catch (erro) {
+                    analisar.disabled = false;
+                    if (window.mostrarAviso) window.mostrarAviso(erro.message, 'erro');
+                }
+            };
+            acoes.appendChild(analisar);
+            alvo.appendChild(instrucao);
+            alvo.appendChild(acoes);
+        }
+        if (ultima && EM_ANDAMENTO.includes(ultima.status)) {
+            alvo.espera = setTimeout(() => { if (document.body.contains(alvo)) recarregar(); }, 4000);
         }
     }
 

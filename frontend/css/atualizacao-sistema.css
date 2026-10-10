@@ -211,6 +211,109 @@
     margin: 0.6rem 0 0.4rem;
 }
 
+/* Correção com IA, dentro do "Ver detalhes" (js/autopost-travamentos.js) */
+.correcao-ia {
+    margin-top: 1rem;
+    padding-top: 0.8rem;
+    border-top: 1px dashed rgba(127, 127, 127, 0.35);
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.correcao-rodada {
+    border: 1px solid rgba(127, 127, 127, 0.25);
+    border-radius: 10px;
+    padding: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.correcao-rodada.antiga {
+    opacity: 0.75;
+}
+
+.correcao-topo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.85rem;
+}
+
+.correcao-status {
+    font-weight: 700;
+    border-radius: 6px;
+    padding: 0.05rem 0.5rem;
+    color: #fff;
+    background: #7f8c8d;
+}
+
+.correcao-status.proposta { background: #2980b9; }
+.correcao-status.publicada { background: #27ae60; }
+.correcao-status.erro,
+.correcao-status.falhou { background: #e74c3c; }
+.correcao-status.rejeitada { background: #95a5a6; }
+.correcao-status.analisando,
+.correcao-status.aprovada,
+.correcao-status.aplicando,
+.correcao-status.gerando { background: #e67e22; }
+
+.correcao-texto {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.correcao-pedido {
+    margin: 0;
+    font-size: 0.85rem;
+    font-style: italic;
+    opacity: 0.85;
+}
+
+.correcao-alteracao {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.correcao-arquivo {
+    font: 600 0.82rem Consolas, "Cascadia Mono", monospace;
+}
+
+.correcao-codigo {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.correcao-codigo .atualizacao-log {
+    max-height: 260px;
+}
+
+.correcao-codigo .antes { border-left: 4px solid #e74c3c; }
+.correcao-codigo .depois { border-left: 4px solid #27ae60; }
+
+.correcao-instrucao {
+    width: 100%;
+    min-height: 70px;
+    padding: 0.6rem;
+    border-radius: 8px;
+    border: 1px solid rgba(127, 127, 127, 0.35);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    resize: vertical;
+}
+
+@media (max-width: 760px) {
+    .correcao-codigo {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 760px) {
     .travamento {
         grid-template-columns: 1fr;

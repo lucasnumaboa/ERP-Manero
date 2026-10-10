@@ -905,6 +905,31 @@ tables = {
             INDEX (status)
         )
     """,
+    "autopost_correcoes": """
+        CREATE TABLE IF NOT EXISTS autopost_correcoes (
+            -- correções dos travamentos do AutoPost propostas pela IA (uma linha por rodada: rejeitada, a próxima
+            -- rodada leva o que o admin pediu). Aprovada, o construtor do servidor Windows aplica, gera o .exe, faz o
+            -- commit e publica (scripts/construtor_autopost.py), escrevendo o andamento em log_texto.
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            diagnostico_id INT NOT NULL,
+            rodada INT NOT NULL,
+            status VARCHAR(20) NOT NULL DEFAULT 'analisando',
+            instrucao TEXT NULL,
+            analise LONGTEXT NULL,
+            alteracoes LONGTEXT NULL,
+            commit_base VARCHAR(40) NULL,
+            log_texto MEDIUMTEXT NULL,
+            versao VARCHAR(20) NULL,
+            commit_sha VARCHAR(40) NULL,
+            erro TEXT NULL,
+            usuario_id INT NULL,
+            data_criacao TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            data_atualizacao TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX (status),
+            UNIQUE KEY (diagnostico_id, rodada),
+            FOREIGN KEY (diagnostico_id) REFERENCES autopost_diagnosticos(id) ON DELETE CASCADE
+        )
+    """,
     "chat_buscas": """
         CREATE TABLE IF NOT EXISTS chat_buscas (
             -- cada busca de produto feita pelo assistente de IA: base do relatório de demanda
