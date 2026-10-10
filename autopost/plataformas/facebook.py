@@ -187,22 +187,8 @@ class Facebook(Plataforma):
         from selenium.webdriver.support.ui import WebDriverWait
 
         self.log(f"Procurando o anúncio no Marketplace: {titulo}")
-        self.scraper.go_to_page(URL_VENDENDO)
-        self.esperar(5)
-        alvo = normalizar(titulo)
-        menu = None
-        # só os cartões de anúncio (JS_LISTA_FACEBOOK) e o título inteiro: o "Mais opções para <pessoa>" das conversas
-        # e títulos parecidos ("PS5" x "Jogo PS5 ...") não podem bater
-        for _ in range(8):
-            for cartao in self.scraper.driver.execute_script(JS_LISTA_FACEBOOK) or []:
-                curto = normalizar(cartao["rotulo"])
-                if normalizar(cartao["titulo"]) == alvo or (len(curto) >= 60 and alvo.startswith(curto)):
-                    menu = cartao["botao"]
-                    break
-            if menu:
-                break
-            self.scraper.driver.execute_script("window.scrollBy(0, 1200);")
-            self.esperar(2)
+        cartao = self._cartao_no_marketplace(titulo)
+        menu = cartao["botao"] if cartao else None
         if not menu:
             self.log("Anúncio não encontrado no Marketplace (já foi excluído ou o título mudou).")
             return False
@@ -217,17 +203,13 @@ class Facebook(Plataforma):
             return False
         self.esperar(3)
 
-        confirmou = False
-        for xpath in ('//div[@role="dialog"]//div[@aria-label="Excluir" and @role="button"]',
-                      '//div[@role="dialog"]//div[@role="button"]//span[text()="Excluir"]/ancestor::div[@role="button"]'):
-            botoes = self.scraper.driver.find_elements(By.XPATH, xpath)
-            if botoes:
-                self._clicar(botoes[0])
-                confirmou = True
-                break
-        if not confirmou:
+        # o diálogo tem dois "Excluir": um escondido e desabilitado (aria-disabled, sem texto) e o de verdade; o app
+        # clicava no primeiro, nada acontecia, e mesmo assim dizia "excluído"
+        confirmar = self.scraper.driver.execute_script(JS_CONFIRMAR_EXCLUSAO)
+        if not confirmar:
             self.log("Botão Excluir da confirmação não encontrado.")
             return False
+        self._clicar(confirmar)
         self.esperar(3)
 
         for xpath in ('//span[contains(text(), "Sim, vendi em outro lugar")]',):
@@ -245,8 +227,27 @@ class Facebook(Plataforma):
             except Exception:
                 continue
         self.esperar(2)
-        self.log("Anúncio excluído no Marketplace.")
+        # só diz que excluiu depois de ver que saiu da lista
+        if self._cartao_no_marketplace(titulo, rolagens=4):
+            self.log("O Facebook não confirmou a exclusão: o anúncio continua em Vendendo.")
+            return False
+        self.log("Anúncio excluído no Marketplace (conferido: saiu de Vendendo).")
         return True
+
+    def _cartao_no_marketplace(self, titulo, rolagens=8):
+        """Cartão do anúncio com este título em Vendendo (título inteiro; o do botão vem cortado em ~70 letras).
+        Só cartões de anúncio: o "Mais opções para <pessoa>" das conversas e títulos parecidos não batem."""
+        self.scraper.go_to_page(URL_VENDENDO)
+        self.esperar(5)
+        alvo = normalizar(titulo)
+        for _ in range(rolagens):
+            for cartao in self.scraper.driver.execute_script(JS_LISTA_FACEBOOK) or []:
+                curto = normalizar(cartao["rotulo"])
+                if normalizar(cartao["titulo"]) == alvo or (len(curto) >= 60 and alvo.startswith(curto)):
+                    return cartao
+            self.scraper.driver.execute_script("window.scrollBy(0, 1200);")
+            self.esperar(2)
+        return None
 
     # ---------- listar ----------
     def listar(self) -> list[dict]:
@@ -265,6 +266,20 @@ class Facebook(Plataforma):
             self.esperar(2)
         self.log(f"{len(itens)} anúncio(s) encontrado(s) no Marketplace.")
         return itens
+
+
+# Botão Excluir de verdade do diálogo de confirmação (visível, habilitado e com o texto "Excluir")
+JS_CONFIRMAR_EXCLUSAO = r"""
+const vis = e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
+const limpa = t => (t || '').replace(/\s+/g, ' ').trim();
+for (const d of document.querySelectorAll('[role="dialog"], [role="alertdialog"]')) {
+    if (!vis(d)) continue;
+    const b = [...d.querySelectorAll('[role="button"], button')].find(x => vis(x)
+        && x.getAttribute('aria-disabled') !== 'true' && !x.disabled && limpa(x.innerText) === 'Excluir');
+    if (b) return b;
+}
+return null;
+"""
 
 
 # Cada anúncio da página "Vendendo" tem botões "Mais opções para <título>" (o título vem cortado em ~70 letras). O

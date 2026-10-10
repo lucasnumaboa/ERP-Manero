@@ -1897,9 +1897,11 @@ class Olx(Plataforma):
         self.esperar(2)
 
         try:
+            # botão Excluir visível e habilitado do diálogo (o Facebook tinha um "Excluir" escondido e desabilitado)
             WebDriverWait(self.scraper.driver, 10).until(EC.element_to_be_clickable((
-                By.XPATH, '//div[@role="dialog"]//button[contains(., "Excluir")] | '
-                          '//div[contains(@class, "modal")]//button[contains(., "Excluir")]'))).click()
+                By.XPATH, '//div[@role="dialog"]//button[contains(., "Excluir") and not(@disabled) and '
+                          'not(@aria-disabled="true")] | //div[contains(@class, "modal")]//button[contains(., "Excluir") '
+                          'and not(@disabled) and not(@aria-disabled="true")]'))).click()
         except Exception:
             btns = self.scraper.driver.find_elements(By.XPATH, '//button[contains(., "Excluir")]')
             if len(btns) > 1:
@@ -1913,7 +1915,11 @@ class Olx(Plataforma):
             except Exception:
                 continue
         self.esperar(2)
-        self.log("Anúncio excluído na OLX.")
+        # só diz que excluiu depois de ver que saiu de Meus anúncios
+        if self._olx_botao_excluir(titulo):
+            self.log("A OLX não confirmou a exclusão: o anúncio continua em Meus anúncios.")
+            return False
+        self.log("Anúncio excluído na OLX (conferido: saiu de Meus anúncios).")
         return True
 
     def _olx_paginas_de_anuncios(self):
