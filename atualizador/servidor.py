@@ -29,6 +29,17 @@ URL_BACKEND = os.getenv("URL_BACKEND", "http://backend:8000/docs")
 _trava = threading.Lock()
 
 
+def arquivos_compose() -> list[str]:
+    """docker-compose.yml e, se existir, o docker-compose.override.yml da instalação (fora do git: pastas de fotos e
+    softwares, limites de memória, variáveis de rede do servidor). O `docker compose` normal já junta os dois; aqui
+    os arquivos vão com -f explícito, então sem isso o backend subiria de novo sem os ajustes do servidor."""
+    arquivos = ["-f", str(PROJETO / "docker-compose.yml")]
+    override = PROJETO / "docker-compose.override.yml"
+    if override.exists():
+        arquivos += ["-f", str(override)]
+    return arquivos
+
+
 def docker(*args, **kw):
     return subprocess.run(["docker", *args], capture_output=True, text=True, encoding="utf-8", errors="replace", **kw)
 
@@ -83,7 +94,7 @@ def rodar():
         if not r["mudou"]:
             andamento.terminar(True, "O sistema já está na versão mais nova.")
             return
-        compose = ["compose", "-p", nome, "--project-directory", str(PROJETO), "-f", str(PROJETO / "docker-compose.yml")]
+        compose = ["compose", "-p", nome, "--project-directory", str(PROJETO), *arquivos_compose()]
         andamento.log("Montando as imagens novas do backend e da tela (pode levar alguns minutos)...")
         montagem = docker(*compose, "build", "backend", "frontend")
         if montagem.returncode:

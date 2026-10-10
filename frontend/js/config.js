@@ -3,7 +3,7 @@
 // Endereço da API. É o ÚNICO lugar com o domínio no frontend: o change_api_link.py (rodado pelo
 // start_erp.bat) grava aqui o link_api do banco a cada inicialização, então um localhost que veio
 // do PC de desenvolvimento é trocado pelo endereço publicado na Cloudflare.
-const ERP_API_URL_PADRAO = 'https://erp-api-call.autoservto.com.br';
+const ERP_API_URL_PADRAO = 'https://erp-api-call.manerostream.com.br';
 
 // Endereço em uso, sem esperar a rede: o confirmado nesta sessão ou, antes disso, o deste arquivo.
 // Usado para montar links de imagens, vídeos e downloads.

@@ -41,6 +41,10 @@ services:
       # botão "Atualizar" em Configurações: quem atualiza é o serviço atualizador (abaixo)
       ERP_MODO: docker
       ATUALIZADOR_URL: http://atualizador:9000
+      # Atrás de um proxy/túnel (Cloudflare): o uvicorn confia no X-Forwarded-Proto e os redirecionamentos
+      # automáticos (ex.: /api/softwares -> /api/softwares/) saem com https. Sem isso saem com http e o navegador
+      # bloqueia a chamada numa página https (a lista fica vazia).
+      FORWARDED_ALLOW_IPS: "*"
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
@@ -48,6 +52,8 @@ services:
         condition: service_healthy
     volumes:
       - uploads_data:/app/frontend/uploads
+      # .exe da página Softwares: sem volume, sumiam a cada recriação do container (atualização, docker compose up)
+      - softwares_data:/app/Softwares
     networks:
       - erp-network
 
@@ -90,6 +96,8 @@ volumes:
   mysql_data:
     driver: local
   uploads_data:
+    driver: local
+  softwares_data:
     driver: local
 
 networks:

@@ -18,7 +18,7 @@ ARQUIVO = PASTA / "config.json"
 CATEGORIAS_FACEBOOK = ["Eletrônicos e informática", "Videogames", "Telefones celulares"]
 
 PADRAO = {
-    "api_url": "https://erp-api-call.autoservto.com.br",
+    "api_url": "https://erp-api-call.manerostream.com.br",
     "email": "",
     "senha_protegida": "",
     "lembrar": True,

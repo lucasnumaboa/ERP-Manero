@@ -49,7 +49,7 @@ No `.env`, troque:
 Abra `frontend\js\config.js` e troque a linha:
 
 ```js
-const ERP_API_URL_PADRAO = 'https://erp-api-call.autoservto.com.br';
+const ERP_API_URL_PADRAO = 'https://erp-api-call.manerostream.com.br';
 ```
 
 por:

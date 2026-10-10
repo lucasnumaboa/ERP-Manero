@@ -51,7 +51,7 @@ def test_todos_os_scripts_tem_sintaxe_valida():
 
 
 def test_endereco_da_api_so_no_config_js():
-    fora = [p.name for p in SCRIPTS + PAGINAS if p.name != "config.js" and "erp-api-call.autoservto.com.br" in p.read_text(encoding="utf-8")]
+    fora = [p.name for p in SCRIPTS + PAGINAS if p.name != "config.js" and "erp-api-call.manerostream.com.br" in p.read_text(encoding="utf-8")]
     assert not fora, f"URL da API fixa fora de js/config.js: {fora}"
 
 
