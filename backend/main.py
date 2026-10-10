@@ -47,6 +47,7 @@ import routers.anuncios as anuncios
 import routers.atualizacao as atualizacao
 import routers.autopost_diagnosticos as autopost_diagnosticos
 import routers.autopost_correcoes as autopost_correcoes
+import routers.autopost_ia as autopost_ia
 import routers.transcricao as transcricao
 import routers.orcamentos as orcamentos
 import routers.ia as ia
@@ -236,6 +237,7 @@ app.include_router(anuncios.router, prefix="/api/anuncios", tags=["Anúncios (Au
 app.include_router(atualizacao.router, prefix="/api/atualizacao", tags=["Atualização do sistema"])
 app.include_router(autopost_diagnosticos.router, prefix="/api/autopost/diagnosticos", tags=["AutoPost: travamentos"])
 app.include_router(autopost_correcoes.router, prefix="/api/autopost/correcoes", tags=["AutoPost: correção com IA"])
+app.include_router(autopost_ia.router, prefix="/api/autopost/ia", tags=["AutoPost: IA nos campos dos sites"])
 app.include_router(transcricao.router, prefix="/api/transcricao", tags=["Transcrição de Áudio"])
 app.include_router(orcamentos.router, prefix="/api/orcamentos", tags=["Orçamentos"], dependencies=permissao_modulo("orcamentos"))
 app.include_router(ia.router, prefix="/api/ia", tags=["IA"], dependencies=permissao_modulo("ia"))

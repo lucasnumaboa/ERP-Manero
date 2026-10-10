@@ -124,6 +124,7 @@ class Executor:
 
     def _plataforma(self, nome):
         plataforma = self._fabrica(nome, self.navegador, self.log, self._parar.is_set, self.cfg)
+        plataforma.escolher_campos = self.erp.escolher_campos
         plataforma.iniciar_item()
         return plataforma
 
@@ -233,6 +234,7 @@ class Executor:
     def _item(self, produto, cfg, imagens):
         mapa = cfg.get("facebook", {}).get("categorias", {})
         return {
+            "produto_id": produto.get("id"),
             "titulo": produto.get("nome", "").strip(),
             "preco": preco_do_anuncio(produto, cfg.get("precos", {})),
             "descricao": produto.get("descricao") or "",

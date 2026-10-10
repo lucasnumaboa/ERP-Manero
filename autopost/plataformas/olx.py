@@ -12,6 +12,66 @@ from .base import ParadaSolicitada, Plataforma, SkipItemException, normalizar  #
 
 URL_ANUNCIOS = "https://conta.olx.com.br/anuncios/publicados"
 
+# Campos de seleção da etapa de características (Marca, Modelo, Condição...): id, nome, opções (textContent: a lista
+# fica escondida até abrir e o Selenium não lê texto escondido), se está vazio e se é obrigatório.
+JS_CAMPOS_OLX = r"""
+const limpar = (t) => (t || '').replace(/\s+/g, ' ').trim();
+const campos = [];
+document.querySelectorAll('[role="combobox"]').forEach((cb) => {
+  const r = cb.getBoundingClientRect();
+  if (!r.width || !r.height) return;
+  const bloco = cb.closest('.olx-core-singleselect') || cb.parentElement;
+  const raiz = cb.closest('.olx-core-form-root') || (bloco && bloco.parentElement);
+  const label = raiz && raiz.querySelector('label');
+  const rotulo = limpar((label && label.textContent) || cb.getAttribute('aria-label'));
+  const opcoes = Array.from(bloco ? bloco.querySelectorAll('[role="option"]') : [])
+    .map((o) => limpar(o.textContent)).filter(Boolean);
+  const obrigatorio = /\*/.test(rotulo) || /obrigat/i.test(raiz ? raiz.textContent : '') ||
+    /error/.test(cb.className) || cb.getAttribute('aria-required') === 'true';
+  campos.push({id: cb.id || '', rotulo: rotulo.replace(/\s*\*\s*$/, ''), opcoes: opcoes,
+               vazio: !!cb.querySelector('[class*="placeholder"]'), obrigatorio: obrigatorio});
+});
+return campos;
+"""
+
+# O que ficou escrito no campo ('' se continua em "Selecione")
+JS_VALOR_CAMPO_OLX = r"""
+const cb = document.getElementById(arguments[0]);
+if (!cb || cb.querySelector('[class*="placeholder"]')) return '';
+const conteudo = cb.querySelector('[class*="trigger-content"]') || cb;
+return (conteudo.textContent || '').replace(/\s+/g, ' ').trim();
+"""
+
+# Clique "de verdade" para componentes que só reagem a pointerdown/mousedown
+JS_CLIQUE_COMPLETO = r"""
+const o = arguments[0];
+for (const tipo of ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click']) {
+  const Evento = tipo.startsWith('pointer') && window.PointerEvent ? PointerEvent : MouseEvent;
+  o.dispatchEvent(new Evento(tipo, {bubbles: true, cancelable: true, view: window}));
+}
+"""
+
+
+def escolha_reserva(campo, titulo):
+    """Sem a IA: a opção que aparece no título (ex.: "2gb" -> "2 GB"); senão o usado em melhor estado ou "Outros".
+    None se nada servir."""
+    import re
+    opcoes = campo.get("opcoes") or []
+    titulo_limpo = re.sub(r"[^a-z0-9]", "", normalizar(titulo))
+    for opcao in opcoes:
+        limpo = re.sub(r"[^a-z0-9]", "", normalizar(opcao))
+        if len(limpo) >= 2 and limpo in titulo_limpo:
+            return opcao
+    por_nome = {normalizar(o): o for o in opcoes}
+    for preferida in ("usado - excelente", "usado - bom", "usado", "outros"):
+        if preferida in por_nome:
+            return por_nome[preferida]
+    return None
+
+
+def _texto(elemento):
+    return " ".join((elemento.get_attribute("textContent") or "").split())
+
 
 class Olx(Plataforma):
     nome = "olx"
@@ -440,6 +500,7 @@ class Olx(Plataforma):
 
         # guarda o título: os campos de características (Marca, Modelo, VRAM...) são escolhidos por ele
         self._current_titulo = item.get('titulo', '')
+        self._current_item = item   # produto_id, título e descrição vão para a IA dos campos de seleção
 
         # 1. Navegar para página de criação de anúncio
         self.log("Navegando para página de criação de anúncio...")
@@ -1496,10 +1557,11 @@ class Olx(Plataforma):
         from selenium.webdriver.support.ui import Select
 
         def _primeiro_select():
-            els = self.scraper.driver.find_elements(By.TAG_NAME, 'select')
+            # a OLX usa campos próprios (div[role=combobox]); <select> nativo quase não aparece mais
+            els = self.scraper.driver.find_elements(By.CSS_SELECTOR, 'select, [role="combobox"]')
             return els[0] if els else None
 
-        self._olx_poll_find_first(_primeiro_select, "selects obrigatórios", max_seconds=45)
+        self._olx_poll_find_first(_primeiro_select, "campos de seleção", max_seconds=45)
 
         try:
             # Método 1: Buscar por elementos SELECT nativos
@@ -1552,70 +1614,131 @@ class Olx(Plataforma):
             self.log(f"Erro geral: {e}")
 
     def preencher_dropdowns_customizados(self):
-        """Preenche os dropdowns customizados da OLX (olx-core-singleselect: div[role=combobox])."""
-        import re
+        """Campos de seleção da OLX (olx-core-singleselect: div[role=combobox] + lista li[role=option]).
 
+        A lista de opções fica escondida (display:none) até abrir, e o Selenium não lê texto de elemento escondido:
+        por isso os campos e as opções são lidos por JavaScript (textContent). As escolhas vêm da IA do ERP, que vê
+        título, descrição e fotos; sem ela, ou para o que ela não respondeu, vale escolha_reserva()."""
+        try:
+            campos = [c for c in (self.scraper.driver.execute_script(JS_CAMPOS_OLX) or [])
+                      if c.get("vazio") and c.get("id") and c.get("opcoes")]
+        except Exception as e:
+            self.log(f"Erro ao ler os campos de seleção da OLX: {e}")
+            return
+        if not campos:
+            return
+        self.log(f"{len(campos)} campo(s) de seleção: " + ", ".join(c.get("rotulo") or c["id"] for c in campos))
+
+        escolhas = {}
+        if self.escolher_campos:
+            item = getattr(self, "_current_item", {}) or {}
+            self.log("Pedindo à IA do ERP as opções de cada campo (título, descrição e fotos do produto)...")
+            try:
+                resposta = self.escolher_campos({
+                    "plataforma": "olx", "produto_id": item.get("produto_id"),
+                    "titulo": item.get("titulo", ""), "descricao": (item.get("descricao") or "")[:6000],
+                    "categoria_site": self._olx_categoria_da_pagina(),
+                    "campos": [{"id": c["id"], "rotulo": c.get("rotulo", ""), "obrigatorio": bool(c.get("obrigatorio")),
+                                "opcoes": c["opcoes"]} for c in campos]})
+                escolhas = (resposta or {}).get("escolhas") or {}
+            except Exception as e:
+                self.log(f"IA do ERP indisponível ({e}); escolhendo pelo título.")
+
+        titulo = getattr(self, "_current_titulo", "") or ""
+        for campo in campos:
+            rotulo = campo.get("rotulo") or campo["id"]
+            valor, origem = escolhas.get(campo["id"]), "IA"
+            if valor not in campo["opcoes"]:
+                valor, origem = escolha_reserva(campo, titulo), "pelo título"
+            if not valor:
+                self.log(f"{rotulo}: nenhuma opção adequada; fica em branco.")
+                continue
+            try:
+                ficou = self._olx_selecionar_opcao(campo["id"], valor)
+            except Exception as e:
+                ficou = None
+                self.log(f"{rotulo}: erro ao escolher '{valor}': {e}")
+            if ficou == valor:
+                self.log(f"{rotulo}: {valor} ({origem}).")
+            else:
+                self.log(f"{rotulo}: tentei '{valor}' ({origem}), mas o campo ficou '{ficou or 'Selecione'}'.")
+
+    def _olx_categoria_da_pagina(self):
+        """Categoria mostrada acima dos campos (ex.: "Informática > Placas de Vídeo"), linhas antes de "Trocar categoria"."""
+        try:
+            texto = self.scraper.driver.execute_script("return document.body.innerText || ''") or ""
+            linhas = [l.strip() for l in texto.splitlines() if l.strip()]
+            i = next(n for n, l in enumerate(linhas) if l.lower().startswith("trocar categoria"))
+            return " > ".join(linhas[max(0, i - 2):i])
+        except Exception:
+            return ""
+
+    def _olx_valor_do_campo(self, campo_id):
+        return (self.scraper.driver.execute_script(JS_VALOR_CAMPO_OLX, campo_id) or "").strip()
+
+    def _olx_selecionar_opcao(self, campo_id, valor):
+        """Abre o campo, clica na opção e lê o que ficou. Se não pegou, tenta eventos de mouse completos e depois o
+        teclado. Devolve o texto que ficou no campo (vazio se continua em "Selecione")."""
         from selenium.webdriver.common.by import By
         from selenium.webdriver.common.keys import Keys
 
-        titulo = (getattr(self, "_current_titulo", "") or "").lower()
+        driver = self.scraper.driver
+        combobox = driver.find_element(By.ID, campo_id)
+        driver.execute_script("arguments[0].scrollIntoView({block:'center'});", combobox)
+        time.sleep(0.3)
+        bloco = combobox.find_element(By.XPATH, "./ancestor::div[contains(@class,'olx-core-singleselect')][1]")
 
-        def _listbox_do(combobox):
-            """Opções do listbox que pertencem a este combobox (mesmo bloco olx-core-singleselect)."""
-            try:
-                bloco = combobox.find_element(
-                    By.XPATH, "./ancestor::div[contains(@class,'olx-core-singleselect')][1]")
-            except Exception:
-                return []
-            try:
-                return bloco.find_elements(By.CSS_SELECTOR, 'li[role="option"]')
-            except Exception:
-                return []
-
-        def _escolher(opcoes):
-            textos = [(o.text.strip(), o) for o in opcoes if o.text.strip()]
-            titulo_limpo = re.sub(r"[^a-z0-9]", "", titulo)
-            # 1) opção que aparece no título (ex.: "2gb" -> "2 GB")
-            for texto, opcao in textos:
-                limpo = re.sub(r"[^a-z0-9]", "", texto.lower())
-                if len(limpo) >= 2 and limpo in titulo_limpo:
-                    return opcao
-            for palavra in re.findall(r"[a-z0-9]{3,}", titulo):
-                for texto, opcao in textos:
-                    if palavra in re.sub(r"[^a-z0-9]", "", texto.lower()):
-                        return opcao
-            # 2) reserva: opções que valem em qualquer campo
-            for texto, opcao in textos:
-                if texto.lower() in ("outros", "usado"):
-                    return opcao
+        def _opcao():
+            for li in bloco.find_elements(By.CSS_SELECTOR, 'li[role="option"]'):
+                if _texto(li) == valor:
+                    return li
             return None
 
-        try:
-            comboboxes = [
-                c for c in self.scraper.driver.find_elements(By.CSS_SELECTOR, 'div[role="combobox"]')
-                if c.is_displayed() and c.find_elements(By.CSS_SELECTOR, 'span[class*="placeholder"]')
-            ]
-        except Exception:
-            comboboxes = []
-
-        for combobox in comboboxes:
-            try:
-                self.scraper.driver.execute_script(
-                    "arguments[0].scrollIntoView({block:'center'});", combobox)
-                time.sleep(0.3)
+        def _abrir():
+            if combobox.get_attribute("aria-expanded") != "true":
                 combobox.click()
-                time.sleep(0.8)
-                opcao = _escolher(_listbox_do(combobox))
-                if opcao is None:
-                    self.log("Dropdown OLX: nenhuma opção adequada encontrada.")
-                    combobox.send_keys(Keys.ESCAPE)
-                    continue
-                self.log(f"Dropdown OLX: {opcao.text.strip()} escolhido.")
-                self.scraper.driver.execute_script("arguments[0].click();", opcao)
-                time.sleep(0.5)
-            except Exception as e:
-                self.log(f"Erro ao preencher dropdown OLX: {e}")
-                continue
+            fim = time.monotonic() + 3
+            while time.monotonic() < fim:
+                li = _opcao()
+                if li is not None and li.is_displayed():
+                    return li
+                time.sleep(0.2)
+            return _opcao()
+
+        # 1) clique normal na opção (ou por JavaScript, se ela não ficou visível)
+        li = _abrir()
+        if li is None:
+            raise RuntimeError("opção não encontrada na lista")
+        if li.is_displayed():
+            li.click()
+        else:
+            driver.execute_script("arguments[0].click();", li)
+        time.sleep(0.5)
+        if self._olx_valor_do_campo(campo_id) == valor:
+            return valor
+
+        # 2) eventos de mouse completos (alguns componentes só reagem a pointerdown/mousedown)
+        li = _abrir()
+        if li is not None:
+            driver.execute_script(JS_CLIQUE_COMPLETO, li)
+            time.sleep(0.5)
+            if self._olx_valor_do_campo(campo_id) == valor:
+                return valor
+
+        # 3) teclado: foca o campo, desce até a opção e confirma
+        opcoes = [_texto(li) for li in bloco.find_elements(By.CSS_SELECTOR, 'li[role="option"]')]
+        if valor in opcoes:
+            if combobox.get_attribute("aria-expanded") == "true":
+                combobox.send_keys(Keys.ESCAPE)
+                time.sleep(0.2)
+            combobox.send_keys(Keys.ENTER)
+            time.sleep(0.4)
+            for _ in range(opcoes.index(valor) + 1):
+                combobox.send_keys(Keys.ARROW_DOWN)
+                time.sleep(0.1)
+            combobox.send_keys(Keys.ENTER)
+            time.sleep(0.5)
+        return self._olx_valor_do_campo(campo_id)
 
     def preencher_dropdown_por_label(self, label_text, valor):
         """Preenche um dropdown encontrando-o pelo label próximo"""

@@ -38,6 +38,8 @@ class Plataforma:
     nome = ""          # "facebook" | "olx"
     rotulo = ""        # para a tela
     url_login = ""
+    # tarefas.py liga ao ERP: escolher_campos({"campos": [...], ...}) -> {"escolhas": {...}}; None = sem IA
+    escolher_campos = None
 
     def __init__(self, navegador, log, parar=lambda: False):
         self.scraper = navegador        # nome usado pelos fluxos trazidos do app antigo
