@@ -307,55 +307,19 @@ async function downloadSoftware(softwareId) {
         }
         
         const baseUrl = await getApiBaseUrl();
-        const token = localStorage.getItem('erp_token');
 
-        if (!token) {
-            alert('Você precisa estar autenticado para baixar arquivos');
-            return;
-        }
-
-        // Faz requisição com autenticação. O endereço é o mesmo para todas as versões do software: sem
-        // "no-store" o navegador reaproveitava a cópia guardada da versão anterior (ou um pedaço dela, pedindo só
-        // o resto com Range) e o download quebrava com "Failed to fetch" depois de uma atualização.
-        const response = await fetch(`${baseUrl}/api/softwares/download/${softwareId}?v=${encodeURIComponent(software.versao || '')}`, {
-            method: 'GET',
-            cache: 'no-store',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Softwares: Erro no download:', errorText);
-            throw new Error('Erro ao baixar software');
-        }
-
-        // Usa o nome do arquivo do banco de dados (mais confiável)
-        let filename = software.nome_arquivo || 'download.exe';
-        
-        // Garante que tem extensão .exe se não tiver
-        if (!filename.toLowerCase().endsWith('.exe')) {
-            filename = filename + '.exe';
-        }
-
-        updateLoadingText('Baixando software...', `Baixando: ${filename}`);
-
-        // Cria blob e faz download
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
+        // Download pelo próprio navegador (link direto para /softwares, que o backend já serve), e não mais por
+        // fetch + blob: extensões que mexem em downloads cortavam o fetch de um .exe grande e a página mostrava
+        // "Failed to fetch" (na aba anônima, sem extensões, funcionava). O download aparece na barra do navegador,
+        // com o andamento. A versão no endereço garante o arquivo novo, sem cópia velha do navegador ou da Cloudflare.
+        updateLoadingText('Baixando software...', `Baixando: ${software.nome_arquivo}`);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
+        a.href = `${baseUrl}/softwares/${encodeURIComponent(software.nome_arquivo)}?v=${encodeURIComponent(software.versao || '')}`;
+        a.rel = 'noopener';
         document.body.appendChild(a);
         a.click();
-        
-        // Cleanup
-        setTimeout(() => {
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-        }, 100);
-        
+        a.remove();
+
         hideLoading();
 
     } catch (error) {
