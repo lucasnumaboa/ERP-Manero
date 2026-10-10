@@ -772,9 +772,53 @@ function ligarEventos() {
     $('#linkFecharChrome').addEventListener('click', e => { e.preventDefault(); chamar('fechar_navegador').then(() => aviso('Chrome do AutoPost fechado.')); });
 
     $('#formConfig').addEventListener('submit', salvarConfig);
+    $('#atualizacaoAgora').addEventListener('click', atualizarAgora);
+    $('#atualizacaoDepois').addEventListener('click', () => { $('#modalAtualizacao').hidden = true; });
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') { $('#modalPreco').hidden = true; }
     });
+}
+
+// ---------- atualização do próprio AutoPost ----------
+const CONFERIR_ATUALIZACAO = 2 * 60 * 60 * 1000;   // além de ao abrir, confere de 2 em 2 horas
+
+async function verificarAtualizacao() {
+    if (!$('#modalAtualizacao').hidden) return;
+    const r = await api().verificar_atualizacao().catch(() => null);
+    if (!r || r.erro || !r.nova) return;
+    $('#atualizacaoAtual').textContent = `versão ${r.atual}`;
+    $('#atualizacaoNova').textContent = r.nova.versao ? `versão ${r.nova.versao}` : 'versão nova';
+    $('#atualizacaoNovidades').textContent = r.nova.alteracoes;
+    $('#atualizacaoSituacao').textContent = '';
+    $('#atualizacaoBarra').hidden = true;
+    $('#atualizacaoAgora').disabled = $('#atualizacaoDepois').disabled = false;
+    $('#modalAtualizacao').hidden = false;
+}
+
+async function atualizarAgora() {
+    const situacao = $('#atualizacaoSituacao');
+    try { await chamar('atualizar'); } catch (e) { situacao.textContent = e.message; return; }
+    $('#atualizacaoAgora').disabled = $('#atualizacaoDepois').disabled = true;
+    $('#atualizacaoBarra').hidden = false;
+    const acompanharDownload = async () => {
+        const p = await chamar('progresso_atualizacao').catch(e => ({ etapa: 'erro', erro: e.message }));
+        if (p.etapa === 'baixando') {
+            const pct = p.total ? Math.min(100, Math.round(p.baixado / p.total * 100)) : 0;
+            $('#atualizacaoBarra div').style.width = `${pct}%`;
+            situacao.textContent = `Baixando… ${pct}%`;
+            setTimeout(acompanharDownload, 500);
+            return;
+        }
+        if (p.etapa === 'pronto') {
+            $('#atualizacaoBarra div').style.width = '100%';
+            situacao.textContent = 'Pronto. Abrindo a versão nova…';
+            chamar('abrir_versao_nova').catch(e => { situacao.textContent = e.message; });
+            return;
+        }
+        situacao.textContent = p.erro || 'Não deu para atualizar.';
+        $('#atualizacaoAgora').disabled = $('#atualizacaoDepois').disabled = false;
+    };
+    acompanharDownload();
 }
 
 async function iniciar() {
@@ -783,6 +827,8 @@ async function iniciar() {
     const r = await chamar('inicio').catch(e => ({ erro: e.message }));
     if (r.erro) { $('#loginErro').textContent = r.erro; $('#loginErro').hidden = false; return; }
     $('#versao').textContent = `versão ${r.versao}`;
+    verificarAtualizacao();
+    setInterval(verificarAtualizacao, CONFERIR_ATUALIZACAO);
     $('#loginApi').value = r.api_url;
     $('#loginEmail').value = r.email;
     $('#loginLembrar').checked = r.lembrar;

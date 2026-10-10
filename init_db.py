@@ -629,6 +629,7 @@ tables = {
             nome_arquivo VARCHAR(255) NOT NULL UNIQUE,
             descricao TEXT,
             versao INT DEFAULT 1,
+            versao_app VARCHAR(30) NULL,
             tamanho BIGINT,
             usuario_id INT,
             data_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -1077,6 +1078,15 @@ try:
     print("Coluna tipo de clientes ajustada para VARCHAR(20)")
 except mysql.connector.Error as err:
     print(f"Ignorado erro ao alterar tipo de clientes: {err}")
+
+# Versão do programa (ex.: 1.2.0) em softwares: o AutoPost compara com a dele para se atualizar
+try:
+    cursor.execute("ALTER TABLE softwares ADD COLUMN versao_app VARCHAR(30) NULL AFTER versao")
+    conn.commit()
+    print("Coluna versao_app criada em softwares")
+except mysql.connector.Error as err:
+    if err.errno != 1060:   # 1060: a coluna já existe
+        print(f"Ignorado erro ao criar versao_app em softwares: {err}")
 
 # Insere um usuário administrador padrão (senha: admin123)
 try:

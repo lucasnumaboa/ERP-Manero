@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import FileResponse
 from typing import Optional
+from urllib.parse import quote
+import hashlib
 import os
 import shutil
 
@@ -98,6 +100,43 @@ async def obter_historico(software_id: int, current_user: dict = Depends(get_cur
     except Exception as e:
         print(f"Erro ao obter histórico: {e}")
         return []
+
+
+_hashes = {}   # caminho -> (mtime_ns, tamanho, sha256)
+
+
+def _sha256(caminho):
+    info = os.stat(caminho)
+    guardado = _hashes.get(caminho)
+    if guardado and guardado[:2] == (info.st_mtime_ns, info.st_size):
+        return guardado[2]
+    h = hashlib.sha256()
+    with open(caminho, "rb") as f:
+        for bloco in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(bloco)
+    _hashes[caminho] = (info.st_mtime_ns, info.st_size, h.hexdigest())
+    return h.hexdigest()
+
+
+@router.get("/atualizacao/{nome_arquivo:path}")
+def versao_publicada(nome_arquivo: str):
+    """Versão publicada de um software, sem login: o AutoPost confere ao abrir se há outra para se atualizar.
+    O endereço do arquivo leva o hash, então cada versão tem endereço próprio (o Cloudflare guarda os .exe)."""
+    with get_db_cursor() as cursor:
+        cursor.execute("""
+            SELECT s.nome_arquivo, s.versao, s.versao_app, s.data_atualizacao, h.alteracoes
+            FROM softwares s
+            LEFT JOIN softwares_historico h ON h.software_id = s.id AND h.versao = s.versao
+            WHERE s.nome_arquivo = %s
+            ORDER BY h.id DESC LIMIT 1
+        """, (nome_arquivo,))
+        software = cursor.fetchone()
+    caminho = os.path.join(SOFTWARES_DIR, nome_arquivo)
+    if not software or not os.path.isfile(caminho):
+        raise HTTPException(status_code=404, detail="Software não encontrado")
+    sha = _sha256(caminho)
+    return {**software, "tamanho": os.path.getsize(caminho), "sha256": sha,
+            "url": f"/softwares/{quote(nome_arquivo)}?v={sha[:12]}"}
 
 
 @router.get("/download/{software_id}")
@@ -248,9 +287,10 @@ async def atualizar_software(
         
         # Atualiza no banco
         with get_db_cursor(commit=True) as cursor:
+            # versao_app volta a vazio: o arquivo enviado à mão não diz a versão do programa
             cursor.execute("""
                 UPDATE softwares 
-                SET versao = %s, tamanho = %s, usuario_id = %s, data_atualizacao = NOW()
+                SET versao = %s, versao_app = NULL, tamanho = %s, usuario_id = %s, data_atualizacao = NOW()
                 WHERE id = %s
             """, (nova_versao, tamanho, current_user.id, software_id))
             

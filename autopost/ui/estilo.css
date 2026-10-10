@@ -334,6 +334,9 @@ main { flex: 1; min-width: 0; overflow: hidden; display: flex; }
 }
 .modal-cartao p { margin: 0; color: var(--discreto); }
 .modal-cartao h3 { font-size: 18px; }
+.barra-atualizacao { height: 8px; border-radius: 999px; background: var(--painel-2); overflow: hidden; }
+.barra-atualizacao div { height: 100%; width: 0; background: var(--destaque); transition: width .3s; }
+#atualizacaoNovidades { white-space: pre-line; max-height: 160px; overflow-y: auto; }
 @keyframes surgir { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
 
 /* ---------- avisos ---------- */

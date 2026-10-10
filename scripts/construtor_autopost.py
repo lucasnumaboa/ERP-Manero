@@ -221,20 +221,22 @@ class Construtor:
             if destino.is_file() and self.guardar:
                 self.guardar.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(destino, self.guardar / f"ERP AutoPost {anterior}.exe")
-            shutil.copy2(exe, destino)
+            temporario = destino.with_name(destino.name + ".novo")   # quem baixa agora não pega o arquivo pela metade
+            shutil.copy2(exe, temporario)
+            os.replace(temporario, destino)
             tamanho = destino.stat().st_size
             sw = self.sql("SELECT id, versao FROM softwares WHERE nome_arquivo = %s", (NOME_EXE,), um=True)
             texto = (f"AutoPost {nova}: correção do travamento #{diag['id']} ({diag['plataforma']}). "
                      f"{analise.get('solucao') or ''}").strip()[:1000]
             if sw:
                 versao_pagina = sw["versao"] + 1
-                self.sql("UPDATE softwares SET versao = %s, tamanho = %s, usuario_id = %s, data_atualizacao = NOW() "
-                         "WHERE id = %s", (versao_pagina, tamanho, rodada["usuario_id"], sw["id"]))
+                self.sql("UPDATE softwares SET versao = %s, versao_app = %s, tamanho = %s, usuario_id = %s, "
+                         "data_atualizacao = NOW() WHERE id = %s", (versao_pagina, nova, tamanho, rodada["usuario_id"], sw["id"]))
                 self.sql("INSERT INTO softwares_historico (software_id, versao, alteracoes, usuario_id) VALUES (%s, %s, %s, %s)",
                          (sw["id"], versao_pagina, texto, rodada["usuario_id"]))
             else:
-                self.sql("INSERT INTO softwares (nome_arquivo, descricao, versao, tamanho, usuario_id) VALUES (%s, %s, 1, %s, %s)",
-                         (NOME_EXE, "AutoPost Facebook e OLX", tamanho, rodada["usuario_id"]))
+                self.sql("INSERT INTO softwares (nome_arquivo, descricao, versao, versao_app, tamanho, usuario_id) "
+                         "VALUES (%s, %s, 1, %s, %s, %s)", (NOME_EXE, "AutoPost Facebook e OLX", nova, tamanho, rodada["usuario_id"]))
             self.sql("UPDATE autopost_diagnosticos SET status = 'resolvido', data_resolucao = NOW(), observacao = %s "
                      "WHERE id = %s", (f"Corrigido no AutoPost {nova} (correção com IA, rodada {rodada['rodada']})", diag["id"]))
             self.estado("publicada", versao=nova, commit_sha=commit)

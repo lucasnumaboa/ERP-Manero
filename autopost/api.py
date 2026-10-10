@@ -7,12 +7,13 @@ import functools
 import traceback
 import webbrowser
 
+import atualizador
 import config
 from erp import ErpCliente, ErroErp
 from navegador import chrome_instalado
 from tarefas import Executor
 
-VERSAO = "1.1.0"
+VERSAO = "1.2.0"
 
 CAMPOS_PRODUTO = ("id", "codigo", "nome", "descricao", "preco_venda", "estoque_atual", "categoria_id",
                   "categoria_nome", "caminho_imagem", "post_facebook", "post_olx", "faturavel", "comissao")
@@ -37,6 +38,10 @@ class Api:
         self.erp = None
         self.executor = None
         self.usuario = None
+        self.janela = None            # app.py preenche: a atualização fecha a janela ao abrir a versão nova
+        self.publicada = None         # versão nova achada no ERP
+        self.atualizacao = None
+        atualizador.limpar_sobras()
 
     def _salvar_cfg(self):
         config.salvar(self.cfg)
@@ -243,6 +248,41 @@ class Api:
         if not self.executor:
             return {"eventos": [], "estado": {"rodando": False}}
         return {"eventos": self.executor.eventos(int(desde)), "estado": self.executor.estado}
+
+    # ---------- atualização do próprio AutoPost ----------
+    @_seguro
+    def verificar_atualizacao(self):
+        api_url = self.erp.base_url if self.erp else self.cfg["api_url"]
+        self.publicada = atualizador.verificar(api_url, VERSAO)
+        if not self.publicada:
+            return {"nova": None, "atual": VERSAO}
+        return {"atual": VERSAO, "nova": {"versao": self.publicada.get("versao_app") or "",
+                                          "alteracoes": self.publicada.get("alteracoes") or "",
+                                          "tamanho": self.publicada.get("tamanho")}}
+
+    @_seguro
+    def atualizar(self):
+        if not self.publicada:
+            return {"erro": "Nenhuma versão nova para instalar."}
+        if self.executor and self.executor.ocupado():
+            return {"erro": "Espere o robô terminar (ou clique em Parar) antes de atualizar."}
+        api_url = self.erp.base_url if self.erp else self.cfg["api_url"]
+        self.atualizacao = atualizador.Atualizador(api_url)
+        self.atualizacao.iniciar(self.publicada)
+        return {"ok": True}
+
+    @_seguro
+    def progresso_atualizacao(self):
+        return dict(self.atualizacao.estado) if self.atualizacao else {"etapa": "parado"}
+
+    @_seguro
+    def abrir_versao_nova(self):
+        if not (self.atualizacao and self.atualizacao.estado["etapa"] == "pronto"):
+            return {"erro": "A versão nova ainda não está pronta."}
+        self.atualizacao.abrir_novo()
+        if self.janela:
+            self.janela.destroy()
+        return {"ok": True}
 
     @_seguro
     def abrir_link(self, url):

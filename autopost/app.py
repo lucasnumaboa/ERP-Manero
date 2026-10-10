@@ -32,6 +32,7 @@ def main():
         "ERP AutoPost", url=str(BASE / "ui" / "index.html"), js_api=api, maximized=maximizada,
         width=largura, height=altura, min_size=(min(1040, largura), min(640, altura)), background_color="#0b1626",
     )
+    api.janela = janela
     janela.events.closing += api.ao_fechar
     webview.start(debug=os.getenv("AUTOPOST_DEBUG") == "1", icon=str(BASE / "ui" / "icone.ico"))
 

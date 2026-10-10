@@ -83,6 +83,12 @@ python -m venv .venv
 Para gerar o `.exe`, rode `build.bat`, que cria `dist\ERP AutoPost.exe`. Ele usa o `.venv` próprio, separado
 do Python do ERP. Depois suba o `.exe` na página **Softwares** do ERP.
 
+Atualização: ao abrir (e de 2 em 2 horas) o app consulta `/api/softwares/atualizacao/ERP%20AutoPost.exe`, sem
+login. Se o exe publicado for outro e não for de versão anterior, ele avisa e, com "Atualizar agora", baixa,
+confere o hash, troca o próprio arquivo e abre a versão nova (`atualizador.py`). A versão do programa
+(`softwares.versao_app`) vem do construtor do servidor (`scripts/construtor_autopost.py`); um exe enviado à mão
+pela página fica sem versão e o app só compara o arquivo.
+
 Testes (com sites de mentira, sem abrir o Chrome): `python -m pytest tests/test_autopost.py` na raiz do repositório.
 
 ### Estrutura
@@ -96,6 +102,7 @@ Testes (com sites de mentira, sem abrir o Chrome): `python -m pytest tests/test_
 | `navegador.py` | Chrome controlado (perfil próprio, undetected-chromedriver) |
 | `plataformas/facebook.py`, `plataformas/olx.py` | publicar, ver se está logado e excluir pelo título |
 | `config.py` | configuração local e senha protegida |
+| `atualizador.py` | confere a versão publicada no ERP, baixa e troca o próprio exe |
 | `ui/` | a tela (HTML, CSS e JS) |
 | `legado/` | fontes dos apps antigos, só para consulta |
 

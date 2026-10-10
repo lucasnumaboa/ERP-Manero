@@ -238,6 +238,21 @@
         </form>
     </div>
 
+    <!-- versão nova do AutoPost publicada no ERP -->
+    <div class="modal" id="modalAtualizacao" hidden>
+        <div class="modal-cartao">
+            <h3>Versão nova do AutoPost</h3>
+            <p>Você está com a <b id="atualizacaoAtual"></b>. A <b id="atualizacaoNova"></b> já está no ERP.</p>
+            <p class="discreto" id="atualizacaoNovidades"></p>
+            <div class="barra-atualizacao" id="atualizacaoBarra" hidden><div></div></div>
+            <p id="atualizacaoSituacao"></p>
+            <div class="acoes">
+                <button class="botao primario grande" id="atualizacaoAgora">Atualizar agora</button>
+                <button class="botao fantasma" id="atualizacaoDepois">Depois</button>
+            </div>
+        </div>
+    </div>
+
     <div class="toasts" id="toasts"></div>
     <script src="app.js"></script>
 </body>
