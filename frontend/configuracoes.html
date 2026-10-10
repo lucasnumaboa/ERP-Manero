@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="css/modulos.css?v=fdd4166201">
     <link rel="stylesheet" href="css/submenu.css?v=fc4e2a67d9">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="css/atualizacao-sistema.css?v=7fdb4b7d16">
     <link rel="stylesheet" href="css/theme-dark.css?v=0137d572a5">
     <link rel="stylesheet" href="css/theme-light.css?v=feb5136289">
     <style>
@@ -285,6 +286,30 @@
                     <div class="configurations-header">
                         <h1><i class="fas fa-database"></i> Configurações do Sistema</h1>
                         <p class="configurations-subtitle">Gerencie as configurações do banco de dados do sistema</p>
+                    </div>
+
+                    <!-- Atualização do sistema (js/atualizacao-sistema.js) -->
+                    <div class="settings-card atualizacao" id="cartaoAtualizacao" style="margin-bottom: 20px;">
+                        <div class="card-header">
+                            <h2><i class="fas fa-sync-alt"></i> Atualização do sistema</h2>
+                            <p class="card-description">Traz a versão mais nova do GitHub e reinicia o ERP. Antes de trocar o código, é feito um backup do banco. Os dados e as fotos não são tocados.</p>
+                        </div>
+                        <div class="configurations-content">
+                            <div class="atualizacao-versoes">
+                                <div><small>Instalada</small><strong id="atuInstalada">…</strong><span id="atuInstaladaInfo"></span></div>
+                                <div><small>No GitHub</small><strong id="atuDisponivel">…</strong><span id="atuDisponivelInfo"></span></div>
+                                <div><small>Instalação</small><strong id="atuModo">…</strong><span id="atuModoInfo"></span></div>
+                            </div>
+                            <p id="atuSituacao" class="atualizacao-situacao">Verificando…</p>
+                            <ul id="atuImpedimentos" class="atualizacao-impedimentos" hidden></ul>
+                            <ul id="atuNovidades" class="atualizacao-novidades" hidden></ul>
+                            <div class="atualizacao-acoes">
+                                <button type="button" class="btn-secondary" id="atuVerificar"><i class="fas fa-search"></i> Verificar de novo</button>
+                                <button type="button" class="btn-primary" id="atuAtualizar" disabled><i class="fas fa-download"></i> Atualizar agora</button>
+                                <button type="button" class="btn-primary" id="atuRecarregar" hidden><i class="fas fa-redo"></i> Recarregar a página</button>
+                            </div>
+                            <pre id="atuLog" class="atualizacao-log" hidden></pre>
+                        </div>
                     </div>
 
                     <!-- Seção de Webhook -->
@@ -704,6 +729,7 @@
     <script src="js/sidebar-template.js?v=c7ae38affb"></script>
     <script src="js/tabs.js?v=0c6e055e53"></script>
     <script src="js/setupModals.js?v=f3b8a1828f"></script>
+    <script src="js/atualizacao-sistema.js?v=0deddc8904"></script>
     <script src="js/configuracoes.js?v=1f7d2dbcbf"></script>
     <script src="js/internal-animation.js?v=7d7314b65d"></script>
     <script src="js/theme-switcher.js?v=2435969ea2"></script>

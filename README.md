@@ -74,6 +74,7 @@ Sistema ERP completo para pequenas e médias empresas, com cliente desktop para 
 - **Filtro "apenas com estoque"** na listagem de Produtos.
 - **Limpeza de sidebar**: simplificação dos scripts de menu lateral, mantendo apenas o necessário.
 - **Taxa de armazenagem**: cada produto pode ter uma taxa (valor fixo por unidade ou % sobre o preço da venda), exibida em Estoque; na venda, marcando "cobrar taxa de armazenagem" no item, o valor entra no custo e já desconta do lucro nos relatórios.
+- **Botão Atualizar** em Configurações: traz a versão do GitHub, faz backup do banco antes, mantém as configurações do computador e reinicia sozinho, na instalação local ou no Docker (veja *Atualizar pelo próprio sistema*).
 - **ERP AutoPost**: um app só para Facebook Marketplace e OLX, com escolha por produto, e o ERP passa a saber o que está anunciado. Quando o produto vende, o anúncio é tirado do ar (veja *ERP AutoPost* abaixo).
 - **Orçamentos**: nova tela em Vendas › Orçamentos para vendedores montarem orçamentos; configurações (preço/km, períodos, itens avulsos, campos, descontos) ficam com o admin.
 
@@ -263,6 +264,24 @@ Os testes rodam sozinhos antes de cada `git push` (gancho em `.githooks/pre-push
 ```bash
 git config core.hooksPath .githooks
 ```
+
+---
+
+## Atualizar pelo próprio sistema
+
+Em **Configurações › Configurações › Atualização do sistema** (só admin), o ERP mostra a versão instalada, a do GitHub e o que mudou entre elas. O botão **Atualizar agora** faz:
+
+1. **Backup do banco** antes de mexer em qualquer coisa.
+2. **Código novo do GitHub** (`git fetch` + `reset --hard`; nunca `git clean`): fotos, logs e backups não são tocados.
+3. **Configurações do computador mantidas**:
+   - os `.env` e o `last_api_url.json` são guardados antes e devolvidos se algo mudar;
+   - o endereço da API do `frontend/js/config.js` é aplicado de novo.
+   - Configurações do banco (chaves da IA, webhook, link_api) não são tocadas: o `init_db.py` só cria tabelas e colunas novas.
+4. **Reinício**:
+   - **Instalação local (Windows)**: instala dependências novas se o `requirements.txt` mudou, roda o `init_db.py` e reinicia o backend (`scripts/atualizar.py`). Se este PC tiver commit que não está no GitHub, ou arquivo alterado à mão, a atualização não roda e a tela diz o motivo.
+   - **Docker**: o serviço `atualizador` (`atualizador/servidor.py`, sem porta para fora, só atende o backend com a `SECRET_KEY`) traz o código para a pasta do `docker-compose.yml` e remonta e sobe o backend e a tela. O banco e as fotos ficam nos volumes. Ele usa o Docker do computador (`/var/run/docker.sock`).
+
+O andamento aparece na tela e fica em `log/atualizacao.json`. Pela linha de comando: `python scripts/atualizar.py` (local).
 
 ---
 

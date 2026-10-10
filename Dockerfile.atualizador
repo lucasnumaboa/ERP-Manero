@@ -1,0 +1,10 @@
+# Atualizador do ERP (botão "Atualizar" em Configurações quando o ERP roda no Docker).
+# docker CLI + compose (para remontar backend e tela), git (para trazer o código) e python.
+FROM docker:28-cli
+
+RUN apk add --no-cache git python3
+
+WORKDIR /app
+COPY scripts/atualizar.py atualizador/servidor.py ./
+
+CMD ["python3", "-u", "servidor.py"]

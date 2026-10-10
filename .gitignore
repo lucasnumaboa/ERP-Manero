@@ -112,3 +112,6 @@ backend/frontend/
 
 # Pacote de instalação gerado por scripts/gerar_pacote_deploy.py (tem senhas, chave da IA e dados de clientes)
 /deploy/
+
+# versão instalada (gravada pelo atualizador e pelo pacote de instalação)
+backend/versao.json

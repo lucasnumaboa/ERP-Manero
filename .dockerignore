@@ -50,3 +50,10 @@ lista.txt
 # Backend venv
 backend/venv/
 backend/__pycache__/
+
+# Pastas que não entram em nenhuma imagem (backups, logs, pacote de instalação, apps de Windows)
+backup/
+log/
+deploy/
+autopost/
+Softwares/

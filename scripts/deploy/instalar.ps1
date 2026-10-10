@@ -69,7 +69,7 @@ docker info *> $null
 if ($LASTEXITCODE -ne 0) { Falhar 'O Docker nao esta rodando. Abra o Docker Desktop, espere ele ficar pronto e rode de novo.' }
 
 # Imagens prontas (pasta imagens\ do pacote): carrega sem internet e sobe sem montar nada
-$imagensNecessarias = @('mysql:8.0', 'erp-maneiro-backend:latest', 'erp-maneiro-frontend:latest')
+$imagensNecessarias = @('mysql:8.0', 'erp-maneiro-backend:latest', 'erp-maneiro-frontend:latest', 'erp-maneiro-atualizador:latest')
 $pacoteImagens = Get-ChildItem $raiz -Recurse -Depth 2 -Filter 'erp-imagens*.tar*' -ErrorAction SilentlyContinue | Select-Object -First 1
 $usarImagensProntas = $false
 if ($pacoteImagens) {
@@ -141,7 +141,15 @@ try {
         # ---------- 3. ERP ----------
         if ($usarImagensProntas) {
             Passo 'Subindo o ERP (imagens prontas do pacote)...'
-            docker compose up -d --no-build
+            docker image inspect 'erp-maneiro-atualizador:latest' *> $null
+            if ($LASTEXITCODE -eq 0) {
+                docker compose up -d --no-build
+            } else {
+                # pacote antigo, sem a imagem do atualizador: sobe o ERP e monta o atualizador (precisa de internet)
+                docker compose up -d --no-build db backend frontend
+                docker compose up -d --build atualizador
+                if ($LASTEXITCODE -ne 0) { Write-Host 'Aviso: o atualizador (botao Atualizar em Configuracoes) nao subiu; sem internet ele fica para depois.' -ForegroundColor Yellow; $global:LASTEXITCODE = 0 }
+            }
         } else {
             Passo 'Montando e subindo o ERP (sem a pasta imagens\ baixa tudo da internet: pode levar alguns minutos)...'
             docker compose up -d --build

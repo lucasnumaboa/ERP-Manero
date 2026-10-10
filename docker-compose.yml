@@ -38,6 +38,9 @@ services:
       DB_NAME: ${DB_NAME:-erp_maneiro}
       DB_PORT: 3306
       SECRET_KEY: ${SECRET_KEY:?Defina SECRET_KEY no arquivo .env (veja .env.docker)}
+      # botão "Atualizar" em Configurações: quem atualiza é o serviço atualizador (abaixo)
+      ERP_MODO: docker
+      ATUALIZADOR_URL: http://atualizador:9000
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
@@ -60,6 +63,26 @@ services:
       - "${FRONTEND_PORT:-3000}:80"
     depends_on:
       - backend
+    networks:
+      - erp-network
+
+  # Atualizador (botão "Atualizar" em Configurações): traz o código do GitHub para esta pasta e remonta
+  # backend e tela. Precisa do Docker do computador (docker.sock); não tem porta para fora e só atende o
+  # backend, que manda a SECRET_KEY. Banco e fotos ficam nos volumes e não são tocados.
+  atualizador:
+    image: erp-maneiro-atualizador:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.atualizador
+    container_name: erp-maneiro-atualizador
+    restart: unless-stopped
+    environment:
+      ATUALIZADOR_TOKEN: ${SECRET_KEY:?Defina SECRET_KEY no arquivo .env (veja .env.docker)}
+      ERP_REPO_URL: ${ERP_REPO_URL:-https://github.com/lucasnumaboa/ERP-Manero.git}
+      ERP_BRANCH: ${ERP_BRANCH:-main}
+    volumes:
+      - ./:/projeto
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - erp-network
 

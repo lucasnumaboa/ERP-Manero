@@ -14,6 +14,7 @@ A pasta deploy/ fica fora do git: tem senhas, a chave da IA e os dados dos clien
 import argparse
 import gzip
 import io
+import json
 import os
 import re
 import secrets
@@ -68,6 +69,15 @@ def extrair_codigo(destino: Path):
     return env_anterior
 
 
+def gravar_versao(destino: Path):
+    """Versão do código no pacote (backend/versao.json): o botão Atualizar compara com a do GitHub."""
+    formato = "%H%x1f%h%x1f%cI%x1f%s"
+    sha, curto, data, msg = subprocess.run(["git", "log", "-1", f"--format={formato}"], cwd=RAIZ, capture_output=True,
+                                           text=True, encoding="utf-8", check=True).stdout.strip().split("\x1f")
+    (destino / "backend" / "versao.json").write_text(
+        json.dumps({"commit": sha, "curto": curto, "data": data, "mensagem": msg}, ensure_ascii=False), encoding="utf-8")
+
+
 def criar_env(destino: Path, env_anterior):
     if env_anterior:
         (destino / ".env").write_text(env_anterior, encoding="utf-8")
@@ -98,12 +108,12 @@ def apontar_tela_para_api_local(destino: Path):
     subprocess.run([sys.executable, str(destino / "versionar_frontend.py")], cwd=destino, check=True, capture_output=True)
 
 
-IMAGENS = ["mysql:8.0", "erp-maneiro-backend:latest", "erp-maneiro-frontend:latest"]
+IMAGENS = ["mysql:8.0", "erp-maneiro-backend:latest", "erp-maneiro-frontend:latest", "erp-maneiro-atualizador:latest"]
 
 
 def montar_imagens(erp: Path, pasta: Path) -> Path:
     """Monta as imagens com o código do pacote (a tela já aponta para a API local) e salva compactadas."""
-    for base in ("mysql:8.0", "python:3.11-slim", "nginx:alpine"):
+    for base in ("mysql:8.0", "python:3.11-slim", "nginx:alpine", "docker:28-cli"):
         subprocess.run(["docker", "pull", "-q", base], check=True)
     r = subprocess.run(["docker", "compose", "build"], cwd=erp, capture_output=True, text=True,
                        encoding="utf-8", errors="replace")
@@ -151,6 +161,7 @@ def main():
     passo("Código (versão atual do git)")
     env_anterior = extrair_codigo(DEPLOY / "erp")
     print("   .env:", criar_env(DEPLOY / "erp", env_anterior))
+    gravar_versao(DEPLOY / "erp")
     apontar_tela_para_api_local(DEPLOY / "erp")
 
     passo("Banco (exportando agora)")

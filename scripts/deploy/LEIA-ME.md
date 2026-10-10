@@ -40,6 +40,10 @@ Com a pasta `imagens\` no pacote, a instalação **não precisa de internet**: o
 | Ver o log da API | `docker compose logs -f backend` |
 | **Apagar a cópia inteira** (banco e fotos) | `docker compose down -v` |
 
+## Atualizar o programa (versão nova do GitHub)
+
+Entre como admin em **Configurações › Configurações › Atualização do sistema** e clique em **Atualizar agora**. O serviço `atualizador` faz backup do banco (em `erpackup\`), traz o código novo e remonta o backend e a tela. Os dados, as fotos e o `erp\.env` continuam os mesmos. Precisa de internet.
+
 ## Atualizar a cópia com dados mais novos
 
 No PC da produção, rode `python scripts\gerar_pacote_deploy.py --imagens` (pasta `C:\ERP`): ele gera esta pasta de novo com o banco do momento. Copie a pasta `banco\` nova para o outro PC e dê dois cliques em `ATUALIZAR_BANCO.bat`.

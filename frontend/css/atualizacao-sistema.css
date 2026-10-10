@@ -1,0 +1,110 @@
+/* Cartão "Atualização do sistema" em Configurações (js/atualizacao-sistema.js) */
+.atualizacao .configurations-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.atualizacao-versoes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.atualizacao-versoes > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 1rem 1.2rem;
+    border: 1px solid rgba(127, 127, 127, 0.25);
+    border-radius: 12px;
+}
+
+.atualizacao-versoes small {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.72rem;
+    opacity: 0.7;
+}
+
+.atualizacao-versoes strong {
+    font-size: 1.15rem;
+    font-family: Consolas, "Cascadia Mono", monospace;
+}
+
+.atualizacao-versoes span {
+    font-size: 0.85rem;
+    opacity: 0.75;
+}
+
+.atualizacao-situacao {
+    margin: 0;
+    font-weight: 600;
+}
+
+.atualizacao-situacao.ok { color: #27ae60; }
+.atualizacao-situacao.novo { color: #2980b9; }
+.atualizacao-situacao.erro { color: #e74c3c; }
+
+.atualizacao-novidades,
+.atualizacao-impedimentos {
+    margin: 0;
+    padding: 0.8rem 1rem 0.8rem 2rem;
+    border-radius: 10px;
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.atualizacao-novidades {
+    background: rgba(41, 128, 185, 0.08);
+}
+
+.atualizacao-novidades li {
+    margin: 0.25rem 0;
+}
+
+.atualizacao-novidades code {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin-right: 0.4rem;
+}
+
+.atualizacao-novidades time {
+    font-size: 0.8rem;
+    opacity: 0.6;
+    margin-left: 0.4rem;
+}
+
+.atualizacao-impedimentos {
+    background: rgba(231, 76, 60, 0.1);
+    color: #c0392b;
+}
+
+.atualizacao-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+}
+
+.atualizacao-acoes button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.atualizacao-log {
+    margin: 0;
+    background: #0f1724;
+    color: #d6e2f0;
+    border-radius: 10px;
+    padding: 1rem;
+    max-height: 320px;
+    overflow-y: auto;
+    font: 0.82rem/1.5 Consolas, "Cascadia Mono", monospace;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* os botões do ERP têm display próprio, que anularia o atributo hidden */
+.atualizacao [hidden] {
+    display: none !important;
+}
