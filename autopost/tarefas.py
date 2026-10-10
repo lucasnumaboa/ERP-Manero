@@ -125,6 +125,8 @@ class Executor:
     def _plataforma(self, nome):
         plataforma = self._fabrica(nome, self.navegador, self.log, self._parar.is_set, self.cfg)
         plataforma.escolher_campos = self.erp.escolher_campos
+        plataforma.pedir_ajuda = self.erp.ajuda_ia
+        plataforma.relatar_memoria = self.erp.memoria_resultado
         plataforma.iniciar_item()
         return plataforma
 
@@ -272,6 +274,7 @@ class Executor:
                 item = self._item(produto, cfg, imagens)
                 plataforma_atual.iniciar_item()
                 no_site = True
+                plataforma_atual._item_atual = item   # a ajuda da IA manda produto, título e preço
                 link = plataforma_atual.publicar(item)
                 no_site = False
                 self.erp.registrar_anuncio(produto["id"], nome, item["titulo"], float(item["preco"] or 0), link)

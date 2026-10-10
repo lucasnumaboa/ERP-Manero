@@ -41,6 +41,21 @@ class Facebook(Plataforma):
                 if self._parar():   # deixa o botão Parar funcionar enquanto espera
                     raise ParadaSolicitada()
 
+    def _achar_com_ajuda(self, by, seletor, segundos, etapa, visivel=True):
+        """Espera o elemento; se não aparecer, pede ajuda à IA (a tela pode ser outra) e espera mais um pouco."""
+        el = self._esperar_elemento(by, seletor, segundos, visivel)
+        for _ in range(2):
+            if el is not None or not self.ajuda_da_ia(etapa, tentativa=f"esperou {segundos}s: {etapa}"):
+                break
+            el = self._esperar_elemento(by, seletor, 15, visivel)
+        return el
+
+    def _escolher_com_ajuda(self, etapa):
+        """Escolha de lista que falhou: a IA vê a tela; a 1ª ajuda costuma só abrir a lista e a 2ª escolher a opção."""
+        for _ in range(2):
+            if not self.ajuda_da_ia(etapa, tentativa=f"não consegui: {etapa}"):
+                break
+
     def _clicar(self, elemento):
         try:
             elemento.click()
@@ -71,7 +86,8 @@ class Facebook(Plataforma):
 
         self.log("Abrindo a criação de anúncio no Marketplace...")
         self.scraper.go_to_page(URL_CRIAR)
-        if not self._esperar_elemento(By.CSS_SELECTOR, INPUT_FOTOS, 45, visivel=False):
+        if not self._achar_com_ajuda(By.CSS_SELECTOR, INPUT_FOTOS, 45,
+                                     "tela de criar anúncio do Marketplace (campo das fotos)", visivel=False):
             raise SkipItemException("a página de criar anúncio não abriu (sem login ou o Facebook mudou a tela)")
 
         self.scraper.input_file_add_files(INPUT_FOTOS, "\n".join(item["imagens"]))
@@ -79,6 +95,10 @@ class Facebook(Plataforma):
         self.esperar(3)
 
         campos = [c for c in self.scraper.driver.find_elements(By.CSS_SELECTOR, 'input[type="text"]') if c.is_displayed()]
+        if len(campos) < 2 and self.ajuda_da_ia("campos de título e preço (logo depois das fotos)",
+                                                tentativa="não achei os campos de título e preço"):
+            campos = [c for c in self.scraper.driver.find_elements(By.CSS_SELECTOR, 'input[type="text"]')
+                      if c.is_displayed()]
         if len(campos) < 2:
             raise SkipItemException("campos de título/preço não encontrados")
         self._clicar(campos[0])
@@ -97,6 +117,7 @@ class Facebook(Plataforma):
             self.log(f"Categoria: {categoria}")
         except Exception as e:
             self.log(f"AVISO: não consegui escolher a categoria ({e}).")
+            self._escolher_com_ajuda(f"escolher a categoria '{categoria}' (só a categoria; condição e descrição vêm depois)")
         self.esperar(1)
 
         try:
@@ -107,6 +128,7 @@ class Facebook(Plataforma):
                 self.log("Condição selecionada.")
         except Exception as e:
             self.log(f"AVISO: não consegui escolher a condição ({e}).")
+            self._escolher_com_ajuda("escolher a condição do produto (só a condição; a descrição vem depois)")
         self.esperar(1)
 
         descricao = item.get("descricao") or ""
@@ -127,7 +149,8 @@ class Facebook(Plataforma):
             self.log("Descrição preenchida.")
         self.esperar(1.5)
 
-        avancar = self._esperar_elemento(By.XPATH, '//span[text()="Avançar"]', 20)
+        avancar = self._achar_com_ajuda(By.XPATH, '//span[text()="Avançar"]', 20,
+                                        "botão Avançar (depois de título, preço, categoria, condição e descrição)")
         if not avancar:
             raise SkipItemException("botão Avançar não apareceu (algum campo obrigatório ficou vazio?)")
         self._clicar(avancar)
@@ -149,7 +172,7 @@ class Facebook(Plataforma):
             self.log(f"Grupos marcados: {marcados}")
         self.esperar(1.5)
 
-        publicar = self._esperar_elemento(By.XPATH, '//span[text()="Publicar"]', 20)
+        publicar = self._achar_com_ajuda(By.XPATH, '//span[text()="Publicar"]', 20, "botão Publicar (última tela)")
         if not publicar:
             raise SkipItemException("botão Publicar não apareceu")
         self._clicar(publicar)

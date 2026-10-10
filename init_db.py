@@ -931,6 +931,25 @@ tables = {
             FOREIGN KEY (diagnostico_id) REFERENCES autopost_diagnosticos(id) ON DELETE CASCADE
         )
     """,
+    "autopost_memoria": """
+        CREATE TABLE IF NOT EXISTS autopost_memoria (
+            -- respostas da IA do AutoPost guardadas para não pagar de novo (routers/autopost_ia.py):
+            -- tipo 'campo' = opção de um campo de seleção para um produto; tipo 'tela' = ações que destravaram uma tela.
+            -- Só é reusada depois de dar certo uma vez (acertos >= 1 e acertos > falhas).
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            plataforma VARCHAR(20) NOT NULL,
+            tipo VARCHAR(10) NOT NULL,
+            chave CHAR(64) NOT NULL,
+            produto_id INT NULL,
+            descricao VARCHAR(500) NULL,
+            resposta TEXT NOT NULL,
+            acertos INT NOT NULL DEFAULT 0,
+            falhas INT NOT NULL DEFAULT 0,
+            data_criacao TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            data_uso TIMESTAMP NULL,
+            UNIQUE KEY (plataforma, tipo, chave)
+        )
+    """,
     "chat_buscas": """
         CREATE TABLE IF NOT EXISTS chat_buscas (
             -- cada busca de produto feita pelo assistente de IA: base do relatório de demanda

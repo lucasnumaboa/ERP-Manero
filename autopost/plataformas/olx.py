@@ -239,7 +239,10 @@ class Olx(Plataforma):
                 self.log(f"AVISO: parei de esperar mudança de tela ({context}) após várias repetições.")
                 return
             self.log(f"Página sem mudança por 10s ({context}). Relendo e repetindo ação...")
-            if retry_fn:
+            if stall_cycles in (2, 4) and self.ajuda_da_ia(
+                    context, tentativa=f"esperou {stall_cycles * 10}s a página mudar depois de: {context}"):
+                pass
+            elif retry_fn:
                 try:
                     retry_fn()
                 except Exception as e:
@@ -254,6 +257,7 @@ class Olx(Plataforma):
         """Procura elemento a cada 1s; a cada stall_seconds sem sucesso chama retry_fn."""
         t0 = time.monotonic()
         last_stall = t0
+        ajudas = [20, 45]   # segundos sem achar: pede ajuda à IA (a tela pode ser outra)
         while time.monotonic() - t0 < max_seconds:
             time.sleep(1)
             try:
@@ -262,6 +266,10 @@ class Olx(Plataforma):
                     return el
             except Exception:
                 pass
+            if ajudas and time.monotonic() - t0 >= ajudas[0]:
+                ajudas.pop(0)
+                self.ajuda_da_ia(f"procurando {context}",
+                                 tentativa=f"procurou {context} por {int(time.monotonic() - t0)}s sem achar")
             if retry_fn and time.monotonic() - last_stall >= stall_seconds:
                 self.log(f"Ainda aguardando elemento ({context}), tentando ação auxiliar...")
                 try:
@@ -748,6 +756,15 @@ class Olx(Plataforma):
 
         # 9. Clicar em Continuar após listbox
         self.clicar_continuar("após campos")
+        # o robô não segue achando que já está na descrição: se a tela ainda é a das características com campo
+        # obrigatório vazio, preenche de novo sem a memória (que pode ter errado) e continua
+        for _ in range(2):
+            vazios = self._olx_obrigatorios_vazios()
+            if not vazios:
+                break
+            self.log("A tela ainda é a das características; falta: " + ", ".join(vazios) + ". Preenchendo de novo...")
+            self.preencher_dropdowns_customizados(refazer=True)
+            self.clicar_continuar("após campos (de novo)")
 
         # 10. Preencher descrição
         self.log("Preenchendo descrição...")
@@ -969,6 +986,9 @@ class Olx(Plataforma):
                 continue
 
             else:
+                if self.ajuda_da_ia("telas depois do preço (envio, OLX Pay, destaque, Finalizar anúncio)",
+                                    tentativa="tela que o robô não reconhece"):
+                    continue
                 self.log("Tela não identificada - tentando Continuar ou Finalizar anúncio...")
                 self._log_corpo_pagina_olx("[DEBUG] Conteúdo encontrado na página (tela não reconhecida)")
                 if not self.clicar_continuar_ou_finalizar():
@@ -1604,12 +1624,13 @@ class Olx(Plataforma):
         except Exception as e:
             self.log(f"Erro geral: {e}")
 
-    def preencher_dropdowns_customizados(self):
+    def preencher_dropdowns_customizados(self, refazer=False):
         """Campos de seleção da OLX (olx-core-singleselect: div[role=combobox] + lista li[role=option]).
 
         A lista de opções fica escondida (display:none) até abrir, e o Selenium não lê texto de elemento escondido:
         por isso os campos e as opções são lidos por JavaScript (textContent). As escolhas vêm da IA do ERP, que vê
-        título, descrição e fotos; sem ela, ou para o que ela não respondeu, vale escolha_reserva()."""
+        título, descrição e fotos (ou da memória do ERP, se já deu certo antes; refazer=True pula a memória); sem
+        ela, ou para o que ela não respondeu, vale escolha_reserva()."""
         try:
             self._olx_fechar_listas()   # aberta, a lista sai do bloco do campo e as opções não seriam lidas
             campos = [c for c in (self.scraper.driver.execute_script(JS_CAMPOS_OLX) or [])
@@ -1621,25 +1642,27 @@ class Olx(Plataforma):
             return
         self.log(f"{len(campos)} campo(s) de seleção: " + ", ".join(c.get("rotulo") or c["id"] for c in campos))
 
-        escolhas = {}
+        escolhas, origens, memorias = {}, {}, {}
         if self.escolher_campos:
             item = getattr(self, "_current_item", {}) or {}
-            self.log("Pedindo à IA do ERP as opções de cada campo (título, descrição e fotos do produto)...")
+            self.log("Buscando as opções de cada campo no ERP (memória ou IA, com título, descrição e fotos)...")
             try:
                 resposta = self.escolher_campos({
-                    "plataforma": "olx", "produto_id": item.get("produto_id"),
+                    "plataforma": "olx", "produto_id": item.get("produto_id"), "refazer": bool(refazer),
                     "titulo": item.get("titulo", ""), "descricao": (item.get("descricao") or "")[:6000],
                     "categoria_site": self._olx_categoria_da_pagina(),
                     "campos": [{"id": c["id"], "rotulo": c.get("rotulo", ""), "obrigatorio": bool(c.get("obrigatorio")),
-                                "opcoes": c["opcoes"]} for c in campos]})
-                escolhas = (resposta or {}).get("escolhas") or {}
+                                "opcoes": c["opcoes"]} for c in campos]}) or {}
+                escolhas = resposta.get("escolhas") or {}
+                origens = resposta.get("origens") or {}
+                memorias = resposta.get("memorias") or {}
             except Exception as e:
                 self.log(f"IA do ERP indisponível ({e}); escolhendo pelo título.")
 
         titulo = getattr(self, "_current_titulo", "") or ""
         for campo in campos:
             rotulo = campo.get("rotulo") or campo["id"]
-            valor, origem = escolhas.get(campo["id"]), "IA"
+            valor, origem = escolhas.get(campo["id"]), origens.get(campo["id"]) or "IA"
             if valor not in campo["opcoes"]:
                 valor, origem = escolha_reserva(campo, titulo), "pelo título"
             if not valor:
@@ -1654,6 +1677,16 @@ class Olx(Plataforma):
                 self.log(f"{rotulo}: {valor} ({origem}).")
             else:
                 self.log(f"{rotulo}: tentei '{valor}' ({origem}), mas o campo ficou '{ficou or 'Selecione'}'.")
+            self.relatar(memorias.get(campo["id"]), ficou == valor)
+
+    def _olx_obrigatorios_vazios(self):
+        """Campos obrigatórios ainda em "Selecione" (a OLX marca com "Campo obrigatório" depois de um Continuar)."""
+        try:
+            self.fechar_listas()
+            return [c.get("rotulo") or c.get("id") for c in (self.scraper.driver.execute_script(JS_CAMPOS_OLX) or [])
+                    if c.get("vazio") and c.get("obrigatorio")]
+        except Exception:
+            return []
 
     def _olx_categoria_da_pagina(self):
         """Categoria mostrada acima dos campos (ex.: "Informática > Placas de Vídeo"), linhas antes de "Trocar categoria"."""
@@ -1682,19 +1715,7 @@ class Olx(Plataforma):
         return None
 
     def _olx_fechar_listas(self):
-        """Fecha lista de opções aberta: ela fica por cima do campo de baixo e rouba o clique."""
-        from selenium.webdriver.common.by import By
-        from selenium.webdriver.common.keys import Keys
-
-        for _ in range(3):
-            abertos = self.scraper.driver.find_elements(By.CSS_SELECTOR, '[role="combobox"][aria-expanded="true"]')
-            if not abertos:
-                return
-            try:
-                abertos[0].send_keys(Keys.ESCAPE)
-            except Exception:
-                self.scraper.driver.find_element(By.TAG_NAME, "body").send_keys(Keys.ESCAPE)
-            time.sleep(0.3)
+        self.fechar_listas()
 
     def _olx_selecionar_opcao(self, campo_id, valor):
         """Abre o campo, clica na opção (clique normal; se não pegar, por JavaScript) e devolve o texto que ficou no

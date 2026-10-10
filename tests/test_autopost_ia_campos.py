@@ -35,6 +35,13 @@ def produto_com_foto():
     yield produto_id
     foto.unlink(missing_ok=True)
     sql("DELETE FROM produtos WHERE id = %s", (produto_id,))
+    sql("DELETE FROM autopost_memoria")
+
+
+def _campos_enviados(mensagens):
+    """Campos que foram para a IA (o JSON vem depois de "Produto e campos (JSON):" e antes do aviso das fotos)."""
+    texto = mensagens[1]["content"][0]["text"].split("\n", 1)[1]
+    return json.JSONDecoder().raw_decode(texto)[0]["campos"]
 
 
 def test_escolhas_da_ia_valem_so_com_opcao_do_campo(cliente_api, vendedor, produto_com_foto, monkeypatch):
@@ -57,10 +64,14 @@ def test_escolhas_da_ia_valem_so_com_opcao_do_campo(cliente_api, vendedor, produ
     assert cliente_api.post("/api/autopost/ia/campos", json=pedido).status_code == 401
     r = cliente_api.post("/api/autopost/ia/campos", headers=vendedor["headers"], json=pedido)
     assert r.status_code == 200, r.text
-    assert r.json() == {"fotos": 1, "escolhas": {
+    corpo = r.json()
+    assert corpo["fotos"] == 1 and corpo["perguntou_ia"] is True and corpo["escolhas"] == {
         "info_graphic_card_manufacturer": "AMD", "info_graphic_card_brand": "Outros",
         "info_graphic_card_model": "Radeon RX", "info_graphic_card_vram": None,
-        "info_graphic_card_condition": "Usado - Excelente"}}
+        "info_graphic_card_condition": "Usado - Excelente"}
+    assert corpo["origens"]["info_graphic_card_manufacturer"] == "ia" and corpo["origens"]["info_graphic_card_vram"] is None
+    assert set(corpo["memorias"]) == {"info_graphic_card_manufacturer", "info_graphic_card_brand",
+                                      "info_graphic_card_model", "info_graphic_card_condition"}
 
     sistema, usuario = pedidos[0]
     assert sistema["role"] == "system" and "texto exato" in sistema["content"]
@@ -69,6 +80,24 @@ def test_escolhas_da_ia_valem_so_com_opcao_do_campo(cliente_api, vendedor, produ
     imagens = [p for p in usuario["content"] if p["type"] == "image_url"]
     # só a foto que existe dentro de uploads; o caminho que sai da pasta é ignorado
     assert len(imagens) == 1 and imagens[0]["image_url"]["url"].startswith("data:image/png;base64,")
+
+    # memória: a resposta só vale de novo depois de dar certo; aí o campo nem vai para a IA
+    assert cliente_api.post("/api/autopost/ia/campos", headers=vendedor["headers"], json=pedido).json()["perguntou_ia"]
+    assert len(pedidos) == 2
+    for memoria_id in corpo["memorias"].values():
+        r = cliente_api.post(f"/api/autopost/ia/memoria/{memoria_id}/resultado", headers=vendedor["headers"],
+                             json={"deu_certo": True})
+        assert r.status_code == 200, r.text
+    r = cliente_api.post("/api/autopost/ia/campos", headers=vendedor["headers"], json=pedido).json()
+    assert len(pedidos) == 3                               # só a VRAM (sem resposta guardada) foi para a IA
+    assert [c["rotulo"] for c in _campos_enviados(pedidos[2])] == [
+        "Memória de Vídeo - VRAM"]
+    assert r["origens"]["info_graphic_card_manufacturer"] == "memória" and r["escolhas"]["info_graphic_card_model"] == "Radeon RX"
+    # refazer (o robô patinou): pergunta tudo de novo
+    cliente_api.post("/api/autopost/ia/campos", headers=vendedor["headers"], json={**pedido, "refazer": True})
+    assert len(_campos_enviados(pedidos[3])) == 5
+    assert cliente_api.post("/api/autopost/ia/memoria/999999/resultado", headers=vendedor["headers"],
+                            json={"deu_certo": True}).status_code == 404
 
 
 def test_resposta_que_nao_e_json_deixa_so_os_obrigatorios_com_outros():

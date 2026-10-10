@@ -100,6 +100,15 @@ class ErpCliente:
         """Campos de seleção do site (com as opções) -> {"escolhas": {id_do_campo: opção}}, pela IA do ERP."""
         return self._pedir("POST", "/api/autopost/ia/campos", json=dados, timeout=90)
 
+    def ajuda_ia(self, dados: dict) -> dict:
+        """O robô travou numa tela: memória do ERP ou IA dizem em que etapa a tela está e o que fazer."""
+        return self._pedir("POST", "/api/autopost/ia/ajuda", json=dados, timeout=120)
+
+    def memoria_resultado(self, memoria_id: int, deu_certo: bool):
+        """Conta ao ERP se a resposta (da memória ou da IA) funcionou."""
+        return self._pedir("POST", f"/api/autopost/ia/memoria/{memoria_id}/resultado", json={"deu_certo": deu_certo},
+                           timeout=20)
+
     def registrar_diagnostico(self, dados: dict):
         """Travamento do robô para o admin ver no ERP (Configurações › AutoPost: travamentos)."""
         return self._pedir("POST", "/api/autopost/diagnosticos/", json=dados, timeout=120)
