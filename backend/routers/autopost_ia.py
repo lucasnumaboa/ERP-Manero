@@ -73,12 +73,16 @@ Regras:
   vendedor) nem que apague, exclua ou saia da conta. Prefira a opção grátis ("Anunciar sem destacar", "Não, obrigado").
 - Use só botões e campos que estão no resumo da tela, com o texto exato.
 - Campo obrigatório vazio vem antes de avançar: preencha ou selecione, depois clique em Continuar/Avançar.
+- Características do produto: tire do título, da descrição e do print; marca/fabricante fora das opções = "Outros";
+  condição sem sinal de desgaste ou defeito = a opção de usado em melhor estado (ex.: "Usado - Excelente").
 - O objetivo é publicar o anúncio: avançar pelas telas até "Finalizar anúncio" ou "Publicar"."""
 
-# o que a IA nunca pode clicar: custa dinheiro, apaga ou sai da conta
-PROIBIDO = re.compile(r"destaque\s+(prata|ouro|diamante)|impulsion|turbin|comprar|compre\b|pagar|pague\b|pagamento|"
-                      r"assin|\bplano|contrat|excluir|apagar|remover|deletar|\bsair\b|desconect|logout|denunc|bloque|"
-                      r"cart[aã]o|\bpix\b|boleto|quero oferecer|oferecer frete", re.I)
+# o que a IA nunca pode clicar: custa dinheiro, liga oferta/serviço pago, apaga ou sai da conta
+# (no teste real ela clicou em "Entregar grátis pela OLX" mesmo explicando que não devia)
+PROIBIDO = re.compile(r"destaque\s+(prata|ouro|diamante)|(?<!sem )destac|impulsion|turbin|comprar|compre\b|pagar|"
+                      r"pague\b|pagamento|assin|\bplano|contrat|excluir|apagar|remover|deletar|\bsair\b|desconect|"
+                      r"logout|denunc|bloque|cart[aã]o|\bpix\b|boleto|quero oferecer|oferecer frete|frete|"
+                      r"gr[aá]tis pela|entreg\w*\s+gr[aá]tis|envio\s+gr[aá]tis|\bativ(ar|e)\b|garantia", re.I)
 PLACEHOLDER = re.compile(r"\s*(\{(titulo|descricao|preco)\}\s*)+")
 
 
@@ -134,8 +138,9 @@ class Resultado(BaseModel):
 
 
 def normalizar(texto) -> str:
+    """Sem acento, sem maiúsculas e sem o "*" de obrigatório (a OLX escreve "Informações adicionais *")."""
     texto = unicodedata.normalize("NFKD", str(texto or "")).encode("ascii", "ignore").decode()
-    return re.sub(r"\s+", " ", texto).strip().lower()
+    return re.sub(r"\s+", " ", texto.replace("*", " ")).strip(" :").lower()
 
 
 def _chave(*partes) -> str:

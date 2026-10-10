@@ -5,6 +5,7 @@ _COMUM = r"""
 const vis = (e) => { const r = e.getBoundingClientRect(); const s = getComputedStyle(e);
   return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none'; };
 const limpar = (t) => (t || '').replace(/\s+/g, ' ').trim();
+const semAsterisco = (t) => limpar((t || '').replace(/\*/g, ' '));
 const SEL_CLICAVEIS = 'button, a[href], [role="button"], [role="link"], [role="tab"], [role="radio"], ' +
   '[role="checkbox"], [role="menuitem"], [role="option"], [role="combobox"], input[type="submit"], ' +
   'input[type="button"], label';
@@ -67,10 +68,10 @@ return parecidos[0] || null;
 
 # Campo visível pelo id/nome ou pelo rótulo
 JS_ACHAR_CAMPO = _COMUM + r"""
-const alvo = limpar(arguments[0]).toLowerCase();
+const alvo = semAsterisco(arguments[0]).toLowerCase();
 const lista = [...document.querySelectorAll(SEL_CAMPOS)].filter(vis);
 return lista.find(e => (e.id || '').toLowerCase() === alvo || (e.name || '').toLowerCase() === alvo) ||
-       lista.find(e => rotuloDe(e).toLowerCase() === alvo) || null;
+       lista.find(e => semAsterisco(rotuloDe(e)).toLowerCase() === alvo) || null;
 """
 
 # Opção visível de uma lista aberta (aberta, a lista costuma ir para uma camada fora do campo)

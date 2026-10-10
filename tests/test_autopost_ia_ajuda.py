@@ -132,6 +132,15 @@ def test_validar_acoes():
         {"tipo": "clicar", "texto": "Continuar"},                             # depois de desistir não vale
     ], tela)
     assert validas == [{"tipo": "desistir", "motivo": "pede código por SMS"}] and len(recusadas) == 3
+    # a OLX escreve "Informações adicionais *"; a IA responde sem o asterisco (caso do teste real)
+    descricao = modulo.Tela(**{**TELA, "campos": [{"id": "body", "rotulo": "Informações adicionais *", "tipo": "area"}],
+                               "botoes": ["Continuar", "Entregar grátis pela OLX", "Ativar", "Anunciar sem destacar"]})
+    validas, recusadas = modulo.validar_acoes([
+        {"tipo": "preencher", "campo": "Informações adicionais", "valor": "{descricao}"},
+        {"tipo": "clicar", "texto": "Entregar grátis pela OLX"}, {"tipo": "clicar", "texto": "Ativar"},
+        {"tipo": "clicar", "texto": "Anunciar sem destacar"}], descricao)
+    assert validas == [{"tipo": "preencher", "campo": "body", "valor": "{descricao}"},
+                       {"tipo": "clicar", "texto": "Anunciar sem destacar"}] and len(recusadas) == 2
     assert modulo.acoes_genericas([{"tipo": "clicar", "texto": "Continuar"},
                                    {"tipo": "preencher", "campo": "d", "valor": " {titulo} {preco} "}])
     assert not modulo.acoes_genericas([{"tipo": "preencher", "campo": "d", "valor": "Placa {titulo}"}])

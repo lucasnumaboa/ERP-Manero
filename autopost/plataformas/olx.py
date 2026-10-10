@@ -222,6 +222,7 @@ class Olx(Plataforma):
         baseline deve ser o texto ANTES da ação que dispara a transição. success_if, se definido, encerra a espera quando verdadeiro."""
         stall_start = time.monotonic()
         stall_cycles = 0
+        recusas = 0
         while True:
             time.sleep(1)
             try:
@@ -229,6 +230,19 @@ class Olx(Plataforma):
                     return
                 cur = self._normalize_olx_snapshot()
             except Exception:
+                continue
+            # "Campo obrigatório" que surgiu depois do clique não é tela nova: a OLX recusou e a tela é a mesma
+            # (era assim que o robô seguia achando que já estava na descrição)
+            if cur != baseline and cur.count("campo obrigatório") > baseline.count("campo obrigatório") and recusas < 2:
+                recusas += 1
+                self.log(f"A OLX não deixou avançar ({context}): apareceu 'Campo obrigatório'.")
+                antes = cur
+                if self.ajuda_da_ia(context, tentativa="a OLX mostrou 'Campo obrigatório' depois do clique"):
+                    depois = self._normalize_olx_snapshot()
+                    if depois != antes and "campo obrigatório" not in depois:
+                        return
+                baseline = self._normalize_olx_snapshot()
+                stall_start = time.monotonic()
                 continue
             if cur != baseline:
                 return
@@ -241,7 +255,9 @@ class Olx(Plataforma):
             self.log(f"Página sem mudança por 10s ({context}). Relendo e repetindo ação...")
             if stall_cycles in (2, 4) and self.ajuda_da_ia(
                     context, tentativa=f"esperou {stall_cycles * 10}s a página mudar depois de: {context}"):
-                pass
+                # a IA fez a página andar: a espera acabou (o fluxo segue e confere a tela no próximo passo)
+                if self._normalize_olx_snapshot() != cur:
+                    return
             elif retry_fn:
                 try:
                     retry_fn()
@@ -500,6 +516,7 @@ class Olx(Plataforma):
         # guarda o título: os campos de características (Marca, Modelo, VRAM...) são escolhidos por ele
         self._current_titulo = item.get('titulo', '')
         self._current_item = item   # produto_id, título e descrição vão para a IA dos campos de seleção
+        self._olx_anuncio_enviado = False
 
         # 1. Navegar para página de criação de anúncio
         self.log("Navegando para página de criação de anúncio...")
@@ -780,6 +797,8 @@ class Olx(Plataforma):
 
         # 13. Clicar em Continuar após preço
         self.clicar_continuar("após preço")
+        # o Continuar do preço publica o anúncio; as telas seguintes são ofertas (garantia, frete grátis, destaque)
+        self._olx_anuncio_enviado = True
 
         self.processar_telas_dinamicas()
 
@@ -816,6 +835,10 @@ class Olx(Plataforma):
                 self.log("Conteúdo vazio no body principal; aguardando iframe (OLX Pay)…")
                 time.sleep(2)
                 page_text = self._normalize_olx_snapshot()
+
+            if "conta.olx.com.br/anuncios" in current_url or "anúncio enviado com sucesso" in page_text:
+                self.log("A OLX já mostra o anúncio enviado (Meus anúncios); fim das telas.")
+                return
 
             self.log(f"Processando tela {tentativas}...")
 
@@ -1678,6 +1701,19 @@ class Olx(Plataforma):
             else:
                 self.log(f"{rotulo}: tentei '{valor}' ({origem}), mas o campo ficou '{ficou or 'Selecione'}'.")
             self.relatar(memorias.get(campo["id"]), ficou == valor)
+
+    def ajuda_da_ia(self, etapa, tentativa=""):
+        """Depois do Continuar do preço a OLX já publicou o anúncio: as telas seguintes oferecem garantia, frete grátis
+        e destaque. A IA não mexe nelas (no teste real ela aceitou "Entregar grátis pela OLX"); as regras fixas do
+        robô recusam tudo."""
+        try:
+            url = self.scraper.driver.current_url.lower()
+        except Exception:
+            url = ""
+        if getattr(self, "_olx_anuncio_enviado", False) or "adid=" in url or any(
+                dominio in url for dominio in ("olx-pay.olx.com.br", "adquirir.olx.com.br", "conta.olx.com.br")):
+            return False
+        return super().ajuda_da_ia(etapa, tentativa)
 
     def _olx_obrigatorios_vazios(self):
         """Campos obrigatórios ainda em "Selecione" (a OLX marca com "Campo obrigatório" depois de um Continuar)."""
