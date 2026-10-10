@@ -370,20 +370,29 @@ function tratarEvento(ev) {
     else if (ev.tipo === 'item') {
         estado.statusItens[ev.chave] = ev.status;
         if (estado.tarefa === 'postar') { desenharFila(); desenharProdutos(); }
+        if (String(ev.chave).startsWith('site-') && estado.abaAnuncios.startsWith('site-')) carregarSite();
     } else if (ev.tipo === 'precisa_login') {
         const logo = $('#modalLogo');
         logo.className = `logo-grande ${ev.plataforma === 'facebook' ? 'logo-fb' : 'logo-olx'}`;
         logo.textContent = ev.plataforma === 'facebook' ? 'f' : 'OLX';
         $('#modalTitulo').textContent = `Entre no ${ev.rotulo}`;
         $('#modalLogin').hidden = false;
+    } else if (ev.tipo === 'conta') {
+        desenharConta(ev.plataforma, ev);
+    } else if (ev.tipo === 'lista') {
+        if (estado.abaAnuncios === `site-${ev.plataforma}`) carregarSite();
     } else if (ev.tipo === 'fim') {
         $('#modalLogin').hidden = true;
         if (ev.tarefa === 'postar') {
             aviso(ev.parado ? `Postagem parada: ${ev.ok} publicado(s).` : `Postagem concluída: ${ev.ok} publicado(s), ${ev.falhas} com erro.`, ev.falhas ? 'aviso' : '');
             estado.filaRodando = null;
             estado.excluidosDaFila.clear();
-        } else if (ev.tarefa === 'remover') {
+        } else if (ev.tarefa === 'remover' || ev.tarefa === 'excluir') {
             aviso(`${ev.ok} anúncio(s) tirado(s) do ar${ev.falhas ? `, ${ev.falhas} com erro` : ''}.`, ev.falhas ? 'aviso' : '');
+        } else if (ev.tarefa === 'listar') {
+            aviso(ev.falhas ? 'Não consegui ler um dos sites; veja o registro em Postar.' : 'Anúncios dos sites lidos.', ev.falhas ? 'aviso' : '');
+        } else if (ev.tarefa === 'contas') {
+            carregarContas(false);
         }
         if (ev.tarefa !== 'login') {
             carregarDados(true);
@@ -397,8 +406,15 @@ function aplicarEstado(st) {
     estado.rodando = !!st.rodando;
     estado.tarefa = st.tarefa;
     $('#indicadorRodando').hidden = !estado.rodando || st.tarefa === 'login';
-    $('#textoRodando').textContent = st.aguardando_login ? 'Esperando você entrar…'
-        : (st.tarefa === 'remover' ? `Tirando do ar ${st.feitos}/${st.total}` : `Postando ${st.feitos}/${st.total}`);
+    const contagem = `${st.feitos}/${st.total}`;
+    $('#textoRodando').textContent = st.aguardando_login ? 'Esperando você entrar…' : ({
+        remover: `Tirando do ar ${contagem}`, excluir: `Excluindo ${contagem}`, listar: 'Lendo os sites…',
+        contas: 'Conferindo os logins…',
+    }[st.tarefa] || `Postando ${contagem}`);
+    $('#botaoMostrarChrome').hidden = !estado.rodando || st.tarefa === 'login';
+    $('#botaoLerSite').disabled = estado.rodando;
+    atualizarBotaoExcluirSite();
+    $$('[data-conferir]').forEach(b => { b.disabled = estado.rodando; });
     $('#botaoPostar').hidden = estado.rodando && st.tarefa !== 'login';
     $('#botaoParar').hidden = !estado.rodando || st.tarefa === 'login';
     $('#botaoRemoverVendidos').disabled = estado.rodando;
@@ -410,7 +426,7 @@ function aplicarEstado(st) {
         $('#numFalhas').textContent = st.falhas || 0;
         $('#barraProgresso').style.width = total ? `${Math.round(100 * (st.feitos || 0) / total)}%` : '0';
         $('#itemAtual').innerHTML = st.atual
-            ? `${st.tarefa === 'remover' ? 'Tirando do ar' : 'Publicando'} no <b>${NOMES[st.atual.plataforma]}</b>: <b>${esc(st.atual.produto)}</b>`
+            ? `${{ remover: 'Tirando do ar', excluir: 'Excluindo', listar: 'Lendo' }[st.tarefa] || 'Publicando'} no <b>${NOMES[st.atual.plataforma]}</b>: <b>${esc(st.atual.produto)}</b>`
             : (estado.rodando ? 'Aguardando o próximo…' : (st.feitos ? 'Concluído.' : 'Parado.'));
     }
     if (antes && !estado.rodando) desenharFila();
@@ -419,6 +435,10 @@ function aplicarEstado(st) {
 // ---------- anúncios ----------
 async function carregarAnuncios() {
     const lista = $('#listaAnuncios');
+    const site = estado.abaAnuncios.startsWith('site-');
+    $('#barraSite').hidden = !site;
+    $('#botaoRemoverVendidos').hidden = site;
+    if (site) return carregarSite();
     lista.innerHTML = '<div class="vazio">Carregando…</div>';
     try {
         const aba = estado.abaAnuncios;
@@ -461,6 +481,109 @@ async function carregarAnuncios() {
     }
 }
 
+// ---------- anúncios que estão nos sites (lidos pelo Chrome do app) ----------
+function siteDaAba() { return estado.abaAnuncios.replace('site-', ''); }
+
+function atualizarBotaoExcluirSite() {
+    const marcados = $$('#listaAnuncios [data-site-item]:checked').length;
+    $('#botaoExcluirSite').disabled = estado.rodando || !marcados;
+    $('#botaoExcluirSite').lastChild.textContent = marcados ? `Excluir ${marcados} selecionado(s)` : 'Excluir selecionados';
+}
+
+async function carregarSite() {
+    const nome = siteDaAba();
+    const lista = $('#listaAnuncios');
+    $('#textoLerSite').textContent = `Ler os anúncios do ${NOMES[nome]} agora`;
+    $('#marcarTodosSite').checked = false;
+    try {
+        const r = await chamar('sites');
+        const dados = (r.listas || {})[nome];
+        $('#lidoEm').textContent = dados ? `Lido em ${data(dados.em)} · ${dados.itens.length} anúncio(s)` : 'Ainda não lido nesta sessão';
+        if (!dados) {
+            lista.innerHTML = `<div class="vazio">Clique em "Ler os anúncios do ${NOMES[nome]} agora". O Chrome do AutoPost entra no site e traz a lista para cá; daí dá para excluir por aqui.</div>`;
+        } else if (!dados.itens.length) {
+            lista.innerHTML = `<div class="vazio">Nenhum anúncio encontrado no ${NOMES[nome]}.</div>`;
+        } else {
+            lista.innerHTML = dados.itens.map((a, i) => {
+                const st = estado.statusItens[`site-${nome}-${a.titulo}`];
+                const situacao = { publicando: 'excluindo…', ok: 'excluído ✓', erro: 'erro' }[st] || '';
+                const meta = [
+                    a.status ? esc(a.status) : '',
+                    a.anuncio_id ? '<span class="no-erp">registrado no ERP</span>' : '<span class="fora-erp">não registrado no ERP</span>',
+                    situacao ? `<b>${situacao}</b>` : '',
+                ].filter(Boolean).join(' · ');
+                const foto = a.imagem
+                    ? `<img src="${esc(a.imagem)}" alt="" loading="lazy">`
+                    : '<div class="sem-imagem"><span data-icone="imagem"></span></div>';
+                const link = a.link ? `<button class="icone-botao" data-abrir="${esc(a.link)}" title="Abrir no site"><span data-icone="link"></span></button>` : '';
+                return `<label class="anuncio site ${st || ''}">
+                    <input type="checkbox" data-site-item="${i}" ${st === 'ok' ? 'disabled' : ''}>
+                    ${foto}
+                    <div style="min-width:0"><div class="titulo" title="${esc(a.titulo)}">${esc(a.titulo)}</div><div class="meta">${meta}</div></div>
+                    <div class="valor">${esc(a.preco || '')}</div>
+                    <div class="acoes">${link}</div>
+                </label>`;
+            }).join('');
+            desenharIcones(lista);
+        }
+    } catch (e) {
+        lista.innerHTML = `<div class="vazio">Erro: ${esc(e.message)}</div>`;
+    }
+    atualizarBotaoExcluirSite();
+}
+
+async function lerSite() {
+    try {
+        await chamar('listar_sites', [siteDaAba()]);
+        $('#log').innerHTML = '';
+        aviso(`Lendo os anúncios do ${NOMES[siteDaAba()]}… (leva um minutinho)`);
+        acompanhar();
+    } catch (e) { aviso(e.message, 'erro'); }
+}
+
+async function excluirDoSite() {
+    const nome = siteDaAba();
+    const r = await chamar('sites').catch(() => ({ listas: {} }));
+    const itens = (r.listas[nome] || { itens: [] }).itens;
+    const escolhidos = $$('#listaAnuncios [data-site-item]:checked').map(c => itens[Number(c.dataset.siteItem)]).filter(Boolean);
+    if (!escolhidos.length) return;
+    if (!confirm(`Excluir ${escolhidos.length} anúncio(s) do ${NOMES[nome]}? O Chrome do AutoPost entra no site e exclui um por um (marcando "vendi por outro meio").`)) return;
+    try {
+        escolhidos.forEach(a => { estado.statusItens[`site-${nome}-${a.titulo}`] = 'publicando'; });
+        await chamar('excluir_do_site', escolhidos.map(a => ({ plataforma: nome, titulo: a.titulo })));
+        $('#log').innerHTML = '';
+        carregarSite();
+        acompanhar();
+    } catch (e) { aviso(e.message, 'erro'); }
+}
+
+// ---------- contas: status de login ----------
+function desenharConta(nome, info) {
+    const el = $(nome === 'facebook' ? '#statusFacebook' : '#statusOlx');
+    if (!el) return;
+    el.className = `conta-status ${info && !info.conferindo ? (info.logado ? 'logado' : 'deslogado') : ''}`;
+    el.lastChild.textContent = !info ? 'Ainda não conferido'
+        : info.conferindo ? 'Conferindo…'
+            : `${info.logado ? 'Logado' : 'Não está logado'} · conferido em ${data(info.em)}`;
+}
+
+async function carregarContas(conferirSePreciso = true) {
+    try {
+        const r = await chamar('contas');
+        ['facebook', 'olx'].forEach(n => desenharConta(n, r.contas[n]));
+        const velho = n => !r.contas[n] || (Date.now() - new Date(r.contas[n].em)) > 2 * 3600 * 1000;
+        if (conferirSePreciso && !r.ocupado && (velho('facebook') || velho('olx'))) conferirContas();
+    } catch (e) { aviso(e.message, 'erro'); }
+}
+
+async function conferirContas() {
+    try {
+        await chamar('conferir_contas');
+        ['facebook', 'olx'].forEach(n => desenharConta(n, { conferindo: true }));
+        acompanhar();
+    } catch (e) { aviso(e.message, 'erro'); }
+}
+
 async function tirarDoAr(ids) {
     const qtd = ids ? ids.length : estado.paraRemover;
     if (!confirm(`Tirar ${qtd} anúncio(s) do ar? O Chrome vai abrir, achar cada anúncio pelo título e excluir.`)) return;
@@ -479,6 +602,7 @@ async function carregarConfig() {
         estado.config = c;
         $('#cfgDelayMin').value = c.delay_min;
         $('#cfgDelayMax').value = c.delay_max;
+        $('#cfgEscondido').checked = c.navegador_escondido !== false;
         $('#cfgGrupos').checked = !!c.facebook.grupos;
         $('#cfgContato').value = c.facebook.contato || '';
         const opcoes = (sel, vazio) => (vazio ? '<option value="">(a padrão)</option>' : '') +
@@ -501,6 +625,7 @@ async function salvarConfig(ev) {
     try {
         await chamar('salvar_configuracoes', {
             delay_min: Number($('#cfgDelayMin').value), delay_max: Number($('#cfgDelayMax').value),
+            navegador_escondido: $('#cfgEscondido').checked,
             facebook: {
                 grupos: $('#cfgGrupos').checked, contato: $('#cfgContato').value,
                 categoria_padrao: $('#cfgCategoriaPadrao').value, categorias,
@@ -518,6 +643,7 @@ function irPara(pag) {
     if (pag === 'postar') desenharFila();
     if (pag === 'anuncios') carregarAnuncios();
     if (pag === 'config') carregarConfig();
+    if (pag === 'contas') carregarContas();
 }
 
 // ---------- login no ERP ----------
@@ -615,9 +741,18 @@ function ligarEventos() {
         carregarAnuncios();
     });
     $('#botaoRemoverVendidos').addEventListener('click', () => tirarDoAr(null));
+    $('#botaoLerSite').addEventListener('click', lerSite);
+    $('#botaoExcluirSite').addEventListener('click', excluirDoSite);
+    $('#marcarTodosSite').addEventListener('change', e => {
+        $$('#listaAnuncios [data-site-item]:not(:disabled)').forEach(c => { c.checked = e.target.checked; });
+        atualizarBotaoExcluirSite();
+    });
+    $('#listaAnuncios').addEventListener('change', e => { if (e.target.matches('[data-site-item]')) atualizarBotaoExcluirSite(); });
+    $('#botaoMostrarChrome').addEventListener('click', () => chamar('mostrar_navegador').catch(e => aviso(e.message, 'erro')));
+    $$('[data-conferir]').forEach(b => b.addEventListener('click', conferirContas));
     $('#listaAnuncios').addEventListener('click', async e => {
         const abrir = e.target.closest('[data-abrir]');
-        if (abrir) return chamar('abrir_link', abrir.dataset.abrir);
+        if (abrir) { e.preventDefault(); return chamar('abrir_link', abrir.dataset.abrir); }
         const remover = e.target.closest('[data-remover]');
         if (remover) return tirarDoAr([Number(remover.dataset.remover)]);
         const marcar = e.target.closest('[data-marcar]');

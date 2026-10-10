@@ -102,6 +102,7 @@
                         <div class="acoes">
                             <button class="botao primario grande" id="botaoPostar"><span data-icone="play"></span>Começar a postar</button>
                             <button class="botao perigo grande" id="botaoParar" hidden><span data-icone="parar"></span>Parar</button>
+                            <button class="botao fantasma" id="botaoMostrarChrome" hidden>Mostrar o Chrome</button>
                         </div>
                     </div>
                     <div class="cartao">
@@ -123,7 +124,7 @@
                 <header class="cabecalho">
                     <div>
                         <h2>Anúncios</h2>
-                        <p>Tudo o que o AutoPost publicou. Quando um produto vende (estoque zerado), o anúncio dele aparece em "Para tirar do ar".</p>
+                        <p>O que o AutoPost publicou e, nas abas "No Facebook" e "Na OLX", o que está de fato em cada site, para excluir por aqui. Quando um produto vende (estoque zerado), o anúncio dele aparece em "Para tirar do ar".</p>
                     </div>
                     <button class="botao perigo" id="botaoRemoverVendidos"><span data-icone="lixeira"></span>Tirar do ar os vendidos</button>
                 </header>
@@ -131,6 +132,16 @@
                     <button class="chip ativo" data-aba="remover">Para tirar do ar <b id="qtdRemover">0</b></button>
                     <button class="chip" data-aba="ativo">No ar</button>
                     <button class="chip" data-aba="removido">Removidos</button>
+                    <span class="divisor"></span>
+                    <button class="chip" data-aba="site-facebook"><i class="logo-fb">f</i>No Facebook</button>
+                    <button class="chip" data-aba="site-olx"><i class="logo-olx">OLX</i>Na OLX</button>
+                </div>
+                <div class="barra site-barra" id="barraSite" hidden>
+                    <button class="botao" id="botaoLerSite"><span data-icone="recarregar"></span><span id="textoLerSite">Ler os anúncios do site</span></button>
+                    <span class="discreto" id="lidoEm"></span>
+                    <span class="espaco"></span>
+                    <label class="check"><input type="checkbox" id="marcarTodosSite"> Marcar todos</label>
+                    <button class="botao perigo" id="botaoExcluirSite" disabled><span data-icone="lixeira"></span>Excluir selecionados</button>
                 </div>
                 <div class="lista" id="listaAnuncios"></div>
             </section>
@@ -147,17 +158,21 @@
                     <div class="cartao conta fb">
                         <div class="logo-grande logo-fb">f</div>
                         <h3>Facebook Marketplace</h3>
+                        <p class="conta-status" id="statusFacebook"><span class="bolinha"></span><span>Ainda não conferido</span></p>
                         <p>Entre com a conta que vai publicar no Marketplace. Se ela participa de grupos de compra e venda, o AutoPost pode anunciar neles também.</p>
-                        <button class="botao primario" data-login="facebook">Abrir o Facebook para entrar</button>
+                        <div class="acoes"><button class="botao primario" data-login="facebook">Abrir o Facebook para entrar</button>
+                        <button class="botao" data-conferir>Conferir login</button></div>
                     </div>
                     <div class="cartao conta olx">
                         <div class="logo-grande logo-olx">OLX</div>
                         <h3>OLX</h3>
+                        <p class="conta-status" id="statusOlx"><span class="bolinha"></span><span>Ainda não conferido</span></p>
                         <p>Entre com a conta da OLX que vai anunciar. Na hora de postar o AutoPost confere o login e, se precisar, pede para você entrar.</p>
-                        <button class="botao primario" data-login="olx">Abrir a OLX para entrar</button>
+                        <div class="acoes"><button class="botao primario" data-login="olx">Abrir a OLX para entrar</button>
+                        <button class="botao" data-conferir>Conferir login</button></div>
                     </div>
                 </div>
-                <p class="discreto">Depois de entrar, é só fechar a janela do Chrome. Se o Chrome do AutoPost estiver aberto e travado, <a href="#" id="linkFecharChrome">feche por aqui</a>.</p>
+                <p class="discreto">Depois de entrar no site, clique em <b>Conferir login</b>. O status também é atualizado sozinho toda vez que o AutoPost posta. Se o Chrome do AutoPost estiver aberto e travado, <a href="#" id="linkFecharChrome">feche por aqui</a>.</p>
             </section>
 
             <!-- ---------- CONFIGURAÇÕES ---------- -->
@@ -175,6 +190,10 @@
                         <label>e no máximo (segundos)<input type="number" id="cfgDelayMax" min="5" max="900"></label>
                     </div>
                     <p class="discreto">O tempo é sorteado entre os dois: postar em ritmo de pessoa diminui a chance de bloqueio.</p>
+
+                    <h3>Chrome</h3>
+                    <label class="check"><input type="checkbox" id="cfgEscondido"> Postar com o Chrome escondido (ele só aparece quando precisar de login)</label>
+                    <p class="discreto">Escondido, o Chrome trabalha fora da tela e você pode usar o computador normalmente. Para ver o que ele está fazendo, use "Mostrar o Chrome" na tela Postar.</p>
 
                     <h3><i class="logo-fb">f</i> Facebook</h3>
                     <label class="check"><input type="checkbox" id="cfgGrupos"> Anunciar também nos grupos (até 20) ao publicar no Marketplace</label>

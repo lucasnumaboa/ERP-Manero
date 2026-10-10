@@ -96,6 +96,10 @@ class ErpCliente:
         campo = {"facebook": "post_facebook", "olx": "post_olx"}[plataforma]
         return self._pedir("PUT", f"/api/produtos/{produto_id}", json={campo: bool(valor)})
 
+    def registrar_diagnostico(self, dados: dict):
+        """Travamento do robô para o admin ver no ERP (Configurações › AutoPost: travamentos)."""
+        return self._pedir("POST", "/api/autopost/diagnosticos/", json=dados, timeout=120)
+
     def baixar(self, caminho: str) -> bytes:
         url = caminho if caminho.startswith("http") else f"{self.base_url}/{caminho.lstrip('/')}"
         r = self.sessao.get(url, timeout=60)

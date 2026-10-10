@@ -351,3 +351,25 @@ main { flex: 1; min-width: 0; overflow: hidden; display: flex; }
     .site { min-width: 0; }
     .site .estado { display: none; }
 }
+
+/* ---------- contas: status de login ---------- */
+.conta-status { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; color: var(--discreto); }
+.conta-status .bolinha { width: 9px; height: 9px; border-radius: 50%; background: var(--borda); flex: none; }
+.conta-status.logado { color: #86efac; }
+.conta-status.logado .bolinha { background: var(--ok); box-shadow: 0 0 0 3px rgba(34, 197, 94, .2); }
+.conta-status.deslogado { color: #fcd34d; }
+.conta-status.deslogado .bolinha { background: var(--aviso); }
+.conta .acoes { margin-top: 4px; }
+
+/* ---------- anúncios lidos dos sites ---------- */
+.chips .divisor { width: 1px; background: var(--borda); margin: 4px 4px; }
+.chip i { font-size: 9px; }
+.site-barra { background: var(--painel); border: 1px solid var(--borda); border-radius: var(--raio); padding: 10px 12px; }
+.anuncio.site { grid-template-columns: 18px 56px minmax(0, 1fr) auto auto; cursor: pointer; }
+.anuncio.site img, .anuncio.site .sem-imagem { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; background: var(--painel-2); }
+.anuncio.site .sem-imagem { display: grid; place-items: center; color: var(--discreto); }
+.anuncio.site.ok { opacity: .55; }
+.anuncio.site.erro { border-color: var(--erro); }
+.anuncio.site.publicando { border-color: var(--destaque); }
+.anuncio .no-erp { color: #86efac; }
+.anuncio .fora-erp { color: #fcd34d; }

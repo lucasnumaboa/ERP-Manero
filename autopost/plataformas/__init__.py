@@ -1,5 +1,5 @@
 """Uma classe por site de anúncio. Cada uma sabe ver se está logada, publicar e excluir pelo título."""
-from .base import ParadaSolicitada, Plataforma, SkipItemException  # noqa: F401
+from .base import ParadaSolicitada, Plataforma, SkipItemException, Travou  # noqa: F401
 
 NOMES = {"facebook": "Facebook", "olx": "OLX"}
 

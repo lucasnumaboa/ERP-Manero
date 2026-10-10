@@ -881,6 +881,30 @@ tables = {
             FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE
         )
     """,
+    "autopost_diagnosticos": """
+        CREATE TABLE IF NOT EXISTS autopost_diagnosticos (
+            -- travamentos do ERP AutoPost (mais de 5 repetições do mesmo passo ou falha num anúncio):
+            -- o que ele tentava, o passo a passo, a página (JSON e HTML) e a imagem da tela. Fila do admin.
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            plataforma VARCHAR(20) NOT NULL,
+            produto_id INT NULL,
+            titulo VARCHAR(255) NULL,
+            acao VARCHAR(500) NOT NULL,
+            erro TEXT NULL,
+            log_texto MEDIUMTEXT NULL,
+            url VARCHAR(1000) NULL,
+            pagina_json LONGTEXT NULL,
+            html LONGTEXT NULL,
+            imagem VARCHAR(255) NULL,
+            versao_app VARCHAR(20) NULL,
+            status VARCHAR(20) NOT NULL DEFAULT 'pendente',
+            observacao VARCHAR(500) NULL,
+            usuario_id INT NULL,
+            data_criacao TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            data_resolucao TIMESTAMP NULL,
+            INDEX (status)
+        )
+    """,
     "chat_buscas": """
         CREATE TABLE IF NOT EXISTS chat_buscas (
             -- cada busca de produto feita pelo assistente de IA: base do relatório de demanda

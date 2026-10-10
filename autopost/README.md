@@ -7,7 +7,10 @@ dois programas antigos ("ERP AutoPost Facebook" e "ERP AutoPost OLX").
 
 1. Abra o `ERP AutoPost.exe` e entre com o seu usuário do ERP.
 2. **Contas**: na primeira vez, clique em "Abrir o Facebook para entrar" e faça login. Faça o mesmo na
-   OLX. O app usa um Chrome próprio, e o login fica guardado nele.
+   OLX. Depois clique em "Conferir login".
+   - O app usa um Chrome próprio, e o login fica guardado nele.
+   - Cada conta mostra se está logada e quando foi conferida. A conferência roda sozinha ao abrir a tela, se a última
+     tiver mais de 2 horas, e também a cada postagem.
 3. **Produtos**: aparecem os produtos com estoque. Cada um tem dois botões, Facebook e OLX.
    - Ligue em cada produto o site onde ele deve ser anunciado. A escolha é gravada no ERP, nos campos
      "postar no Facebook/OLX" do produto.
@@ -19,7 +22,13 @@ dois programas antigos ("ERP AutoPost Facebook" e "ERP AutoPost OLX").
 5. **Anúncios**: lista tudo o que o app publicou, registrado no ERP em `/api/anuncios`.
    - Quando um produto vende (estoque zerado) ou é desativado, o anúncio dele vai para "Para tirar do ar".
    - "Tirar do ar os vendidos" exclui esses anúncios nos sites. O app acha cada um pelo título.
+   - As abas **No Facebook** e **Na OLX** leem o que está de fato em cada site, incluindo anúncios que não foram
+     feitos pelo app (aparecem como "não registrado no ERP").
+   - Marque os anúncios e clique em "Excluir selecionados" para tirar do ar sem entrar no site; o registro no ERP
+     é atualizado junto.
 6. **Configurações**:
+   - **Chrome escondido** (vem ligado): o Chrome trabalha fora da tela e aparece só quando precisa de login.
+     Para ver o que ele está fazendo, use "Mostrar o Chrome" na tela Postar.
    - Espera entre anúncios.
    - Opção de anunciar também nos grupos do Facebook.
    - Contato no começo da descrição.
@@ -34,6 +43,19 @@ dois programas antigos ("ERP AutoPost Facebook" e "ERP AutoPost OLX").
 - Esperas por elemento em vez de pausas fixas, e o botão Parar funciona até no meio de uma espera.
 - A senha do ERP só fica salva se você marcar "Lembrar", e mesmo assim criptografada pelo Windows (DPAPI).
 - O passo a passo de cada publicação fica gravado em `%APPDATA%\ERP AutoPost\logs\`.
+
+## Quando o robô trava
+
+Os sites mudam as telas. Quando o mesmo passo com cara de problema ("ainda aguardando", "erro", "tentando de
+novo"...) se repete **mais de 5 vezes**, quando a mesma linha se repete 6 vezes seguidas, ou quando um anúncio
+passa de 10 minutos, o app:
+1. para esse anúncio e segue para o próximo;
+2. manda ao ERP o que estava tentando fazer, o passo a passo, a imagem da tela, a página em JSON (botões, campos
+   e textos visíveis, com senhas mascaradas) e o HTML.
+
+Falhas no site também vão. O admin vê tudo em **Configurações › AutoPost: travamentos para ajustar** (fila
+pendente, com "Marcar como resolvido"). Se o ERP não receber, fica uma cópia em
+`%APPDATA%\ERP AutoPost\diagnosticos\`.
 
 ## Onde ficam as coisas
 

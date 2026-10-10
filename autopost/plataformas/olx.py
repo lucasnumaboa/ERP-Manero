@@ -443,11 +443,14 @@ class Olx(Plataforma):
         self.scraper.go_to_page('https://www2.olx.com.br/desapega?lis=cta_header_home')
         self.wait_for_olx_body_min_length(50, "desapega / criar anúncio")
 
-        # 1.1. Verificar tela de boas-vindas "Anuncie de graça"
+        # 1.1. Tela de boas-vindas ("Anuncie de graça", e desde out/2026 "Anuncie em poucos minutos com total
+        # segurança"): reconhece pelo botão "Começar meu anúncio", não pelo texto, que a OLX muda.
         try:
             page_text_inicial = self.scraper.driver.find_element(By.TAG_NAME, 'body').text.lower()
-            if "anuncie de gra" in page_text_inicial:
-                self.log("Tela 'Anuncie de graça' detectada! Clicando em Continuar...")
+            tem_botao_comecar = bool(self.scraper.driver.find_elements(
+                By.XPATH, '//button[contains(normalize-space(.),"Começar meu anúncio")]'))
+            if tem_botao_comecar or "anuncie de gra" in page_text_inicial or "anuncie em poucos minutos" in page_text_inicial:
+                self.log("Tela de boas-vindas da OLX detectada! Clicando em 'Começar meu anúncio'...")
                 snap = self._normalize_olx_body_text()
                 if self._perform_comecar_anuncio_click():
                     self.log("Botão 'Começar meu anúncio' clicado!")
@@ -1120,7 +1123,7 @@ class Olx(Plataforma):
                 return
             
             self.log("Tela de frete sem ação necessária")
-        except:
+        except Exception:
             self.log("Erro ao processar tela de frete")
 
     def tratar_modal_motivo(self):
@@ -1207,7 +1210,7 @@ class Olx(Plataforma):
                         self.log("Modal fechado!")
                         time.sleep(2)
                         return True
-                    except:
+                    except Exception:
                         # Tentar botão com texto similar
                         try:
                             nao_btn = self.scraper.driver.find_element(By.XPATH, '//*[contains(text(),"Não")]')
@@ -1215,11 +1218,11 @@ class Olx(Plataforma):
                             self.log("Modal fechado (alternativo)!")
                             time.sleep(2)
                             return True
-                        except:
+                        except Exception:
                             pass
                     break
             return False
-        except:
+        except Exception:
             return False
 
     def clicar_continuar(self, contexto=""):
@@ -1374,7 +1377,7 @@ class Olx(Plataforma):
             entrega = self.scraper.driver.find_element(By.XPATH, '//*[contains(text(),"Entrega em mãos")]')
             entrega.click()
             self.log("Entrega em mãos selecionada!")
-        except:
+        except Exception:
             pass
 
     def preencher_peso_se_existir(self):
@@ -1450,7 +1453,7 @@ class Olx(Plataforma):
                         self.log(f"'Sem destacar' selecionado via: {selector[:30]}...")
                         time.sleep(1)
                         return
-                except:
+                except Exception:
                     continue
             
             self.log("Opção 'sem destacar' não encontrada!")
@@ -1570,9 +1573,9 @@ class Olx(Plataforma):
                             break
                     
                     time.sleep(0.5)
-                except:
+                except Exception:
                     continue
-        except:
+        except Exception:
             pass
 
     def preencher_dropdown_por_label(self, label_text, valor):
@@ -1606,9 +1609,9 @@ class Olx(Plataforma):
                                 self.log(f"{label_text}: {valor} selecionado!")
                                 return
                             break
-                except:
+                except Exception:
                     continue
-        except:
+        except Exception:
             pass
 
     # ===================== Novos no AutoPost =====================
@@ -1695,3 +1698,69 @@ class Olx(Plataforma):
         self.esperar(2)
         self.log("Anúncio excluído na OLX.")
         return True
+
+    def listar(self) -> list[dict]:
+        """Anúncios em "Meus anúncios › Publicados" (todas as páginas). Cada card é achado pelo botão Excluir."""
+        from selenium.webdriver.common.by import By
+
+        self.log("Lendo os anúncios publicados na OLX...")
+        self.scraper.go_to_page(URL_ANUNCIOS)
+        self.wait_for_olx_body_min_length(50, "meus anúncios", max_wait=60)
+        self.esperar(3)
+        itens, vistos = [], set()
+        for pagina in range(1, 21):
+            for _ in range(6):   # a lista carrega rolando
+                self.scraper.driver.execute_script("window.scrollBy(0, 2500);")
+                self.esperar(1)
+            for item in self.scraper.driver.execute_script(JS_LISTA_OLX) or []:
+                if item["titulo"] not in vistos:
+                    vistos.add(item["titulo"])
+                    itens.append(item)
+            proxima = [b for b in self.scraper.driver.find_elements(
+                By.XPATH, '//a[contains(@aria-label,"róxima") or normalize-space(.)="Próxima"] | '
+                          '//button[contains(@aria-label,"róxima") or normalize-space(.)="Próxima"]')
+                if b.is_displayed() and b.is_enabled() and b.get_attribute("aria-disabled") != "true"]
+            if not proxima:
+                break
+            self._log(f"Página {pagina} lida ({len(itens)} anúncio(s) até agora); indo para a próxima...")  # progresso, não conta como repetição
+            self.scraper.driver.execute_script("arguments[0].click();", proxima[0])
+            self.esperar(4)
+        self.log(f"{len(itens)} anúncio(s) encontrado(s) na OLX.")
+        return itens
+
+
+# Cards de "Meus anúncios": sobe a partir de cada botão Excluir até o bloco com foto e preço (sem pegar a lista
+# inteira, que teria mais de um Excluir). Título: link do anúncio, um título (h2/h3) ou a primeira linha com cara
+# de título.
+JS_LISTA_OLX = r"""
+const limpa = t => (t || '').replace(/\s+/g, ' ').trim();
+const ehExcluir = b => /^excluir/i.test(limpa(b.innerText || b.getAttribute('aria-label')));
+const saida = [], vistos = new Set();
+for (const botao of [...document.querySelectorAll('button, a, [role=button]')].filter(ehExcluir)) {
+    let bloco = botao, card = null;
+    for (let i = 0; i < 15 && bloco.parentElement; i++) {
+        bloco = bloco.parentElement;
+        if ([...bloco.querySelectorAll('button, a, [role=button]')].filter(ehExcluir).length > 1) break;
+        if (bloco.querySelector('img') && /R\$/.test(bloco.innerText)) card = bloco;
+    }
+    if (!card) continue;
+    const texto = card.innerText || '';
+    const linhas = texto.split('\n').map(limpa).filter(Boolean);
+    const link = [...card.querySelectorAll('a[href]')].find(a => /olx\.com\.br\/.*\d{6,}/.test(a.href));
+    const cabecalho = card.querySelector('h2, h3, [data-testid*="title"], [class*="title"]');
+    let titulo = limpa(link && link.innerText) || limpa(cabecalho && cabecalho.innerText)
+        || linhas.find(l => l.length > 6 && !/R\$|excluir|editar|vend|visualiza|destac|publicad|expira|^\d/i.test(l)) || '';
+    if (!titulo || vistos.has(titulo)) continue;
+    vistos.add(titulo);
+    const img = card.querySelector('img');
+    saida.push({
+        titulo,
+        preco: (texto.match(/R\$\s?[\d.]+(,\d{2})?/) || [''])[0],
+        status: linhas.find(l => /publicad|ativo|expirad|pendente|em análise|reprovad|vendid|inativ|pausad/i.test(l)) || '',
+        imagem: img ? img.currentSrc || img.src : '',
+        link: link ? link.href : '',
+        detalhes: linhas.slice(0, 6).join(' · ').slice(0, 300),
+    });
+}
+return saida;
+"""

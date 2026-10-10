@@ -19,6 +19,7 @@ from conftest import sql
 
 AUTOPOST = Path(__file__).resolve().parent.parent / "autopost"
 MODULOS = ("config", "erp", "navegador", "plataformas", "plataformas.base", "tarefas", "api")
+TRAVOU = []   # classe Travou do AutoPost (importada isolada pelo fixture ap)
 
 
 @pytest.fixture(scope="module")
@@ -38,6 +39,7 @@ def ap():
         sys.modules.update(guardados)
         if appdata is not None:
             os.environ["APPDATA"] = appdata
+    TRAVOU[:] = [mods["base"].Travou]
     return SimpleNamespace(**mods)
 
 
@@ -82,8 +84,16 @@ def test_cliente_erp_contra_a_api(ap, cliente_api, grupo_vendedores, novo_produt
 
 # ---------- executor com sites e ERP de mentira ----------
 class ErpFalso:
-    def __init__(self):
-        self.registrados, self.removidos = [], []
+    def __init__(self, ativos=()):
+        self.registrados, self.removidos, self.diagnosticos = [], [], []
+        self.ativos = list(ativos)
+
+    def anuncios(self, status=None):
+        return self.ativos
+
+    def registrar_diagnostico(self, dados):
+        self.diagnosticos.append(dados)
+        return {"id": len(self.diagnosticos)}
 
     def baixar(self, caminho):
         if "quebrada" in caminho:
@@ -99,21 +109,47 @@ class ErpFalso:
 
 class NavegadorFalso:
     def __init__(self):
-        self.paginas = []
+        self.paginas, self.mostrado = [], 0
 
     def go_to_page(self, url):
         self.paginas.append(url)
 
+    def abrir(self, visivel=None):
+        pass
+
+    def aberto(self):
+        return True
+
+    def mostrar(self):
+        self.mostrado += 1
+
+    def esconder(self):
+        pass
+
     def fechar(self):
         pass
 
+    def texto_da_pagina(self):
+        return ""
 
-def fabrica(registro, logado=None, falha=(), achados=(), lento=0):
+    def retrato(self):
+        import base64
+        return {"url": "https://site/tela", "imagem_base64": base64.b64encode(_png()).decode(), "html": "<html>tela</html>",
+                "pagina": {"botoes": [{"tag": "button", "texto": "Continuar"}]}}
+
+
+def fabrica(registro, logado=None, falha=(), achados=(), lento=0, trava=(), no_site=None):
     logado = logado if logado is not None else {"facebook": [True], "olx": [True]}
 
     class Site:
         def __init__(self, nome, navegador, log, parar, opcoes):
             self.nome, self.rotulo, self.url_login, self.log, self.parar = nome, nome.upper(), f"login:{nome}", log, parar
+
+        def iniciar_item(self):
+            pass
+
+        def listar(self):
+            return [dict(i) for i in (no_site or {}).get(self.nome, [])]
 
         def esta_logado(self):
             fila = logado[self.nome]
@@ -124,6 +160,8 @@ def fabrica(registro, logado=None, falha=(), achados=(), lento=0):
             time.sleep(lento)
             if item["titulo"] in falha:
                 raise RuntimeError("o site recusou")
+            if item["titulo"] in trava:
+                raise TRAVOU[0]("Ainda aguardando elemento (categoria Produtos)", "repetiu 6 vezes")
             return None
 
         def excluir(self, titulo):
@@ -172,6 +210,8 @@ def test_posta_fila_por_site_e_registra_no_erp(ap):
     fim = [e for e in ex.eventos() if e["tipo"] == "fim"][0]
     assert fim["ok"] == 3 and not fim["parado"]
     assert not ap.tarefas.PASTA_IMAGENS.exists()   # fotos temporárias apagadas no fim
+    # só a falha no site vira travamento para o admin (sem foto / foto quebrada não)
+    assert [d["titulo"] for d in erp.diagnosticos] == ["Falha"]
 
 
 def test_pede_login_e_continua(ap):
@@ -253,3 +293,80 @@ def test_tela_chama_so_metodos_que_existem(ap):
     ids = set(re.findall(r'id="([\w-]+)"', html))
     usados = set(re.findall(r"\$\('#([\w-]+)", js))
     assert usados <= ids, usados - ids
+
+
+# ---------- travamentos ----------
+def test_vigia_trava_com_mais_de_5_repeticoes(ap):
+    plataforma = ap.base.Plataforma(NavegadorFalso(), log=lambda m: None)
+    for i in range(10):                       # passos diferentes, sem cara de problema: segue
+        plataforma.log(f"Clicando no passo {chr(65 + i)}")
+    for i in range(5):                        # 5 vezes "ainda aguardando" (números não contam): ainda segue
+        plataforma.log(f"Ainda aguardando elemento (Produtos), tentativa {i}")
+        plataforma.log("Relendo a página")
+    with pytest.raises(ap.base.Travou) as erro:
+        plataforma.log("Ainda aguardando elemento (Produtos), tentativa 6")
+    assert "repetiu 6 vezes" in str(erro.value) and "Produtos" in erro.value.acao
+    with pytest.raises(ap.base.Travou):       # mesmo se um "except" engolir, dispara de novo no próximo passo
+        plataforma.log("qualquer outra coisa")
+    plataforma.iniciar_item()                 # anúncio seguinte começa do zero
+    plataforma.log("Ainda aguardando elemento (Produtos)")
+
+    seguidas = ap.base.Plataforma(NavegadorFalso(), log=lambda m: None)
+    for _ in range(5):
+        seguidas.log("Clicando em Continuar...")
+    with pytest.raises(ap.base.Travou):       # a mesma linha 6 vezes seguidas
+        seguidas.log("Clicando em Continuar...")
+
+
+def test_travamento_vai_para_o_erp_com_imagem_e_pagina(ap):
+    erp, publicados = ErpFalso(), []
+    ex = ap.tarefas.Executor(erp, NavegadorFalso(), fabrica(publicados, trava={"Placa travada"}), versao_app="9.9")
+    ex.postar([{"produto": _produto(7, "Placa travada"), "plataformas": ["olx"]},
+               {"produto": _produto(8, "Placa boa"), "plataformas": ["olx"]}], CFG)
+    _esperar_fim(ex)
+    assert ex.estado["ok"] == 1 and ex.estado["falhas"] == 1   # travou num, seguiu para o próximo
+    d = erp.diagnosticos[0]
+    assert d["plataforma"] == "olx" and d["produto_id"] == 7 and "Produtos" in d["acao"]
+    assert d["imagem_base64"] and d["html"] == "<html>tela</html>" and d["pagina"]["botoes"]
+    assert "Placa travada" in d["log"] and d["versao_app"] == "9.9" and d["url"] == "https://site/tela"
+
+
+def test_travamento_fica_salvo_no_pc_se_o_erp_nao_receber(ap, tmp_path, monkeypatch):
+    class ErpFora(ErpFalso):
+        def registrar_diagnostico(self, dados):
+            raise OSError("ERP fora do ar")
+    monkeypatch.setattr(ap.tarefas, "PASTA_DIAGNOSTICOS", tmp_path)
+    ex = ap.tarefas.Executor(ErpFora(), NavegadorFalso(), fabrica([], trava={"Placa travada"}))
+    ex.postar([{"produto": _produto(7, "Placa travada"), "plataformas": ["olx"]}], CFG)
+    _esperar_fim(ex)
+    pasta = next(tmp_path.iterdir())
+    assert {p.name for p in pasta.iterdir()} == {"tela.png", "pagina.html", "diagnostico.json"}
+
+
+# ---------- contas e anúncios dos sites ----------
+def test_conferir_contas_guarda_o_status(ap):
+    cfg, salvo = {}, []
+    ex = ap.tarefas.Executor(ErpFalso(), NavegadorFalso(), fabrica([], logado={"facebook": [True], "olx": [False]}),
+                             cfg=cfg, guardar_cfg=lambda: salvo.append(1))
+    ex.conferir_contas()
+    _esperar_fim(ex)
+    assert cfg["contas"]["facebook"]["logado"] is True and cfg["contas"]["olx"]["logado"] is False
+    assert salvo and [e["plataforma"] for e in ex.eventos() if e["tipo"] == "conta"] == ["facebook", "olx"]
+
+
+def test_le_os_sites_e_exclui_por_aqui(ap):
+    ativos = [{"id": 31, "plataforma": "olx", "titulo": "Placa RX 580", "produto_id": 5}]
+    erp, registro = ErpFalso(ativos), []
+    no_site = {"olx": [{"titulo": "placa rx 580", "preco": "R$ 450"}, {"titulo": "Monitor antigo", "preco": "R$ 300"}]}
+    ex = ap.tarefas.Executor(erp, NavegadorFalso(), fabrica(registro, achados={"placa rx 580", "Monitor antigo"}, no_site=no_site))
+    ex._esperar = lambda s: None
+    ex.listar_sites(["olx"])
+    _esperar_fim(ex)
+    itens = ex.listas["olx"]["itens"]
+    assert [(i["titulo"], i["anuncio_id"]) for i in itens] == [("placa rx 580", 31), ("Monitor antigo", None)]
+
+    ex.excluir_do_site([{"plataforma": "olx", "titulo": "placa rx 580"}, {"plataforma": "olx", "titulo": "Monitor antigo"}])
+    _esperar_fim(ex)
+    assert [r for r in registro if r[1] == "excluir"] == [("olx", "excluir", "placa rx 580"), ("olx", "excluir", "Monitor antigo")]
+    assert erp.removidos == [(31, "excluído pelo AutoPost")]   # o registrado no ERP sai de lá também
+    assert ex.listas["olx"]["itens"] == []

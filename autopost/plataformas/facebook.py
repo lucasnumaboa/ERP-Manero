@@ -117,8 +117,13 @@ class Facebook(Plataforma):
         if areas and descricao.strip():
             self._clicar(areas[0])
             self.esperar(0.5)
-            copiar_para_area_de_transferencia(descricao)
-            areas[0].send_keys(Keys.CONTROL, "v")
+            # digita pelo próprio navegador (mantém emoji e acentos e funciona com o Chrome escondido, sem mexer
+            # na área de transferência de quem está usando o PC); se não pegar, cola como o app antigo
+            self.scraper.driver.execute_script(
+                "arguments[0].focus(); document.execCommand('insertText', false, arguments[1]);", areas[0], descricao)
+            if not (areas[0].get_attribute("value") or "").strip():
+                copiar_para_area_de_transferencia(descricao)
+                areas[0].send_keys(Keys.CONTROL, "v")
             self.log("Descrição preenchida.")
         self.esperar(1.5)
 
@@ -221,3 +226,51 @@ class Facebook(Plataforma):
         self.esperar(2)
         self.log("Anúncio excluído no Marketplace.")
         return True
+
+    # ---------- listar ----------
+    def listar(self) -> list[dict]:
+        """Anúncios da página "Vendendo" do Marketplace (rola até a lista parar de crescer)."""
+        self.log("Lendo os anúncios do Marketplace...")
+        self.scraper.go_to_page(URL_VENDENDO)
+        self.esperar(5)
+        itens, antes = [], -1
+        for _ in range(25):
+            itens = self.scraper.driver.execute_script(JS_LISTA_FACEBOOK) or []
+            if len(itens) == antes:
+                break
+            antes = len(itens)
+            self.scraper.driver.execute_script("window.scrollBy(0, 2500);")
+            self.esperar(2)
+        self.log(f"{len(itens)} anúncio(s) encontrado(s) no Marketplace.")
+        return itens
+
+
+# Cada anúncio da página "Vendendo" tem um botão "Mais opções para <título>" (o mesmo que a exclusão usa); o card é
+# o bloco acima dele com foto e preço.
+JS_LISTA_FACEBOOK = r"""
+const limpa = t => (t || '').replace(/\s+/g, ' ').trim();
+const saida = [], vistos = new Set();
+for (const botao of document.querySelectorAll('[aria-label^="Mais opções para "]')) {
+    const titulo = limpa(botao.getAttribute('aria-label').replace(/^Mais opções para /, ''));
+    if (!titulo || vistos.has(titulo)) continue;
+    vistos.add(titulo);
+    let card = botao;
+    for (let i = 0; i < 14 && card.parentElement; i++) {
+        card = card.parentElement;
+        if (card.querySelector('img') && /R\$|Grátis/.test(card.innerText)) break;
+    }
+    const texto = card.innerText || '';
+    const linhas = texto.split('\n').map(limpa).filter(Boolean);
+    const img = card.querySelector('img');
+    const link = card.querySelector('a[href*="/marketplace/item/"]');
+    saida.push({
+        titulo,
+        preco: (texto.match(/R\$\s?[\d.]+(,\d{2})?/) || [/Grátis/.test(texto) ? 'Grátis' : ''])[0],
+        status: linhas.find(l => /^(vendido|pendente|ativo|em estoque|esgotado|reservado|indisponível|anúncio|listado|aguardando)/i.test(l)) || '',
+        imagem: img ? img.currentSrc || img.src : '',
+        link: link ? link.href : '',
+        detalhes: linhas.slice(0, 6).join(' · ').slice(0, 300),
+    });
+}
+return saida;
+"""

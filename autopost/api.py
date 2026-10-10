@@ -12,7 +12,7 @@ from erp import ErpCliente, ErroErp
 from navegador import chrome_instalado
 from tarefas import Executor
 
-VERSAO = "1.0.0"
+VERSAO = "1.1.0"
 
 CAMPOS_PRODUTO = ("id", "codigo", "nome", "descricao", "preco_venda", "estoque_atual", "categoria_id",
                   "categoria_nome", "caminho_imagem", "post_facebook", "post_olx", "faturavel", "comissao")
@@ -59,7 +59,7 @@ class Api:
         self.erp = erp
         if self.executor and self.executor.ocupado():
             self.executor.parar()
-        self.executor = Executor(erp)
+        self.executor = Executor(erp, cfg=self.cfg, guardar_cfg=self._salvar_cfg, versao_app=VERSAO)
         self.cfg.update({"api_url": api_url, "email": email.strip(), "lembrar": bool(lembrar),
                          "senha_protegida": config.proteger(senha) if lembrar else ""})
         self._salvar_cfg()
@@ -135,6 +135,7 @@ class Api:
     @_seguro
     def configuracoes(self):
         return {"delay_min": self.cfg["delay_min"], "delay_max": self.cfg["delay_max"],
+                "navegador_escondido": self.cfg.get("navegador_escondido", True),
                 "facebook": self.cfg["facebook"], "categorias_facebook": config.CATEGORIAS_FACEBOOK,
                 "pasta_logs": str(config.PASTA / "logs")}
 
@@ -142,7 +143,8 @@ class Api:
     def salvar_configuracoes(self, dados):
         dmin = max(5, int(dados.get("delay_min", 20)))
         dmax = max(dmin, int(dados.get("delay_max", 60)))
-        self.cfg.update({"delay_min": dmin, "delay_max": dmax})
+        self.cfg.update({"delay_min": dmin, "delay_max": dmax,
+                         "navegador_escondido": bool(dados.get("navegador_escondido", True))})
         fb = dados.get("facebook") or {}
         self.cfg["facebook"].update({
             "grupos": bool(fb.get("grupos", True)),
@@ -176,6 +178,44 @@ class Api:
             return {"erro": "Nenhum anúncio para tirar do ar."}
         self.executor.remover(lista, self.cfg)
         return {"ok": True, "quantidade": len(lista)}
+
+    # ---------- contas ----------
+    @_seguro
+    def contas(self):
+        """Última conferência de login de cada site (feita ao postar ou pelo botão Conferir)."""
+        return {"contas": self.cfg.get("contas", {}), "ocupado": bool(self.executor and self.executor.ocupado())}
+
+    @_seguro
+    def conferir_contas(self):
+        self.executor.conferir_contas()
+        return {"ok": True}
+
+    # ---------- anúncios que estão nos sites ----------
+    @_seguro
+    def listar_sites(self, plataformas):
+        self.executor.listar_sites(plataformas or ["facebook", "olx"])
+        return {"ok": True}
+
+    @_seguro
+    def sites(self):
+        return {"listas": self.executor.listas if self.executor else {}}
+
+    @_seguro
+    def excluir_do_site(self, itens):
+        itens = [{"plataforma": i["plataforma"], "titulo": i["titulo"]} for i in itens or []
+                 if i.get("plataforma") in ("facebook", "olx") and i.get("titulo")]
+        if not itens:
+            return {"erro": "Nenhum anúncio selecionado."}
+        self.executor.excluir_do_site(itens)
+        return {"ok": True, "quantidade": len(itens)}
+
+    @_seguro
+    def mostrar_navegador(self):
+        """Traz o Chrome do app para a tela (para acompanhar o robô)."""
+        if not (self.executor and self.executor.navegador.aberto()):
+            return {"erro": "O Chrome do AutoPost não está aberto."}
+        self.executor.navegador.mostrar()
+        return {"ok": True}
 
     @_seguro
     def abrir_login(self, plataforma):

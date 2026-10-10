@@ -45,6 +45,7 @@ import routers.depositos as depositos
 import routers.produto_chat_ia as produto_chat_ia
 import routers.anuncios as anuncios
 import routers.atualizacao as atualizacao
+import routers.autopost_diagnosticos as autopost_diagnosticos
 import routers.transcricao as transcricao
 import routers.orcamentos as orcamentos
 import routers.ia as ia
@@ -232,6 +233,7 @@ app.include_router(depositos.router, prefix="/api/depositos", tags=["Depósitos"
 app.include_router(produto_chat_ia.router, prefix="/api/produto-chat", tags=["Chat IA do Produto"])
 app.include_router(anuncios.router, prefix="/api/anuncios", tags=["Anúncios (AutoPost)"])
 app.include_router(atualizacao.router, prefix="/api/atualizacao", tags=["Atualização do sistema"])
+app.include_router(autopost_diagnosticos.router, prefix="/api/autopost/diagnosticos", tags=["AutoPost: travamentos"])
 app.include_router(transcricao.router, prefix="/api/transcricao", tags=["Transcrição de Áudio"])
 app.include_router(orcamentos.router, prefix="/api/orcamentos", tags=["Orçamentos"], dependencies=permissao_modulo("orcamentos"))
 app.include_router(ia.router, prefix="/api/ia", tags=["IA"], dependencies=permissao_modulo("ia"))

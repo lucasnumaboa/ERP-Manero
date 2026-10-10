@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="css/modulos.css?v=fdd4166201">
     <link rel="stylesheet" href="css/submenu.css?v=fc4e2a67d9">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="css/atualizacao-sistema.css?v=7fdb4b7d16">
+    <link rel="stylesheet" href="css/atualizacao-sistema.css?v=48e6e84605">
     <link rel="stylesheet" href="css/theme-dark.css?v=0137d572a5">
     <link rel="stylesheet" href="css/theme-light.css?v=feb5136289">
     <style>
@@ -309,6 +309,21 @@
                                 <button type="button" class="btn-primary" id="atuRecarregar" hidden><i class="fas fa-redo"></i> Recarregar a página</button>
                             </div>
                             <pre id="atuLog" class="atualizacao-log" hidden></pre>
+                        </div>
+                    </div>
+
+                    <!-- Travamentos do ERP AutoPost (js/autopost-travamentos.js) -->
+                    <div class="settings-card atualizacao" id="cartaoTravamentos" style="margin-bottom: 20px;">
+                        <div class="card-header">
+                            <h2><i class="fas fa-bug"></i> AutoPost: travamentos para ajustar <span class="travamentos-contagem" id="travContagem" hidden></span></h2>
+                            <p class="card-description">Quando o AutoPost repete o mesmo passo mais de 5 vezes ou não consegue publicar, ele manda para cá o que tentava fazer, o passo a passo, a página (JSON e HTML) e a imagem da tela.</p>
+                        </div>
+                        <div class="configurations-content">
+                            <div class="atualizacao-acoes">
+                                <label class="travamentos-filtro"><input type="checkbox" id="travResolvidos"> Mostrar os já resolvidos</label>
+                                <button type="button" class="btn-secondary" id="travRecarregar"><i class="fas fa-redo"></i> Atualizar lista</button>
+                            </div>
+                            <div id="travLista" class="travamentos-lista"><p>Carregando…</p></div>
                         </div>
                     </div>
 
@@ -729,6 +744,7 @@
     <script src="js/sidebar-template.js?v=c7ae38affb"></script>
     <script src="js/tabs.js?v=0c6e055e53"></script>
     <script src="js/setupModals.js?v=f3b8a1828f"></script>
+    <script src="js/autopost-travamentos.js?v=cf11e346e3"></script>
     <script src="js/atualizacao-sistema.js?v=0deddc8904"></script>
     <script src="js/configuracoes.js?v=1f7d2dbcbf"></script>
     <script src="js/internal-animation.js?v=7d7314b65d"></script>

@@ -24,6 +24,8 @@ PADRAO = {
     "lembrar": True,
     "delay_min": 20,           # segundos de espera entre um anúncio e outro (sorteado entre min e max)
     "delay_max": 60,
+    "navegador_escondido": True,   # posta com o Chrome fora da tela; ele aparece só quando precisa de login
+    "contas": {},              # última conferência de login: {"facebook": {"logado": true, "em": "..."}}
     "facebook": {
         "grupos": True,        # também anunciar nos grupos (até 20) na etapa final do Marketplace
         "contato": "",         # se preenchido, entra no começo da descrição: "Meu contato: ..."
