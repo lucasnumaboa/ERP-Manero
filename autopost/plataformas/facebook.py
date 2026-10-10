@@ -228,24 +228,32 @@ class Facebook(Plataforma):
                 continue
         self.esperar(2)
         # só diz que excluiu depois de ver que saiu da lista
-        if self._cartao_no_marketplace(titulo, rolagens=4):
+        if self._cartao_no_marketplace(titulo):
             self.log("O Facebook não confirmou a exclusão: o anúncio continua em Vendendo.")
             return False
         self.log("Anúncio excluído no Marketplace (conferido: saiu de Vendendo).")
         return True
 
-    def _cartao_no_marketplace(self, titulo, rolagens=8):
+    def _cartao_no_marketplace(self, titulo):
         """Cartão do anúncio com este título em Vendendo (título inteiro; o do botão vem cortado em ~70 letras).
-        Só cartões de anúncio: o "Mais opções para <pessoa>" das conversas e títulos parecidos não batem."""
+        Só cartões de anúncio: o "Mais opções para <pessoa>" das conversas e títulos parecidos não batem. Rola até a
+        lista parar de crescer 3 vezes seguidas: o Facebook carrega aos poucos e parar cedo faria um anúncio do fim
+        da lista "não estar" (e a conferência da exclusão diria que saiu sem ter saído)."""
         self.scraper.go_to_page(URL_VENDENDO)
         self.esperar(5)
         alvo = normalizar(titulo)
-        for _ in range(rolagens):
-            for cartao in self.scraper.driver.execute_script(JS_LISTA_FACEBOOK) or []:
+        antes, iguais = -1, 0
+        for _ in range(40):
+            cartoes = self.scraper.driver.execute_script(JS_LISTA_FACEBOOK) or []
+            for cartao in cartoes:
                 curto = normalizar(cartao["rotulo"])
                 if normalizar(cartao["titulo"]) == alvo or (len(curto) >= 60 and alvo.startswith(curto)):
                     return cartao
-            self.scraper.driver.execute_script("window.scrollBy(0, 1200);")
+            iguais = iguais + 1 if len(cartoes) == antes else 0
+            if iguais >= 3:
+                return None
+            antes = len(cartoes)
+            self.scraper.driver.execute_script("window.scrollBy(0, 2500);")
             self.esperar(2)
         return None
 
@@ -255,11 +263,12 @@ class Facebook(Plataforma):
         self.log("Lendo os anúncios do Marketplace...")
         self.scraper.go_to_page(URL_VENDENDO)
         self.esperar(5)
-        itens, antes = [], -1
-        for _ in range(25):
+        itens, antes, iguais = [], -1, 0
+        for _ in range(40):
             itens = [{k: v for k, v in c.items() if k not in ("botao", "rotulo")}
                      for c in self.scraper.driver.execute_script(JS_LISTA_FACEBOOK) or []]
-            if len(itens) == antes:
+            iguais = iguais + 1 if len(itens) == antes else 0
+            if iguais >= 3:   # a lista carrega aos poucos: só para quando ficou igual 3 vezes seguidas
                 break
             antes = len(itens)
             self.scraper.driver.execute_script("window.scrollBy(0, 2500);")
