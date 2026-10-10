@@ -115,10 +115,13 @@ async def download_software(software_id: int, current_user: dict = Depends(get_c
     if not os.path.exists(caminho_arquivo):
         raise HTTPException(status_code=404, detail="Arquivo não encontrado no servidor")
     
+    # no-store: o endereço não muda entre versões; guardado no navegador, o download seguinte reaproveitava o
+    # arquivo antigo (ou pedia só o resto dele) e quebrava quando um software era atualizado
     return FileResponse(
         path=caminho_arquivo,
         filename=software["nome_arquivo"],
-        media_type="application/octet-stream"
+        media_type="application/octet-stream",
+        headers={"Cache-Control": "no-store"},
     )
 
 

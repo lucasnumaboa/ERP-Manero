@@ -314,9 +314,12 @@ async function downloadSoftware(softwareId) {
             return;
         }
 
-        // Faz requisição com autenticação
-        const response = await fetch(`${baseUrl}/api/softwares/download/${softwareId}`, {
+        // Faz requisição com autenticação. O endereço é o mesmo para todas as versões do software: sem
+        // "no-store" o navegador reaproveitava a cópia guardada da versão anterior (ou um pedaço dela, pedindo só
+        // o resto com Range) e o download quebrava com "Failed to fetch" depois de uma atualização.
+        const response = await fetch(`${baseUrl}/api/softwares/download/${softwareId}?v=${encodeURIComponent(software.versao || '')}`, {
             method: 'GET',
+            cache: 'no-store',
             headers: {
                 'Authorization': `Bearer ${token}`
             }
