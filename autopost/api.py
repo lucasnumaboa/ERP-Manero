@@ -13,7 +13,7 @@ from erp import ErpCliente, ErroErp
 from navegador import chrome_instalado
 from tarefas import Executor
 
-VERSAO = "1.2.3"
+VERSAO = "1.2.4"
 
 CAMPOS_PRODUTO = ("id", "codigo", "nome", "descricao", "preco_venda", "estoque_atual", "categoria_id",
                   "categoria_nome", "caminho_imagem", "post_facebook", "post_olx", "faturavel", "comissao")

@@ -42,15 +42,6 @@ const conteudo = cb.querySelector('[class*="trigger-content"]') || cb;
 return (conteudo.textContent || '').replace(/\s+/g, ' ').trim();
 """
 
-# Clique "de verdade" para componentes que só reagem a pointerdown/mousedown
-JS_CLIQUE_COMPLETO = r"""
-const o = arguments[0];
-for (const tipo of ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click']) {
-  const Evento = tipo.startsWith('pointer') && window.PointerEvent ? PointerEvent : MouseEvent;
-  o.dispatchEvent(new Evento(tipo, {bubbles: true, cancelable: true, view: window}));
-}
-"""
-
 
 def escolha_reserva(campo, titulo):
     """Sem a IA: a opção que aparece no título (ex.: "2gb" -> "2 GB"); senão o usado em melhor estado ou "Outros".
@@ -1620,6 +1611,7 @@ class Olx(Plataforma):
         por isso os campos e as opções são lidos por JavaScript (textContent). As escolhas vêm da IA do ERP, que vê
         título, descrição e fotos; sem ela, ou para o que ela não respondeu, vale escolha_reserva()."""
         try:
+            self._olx_fechar_listas()   # aberta, a lista sai do bloco do campo e as opções não seriam lidas
             campos = [c for c in (self.scraper.driver.execute_script(JS_CAMPOS_OLX) or [])
                       if c.get("vazio") and c.get("id") and c.get("opcoes")]
         except Exception as e:
@@ -1676,69 +1668,78 @@ class Olx(Plataforma):
     def _olx_valor_do_campo(self, campo_id):
         return (self.scraper.driver.execute_script(JS_VALOR_CAMPO_OLX, campo_id) or "").strip()
 
-    def _olx_selecionar_opcao(self, campo_id, valor):
-        """Abre o campo, clica na opção e lê o que ficou. Se não pegou, tenta eventos de mouse completos e depois o
-        teclado. Devolve o texto que ficou no campo (vazio se continua em "Selecione")."""
+    def _olx_opcao_visivel(self, valor):
+        """Opção visível com esse texto. Aberta, a lista sai do bloco do campo e aparece numa camada à parte
+        (div.olx-core-singleselect__dropdown); só uma lista fica aberta por vez."""
+        from selenium.webdriver.common.by import By
+
+        for li in self.scraper.driver.find_elements(By.CSS_SELECTOR, 'li[role="option"]'):
+            try:
+                if li.is_displayed() and _texto(li) == valor:
+                    return li
+            except Exception:
+                continue
+        return None
+
+    def _olx_fechar_listas(self):
+        """Fecha lista de opções aberta: ela fica por cima do campo de baixo e rouba o clique."""
         from selenium.webdriver.common.by import By
         from selenium.webdriver.common.keys import Keys
 
+        for _ in range(3):
+            abertos = self.scraper.driver.find_elements(By.CSS_SELECTOR, '[role="combobox"][aria-expanded="true"]')
+            if not abertos:
+                return
+            try:
+                abertos[0].send_keys(Keys.ESCAPE)
+            except Exception:
+                self.scraper.driver.find_element(By.TAG_NAME, "body").send_keys(Keys.ESCAPE)
+            time.sleep(0.3)
+
+    def _olx_selecionar_opcao(self, campo_id, valor):
+        """Abre o campo, clica na opção (clique normal; se não pegar, por JavaScript) e devolve o texto que ficou no
+        campo (vazio se continua em "Selecione"). Sempre deixa a lista fechada."""
+        from selenium.webdriver.common.by import By
+
         driver = self.scraper.driver
+        self._olx_fechar_listas()
         combobox = driver.find_element(By.ID, campo_id)
         driver.execute_script("arguments[0].scrollIntoView({block:'center'});", combobox)
         time.sleep(0.3)
-        bloco = combobox.find_element(By.XPATH, "./ancestor::div[contains(@class,'olx-core-singleselect')][1]")
-
-        def _opcao():
-            for li in bloco.find_elements(By.CSS_SELECTOR, 'li[role="option"]'):
-                if _texto(li) == valor:
-                    return li
-            return None
 
         def _abrir():
             if combobox.get_attribute("aria-expanded") != "true":
-                combobox.click()
+                try:
+                    combobox.click()
+                except Exception:   # algo por cima do campo: fecha as listas e abre por JavaScript
+                    self._olx_fechar_listas()
+                    driver.execute_script("arguments[0].click();", combobox)
             fim = time.monotonic() + 3
             while time.monotonic() < fim:
-                li = _opcao()
-                if li is not None and li.is_displayed():
+                li = self._olx_opcao_visivel(valor)
+                if li is not None:
                     return li
                 time.sleep(0.2)
-            return _opcao()
+            return None
 
-        # 1) clique normal na opção (ou por JavaScript, se ela não ficou visível)
-        li = _abrir()
-        if li is None:
-            raise RuntimeError("opção não encontrada na lista")
-        if li.is_displayed():
-            li.click()
-        else:
-            driver.execute_script("arguments[0].click();", li)
-        time.sleep(0.5)
-        if self._olx_valor_do_campo(campo_id) == valor:
-            return valor
-
-        # 2) eventos de mouse completos (alguns componentes só reagem a pointerdown/mousedown)
-        li = _abrir()
-        if li is not None:
-            driver.execute_script(JS_CLIQUE_COMPLETO, li)
+        try:
+            li = _abrir()
+            if li is None:
+                raise RuntimeError("a opção não apareceu na lista aberta")
+            try:
+                li.click()
+            except Exception:
+                driver.execute_script("arguments[0].click();", li)
             time.sleep(0.5)
             if self._olx_valor_do_campo(campo_id) == valor:
                 return valor
-
-        # 3) teclado: foca o campo, desce até a opção e confirma
-        opcoes = [_texto(li) for li in bloco.find_elements(By.CSS_SELECTOR, 'li[role="option"]')]
-        if valor in opcoes:
-            if combobox.get_attribute("aria-expanded") == "true":
-                combobox.send_keys(Keys.ESCAPE)
-                time.sleep(0.2)
-            combobox.send_keys(Keys.ENTER)
-            time.sleep(0.4)
-            for _ in range(opcoes.index(valor) + 1):
-                combobox.send_keys(Keys.ARROW_DOWN)
-                time.sleep(0.1)
-            combobox.send_keys(Keys.ENTER)
-            time.sleep(0.5)
-        return self._olx_valor_do_campo(campo_id)
+            li = _abrir()
+            if li is not None:
+                driver.execute_script("arguments[0].click();", li)
+                time.sleep(0.5)
+            return self._olx_valor_do_campo(campo_id)
+        finally:
+            self._olx_fechar_listas()
 
     def preencher_dropdown_por_label(self, label_text, valor):
         """Preenche um dropdown encontrando-o pelo label próximo"""
