@@ -14,7 +14,7 @@ from erp import ErpCliente, ErroErp
 from navegador import chrome_instalado
 from tarefas import Executor
 
-VERSAO = "1.3.0"
+VERSAO = "1.3.1"
 
 CAMPOS_PRODUTO = ("id", "codigo", "nome", "descricao", "preco_venda", "estoque_atual", "categoria_id",
                   "categoria_nome", "caminho_imagem", "post_facebook", "post_olx", "faturavel", "comissao")
@@ -45,6 +45,8 @@ class Api:
         self._publicada = None        # versão nova achada no ERP
         self._atualizacao = None
         self._agendador = None       # busca automática do "Acha produto" (começa depois do login)
+        self._avisar = None          # app.py: notificação do Windows pelo ícone da bandeja (titulo, texto)
+        self._fechar_app = None      # app.py: fecha de verdade (o X da janela só manda para a bandeja)
         atualizador.limpar_sobras()
 
     def _salvar_cfg(self):
@@ -69,6 +71,7 @@ class Api:
         if self.executor and self.executor.ocupado():
             self.executor.parar()
         self.executor = Executor(erp, cfg=self.cfg, guardar_cfg=self._salvar_cfg, versao_app=VERSAO)
+        self.executor.ao_achar_novos = self._avisar_novos
         if self._agendador is None:
             self._agendador = achados.Agendador(lambda: self.executor)
         self.cfg.update({"api_url": api_url, "email": email.strip(), "lembrar": bool(lembrar),
@@ -256,6 +259,13 @@ class Api:
         return {"eventos": self.executor.eventos(int(desde)), "estado": self.executor.estado}
 
     # ---------- acha produto ----------
+    def _avisar_novos(self, total, por_pesquisa):
+        if not self._avisar or not total:
+            return
+        detalhes = ", ".join(f"{termo} ({n})" for termo, n in por_pesquisa if n)
+        self._avisar("Opa, apareceram produtos novos!",
+                     f"{total} anúncio(s) novo(s) no Facebook: {detalhes}. Clique no ícone do AutoPost para ver.")
+
     @_seguro
     def achados(self):
         dados = achados.carregar()
@@ -353,7 +363,9 @@ class Api:
         if not (self._atualizacao and self._atualizacao.estado["etapa"] == "pronto"):
             return {"erro": "A versão nova ainda não está pronta."}
         self._atualizacao.abrir_novo()
-        if self._janela:
+        if self._fechar_app:
+            self._fechar_app()          # sai de verdade (o X da janela só esconde)
+        elif self._janela:
             self._janela.destroy()
         return {"ok": True}
 

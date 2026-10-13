@@ -147,5 +147,6 @@ class Atualizador:
     def abrir_novo(self):
         # sem isto o exe novo usaria a pasta temporária deste, que é apagada quando este fecha
         env = dict(os.environ, PYINSTALLER_RESET_ENVIRONMENT="1")
-        subprocess.Popen([str(self.exe)], cwd=str(self.exe.parent), env=env, close_fds=True,
+        # --depois-de-atualizar: a nova espera esta sair em vez de achar que já tem um AutoPost aberto (bandeja.py)
+        subprocess.Popen([str(self.exe), "--depois-de-atualizar"], cwd=str(self.exe.parent), env=env, close_fds=True,
                          creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP)

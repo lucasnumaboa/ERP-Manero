@@ -52,6 +52,7 @@ class Executor:
         self._parar = threading.Event()
         self._continuar = threading.Event()
         self.listas = {}   # anúncios lidos dos sites: {"facebook": {"itens": [...], "em": "..."}}
+        self.ao_achar_novos = None   # api.py: notificação "apareceram produtos novos" (total, [(termo, n)])
         self.estado = {"rodando": False, "tarefa": None, "total": 0, "feitos": 0, "ok": 0, "falhas": 0,
                        "atual": None, "aguardando_login": None}
 
@@ -386,7 +387,7 @@ class Executor:
         self.log(f"Acha produto: {len(ids)} pesquisa(s) no Facebook{' (automático)' if automatico else ''}.")
         plataforma = self._plataforma("facebook")
         self._garantir_login(plataforma)
-        novos_total = 0
+        novos_total, por_pesquisa = 0, []
         for indice, pid in enumerate(ids):
             self._verificar_parada()
             dados = achados.carregar()
@@ -411,6 +412,7 @@ class Executor:
                 resumo = achados.aplicar_resultado(dados, pesquisa, r["itens"])
                 achados.salvar(dados)
                 novos_total += resumo["novos"]
+                por_pesquisa.append((pesquisa["termo"], resumo["novos"]))
                 self.estado["ok"] += 1
                 self.log(f"\"{rotulo}\": {len(r['itens'])} anúncio(s) no raio · {resumo['novos']} novo(s) · "
                          f"{resumo['baixaram']} baixaram o preço · {resumo['sumiram']} sumiram"
@@ -441,6 +443,11 @@ class Executor:
         dados["auto"]["ultima_rodada"] = achados.agora()
         achados.salvar(dados)
         self.log(f"Acha produto: fim, {novos_total} anúncio(s) novo(s).", "ok")
+        if novos_total and self.ao_achar_novos:
+            try:
+                self.ao_achar_novos(novos_total, por_pesquisa)
+            except Exception as e:
+                self.log(f"Não consegui mostrar o aviso de produtos novos: {e}", "aviso")
 
     # ---------- ler os anúncios dos sites ----------
     def listar_sites(self, nomes):
