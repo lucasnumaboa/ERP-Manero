@@ -43,6 +43,24 @@ return (conteudo.textContent || '').replace(/\s+/g, ' ').trim();
 """
 
 
+# Tour/aviso da OLX por cima da página (ex.: "Receba solicitações de encontros no Chat", "Passo 1 de 3", 13/10/2026).
+# Só fecha modal de passos: os diálogos que o robô usa (excluir, motivo do frete, sair) não têm "Passo N de M".
+JS_FECHAR_TOUR_OLX = r"""
+const vis = e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
+const limpa = t => (t || '').replace(/\s+/g, ' ').trim();
+for (const d of document.querySelectorAll('[role="dialog"], [aria-modal="true"]')) {
+    if (!vis(d)) continue;
+    const texto = limpa(d.innerText);
+    if (!/steps-modal/i.test(String(d.className)) && !/Passo \d+ de \d+/i.test(texto)) continue;
+    const fechar = [...d.querySelectorAll('button, [role="button"]')].find(b => vis(b) &&
+        (/^Fechar/i.test(b.getAttribute('aria-label') || '') || /olx-modal-close/.test(String(b.className))));
+    if (fechar) { fechar.click(); return 'fechou|' + texto.slice(0, 70); }
+    return 'sem fechar|' + texto.slice(0, 70);
+}
+return '';
+"""
+
+
 def escolha_reserva(campo, titulo):
     """Sem a IA: a opção que aparece no título (ex.: "2gb" -> "2 GB"); senão o usado em melhor estado ou "Outros".
     None se nada servir."""
@@ -181,12 +199,37 @@ class Olx(Plataforma):
             return
         self._olx_try_click_continuar_finalizar_em_iframes()
 
+    def _olx_fechar_tour(self):
+        """Fecha tour/aviso de passos da OLX que cobre a página (o robô "se perdia" atrás dele). True se fechou."""
+        from selenium.webdriver.common.by import By
+        from selenium.webdriver.common.keys import Keys
+
+        try:
+            r = self.scraper.driver.execute_script(JS_FECHAR_TOUR_OLX) or ""
+        except Exception:
+            return False
+        if not r:
+            return False
+        acao, _, texto = r.partition("|")
+        if acao == "fechou":
+            self._log(f"Aviso da OLX fechado: {texto}")
+            time.sleep(1)
+            return True
+        self._log(f"Aviso da OLX sem botão de fechar ({texto}); tentando Esc.")
+        try:
+            self.scraper.driver.find_element(By.TAG_NAME, "body").send_keys(Keys.ESCAPE)
+            time.sleep(1)
+        except Exception:
+            pass
+        return False
+
     def wait_for_olx_body_min_length(self, min_len=50, context="", max_wait=120):
         """Após navegação: verifica a cada 1s se o corpo da página tem conteúdo suficiente."""
         t0 = time.monotonic()
         stall = t0
         while time.monotonic() - t0 < max_wait:
             time.sleep(1)
+            self._olx_fechar_tour()
             try:
                 cur = self._normalize_olx_body_text()
             except Exception:
@@ -252,6 +295,10 @@ class Olx(Plataforma):
             if stall_cycles > max_stall_cycles:
                 self.log(f"AVISO: parei de esperar mudança de tela ({context}) após várias repetições.")
                 return
+            if self._olx_fechar_tour():
+                baseline = self._normalize_olx_snapshot()
+                stall_start = time.monotonic()
+                continue
             self.log(f"Página sem mudança por 10s ({context}). Relendo e repetindo ação...")
             if stall_cycles in (2, 4) and self.ajuda_da_ia(
                     context, tentativa=f"esperou {stall_cycles * 10}s a página mudar depois de: {context}"):
@@ -276,6 +323,7 @@ class Olx(Plataforma):
         ajudas = [20, 45]   # segundos sem achar: pede ajuda à IA (a tela pode ser outra)
         while time.monotonic() - t0 < max_seconds:
             time.sleep(1)
+            self._olx_fechar_tour()
             try:
                 el = find_fn()
                 if el is not None:
@@ -816,7 +864,7 @@ class Olx(Plataforma):
         while tentativas < max_tentativas:
             tentativas += 1
 
-            if self.fechar_modal_saida():
+            if self.fechar_modal_saida() or self._olx_fechar_tour():
                 continue
 
             try:
@@ -1929,6 +1977,7 @@ class Olx(Plataforma):
         self.scraper.go_to_page(URL_ANUNCIOS)
         self.wait_for_olx_body_min_length(50, "meus anúncios", max_wait=60)
         self.esperar(3)
+        self._olx_fechar_tour()
         for pagina in range(1, 21):
             for _ in range(6):   # a lista carrega rolando
                 self.scraper.driver.execute_script("window.scrollBy(0, 2500);")
