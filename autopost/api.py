@@ -7,13 +7,14 @@ import functools
 import traceback
 import webbrowser
 
+import achados
 import atualizador
 import config
 from erp import ErpCliente, ErroErp
 from navegador import chrome_instalado
 from tarefas import Executor
 
-VERSAO = "1.2.8"
+VERSAO = "1.3.0"
 
 CAMPOS_PRODUTO = ("id", "codigo", "nome", "descricao", "preco_venda", "estoque_atual", "categoria_id",
                   "categoria_nome", "caminho_imagem", "post_facebook", "post_olx", "faturavel", "comissao")
@@ -43,6 +44,7 @@ class Api:
         self._janela = None           # app.py preenche: a atualização fecha a janela ao abrir a versão nova
         self._publicada = None        # versão nova achada no ERP
         self._atualizacao = None
+        self._agendador = None       # busca automática do "Acha produto" (começa depois do login)
         atualizador.limpar_sobras()
 
     def _salvar_cfg(self):
@@ -67,6 +69,8 @@ class Api:
         if self.executor and self.executor.ocupado():
             self.executor.parar()
         self.executor = Executor(erp, cfg=self.cfg, guardar_cfg=self._salvar_cfg, versao_app=VERSAO)
+        if self._agendador is None:
+            self._agendador = achados.Agendador(lambda: self.executor)
         self.cfg.update({"api_url": api_url, "email": email.strip(), "lembrar": bool(lembrar),
                          "senha_protegida": config.proteger(senha) if lembrar else ""})
         self._salvar_cfg()
@@ -251,6 +255,73 @@ class Api:
             return {"eventos": [], "estado": {"rodando": False}}
         return {"eventos": self.executor.eventos(int(desde)), "estado": self.executor.estado}
 
+    # ---------- acha produto ----------
+    @_seguro
+    def achados(self):
+        dados = achados.carregar()
+        quando = achados.proxima_rodada(dados)
+        return {"pesquisas": dados["pesquisas"], "itens": list(dados["itens"].values()), "auto": dados["auto"],
+                "proxima": quando.isoformat(timespec="minutes") if quando else None, "raios": achados.RAIOS_KM}
+
+    @_seguro
+    def salvar_pesquisa(self, dados_tela):
+        dados = achados.carregar()
+        pid = (dados_tela or {}).get("id")
+        antiga = next((p for p in dados["pesquisas"] if p["id"] == pid), None) if pid else None
+        nova = achados.montar_pesquisa(dados_tela or {}, antiga)
+        achados.reaproveitar_cidade(dados, nova)
+        if antiga:
+            dados["pesquisas"] = [nova if p["id"] == pid else p for p in dados["pesquisas"]]
+        else:
+            dados["pesquisas"].append(nova)
+        achados.salvar(dados)
+        return {"ok": True, "pesquisa": nova}
+
+    @_seguro
+    def remover_pesquisa(self, pesquisa_id):
+        if self.executor and self.executor.ocupado() and self.executor.estado.get("tarefa") == "achar":
+            return {"erro": "Espere a busca terminar (ou clique em Parar) para apagar uma pesquisa."}
+        dados = achados.carregar()
+        achados.remover_pesquisa(dados, pesquisa_id)
+        achados.salvar(dados)
+        return {"ok": True}
+
+    @_seguro
+    def marcar_achados(self, ids, estado):
+        if estado not in achados.ESTADOS:
+            return {"erro": f"Estado inválido: {estado}"}
+        dados = achados.carregar()
+        for i in ids or []:
+            item = dados["itens"].get(str(i))
+            if item:
+                item["estado"] = estado
+                if estado != "novo":
+                    item["preco_baixou"] = False
+        achados.salvar(dados)
+        return {"ok": True}
+
+    @_seguro
+    def limpar_achados(self):
+        """Apaga da lista os descartados e os que sumiram do Facebook (menos os favoritos)."""
+        dados = achados.carregar()
+        antes = len(dados["itens"])
+        dados["itens"] = {k: v for k, v in dados["itens"].items()
+                          if v.get("estado") == "favorito" or (v.get("estado") != "descartado" and not v.get("sumiu"))}
+        achados.salvar(dados)
+        return {"ok": True, "apagados": antes - len(dados["itens"])}
+
+    @_seguro
+    def salvar_auto_achados(self, ligado, horas):
+        dados = achados.carregar()
+        dados["auto"].update({"ligado": bool(ligado), "horas": max(1, min(48, int(horas or 3)))})
+        achados.salvar(dados)
+        return {"ok": True}
+
+    @_seguro
+    def buscar_achados(self, ids=None):
+        self.executor.achar(ids or None)
+        return {"ok": True}
+
     # ---------- atualização do próprio AutoPost ----------
     @_seguro
     def verificar_atualizacao(self):
@@ -293,6 +364,8 @@ class Api:
         return {"ok": True}
 
     def ao_fechar(self):
+        if self._agendador:
+            self._agendador.parar()
         if self.executor:
             self.executor.parar()
             self.executor.navegador.fechar()

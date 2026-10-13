@@ -18,6 +18,7 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
+import achados
 from config import PASTA
 from navegador import Navegador
 from plataformas import NOMES, ParadaSolicitada, SkipItemException, Travou, criar
@@ -370,6 +371,76 @@ class Executor:
             self._esperar(random.randint(5, 12))
         self.log(f"Fim: {self.estado['ok']} tirado(s) do ar, {self.estado['falhas']} com erro.",
                  "ok" if not self.estado["falhas"] else "aviso")
+
+    # ---------- acha produto (pesquisas no Facebook Marketplace) ----------
+    def achar(self, ids=None, automatico=False):
+        """ids: pesquisas escolhidas; None = todas as ativas."""
+        dados = achados.carregar()
+        pesquisas = [p for p in dados["pesquisas"] if (p["id"] in ids if ids else p.get("ativa"))]
+        if not pesquisas:
+            raise RuntimeError("Nenhuma pesquisa ativa para buscar.")
+        self._iniciar("achar", self._achar, [p["id"] for p in pesquisas], automatico)
+
+    def _achar(self, ids, automatico):
+        self.estado["total"] = len(ids)
+        self.log(f"Acha produto: {len(ids)} pesquisa(s) no Facebook{' (automático)' if automatico else ''}.")
+        plataforma = self._plataforma("facebook")
+        self._garantir_login(plataforma)
+        novos_total = 0
+        for indice, pid in enumerate(ids):
+            self._verificar_parada()
+            dados = achados.carregar()
+            pesquisa = next((p for p in dados["pesquisas"] if p["id"] == pid), None)
+            if pesquisa is None:
+                continue   # apagada enquanto rodava
+            rotulo = f"{pesquisa['termo']}" + (f" · {pesquisa['cidade']}" if pesquisa.get("cidade") else "")
+            self.estado["atual"] = {"produto": rotulo, "plataforma": "facebook"}
+            self._evento("achar", pesquisa=pid, status="buscando")
+            self._linhas_item = []
+            try:
+                plataforma.iniciar_item()
+                r = plataforma.buscar(pesquisa)
+                dados = achados.carregar()   # a tela pode ter mudado algo enquanto buscava
+                pesquisa = next((p for p in dados["pesquisas"] if p["id"] == pid), None)
+                if pesquisa is None:
+                    continue
+                if r.get("cidade_id"):
+                    pesquisa["cidade_id"] = r["cidade_id"]
+                pesquisa["cidade_rotulo"] = r.get("rotulo") or pesquisa.get("cidade_rotulo")
+                achados.reaproveitar_cidade(dados, pesquisa)
+                resumo = achados.aplicar_resultado(dados, pesquisa, r["itens"])
+                achados.salvar(dados)
+                novos_total += resumo["novos"]
+                self.estado["ok"] += 1
+                self.log(f"\"{rotulo}\": {len(r['itens'])} anúncio(s) no raio · {resumo['novos']} novo(s) · "
+                         f"{resumo['baixaram']} baixaram o preço · {resumo['sumiram']} sumiram"
+                         + (f" · {resumo['filtrados']} tirados pelas palavras/preço" if resumo["filtrados"] else ""), "ok")
+                self._evento("achar", pesquisa=pid, status="ok", novos=resumo["novos"])
+            except ParadaSolicitada:
+                raise
+            except Exception as e:
+                self.estado["falhas"] += 1
+                dados = achados.carregar()
+                for p in dados["pesquisas"]:
+                    if p["id"] == pid:
+                        p["ultima_busca"] = achados.agora()
+                        p["ultimo_resultado"] = {"erro": str(e)[:300]}
+                achados.salvar(dados)
+                self._evento("achar", pesquisa=pid, status="erro", mensagem=str(e))
+                self.log(f"Não consegui buscar \"{rotulo}\": {e}", "erro")
+                if isinstance(e, Travou):
+                    self.diagnosticar("facebook", f"acha produto: {e.acao}", str(e), titulo=rotulo)
+            finally:
+                self.estado["feitos"] += 1
+            if indice < len(ids) - 1:
+                self.estado["atual"] = None
+                espera = random.randint(*achados.ESPERA_ENTRE_PESQUISAS)
+                self.log(f"Aguardando {espera}s antes da próxima pesquisa (parece menos robô)...")
+                self._esperar(espera)
+        dados = achados.carregar()
+        dados["auto"]["ultima_rodada"] = achados.agora()
+        achados.salvar(dados)
+        self.log(f"Acha produto: fim, {novos_total} anúncio(s) novo(s).", "ok")
 
     # ---------- ler os anúncios dos sites ----------
     def listar_sites(self, nomes):

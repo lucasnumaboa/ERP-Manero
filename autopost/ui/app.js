@@ -17,6 +17,11 @@ const ICONES = {
     lixeira: '<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/>',
     imagem: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/>',
     link: '<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
+    mais: '<path d="M12 5v14M5 12h14"/>',
+    estrela: '<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2-5.5-2.9-5.5 2.9 1-6.2L3 9.6l6.2-.9L12 3Z"/>',
+    fechar: '<path d="M6 6l12 12M18 6 6 18"/>',
+    editar: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"/>',
+    olho: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
 };
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -40,6 +45,9 @@ const estado = {
     tarefa: null,
     abaAnuncios: 'remover',
     config: null,
+    achados: { pesquisas: [], itens: [], auto: {}, raios: [] },
+    filtroAchados: 'novo',
+    buscandoPesquisa: null,
 };
 
 // ---------- utilidades ----------
@@ -379,6 +387,9 @@ function tratarEvento(ev) {
         $('#modalLogin').hidden = false;
     } else if (ev.tipo === 'conta') {
         desenharConta(ev.plataforma, ev);
+    } else if (ev.tipo === 'achar') {
+        estado.buscandoPesquisa = ev.status === 'buscando' ? ev.pesquisa : null;
+        carregarAchados();
     } else if (ev.tipo === 'lista') {
         if (estado.abaAnuncios === `site-${ev.plataforma}`) carregarSite();
     } else if (ev.tipo === 'fim') {
@@ -393,6 +404,12 @@ function tratarEvento(ev) {
             aviso(ev.falhas ? 'Não consegui ler um dos sites; veja o registro em Postar.' : 'Anúncios dos sites lidos.', ev.falhas ? 'aviso' : '');
         } else if (ev.tarefa === 'contas') {
             carregarContas(false);
+        } else if (ev.tarefa === 'achar') {
+            estado.buscandoPesquisa = null;
+            carregarAchados().then(() => {
+                const novos = estado.achados.itens.filter(i => i.estado === 'novo' && !i.sumiu).length;
+                aviso(ev.parado ? 'Busca parada.' : `Busca concluída: ${novos} anúncio(s) novo(s) na lista.`, ev.falhas ? 'aviso' : '');
+            });
         }
         if (ev.tarefa !== 'login') {
             carregarDados(true);
@@ -409,7 +426,7 @@ function aplicarEstado(st) {
     const contagem = `${st.feitos}/${st.total}`;
     $('#textoRodando').textContent = st.aguardando_login ? 'Esperando você entrar…' : ({
         remover: `Tirando do ar ${contagem}`, excluir: `Excluindo ${contagem}`, listar: 'Lendo os sites…',
-        contas: 'Conferindo os logins…',
+        contas: 'Conferindo os logins…', achar: `Buscando produtos ${contagem}`,
     }[st.tarefa] || `Postando ${contagem}`);
     $('#botaoMostrarChrome').hidden = !estado.rodando || st.tarefa === 'login';
     $('#botaoLerSite').disabled = estado.rodando;
@@ -418,6 +435,8 @@ function aplicarEstado(st) {
     $('#botaoPostar').hidden = estado.rodando && st.tarefa !== 'login';
     $('#botaoParar').hidden = !estado.rodando || st.tarefa === 'login';
     $('#botaoRemoverVendidos').disabled = estado.rodando;
+    $('#botaoBuscarAchados').disabled = estado.rodando;
+    $$('[data-buscar-pesq]').forEach(b => { b.disabled = estado.rodando; });
     if (estado.rodando || antes) {
         const total = st.total || 0;
         $('#numFeitos').textContent = st.feitos || 0;
@@ -426,7 +445,7 @@ function aplicarEstado(st) {
         $('#numFalhas').textContent = st.falhas || 0;
         $('#barraProgresso').style.width = total ? `${Math.round(100 * (st.feitos || 0) / total)}%` : '0';
         $('#itemAtual').innerHTML = st.atual
-            ? `${{ remover: 'Tirando do ar', excluir: 'Excluindo', listar: 'Lendo' }[st.tarefa] || 'Publicando'} no <b>${NOMES[st.atual.plataforma]}</b>: <b>${esc(st.atual.produto)}</b>`
+            ? `${{ remover: 'Tirando do ar', excluir: 'Excluindo', listar: 'Lendo', achar: 'Buscando' }[st.tarefa] || 'Publicando'} no <b>${NOMES[st.atual.plataforma]}</b>: <b>${esc(st.atual.produto)}</b>`
             : (estado.rodando ? 'Aguardando o próximo…' : (st.feitos ? 'Concluído.' : 'Parado.'));
     }
     if (antes && !estado.rodando) desenharFila();
@@ -557,6 +576,149 @@ async function excluirDoSite() {
     } catch (e) { aviso(e.message, 'erro'); }
 }
 
+// ---------- acha produto ----------
+async function carregarAchados() {
+    try {
+        estado.achados = await chamar('achados');
+    } catch (e) { aviso(e.message, 'erro'); return; }
+    atualizarSeloAchados();
+    if (!$('#pag-achar').hidden) desenharAchados();
+}
+
+function atualizarSeloAchados() {
+    const novos = estado.achados.itens.filter(i => i.estado === 'novo' && !i.sumiu).length;
+    $('#seloAchados').textContent = novos;
+    $('#seloAchados').hidden = !novos;
+    $('#qtdNovos').textContent = novos || '';
+}
+
+function textoPesquisa(p) {
+    const preco = p.preco_min != null && p.preco_max != null ? `${reais(p.preco_min)} a ${reais(p.preco_max)}`
+        : p.preco_max != null ? `até ${reais(p.preco_max)}` : p.preco_min != null ? `a partir de ${reais(p.preco_min)}` : 'qualquer preço';
+    const cidade = p.cidade_rotulo ? p.cidade_rotulo.split(' · ')[0] : (p.cidade || 'localização do Facebook');
+    return `${esc(cidade)} · ${p.raio_km} km · ${preco}`;
+}
+
+function desenharAchados() {
+    const a = estado.achados;
+    $('#autoAchados').checked = !!a.auto.ligado;
+    $('#horasAchados').value = a.auto.horas || 3;
+    $('#proximaAchados').textContent = a.auto.ligado && a.proxima ? `Próxima busca automática: ${data(a.proxima)}` : '';
+    // pesquisas
+    $('#listaPesquisas').innerHTML = a.pesquisas.length ? a.pesquisas.map(p => {
+        const r = p.ultimo_resultado;
+        const ultima = !p.ultima_busca ? 'Ainda não buscada'
+            : r && r.erro ? `<span class="erro-txt">Erro em ${data(p.ultima_busca)}: ${esc(r.erro)}</span>`
+            : `Buscada em ${data(p.ultima_busca)} · ${r ? r.lidos : 0} anúncio(s) · ${r ? r.novos : 0} novo(s)`;
+        const qtd = a.itens.filter(i => (i.pesquisas || []).includes(p.id) && !i.sumiu && i.estado !== 'descartado').length;
+        return `<div class="pesquisa ${p.ativa ? '' : 'inativa'} ${estado.buscandoPesquisa === p.id ? 'buscando' : ''}">
+            <div class="termo">${esc(p.termo)}</div>
+            <div class="meta">${textoPesquisa(p)}${(p.excluir || []).length ? ` · sem: ${esc(p.excluir.join(', '))}` : ''}</div>
+            <div class="meta">${estado.buscandoPesquisa === p.id ? '<b>buscando agora…</b>' : ultima}</div>
+            <div class="linha-acoes">
+                <span class="discreto">${qtd} na lista</span><span class="espaco"></span>
+                <button class="icone-botao" data-buscar-pesq="${p.id}" title="Buscar só esta agora"><span data-icone="busca"></span></button>
+                <button class="icone-botao" data-editar-pesq="${p.id}" title="Editar"><span data-icone="editar"></span></button>
+                <button class="icone-botao" data-apagar-pesq="${p.id}" title="Apagar a pesquisa (e os anúncios dela que não são favoritos)"><span data-icone="lixeira"></span></button>
+            </div>
+        </div>`;
+    }).join('') : '<div class="vazio">Nenhuma pesquisa ainda. Clique em "Nova pesquisa" (ex.: ps4, Salto, até R$ 1.200).</div>';
+    // filtro por pesquisa
+    const sel = $('#filtroPesquisa');
+    const escolhido = sel.value;
+    sel.innerHTML = '<option value="">Todas as pesquisas</option>' + a.pesquisas.map(p => `<option value="${p.id}">${esc(p.termo)}${p.cidade ? ' · ' + esc(p.cidade) : ''}</option>`).join('');
+    sel.value = a.pesquisas.some(p => p.id === escolhido) ? escolhido : '';
+    // itens
+    let itens = a.itens.filter(i => {
+        if (sel.value && !(i.pesquisas || []).includes(sel.value)) return false;
+        if (estado.filtroAchados === 'todos') return i.estado !== 'descartado';
+        if (estado.filtroAchados === 'novo') return i.estado === 'novo' && !i.sumiu;
+        return i.estado === estado.filtroAchados;
+    });
+    const ordem = $('#ordemAchados').value;
+    itens.sort((x, y) => ordem === 'barato' ? (x.preco ?? 1e12) - (y.preco ?? 1e12)
+        : ordem === 'caro' ? (y.preco ?? -1) - (x.preco ?? -1)
+        : String(y.achado_em).localeCompare(String(x.achado_em)));
+    const nomePesq = Object.fromEntries(a.pesquisas.map(p => [p.id, p.termo]));
+    const lista = $('#listaAchados');
+    if (!a.pesquisas.length) { lista.innerHTML = ''; desenharIcones($('#pag-achar')); return; }
+    lista.innerHTML = itens.length ? itens.slice(0, 500).map(i => {
+        const foto = i.imagem ? `<img src="${esc(i.imagem)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<div class="sem-imagem"><span data-icone="imagem"></span></div>';
+        const tags = [
+            i.estado === 'novo' && !i.sumiu ? '<span class="tag novo">novo</span>' : '',
+            i.preco_baixou ? '<span class="tag baixou">baixou</span>' : '',
+            i.sumiu ? '<span class="tag sumiu">sumiu do Facebook</span>' : '',
+        ].join('');
+        const ult = (i.historico || []).slice(-1)[0];
+        const meta = [esc(i.cidade || ''), `achado em ${data(i.achado_em)}`,
+            ult ? `era ${reais(ult.de)}` : '', (i.pesquisas || []).map(p => esc(nomePesq[p] || '')).filter(Boolean).join(', ')].filter(Boolean).join(' · ');
+        const valor = i.preco === 0 ? 'Grátis' : i.preco != null ? reais(i.preco) : '';
+        const antigo = i.preco_antigo ? `<span class="riscado">${reais(i.preco_antigo)}</span>` : '';
+        return `<div class="anuncio achado ${i.estado} ${i.sumiu ? 'sumiu' : ''}">
+            ${foto}
+            <div style="min-width:0"><div class="titulo" data-abrir-achado="${i.id}" title="Abrir no Facebook">${tags}${esc(i.titulo)}</div><div class="meta">${meta}</div></div>
+            <div class="valor">${antigo}${valor}</div>
+            <div class="acoes">
+                <button class="icone-botao" data-abrir-achado="${i.id}" title="Abrir no Facebook"><span data-icone="link"></span></button>
+                <button class="icone-botao ${i.estado === 'favorito' ? 'ligado' : ''}" data-marcar="${i.id}" data-estado="${i.estado === 'favorito' ? 'visto' : 'favorito'}" title="${i.estado === 'favorito' ? 'Tirar dos favoritos' : 'Favoritar'}"><span data-icone="estrela"></span></button>
+                ${i.estado === 'descartado'
+                    ? `<button class="icone-botao" data-marcar="${i.id}" data-estado="visto" title="Voltar para a lista"><span data-icone="olho"></span></button>`
+                    : `<button class="icone-botao" data-marcar="${i.id}" data-estado="descartado" title="Descartar (não mostrar mais)"><span data-icone="fechar"></span></button>`}
+            </div>
+        </div>`;
+    }).join('') : `<div class="vazio">${estado.filtroAchados === 'novo' ? 'Nenhum anúncio novo. Clique em "Buscar agora" ou espere a busca automática.' : 'Nada aqui.'}</div>`;
+    desenharIcones($('#pag-achar'));
+}
+
+function abrirPesquisa(id) {
+    const p = estado.achados.pesquisas.find(x => x.id === id) || { raio_km: 10, ativa: true };
+    $('#tituloPesquisa').textContent = id ? 'Editar pesquisa' : 'Nova pesquisa';
+    $('#pesqId').value = id || '';
+    $('#pesqTermo').value = p.termo || '';
+    $('#pesqCidade').value = p.cidade || '';
+    $('#pesqRaio').innerHTML = (estado.achados.raios || [10]).map(r => `<option value="${r}">${r} km</option>`).join('');
+    $('#pesqRaio').value = p.raio_km || 10;
+    $('#pesqMin').value = p.preco_min ?? '';
+    $('#pesqMax').value = p.preco_max ?? '';
+    $('#pesqExcluir').value = (p.excluir || []).join(', ');
+    $('#pesqAtiva').checked = p.ativa !== false;
+    $('#pesqGratis').checked = p.ignorar_gratis !== false;
+    $('#modalPesquisa').hidden = false;
+    $('#pesqTermo').focus();
+}
+
+async function salvarPesquisa(ev) {
+    ev.preventDefault();
+    try {
+        await chamar('salvar_pesquisa', {
+            id: $('#pesqId').value || null, termo: $('#pesqTermo').value, cidade: $('#pesqCidade').value,
+            raio_km: Number($('#pesqRaio').value), preco_min: $('#pesqMin').value, preco_max: $('#pesqMax').value,
+            excluir: $('#pesqExcluir').value, ativa: $('#pesqAtiva').checked, ignorar_gratis: $('#pesqGratis').checked,
+        });
+        $('#modalPesquisa').hidden = true;
+        aviso('Pesquisa salva.');
+        carregarAchados();
+    } catch (e) { aviso(e.message, 'erro'); }
+}
+
+async function buscarAchados(ids) {
+    try {
+        await chamar('buscar_achados', ids || null);
+        $('#log').innerHTML = '';
+        aviso('Buscando no Facebook… (o andamento aparece em Postar)');
+        acompanhar();
+    } catch (e) { aviso(e.message, 'erro'); }
+}
+
+async function marcarAchados(ids, novo) {
+    try {
+        await chamar('marcar_achados', ids, novo);
+        ids.forEach(id => { const i = estado.achados.itens.find(x => x.id === id); if (i) { i.estado = novo; if (novo !== 'novo') i.preco_baixou = false; } });
+        atualizarSeloAchados();
+        desenharAchados();
+    } catch (e) { aviso(e.message, 'erro'); }
+}
+
 // ---------- contas: status de login ----------
 function desenharConta(nome, info) {
     const el = $(nome === 'facebook' ? '#statusFacebook' : '#statusOlx');
@@ -644,6 +806,7 @@ function irPara(pag) {
     if (pag === 'anuncios') carregarAnuncios();
     if (pag === 'config') carregarConfig();
     if (pag === 'contas') carregarContas();
+    if (pag === 'achar') carregarAchados();
 }
 
 // ---------- login no ERP ----------
@@ -663,6 +826,7 @@ async function entrarNoErp(ev) {
         $('#app').hidden = false;
         irPara('produtos');
         await carregarDados();
+        carregarAchados();
         carregarConfig();
         acompanhar();
     } catch (e) {
@@ -769,6 +933,57 @@ function ligarEventos() {
             acompanhar();
         } catch (e) { aviso(e.message, 'erro'); }
     }));
+    $('#botaoNovaPesquisa').addEventListener('click', () => abrirPesquisa(null));
+    $('#botaoBuscarAchados').addEventListener('click', () => buscarAchados(null));
+    $('#formPesquisa').addEventListener('submit', salvarPesquisa);
+    $('#pesqCancelar').addEventListener('click', () => { $('#modalPesquisa').hidden = true; });
+    $('#filtroAchados').addEventListener('click', e => {
+        const b = e.target.closest('[data-filtro]');
+        if (!b) return;
+        estado.filtroAchados = b.dataset.filtro;
+        $$('#filtroAchados .chip').forEach(c => c.classList.toggle('ativo', c === b));
+        desenharAchados();
+    });
+    $('#filtroPesquisa').addEventListener('change', desenharAchados);
+    $('#ordemAchados').addEventListener('change', desenharAchados);
+    const salvarAuto = () => chamar('salvar_auto_achados', $('#autoAchados').checked, Number($('#horasAchados').value || 3))
+        .then(carregarAchados).catch(e => aviso(e.message, 'erro'));
+    $('#autoAchados').addEventListener('change', salvarAuto);
+    $('#horasAchados').addEventListener('change', salvarAuto);
+    $('#botaoVerTodosNovos').addEventListener('click', () => {
+        const ids = estado.achados.itens.filter(i => i.estado === 'novo').map(i => i.id);
+        if (ids.length) marcarAchados(ids, 'visto');
+    });
+    $('#botaoLimparAchados').addEventListener('click', async () => {
+        if (!confirm('Apagar da lista os descartados e os que sumiram do Facebook? Os favoritos ficam.')) return;
+        const r = await chamar('limpar_achados').catch(e => { aviso(e.message, 'erro'); return null; });
+        if (r) { aviso(`${r.apagados} anúncio(s) apagado(s) da lista.`); carregarAchados(); }
+    });
+    $('#listaPesquisas').addEventListener('click', async e => {
+        const b = e.target.closest('button');
+        if (!b) return;
+        if (b.dataset.buscarPesq) buscarAchados([b.dataset.buscarPesq]);
+        else if (b.dataset.editarPesq) abrirPesquisa(b.dataset.editarPesq);
+        else if (b.dataset.apagarPesq) {
+            const p = estado.achados.pesquisas.find(x => x.id === b.dataset.apagarPesq);
+            if (!p || !confirm(`Apagar a pesquisa "${p.termo}"? Os anúncios dela saem da lista (menos os favoritos).`)) return;
+            try { await chamar('remover_pesquisa', p.id); carregarAchados(); } catch (err) { aviso(err.message, 'erro'); }
+        }
+    });
+    $('#listaAchados').addEventListener('click', e => {
+        const abrir = e.target.closest('[data-abrir-achado]');
+        if (abrir) {
+            const i = estado.achados.itens.find(x => x.id === abrir.dataset.abrirAchado);
+            if (i) {
+                chamar('abrir_link', i.link);
+                if (i.estado === 'novo') marcarAchados([i.id], 'visto');
+            }
+            return;
+        }
+        const m = e.target.closest('[data-marcar]');
+        if (m) marcarAchados([m.dataset.marcar], m.dataset.estado);
+    });
+    setInterval(() => { if (estado.usuario) carregarAchados(); }, 60000);
     $('#linkFecharChrome').addEventListener('click', e => { e.preventDefault(); chamar('fechar_navegador').then(() => aviso('Chrome do AutoPost fechado.')); });
 
     $('#formConfig').addEventListener('submit', salvarConfig);

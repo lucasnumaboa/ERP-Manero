@@ -376,3 +376,31 @@ main { flex: 1; min-width: 0; overflow: hidden; display: flex; }
 .anuncio.site.publicando { border-color: var(--destaque); }
 .anuncio .no-erp { color: #86efac; }
 .anuncio .fora-erp { color: #fcd34d; }
+
+/* ---------- acha produto ---------- */
+.acoes-cabecalho { display: flex; gap: 8px; flex-wrap: wrap; }
+.pequeno-numero { width: 64px; }
+.auto-achados { background: var(--painel); border: 1px solid var(--borda); border-radius: var(--raio); padding: 10px 14px; }
+.pesquisas { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.pesquisa { background: var(--painel); border: 1px solid var(--borda); border-left: 3px solid var(--fb); border-radius: var(--raio); padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.pesquisa.inativa { opacity: .55; border-left-color: var(--borda); }
+.pesquisa.buscando { border-color: var(--destaque); }
+.pesquisa .termo { font-weight: 700; font-size: 15px; }
+.pesquisa .meta { color: var(--discreto); font-size: 12px; }
+.pesquisa .meta .erro-txt { color: #fca5a5; }
+.pesquisa .linha-acoes { display: flex; gap: 4px; margin-top: 4px; align-items: center; }
+.pesquisa .linha-acoes .espaco { flex: 1; }
+.anuncio.achado { grid-template-columns: 64px minmax(0, 1fr) auto auto; }
+.anuncio.achado img, .anuncio.achado .sem-imagem { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; background: var(--painel-2); }
+.anuncio.achado .sem-imagem { display: grid; place-items: center; color: var(--discreto); }
+.anuncio.achado .titulo { cursor: pointer; }
+.anuncio.achado .titulo:hover { color: var(--destaque); }
+.anuncio.achado.novo { border-color: rgba(20, 184, 166, .55); }
+.anuncio.achado.sumiu { opacity: .55; }
+.anuncio.achado.descartado { opacity: .45; }
+.anuncio .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 0 6px; border-radius: 6px; margin-right: 4px; }
+.anuncio .tag.novo { background: rgba(20, 184, 166, .18); color: var(--destaque); }
+.anuncio .tag.baixou { background: rgba(34, 197, 94, .18); color: #86efac; }
+.anuncio .tag.sumiu { background: rgba(245, 158, 11, .18); color: #fcd34d; }
+.anuncio .riscado { text-decoration: line-through; color: var(--discreto); font-weight: 400; font-size: 12px; margin-right: 6px; }
+.icone-botao.ligado { color: var(--aviso); }

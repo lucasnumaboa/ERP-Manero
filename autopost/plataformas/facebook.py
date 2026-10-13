@@ -6,13 +6,18 @@ condição, descrição colada pela área de transferência (para manter emoji e
 Publicar. As esperas fixas viraram esperas pelo campo/botão, e a exclusão agora tira só o anúncio do produto
 (o app antigo excluía todos, um a um).
 """
+import random
+import re
 import time
+from urllib.parse import quote
 
 from .base import ParadaSolicitada, Plataforma, SkipItemException, normalizar
 from navegador import copiar_para_area_de_transferencia
 
 URL_CRIAR = "https://www.facebook.com/marketplace/create/item"
 URL_VENDENDO = "https://www.facebook.com/marketplace/you/selling"
+URL_BUSCA = "https://www.facebook.com/marketplace/{local}/search/?query={termo}"
+MAX_ACHADOS = 400       # anúncios lidos por pesquisa (o Facebook vai carregando ao rolar)
 INPUT_FOTOS = 'input[accept="image/*,image/heif,image/heic"]'
 
 
@@ -257,6 +262,96 @@ class Facebook(Plataforma):
             self.esperar(2)
         return None
 
+    # ---------- acha produto: busca no Marketplace ----------
+    def _rotulo_local(self):
+        """Texto do botão de localização da busca, ex.: "Salto · No raio de 10 km"."""
+        return self.scraper.driver.execute_script(JS_ROTULO_LOCAL) or ""
+
+    def resolver_cidade(self, cidade: str):
+        """Código da cidade no Facebook. O nome no endereço não serve ("salto" cai em Salto, no Uruguai): escolhe a
+        cidade na caixa "Mudar localização" da busca e lê o código que o Facebook põe no endereço. Isso também muda a
+        localização do Marketplace deste Chrome do AutoPost. Devolve (codigo, rotulo)."""
+        from selenium.webdriver.common.keys import Keys
+
+        driver = self.scraper.driver
+        self.scraper.go_to_page("https://www.facebook.com/marketplace/search/?query=a")
+        self.esperar(6)
+        botao = driver.execute_script(JS_BOTAO_LOCAL)
+        if botao is None:
+            raise SkipItemException("não achei o botão de localização da busca do Marketplace")
+        self._clicar(botao)
+        self.esperar(2.5)
+        campo = driver.execute_script("""return [...document.querySelectorAll('[role="dialog"] input')]
+            .find(i => /local/i.test((i.getAttribute('aria-label') || '') + (i.placeholder || ''))) || null""")
+        if campo is None:
+            raise SkipItemException("a caixa de localização do Marketplace não abriu")
+        self._clicar(campo)
+        campo.send_keys(Keys.CONTROL, "a")
+        campo.send_keys(Keys.DELETE)
+        for letra in cidade:
+            campo.send_keys(letra)
+            time.sleep(random.uniform(0.05, 0.15))
+        nome = normalizar(cidade.split(",")[0])
+        opcao, fim = None, time.monotonic() + 8
+        while opcao is None and time.monotonic() < fim:
+            self.esperar(0.5)
+            opcao = driver.execute_script(JS_OPCAO_CIDADE, nome)
+        if opcao is None:
+            driver.find_element("tag name", "body").send_keys(Keys.ESCAPE)
+            raise SkipItemException(f"o Facebook não sugeriu nenhuma cidade chamada \"{cidade}\"")
+        self._clicar(opcao)
+        self.esperar(1.5)
+        aplicar = driver.execute_script("""return [...document.querySelectorAll('[role="dialog"] [role="button"], [role="dialog"] button')]
+            .find(b => (b.innerText || '').trim() === 'Aplicar' && b.getAttribute('aria-disabled') !== 'true') || null""")
+        if aplicar is None:
+            raise SkipItemException("o botão Aplicar da localização não apareceu")
+        self._clicar(aplicar)
+        fim = time.monotonic() + 15
+        while time.monotonic() < fim:
+            achado = re.search(r"/marketplace/(\d+)/", driver.current_url)
+            if achado:
+                self.esperar(2)
+                return achado.group(1), self._rotulo_local()
+            self.esperar(0.5)
+        raise SkipItemException("o Facebook não mudou para a cidade escolhida")
+
+    def buscar(self, pesquisa: dict) -> dict:
+        """Abre a busca do Marketplace com os filtros e lê os anúncios rolando a página.
+        Devolve {"itens": [...], "rotulo": "Salto · No raio de 10 km", "cidade_id": "..."}."""
+        cidade_id = pesquisa.get("cidade_id")
+        if pesquisa.get("cidade") and not cidade_id:
+            self.log(f"Descobrindo a cidade \"{pesquisa['cidade']}\" no Facebook...")
+            cidade_id, rotulo = self.resolver_cidade(pesquisa["cidade"])
+            self.log(f"Cidade: {rotulo.split(' · ')[0] or pesquisa['cidade']} (código {cidade_id}).")
+        url = URL_BUSCA.format(local=cidade_id or "search", termo=quote(pesquisa["termo"]))
+        if not cidade_id:
+            url = url.replace("/search/search/", "/search/")
+        url += f"&radius={int(pesquisa.get('raio_km') or 10)}&exact=false"
+        if pesquisa.get("preco_min") is not None:
+            url += f"&minPrice={int(pesquisa['preco_min'])}"
+        if pesquisa.get("preco_max") is not None:
+            url += f"&maxPrice={int(pesquisa['preco_max'])}"
+        self.scraper.go_to_page(url)
+        self.esperar(random.uniform(5, 8))
+        lidos, sem_novidade = {}, 0
+        for _ in range(40):
+            antes = len(lidos)
+            pagina = self.scraper.driver.execute_script(JS_BUSCA_FACEBOOK) or {}
+            for card in pagina.get("cards") or []:
+                lidos.setdefault(card["id"], card)
+            if len(lidos) >= MAX_ACHADOS or pagina.get("divisor"):
+                break   # o resto da página é de fora do raio
+            sem_novidade = sem_novidade + 1 if len(lidos) == antes else 0
+            if sem_novidade >= 3:
+                break
+            self.scraper.driver.execute_script("window.scrollBy(0, Math.round(window.innerHeight * (1.2 + Math.random())));")
+            self.esperar(random.uniform(1.5, 3.5))
+        rotulo = self._rotulo_local()
+        itens = list(lidos.values())[:MAX_ACHADOS]
+        if not itens and "R$" not in (self.navegador.texto_da_pagina() or ""):
+            raise SkipItemException("a busca do Marketplace não mostrou resultados (sem login ou a página mudou)")
+        return {"itens": itens, "rotulo": rotulo, "cidade_id": cidade_id}
+
     # ---------- listar ----------
     def listar(self) -> list[dict]:
         """Anúncios da página "Vendendo" do Marketplace (rola até a lista parar de crescer)."""
@@ -275,6 +370,62 @@ class Facebook(Plataforma):
             self.esperar(2)
         self.log(f"{len(itens)} anúncio(s) encontrado(s) no Marketplace.")
         return itens
+
+
+# ---- Acha produto ----
+# Cartões da busca: link /marketplace/item/<número>; linhas do cartão: [selo como "Acabou de chegar"], preço atual,
+# [preço antigo, quando baixou], título e cidade ("Salto, SP"). "Gratuito" = preço 0. Depois do aviso "Resultados um
+# pouco mais distantes do que você selecionou" vêm anúncios fora do raio (São Paulo, Campinas...): ficam de fora.
+# (Conferido na busca real em 13/10/2026.)
+JS_BUSCA_FACEBOOK = r"""
+const limpa = t => (t || '').replace(/\s+/g, ' ').trim();
+const ehPreco = l => /^(R\$\s?[\d.]+(,\d{2})?|Gratuito|Grátis)$/i.test(l);
+const valor = l => /^(Gratuito|Grátis)$/i.test(l) ? 0 : parseInt(l.replace(/[^\d,]/g, '').split(',')[0], 10);
+const divisor = [...document.querySelectorAll('span, div, h2, h3')]
+    .find(e => /^Resultados um pouco mais distantes/i.test(limpa(e.innerText)) && e.children.length < 3) || null;
+const saida = [], vistos = new Set();
+for (const a of document.querySelectorAll('a[href*="/marketplace/item/"]')) {
+    const id = (a.href.match(/\/marketplace\/item\/(\d+)/) || [])[1];
+    if (!id || vistos.has(id)) continue;
+    if (divisor && (divisor.compareDocumentPosition(a) & Node.DOCUMENT_POSITION_FOLLOWING)) continue;
+    const linhas = (a.innerText || '').split('\n').map(limpa).filter(Boolean);
+    const precos = linhas.filter(ehPreco);
+    const resto = linhas.filter(l => !ehPreco(l));
+    if (!precos.length || !resto.length) continue;
+    vistos.add(id);
+    const ultimo = resto.length > 1 ? resto[resto.length - 1] : '';
+    const posPreco = linhas.indexOf(precos[precos.length - 1]);
+    const titulo = linhas.slice(posPreco + 1).find(l => !ehPreco(l) && l !== ultimo) || resto.find(l => l !== ultimo) || resto[0];
+    const img = a.querySelector('img');
+    saida.push({id, titulo, preco: valor(precos[0]), preco_antigo: precos[1] ? valor(precos[1]) : null,
+                cidade: ultimo, imagem: img ? (img.currentSrc || img.src) : '',
+                link: 'https://www.facebook.com/marketplace/item/' + id + '/'});
+}
+return {cards: saida, divisor: !!divisor};
+"""
+
+JS_ROTULO_LOCAL = r"""
+const t = [...document.querySelectorAll('span, div')].map(e => (e.innerText || '').replace(/\s+/g, ' ').trim())
+    .filter(x => /No raio de \d+ km$/i.test(x) && x.length < 80).sort((a, b) => a.length - b.length);
+return t[0] || '';
+"""
+
+JS_BOTAO_LOCAL = r"""
+return [...document.querySelectorAll('[role="button"], div, span')]
+    .filter(e => /No raio de \d+ km/i.test(e.innerText || '') && e.getBoundingClientRect().width > 0)
+    .sort((a, b) => (a.innerText || '').length - (b.innerText || '').length)[0] || null;
+"""
+
+# opção da cidade na caixa de localização: a primeira cujo nome começa com o digitado e que é "Cidade"
+JS_OPCAO_CIDADE = r"""
+const norm = t => (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+const nome = arguments[0];
+// a lista de sugestões fica fora do diálogo
+const opcoes = [...document.querySelectorAll('li[role="option"]')].filter(o => o.getBoundingClientRect().width > 0);
+return opcoes.find(o => norm(o.innerText) === nome + ' cidade') ||
+       opcoes.find(o => norm(o.innerText).startsWith(nome + ' ') && /cidade$/.test(norm(o.innerText))) ||
+       opcoes.find(o => norm(o.innerText).startsWith(nome)) || null;
+"""
 
 
 # Botão Excluir de verdade do diálogo de confirmação (visível, habilitado e com o texto "Excluir")

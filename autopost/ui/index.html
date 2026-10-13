@@ -39,6 +39,7 @@
                 <button class="nav ativo" data-pag="produtos"><span data-icone="caixa"></span>Produtos</button>
                 <button class="nav" data-pag="postar"><span data-icone="enviar"></span>Postar<b class="selo" id="seloFila" hidden></b></button>
                 <button class="nav" data-pag="anuncios"><span data-icone="lista"></span>Anúncios<b class="selo alerta" id="seloRemover" hidden></b></button>
+                <button class="nav" data-pag="achar"><span data-icone="busca"></span>Acha produto<b class="selo" id="seloAchados" hidden></b></button>
                 <button class="nav" data-pag="contas"><span data-icone="chave"></span>Contas</button>
                 <button class="nav" data-pag="config"><span data-icone="engrenagem"></span>Configurações</button>
             </nav>
@@ -146,6 +147,46 @@
                 <div class="lista" id="listaAnuncios"></div>
             </section>
 
+            <!-- ---------- ACHA PRODUTO ---------- -->
+            <section class="pagina" id="pag-achar" hidden>
+                <header class="cabecalho">
+                    <div>
+                        <h2>Acha produto</h2>
+                        <p>Pesquisas salvas no <b class="cor-fb">Facebook Marketplace</b>. O AutoPost procura, junta aqui os anúncios da cidade (dentro do raio) e marca o que é novo, o que baixou de preço e o que sumiu. Entre uma pesquisa e outra ele espera de 40 s a 2 min, para não parecer robô.</p>
+                    </div>
+                    <div class="acoes-cabecalho">
+                        <button class="botao" id="botaoBuscarAchados"><span data-icone="busca"></span>Buscar agora</button>
+                        <button class="botao primario" id="botaoNovaPesquisa"><span data-icone="mais"></span>Nova pesquisa</button>
+                    </div>
+                </header>
+                <div class="barra auto-achados">
+                    <label class="check"><input type="checkbox" id="autoAchados"> Buscar sozinho a cada</label>
+                    <input type="number" id="horasAchados" min="1" max="48" class="pequeno-numero"> <span>hora(s) enquanto o AutoPost estiver aberto</span>
+                    <span class="espaco"></span>
+                    <span class="discreto" id="proximaAchados"></span>
+                </div>
+                <div class="pesquisas" id="listaPesquisas"></div>
+                <div class="barra">
+                    <div class="chips" id="filtroAchados">
+                        <button class="chip ativo" data-filtro="novo">Novos <b id="qtdNovos"></b></button>
+                        <button class="chip" data-filtro="todos">Todos</button>
+                        <button class="chip" data-filtro="favorito">Favoritos</button>
+                        <button class="chip" data-filtro="visto">Vistos</button>
+                        <button class="chip" data-filtro="descartado">Descartados</button>
+                    </div>
+                    <select id="filtroPesquisa"><option value="">Todas as pesquisas</option></select>
+                    <select id="ordemAchados">
+                        <option value="recentes">Mais recentes</option>
+                        <option value="barato">Menor preço</option>
+                        <option value="caro">Maior preço</option>
+                    </select>
+                    <span class="espaco"></span>
+                    <button class="botao pequeno fantasma" id="botaoVerTodosNovos">Marcar os novos como vistos</button>
+                    <button class="botao pequeno fantasma" id="botaoLimparAchados" title="Apaga da lista os descartados e os que sumiram do Facebook (os favoritos ficam)">Limpar descartados e sumidos</button>
+                </div>
+                <div class="lista" id="listaAchados"></div>
+            </section>
+
             <!-- ---------- CONTAS ---------- -->
             <section class="pagina" id="pag-contas" hidden>
                 <header class="cabecalho">
@@ -221,6 +262,31 @@
                 <button class="botao fantasma" id="modalParar">Parar</button>
             </div>
         </div>
+    </div>
+
+    <!-- pesquisa do Acha produto -->
+    <div class="modal" id="modalPesquisa" hidden>
+        <form class="modal-cartao" id="formPesquisa">
+            <h3 id="tituloPesquisa">Nova pesquisa</h3>
+            <input type="hidden" id="pesqId">
+            <label>O que procurar<input type="text" id="pesqTermo" placeholder="Ex.: ps4" required maxlength="80"></label>
+            <div class="linha">
+                <label>Cidade<input type="text" id="pesqCidade" placeholder="Ex.: Salto" maxlength="60"></label>
+                <label>Raio<select id="pesqRaio"></select></label>
+            </div>
+            <p class="discreto">Vazio = a localização que está no Facebook do AutoPost. Cidade nova: na 1ª busca o AutoPost escolhe essa cidade no Marketplace (a localização dele muda para ela).</p>
+            <div class="linha">
+                <label>Preço mínimo (R$, opcional)<input type="number" id="pesqMin" min="0" step="1"></label>
+                <label>Preço máximo (R$)<input type="number" id="pesqMax" min="0" step="1"></label>
+            </div>
+            <label>Tirar da lista se o título tiver (opcional)<input type="text" id="pesqExcluir" placeholder="Ex.: ps3, compro, troco, controle"></label>
+            <label class="check"><input type="checkbox" id="pesqGratis" checked> Ignorar anúncios "Gratuito" (no Marketplace quase sempre é troca ou "compro")</label>
+            <label class="check"><input type="checkbox" id="pesqAtiva" checked> Ativa (entra no "Buscar agora" e na busca automática)</label>
+            <div class="acoes">
+                <button type="submit" class="botao primario">Salvar</button>
+                <button type="button" class="botao fantasma" id="pesqCancelar">Cancelar</button>
+            </div>
+        </form>
     </div>
 
     <!-- editar preço -->
