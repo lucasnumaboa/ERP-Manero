@@ -29,6 +29,11 @@ async function checkPagePermissions() {
                 view: 'vendas_visualizar',
                 edit: 'vendas_editar'
             },
+            // venda simplificada: só quem pode criar venda (o botão Concluir é .btn-primary)
+            'venda_simplificada.html': {
+                view: 'vendas_editar',
+                edit: 'vendas_editar'
+            },
             'vendedores.html': {
                 view: 'vendedores_visualizar',
                 edit: 'vendedores_editar'

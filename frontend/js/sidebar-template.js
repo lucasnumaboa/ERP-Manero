@@ -234,6 +234,7 @@
             'relatorios.html': 'dashboard_visualizar',
             'metas.html': 'metas_visualizar',
             'vendas.html': 'vendas_visualizar',
+            'venda_simplificada.html': 'vendas_editar',
             'orcamentos.html': 'vendas_visualizar',
             'clientes.html': 'clientes_visualizar',
             'vendedores.html': 'vendedores_visualizar',
@@ -304,6 +305,7 @@
         // Gera os grupos baseados em permissões
         const vendasGroup = menuGroup('vendas', 'fa-shopping-cart', 'Vendas', [
             menuItem('vendas.html', 'fa-shopping-cart', 'Vendas'),
+            menuItem('venda_simplificada.html', 'fa-barcode', 'Venda simplificada'),
             menuItem('orcamentos.html', 'fa-file-invoice-dollar', 'Orçamentos'),
             menuItem('clientes.html', 'fa-users', 'Clientes'),
             menuItem('vendedores.html', 'fa-user-tie', 'Vendedores'),

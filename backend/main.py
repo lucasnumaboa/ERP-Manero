@@ -23,6 +23,7 @@ import routers.vendedores as vendedores
 import routers.pedidos_compra as pedidos_compra
 import routers.estoque as estoque
 import routers.pedidos_venda as pedidos_venda
+import routers.venda_simplificada as venda_simplificada
 import routers.objetos_postagem as objetos_postagem
 import routers.propostas as propostas
 import routers.contas_pagar as contas_pagar
@@ -212,6 +213,7 @@ app.include_router(parceiros.router, prefix="/api/parceiros", tags=["Parceiros"]
 app.include_router(vendedores.router, prefix="/api/vendedores", tags=["Vendedores"], dependencies=permissao_modulo("vendedores"))
 app.include_router(pedidos_compra.router, prefix="/api/compras", tags=["Compras"], dependencies=permissao_modulo("compras"))
 app.include_router(estoque.router, prefix="/api/estoque", tags=["Estoque"], dependencies=permissao_modulo("estoque"))
+app.include_router(venda_simplificada.router, prefix="/api/vendas/simplificada", tags=["Venda simplificada"], dependencies=permissao_modulo("vendas"))
 app.include_router(pedidos_venda.router, prefix="/api/vendas", tags=["Vendas"], dependencies=permissao_modulo("vendas"))
 app.include_router(objetos_postagem.router, prefix="/api/postagens", tags=["Postagens"], dependencies=permissao_modulo("postagens"))
 app.include_router(propostas.router, prefix="/api/propostas", tags=["Propostas"], dependencies=permissao_modulo("propostas"))

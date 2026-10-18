@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0a192f">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/app/favicon-32.png">
+    <link rel="apple-touch-icon" href="img/app/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="ERP Maneiro">
+    <title>ERP Maneiro - Venda simplificada</title>
+    <link rel="stylesheet" href="css/styles.css?v=4a2ec3f312">
+    <link rel="stylesheet" href="css/permissions.css?v=f1df341f0a">
+    <link rel="stylesheet" href="css/dashboard.css?v=1c79918a68">
+    <link rel="stylesheet" href="css/modulos.css?v=552750208f">
+    <link rel="stylesheet" href="css/submenu.css?v=fc4e2a67d9">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="css/theme-dark.css?v=0137d572a5">
+    <link rel="stylesheet" href="css/theme-light.css?v=feb5136289">
+    <script src="js/config.js?v=cc42b64fd7"></script>
+    <script src="js/avisos.js?v=21d04a4fda"></script>
+    <style>
+        .vs-grade { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+        .vs-cartao { background: var(--card-bg, #112240); border: 1px solid var(--border-color, #233554); border-radius: 12px; padding: 18px; }
+        .vs-espaco { margin-top: 16px; }
+        .vs-cartao h3 { margin: 0 0 12px; font-size: 16px; }
+        .vs-scanner { display: flex; gap: 10px; }
+        .vs-scanner input { flex: 1; font-size: 22px; padding: 12px 14px; letter-spacing: 1px; }
+        .vs-dica { font-size: 13px; opacity: .75; margin: 8px 0 0; }
+        .vs-itens td input { width: 100%; max-width: 120px; padding: 6px 8px; }
+        .vs-itens td.vs-num { text-align: right; white-space: nowrap; }
+        .vs-vazio { text-align: center; padding: 28px 10px; opacity: .7; }
+        .vs-total { display: flex; justify-content: space-between; align-items: baseline; font-size: 15px; margin: 14px 0; }
+        .vs-total b { font-size: 30px; }
+        .vs-campo { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+        .vs-campo input, .vs-campo select { padding: 10px 12px; font-size: 15px; }
+        .vs-concluir { width: 100%; padding: 14px; font-size: 17px; }
+        .vs-ultima { margin-top: 14px; font-size: 14px; }
+        .vs-sem-estoque { color: #f87171; font-size: 12px; }
+        @media (max-width: 900px) { .vs-grade { grid-template-columns: 1fr; } }
+    </style>
+    <link rel="stylesheet" href="css/celular.css?v=f62dbead6d">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Menu Lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="img/icon.png" alt="ERP Maneiro" class="logo-img">
+                <button id="toggleSidebar" class="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="userName">Carregando...</h3>
+                    <p id="userRole">Carregando...</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <!-- Preenchido pelo js/sidebar-template.js conforme as permissões do usuário -->
+                <ul>
+                    <li class="logout"><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Sair</span></a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <div class="content">
+                <div class="page-header">
+                    <h1>Venda simplificada</h1>
+                    <p>Escaneie os produtos, digite o nome do cliente e conclua. A venda sai finalizada e recebida (PIX, Loja Física).</p>
+                </div>
+
+                <div class="vs-grade">
+                    <div>
+                        <div class="vs-cartao">
+                            <h3><i class="fas fa-barcode"></i> Código de barras</h3>
+                            <form id="vsFormScanner" class="vs-scanner" autocomplete="off">
+                                <input type="text" id="vsCodigo" inputmode="numeric" placeholder="Escaneie ou digite o EAN-13 e Enter" autofocus>
+                                <button type="submit" class="btn-primary"><i class="fas fa-plus"></i> Adicionar</button>
+                            </form>
+                            <p class="vs-dica">O leitor escaneia e já aperta Enter. Escaneou de novo o mesmo produto? A quantidade sobe.</p>
+                        </div>
+
+                        <div class="vs-cartao vs-espaco">
+                            <h3><i class="fas fa-list"></i> Produtos</h3>
+                            <div class="table-container">
+                                <table class="data-table vs-itens">
+                                    <thead>
+                                        <tr>
+                                            <th>Produto</th>
+                                            <th>Qtd.</th>
+                                            <th>Preço (R$)</th>
+                                            <th>Subtotal</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="vsItens">
+                                        <tr><td colspan="5" class="vs-vazio">Nenhum produto ainda: escaneie o primeiro.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vs-cartao">
+                        <h3><i class="fas fa-user"></i> Cliente e pagamento</h3>
+                        <div class="vs-campo">
+                            <label for="vsCliente">Nome do cliente</label>
+                            <input type="text" id="vsCliente" maxlength="100" placeholder="Ex.: João da Silva" list="vsClientesSugestao">
+                            <datalist id="vsClientesSugestao"></datalist>
+                        </div>
+                        <div class="vs-campo">
+                            <label for="vsForma">Forma de pagamento</label>
+                            <select id="vsForma"></select>
+                        </div>
+                        <div class="vs-campo">
+                            <label for="vsPlataforma">Plataforma</label>
+                            <select id="vsPlataforma"></select>
+                        </div>
+                        <p class="vs-dica" id="vsVendedor"></p>
+                        <div class="vs-total"><span>Total</span><b id="vsTotal">R$ 0,00</b></div>
+                        <button class="btn-primary vs-concluir" id="vsConcluir" disabled><i class="fas fa-check"></i> Concluir venda</button>
+                        <div class="vs-ultima" id="vsUltima"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/auth.js?v=0bdde0a233"></script>
+    <script src="js/api.js?v=fee2f98a38"></script>
+    <script src="js/sidebar-template.js?v=0bdb18980c"></script>
+    <script src="js/permissions.js?v=7689199b05"></script>
+    <script src="js/webhook-estoque.js?v=dedbcd83a1"></script>
+    <script src="js/venda_simplificada.js?v=5ee5f3c701"></script>
+    <script src="js/internal-animation.js?v=7d7314b65d"></script>
+    <script src="js/theme-switcher.js?v=2435969ea2"></script>
+</body>
+
+</html>
