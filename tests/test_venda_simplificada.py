@@ -92,3 +92,8 @@ def test_tela_no_menu_e_nas_permissoes():
     menu = (front / "js" / "sidebar-template.js").read_text(encoding="utf-8")
     assert "menuItem('venda_simplificada.html'" in menu and "'venda_simplificada.html': 'vendas_editar'" in menu
     assert "'venda_simplificada.html': {" in (front / "js" / "permissions.js").read_text(encoding="utf-8")
+    # leitura pela câmera do celular
+    pagina = (front / "venda_simplificada.html").read_text(encoding="utf-8")
+    assert 'id="vsCamera"' in pagina and "js/leitor-camera.js" in pagina
+    leitor = (front / "js" / "leitor-camera.js").read_text(encoding="utf-8")
+    assert "BarcodeDetector" in leitor and "@zxing/browser@0.1.5" in leitor and "window.abrirLeitorCamera" in leitor

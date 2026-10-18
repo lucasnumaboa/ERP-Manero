@@ -52,11 +52,51 @@
         }, true);
 
         rotularTabelasEmCartoes();
+        prepararFiltrosRecolhiveis();
+    }
+
+    // Quadro de filtros recolhível no celular: tocar no título abre e fecha (fica lembrado por tela).
+    // A classe só tem efeito dentro do @media do celular.css; no computador nada muda.
+    function prepararFiltrosRecolhiveis() {
+        const pagina = location.pathname.split('/').pop() || 'index.html';
+        document.querySelectorAll('.filter-container').forEach((filtro, n) => {
+            let quadro = filtro;
+            let titulo = filtro.firstElementChild;
+            if (!titulo || !/^H[2-4]$/.test(titulo.tagName)) {
+                // estoque: o título fica no cartão em volta (.card-header)
+                const cabecalho = filtro.parentElement && filtro.parentElement.querySelector(':scope > .card-header');
+                if (!cabecalho) return;
+                quadro = filtro.parentElement;
+                titulo = cabecalho;
+            }
+            if (quadro.classList.contains('filtro-recolhivel')) return;
+            const chave = `erp_filtros_fechados:${pagina}:${n}`;
+            const aplicar = (fechado) => {
+                quadro.classList.toggle('filtros-fechados', fechado);
+                titulo.setAttribute('aria-expanded', String(!fechado));
+            };
+            quadro.classList.add('filtro-recolhivel');
+            titulo.classList.add('filtro-titulo');
+            titulo.setAttribute('role', 'button');
+            const seta = document.createElement('i');
+            seta.className = 'fas fa-chevron-down filtro-seta';
+            (titulo.querySelector('h2, h3, h4') || titulo).appendChild(seta);
+            try { aplicar(localStorage.getItem(chave) === '1'); } catch (e) { aplicar(false); }
+            titulo.addEventListener('click', (e) => {
+                if (!window.matchMedia('(max-width: 768px)').matches || e.target.closest('button, a, input, select')) return;
+                const fechado = !quadro.classList.contains('filtros-fechados');
+                aplicar(fechado);
+                try { localStorage.setItem(chave, fechado ? '1' : '0'); } catch (erro) { /* só não lembra */ }
+            });
+        });
     }
 
     // Tabelas com .tabela-cartoes viram cartões no celular: cada célula recebe o nome da coluna
     // (data-label), inclusive as linhas que a tela desenha depois, ao carregar ou filtrar.
+    // As listas (.data-table fora de janelas) entram sozinhas; .sem-cartoes deixa uma tabela rolando de lado.
     function rotularTabelasEmCartoes() {
+        const marcar = () => document.querySelectorAll('.main-content table.data-table:not(.tabela-cartoes):not(.sem-cartoes)')
+            .forEach(tabela => { if (!tabela.closest('.modal')) tabela.classList.add('tabela-cartoes'); });
         const rotular = (tabela) => {
             const titulos = [...tabela.querySelectorAll('thead th')].map(th => th.textContent.trim());
             tabela.querySelectorAll('tbody tr').forEach(tr => {
@@ -67,7 +107,10 @@
                 });
             });
         };
-        const rotularTudo = () => document.querySelectorAll('table.tabela-cartoes').forEach(rotular);
+        const rotularTudo = () => {
+            marcar();
+            document.querySelectorAll('table.tabela-cartoes').forEach(rotular);
+        };
         rotularTudo();
         let agendado = false;
         new MutationObserver(() => {

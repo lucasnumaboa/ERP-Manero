@@ -34,12 +34,12 @@ function vsDesenhar() {
     } else {
         corpo.innerHTML = vs.itens.map((i, n) => `
             <tr>
-                <td>${vsEscape(i.nome)}<br><small>${vsEscape(i.ean || i.codigo)}</small>
+                <td class="vs-produto" data-label="Produto">${vsEscape(i.nome)}<br><small>${vsEscape(i.ean || i.codigo)}</small>
                     ${i.quantidade > i.estoque ? `<br><span class="vs-sem-estoque">só ${i.estoque} no estoque</span>` : ''}</td>
-                <td><input type="number" min="1" step="1" value="${i.quantidade}" data-qtd="${n}"></td>
-                <td><input type="number" min="0" step="0.01" value="${i.preco.toFixed(2)}" data-preco="${n}"></td>
-                <td class="vs-num">${vsReais(i.quantidade * i.preco)}</td>
-                <td><button class="btn-icon" data-remover="${n}" title="Tirar da venda"><i class="fas fa-trash"></i></button></td>
+                <td data-label="Qtd."><input type="number" min="1" step="1" inputmode="numeric" value="${i.quantidade}" data-qtd="${n}"></td>
+                <td data-label="Preço (R$)"><input type="number" min="0" step="0.01" inputmode="decimal" value="${i.preco.toFixed(2)}" data-preco="${n}"></td>
+                <td class="vs-num" data-label="Subtotal">${vsReais(i.quantidade * i.preco)}</td>
+                <td data-label=""><button class="btn-icon" data-remover="${n}" title="Tirar da venda"><i class="fas fa-trash"></i> <span class="vs-so-celular">Tirar</span></button></td>
             </tr>`).join('');
     }
     document.getElementById('vsTotal').textContent = vsReais(vsTotal());
@@ -59,13 +59,14 @@ async function vsAdicionar(codigo) {
     try {
         produto = await apiGet(`/api/produtos/codigo/${encodeURIComponent(codigo)}`);
     } catch (e) {
-        mostrarAviso(/: 404$/.test(e.message) ? `Nenhum produto com o código ${codigo}.` : vsMensagem(e, 'Não consegui buscar o produto.'), 'erro');
-        return;
+        const msg = /: 404$/.test(e.message) ? `Nenhum produto com o código ${codigo}.` : vsMensagem(e, 'Não consegui buscar o produto.');
+        mostrarAviso(msg, 'erro');
+        return { erro: msg };
     }
-    if (!produto) return;
+    if (!produto) return null;
     if (produto.ativo === false) {
         mostrarAviso(`${produto.nome} está inativo.`, 'aviso');
-        return;
+        return { erro: `${produto.nome} está inativo.` };
     }
     const existente = vs.itens.find(i => i.id === produto.id);
     if (existente) {
@@ -79,6 +80,25 @@ async function vsAdicionar(codigo) {
     const item = existente || vs.itens[vs.itens.length - 1];
     if (item.quantidade > item.estoque) mostrarAviso(`${produto.nome}: só tem ${item.estoque} no estoque.`, 'aviso');
     vsDesenhar();
+    return { item };
+}
+
+// celular/tablet: focar o campo abriria o teclado a cada leitura
+const vsToque = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+function vsFocar() {
+    if (!vsToque) document.getElementById('vsCodigo').focus();
+}
+
+function vsAbrirCamera() {
+    window.abrirLeitorCamera({
+        titulo: 'Ler código de barras',
+        aoLer: async codigo => {
+            const r = await vsAdicionar(codigo);
+            if (!r) return null;
+            if (r.erro) return `✗ ${r.erro}`;
+            return `✓ ${r.item.nome} (${r.item.quantidade} un.) · total ${vsReais(vsTotal())}`;
+        },
+    });
 }
 
 async function vsConcluir() {
@@ -109,7 +129,7 @@ async function vsConcluir() {
         vs.itens = [];
         document.getElementById('vsCliente').value = '';
         vsDesenhar();
-        document.getElementById('vsCodigo').focus();
+        vsFocar();
     } catch (e) {
         mostrarAviso(vsMensagem(e, 'Não consegui concluir a venda.'), 'erro');
     } finally {
@@ -143,11 +163,13 @@ async function vsCarregarPadroes() {
 document.addEventListener('DOMContentLoaded', () => {
     vsCarregarPadroes();
     const campo = document.getElementById('vsCodigo');
+    vsFocar();
+    document.getElementById('vsCamera').addEventListener('click', vsAbrirCamera);
     document.getElementById('vsFormScanner').addEventListener('submit', ev => {
         ev.preventDefault();
         const codigo = campo.value;
         campo.value = '';
-        vsAdicionar(codigo).finally(() => campo.focus());
+        vsAdicionar(codigo).finally(vsFocar);
     });
     document.getElementById('vsCliente').addEventListener('input', vsAtualizarBotao);
     document.getElementById('vsConcluir').addEventListener('click', vsConcluir);
@@ -162,6 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!b) return;
         vs.itens.splice(Number(b.dataset.remover), 1);
         vsDesenhar();
-        campo.focus();
+        vsFocar();
     });
 });

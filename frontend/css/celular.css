@@ -7,7 +7,8 @@
  */
 
 #botaoMenuCelular,
-#sombraMenuCelular {
+#sombraMenuCelular,
+.filtro-seta {
     display: none;
 }
 
@@ -112,7 +113,7 @@
     }
 
     .content {
-        padding: 60px 12px 16px !important;   /* 60px no topo: espaço do botão ☰ */
+        padding: 60px 12px 96px !important;   /* 60px no topo: botão ☰; 96px embaixo: o último botão sobe acima do botão do chat */
         min-width: 0;
     }
 
@@ -377,5 +378,287 @@
 
     table.tabela-cartoes td[colspan]::before {
         display: none;
+    }
+}
+
+/* ---------- Revisão do celular (18/10/2026): filtros, botões, títulos e cartões ---------- */
+@media (max-width: 768px) {
+    /* desfoque (backdrop-filter) dentro de quadro com rolagem deixava tabelas e cartões lavados/apagados;
+       o fundo dos quadros já é quase opaco, então no celular fica sem desfoque */
+    .main-content,
+    .main-content * {
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+
+    /* filtros: a frase "Configure os filtros..." sai; campos em 2 colunas com o rótulo em cima */
+    .filter-container > p,
+    .filter-container + p,
+    .settings-card > .card-description {
+        display: none;
+    }
+
+    .filter-container {
+        padding: 12px !important;
+        display: block !important;   /* em algumas telas era flex: as linhas ficavam da largura do conteúdo */
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .filter-container > h2,
+    .filter-container > h3,
+    .filter-container > h4,
+    .settings-card > .card-header h2 {
+        font-size: 1.05rem !important;
+        margin: 0 0 10px !important;
+        line-height: 1.3;
+    }
+
+    .filter-container .filter-row {
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px !important;
+        align-items: end !important;
+        margin: 0 0 10px !important;
+        padding: 0 !important;
+    }
+
+    .filter-container .filter-row > * {
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        margin: 0 !important;
+    }
+
+    .filter-container .filter-control {
+        display: flex !important;
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 4px;
+    }
+
+    .filter-container .filter-control > label,
+    .filter-container .control-label {
+        font-size: 12px !important;
+        margin: 0 !important;
+        white-space: normal !important;
+    }
+
+    .filter-container .filter-control > input,
+    .filter-container .filter-control > select,
+    .filter-container .filter-control > .search-input-group {
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* texto livre (busca, nome) ocupa a linha toda; seleções e datas ficam lado a lado */
+    .filter-container .filter-control:has(> input[type="text"]),
+    .filter-container .filter-control:has(> input[type="search"]),
+    .filter-container .filter-control:has(> .search-input-group) {
+        grid-column: 1 / -1;
+    }
+
+    .filter-container .filter-row > button,
+    .filter-container .filter-row > a {
+        width: 100% !important;
+        justify-content: center;
+        padding: 10px 8px !important;
+    }
+
+    /* caixa de marcar: o quadradinho ao lado do texto, não em cima */
+    .checkbox-label,
+    .checkbox-item > label.checkbox-label {   /* vence o ".checkbox-item label { display: inline !important }" do modulos.css */
+        display: inline-flex !important;
+        align-items: center;
+        gap: 8px;
+        white-space: normal;
+    }
+
+    .checkbox-item {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+    }
+
+    .checkbox-item > label {
+        width: auto !important;
+        flex: 1 1 auto;
+        margin: 0 !important;
+    }
+
+    /* cabeçalho dos cartões (.settings-card): o recuo de 2,5rem x 4rem do computador não cabe */
+    .card-header {
+        padding: 14px 16px !important;
+    }
+
+    .card-header::after {
+        left: 16px !important;
+        right: 16px !important;
+    }
+
+    .card-header h2 {
+        font-size: 1.1rem !important;
+        margin: 0 !important;
+    }
+
+    .card-description {
+        padding: 10px 16px 0 !important;
+        font-size: 14px !important;
+    }
+
+    .checkboxes-row .checkbox-item {
+        grid-column: auto;
+    }
+
+    /* filtro recolhível (sidebar-template.js): toque no título abre e fecha */
+    .filtro-recolhivel > .filtro-titulo {
+        cursor: pointer;
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .filtro-recolhivel > .filtro-titulo .filtro-seta {
+        display: inline-block;
+        margin-left: auto;
+        font-size: 13px;
+        opacity: 0.7;
+        transition: transform 0.2s;
+    }
+
+    .filtro-recolhivel > .filtro-titulo > h2,
+    .filtro-recolhivel > .filtro-titulo > h3,
+    .filtro-recolhivel > .filtro-titulo > h4 {
+        flex: 1 1 auto;
+        display: flex !important;
+        align-items: center;
+    }
+
+    .filtro-recolhivel.filtros-fechados > .filtro-titulo {
+        margin-bottom: 0 !important;
+    }
+
+    .filtro-recolhivel.filtros-fechados > .filtro-titulo .filtro-seta {
+        transform: rotate(-90deg);
+    }
+
+    .filtro-recolhivel.filtros-fechados > :not(.filtro-titulo) {
+        display: none !important;
+    }
+
+    /* barra de ações (Novo X, Recalcular...): botões em grade, todos do mesmo tamanho */
+    .actions-bar .actions-left,
+    .actions-bar .actions-right {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px !important;
+    }
+
+    .actions-bar .actions-left > button,
+    .actions-bar .actions-left > a,
+    .actions-bar .actions-right > button,
+    .actions-bar .actions-right > a {
+        width: 100% !important;
+        margin: 0 !important;
+        justify-content: center;
+        text-align: center;
+        white-space: normal;
+        min-height: 42px;
+    }
+
+    .actions-bar .actions-left > :only-child,
+    .actions-bar .actions-right > :only-child,
+    .actions-bar .actions-left > :not(button):not(a),
+    .actions-bar .actions-right > :not(button):not(a) {
+        grid-column: 1 / -1;   /* quadro de filtros, busca etc. dentro da barra ocupam a linha toda */
+    }
+
+    /* cartões de tabela: rótulo da coluna menor e valor à direita, linhas de ação com botões grandes */
+    table.tabela-cartoes td .btn-icon,
+    table.tabela-cartoes td .action-btn {
+        min-width: 38px;
+        min-height: 38px;
+    }
+
+    table.tabela-cartoes td[data-label=""],
+    table.tabela-cartoes td:not([data-label]) {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    /* o nome da coluna à esquerda e o conteúdo junto à direita (botões de ação não se espalham) */
+    table.tabela-cartoes td::before {
+        margin-right: auto;
+    }
+
+    table.tabela-cartoes td {
+        justify-content: flex-end !important;
+        flex-wrap: wrap;
+        column-gap: 8px;
+    }
+
+    /* dashboard: resumo em 2 colunas (o ícone em cima do valor) e o filtro de mês numa linha */
+    .summary-section {
+        padding: 14px !important;
+        margin-bottom: 14px !important;
+    }
+
+    .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+    }
+
+    .summary-card {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 8px;
+        padding: 12px !important;
+        min-width: 0;
+    }
+
+    .summary-card .card-icon {
+        margin: 0 !important;
+        width: 36px !important;
+        height: 36px !important;
+    }
+
+    .summary-card .card-info {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .summary-card .card-info h3 {
+        font-size: 11px !important;
+        line-height: 1.3;
+    }
+
+    .summary-card .card-value {
+        font-size: 1rem !important;
+        overflow-wrap: anywhere;
+    }
+
+    .date-filter {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 6px 8px !important;
+        width: 100%;
+        align-items: center;
+    }
+
+    .date-filter label {
+        grid-column: 1 / -1;
+        font-size: 13px;
+    }
+
+    .date-filter input {
+        width: 100% !important;
+        min-width: 0;
     }
 }

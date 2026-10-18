@@ -1643,3 +1643,18 @@ body.modal-open {
 .etiqueta-previa { background: #fff; border: 1px solid #d0d7e2; border-radius: 8px; padding: 10px; text-align: center; }
 .etiqueta-previa canvas { width: 100%; max-width: 400px; height: auto; image-rendering: pixelated; }
 .etiqueta-info { font-size: 13px; color: #6b7a90; margin: 8px 0; }
+
+/* ---------- leitor de código de barras pela câmera (js/leitor-camera.js) ---------- */
+.leitor-camera { position: fixed; inset: 0; z-index: 3000; display: flex; flex-direction: column; align-items: center; gap: 14px;
+    padding: 14px 14px calc(14px + env(safe-area-inset-bottom)); background: rgba(2, 12, 27, 0.97); color: #e6f1ff; }
+.leitor-camera-topo { width: 100%; max-width: 640px; display: flex; justify-content: space-between; align-items: center; font-size: 17px; font-weight: 600; }
+.leitor-camera-fechar { background: none; border: 0; color: inherit; font-size: 24px; padding: 6px 10px; cursor: pointer; }
+.leitor-camera-video { position: relative; width: 100%; max-width: 640px; flex: 1 1 auto; min-height: 0; max-height: 70vh; border-radius: 14px; overflow: hidden; background: #000; }
+.leitor-camera-video video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.leitor-camera-mira { position: absolute; left: 8%; right: 8%; top: 36%; height: 28%; border: 3px solid rgba(100, 255, 218, 0.9); border-radius: 10px;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35); transition: border-color 0.15s, background 0.15s; }
+.leitor-camera.leu .leitor-camera-mira { border-color: #2ecc71; background: rgba(46, 204, 113, 0.25); }
+.leitor-camera-status { margin: 0; text-align: center; font-size: 16px; min-height: 1.4em; overflow-wrap: anywhere; }
+.leitor-camera-pronto { width: 100%; max-width: 640px; padding: 14px; font-size: 17px; }
+body.leitor-camera-aberto #pcwBotao,
+body.leitor-camera-aberto #sessionTimerBar { display: none !important; }

@@ -78,6 +78,12 @@ async function checkPagePermissions() {
                 view: 'metas_visualizar',
                 edit: 'metas_editar'
             },
+            // gravar plataforma no backend exige configuracoes_editar (permissoes.py); sem esta linha o
+            // botão "Nova Plataforma" (.btn-primary) ficava escondido até para o administrador
+            'plataformas_venda.html': {
+                view: 'vendas_visualizar',
+                edit: 'configuracoes_editar'
+            },
             'configuracoes.html': {
                 view: 'configuracoes_visualizar',
                 edit: 'configuracoes_editar'
