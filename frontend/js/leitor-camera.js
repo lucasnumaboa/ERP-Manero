@@ -7,7 +7,8 @@
  * lente. Embaixo do vídeo aparece qual leitor e resolução estão em uso (ajuda a entender um aparelho que não lê).
  *
  * Uso: abrirLeitorCamera({ titulo, aoLer(codigo) })
- *   - a tela fica aberta para ler vários códigos seguidos; o mesmo código parado na frente da câmera não repete;
+ *   - a tela fica aberta para ler vários códigos seguidos; cada código conta uma vez só enquanto ela está aberta
+ *     (não bipa nem soma de novo: mais unidades do mesmo produto se mudam na lista);
  *   - aoLer pode devolver (ou prometer) um texto, que aparece embaixo do vídeo (ex.: o nome do produto).
  */
 (function () {
@@ -15,7 +16,6 @@
 
     const ZXING_URL = 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js';
     const FORMATOS = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39'];
-    const REPETICAO_MS = 2500;   // o mesmo código só conta de novo depois de sair da frente da câmera por esse tempo
     const ZOOM_PADRAO = 2;       // com 2x dá para segurar a etiqueta longe o bastante para o celular focar
     const CHAVE_ZOOM = 'erp_camera_zoom';
     // ZXing: DecodeHintType.POSSIBLE_FORMATS = 2 e TRY_HARDER = 3 (conferido no zxing-browser 0.1.5)
@@ -104,7 +104,7 @@
         const controles = tela.querySelector('.leitor-camera-controles');
         const status = tela.querySelector('.leitor-camera-status');
         const info = tela.querySelector('.leitor-camera-info');
-        const estado = { parar: [], ultimo: '', ultimoEm: 0, fechado: false, audio: null, trilha: null, lentes: [], lente: 0 };
+        const estado = { parar: [], lidos: new Set(), ultimo: '', avisoEm: 0, fechado: false, audio: null, trilha: null, lentes: [], lente: 0 };
         aberto = estado;
 
         const pararCamera = () => {
@@ -135,14 +135,19 @@
 
         const lido = codigo => {
             codigo = String(codigo || '').trim();
-            const agora = Date.now();
             if (!codigo || estado.fechado) return;
-            if (codigo === estado.ultimo && agora - estado.ultimoEm < REPETICAO_MS) {
-                estado.ultimoEm = agora;   // continua na frente da câmera: não repete
+            if (estado.lidos.has(codigo)) {
+                // já lido nesta abertura da câmera: não bipa nem soma de novo. Se é um produto lido antes (não o
+                // último), avisa — no máximo a cada 3 s, porque a câmera vê o mesmo código várias vezes por segundo.
+                const agora = Date.now();
+                if (codigo !== estado.ultimo && agora - estado.avisoEm > 3000) {
+                    estado.avisoEm = agora;
+                    status.textContent = `Já lido: ${codigo}. Para mais unidades, mude a quantidade na lista.`;
+                }
                 return;
             }
+            estado.lidos.add(codigo);
             estado.ultimo = codigo;
-            estado.ultimoEm = agora;
             if (navigator.vibrate) navigator.vibrate(70);
             bip(estado.audio);
             tela.classList.add('leu');
