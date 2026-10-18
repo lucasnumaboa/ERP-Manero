@@ -84,6 +84,12 @@ async function checkPagePermissions() {
                 view: 'vendas_visualizar',
                 edit: 'configuracoes_editar'
             },
+            // datas do calendário: o backend só deixa administrador criar, editar e excluir (calendario.py);
+            // hasPermission() libera o admin e nenhum grupo tem esta permissão
+            'calendario.html': {
+                view: 'dashboard_visualizar',
+                edit: 'somente_admin'
+            },
             'configuracoes.html': {
                 view: 'configuracoes_visualizar',
                 edit: 'configuracoes_editar'

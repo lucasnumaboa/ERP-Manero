@@ -130,6 +130,21 @@
                     checkApiStatus(currentApiUrl);
                 });
             
+            // Gravar o link da API é só para administrador (rota de admin do configuracoes.py): um endereço errado
+            // derruba o ERP para todo mundo. O botão Salvar (.btn-primary) só aparece para ele.
+            const avisoSoAdmin = () => showResult('Para alterar o endereço da API, entre no ERP como administrador.', 'info');
+            if (token) {
+                fetch(`${currentApiUrl}/api/usuarios/me`, { headers: { 'Authorization': `Bearer ${token}` } })
+                    .then(r => (r.ok ? r.json() : null))
+                    .then(usuario => {
+                        if (usuario && usuario.nivel_acesso === 'admin') document.body.classList.add('has-edit-permission');
+                        else avisoSoAdmin();
+                    })
+                    .catch(avisoSoAdmin);
+            } else {
+                avisoSoAdmin();
+            }
+
             // Formulário de configuração
             document.getElementById('api-config-form').addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -144,42 +159,40 @@
                     return;
                 }
                 
-                // Salvar a nova URL no backend usando o endpoint correto
-                const token = localStorage.getItem('erp_token');
-                if (token) {
-                    fetch(`${currentApiUrl}/api/configuracoes/link_api?valor=${encodeURIComponent(newApiUrl)}`, {
-                        method: 'PUT',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
+                // Grava o link_api no servidor pela rota de admin (antes ia para /api/configuracoes/link_api, que só
+                // aceita GET: respondia 405 e a URL ficava só no navegador, onde o config.js nem lê mais)
+                const tokenSalvar = localStorage.getItem('erp_token');
+                if (!tokenSalvar) {
+                    avisoSoAdmin();
+                    return;
+                }
+                fetch(`${currentApiUrl}/api/configuracoes/configuracoes/link_api`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${tokenSalvar}`
+                    },
+                    body: JSON.stringify({ valor: newApiUrl })
+                })
+                    .then(async response => {
+                        if (!response.ok) {
+                            const erro = await response.json().catch(() => ({}));
+                            throw new Error(erro.detail || `erro ${response.status}`);
                         }
+                        try {
+                            sessionStorage.setItem('erp_api_url_sessao', newApiUrl);
+                            localStorage.setItem('api_base_url', newApiUrl);
+                        } catch (erro) { /* o login consulta o link_api de novo */ }
+                        showResult('Endereço da API salvo no servidor. Redirecionando para o login...', 'success');
+                        // só sai depois de salvar (antes deslogava mesmo quando dava erro)
+                        setTimeout(() => {
+                            localStorage.removeItem('erp_token');
+                            localStorage.removeItem('erp_token_type');
+                            localStorage.removeItem('erp_user_data');
+                            window.location.href = 'index.html';
+                        }, 2000);
                     })
-                .then(response => {
-                     if (response.ok) {
-                         localStorage.setItem('api_base_url', newApiUrl);
-                         showResult('Configuração salva com sucesso no servidor e localmente! Redirecionando para a página de login...', 'success');
-                     } else {
-                         throw new Error('Falha ao salvar no servidor');
-                     }
-                 })
-                 .catch(error => {
-                     console.error('Erro ao salvar configuração:', error);
-                     localStorage.setItem('api_base_url', newApiUrl);
-                     showResult('Configuração salva apenas localmente. Não foi possível salvar no servidor.', 'warning');
-                 });
-                 } else {
-                     // Se não tiver token, apenas salva localmente
-                     localStorage.setItem('api_base_url', newApiUrl);
-                     showResult('Configuração salva apenas localmente. Faça login como administrador para salvar no servidor.', 'warning');
-                 }
-                
-                // Redirecionar para a página de login após 2 segundos
-                setTimeout(() => {
-                    localStorage.removeItem('erp_token');
-                    localStorage.removeItem('erp_token_type');
-                    localStorage.removeItem('erp_user_data');
-                    window.location.href = 'index.html';
-                }, 2000);
+                    .catch(erro => showResult(`Não consegui salvar no servidor: ${erro.message}`, 'danger'));
             });
             
             // Botão de teste de conexão
