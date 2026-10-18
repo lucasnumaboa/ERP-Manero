@@ -1117,6 +1117,19 @@ except mysql.connector.Error as err:
     if err.errno != 1060:   # 1060: a coluna já existe
         print(f"Ignorado erro ao criar ean13 em produtos: {err}")
 
+# Compra com a conta a pagar já criada (compras.js cria a conta ao aprovar/receber e marca aqui). Sem a coluna, o PUT
+# que marca dava "Unknown column 'criado_tit_ap'" (500) e cada novo salvar da compra criava outra conta a pagar
+# (achado em 18/10/2026: 7 compras com conta repetida). Ao criar a coluna, as compras que já têm conta ficam marcadas.
+try:
+    cursor.execute("ALTER TABLE pedidos_compra ADD COLUMN criado_tit_ap BOOLEAN NOT NULL DEFAULT FALSE")
+    cursor.execute("UPDATE pedidos_compra pc SET criado_tit_ap = TRUE WHERE EXISTS (SELECT 1 FROM contas_pagar cp "
+                   "WHERE cp.descricao = CONCAT('Compra do fornecedor - Ref. Compra #', pc.id))")
+    conn.commit()
+    print(f"Coluna criado_tit_ap criada em pedidos_compra ({cursor.rowcount} compra(s) que já tinham conta a pagar marcadas)")
+except mysql.connector.Error as err:
+    if err.errno != 1060:   # 1060: a coluna já existe
+        print(f"Ignorado erro ao criar criado_tit_ap em pedidos_compra: {err}")
+
 
 def _ean13_interno(numero):
     doze = f"200{int(numero):09d}"

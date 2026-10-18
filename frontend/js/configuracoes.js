@@ -1832,25 +1832,18 @@ async function testarWebhook() {
         let sucesso = 0;
         let falha = 0;
 
-        // Envia para cada vendedor
+        // Envia para cada vendedor. Quem chama o webhook é o servidor, com a URL e o "Ativo" já SALVOS (o webhook pode
+        // ser um endereço que só o servidor alcança, como o middleware do Evolution)
+        let motivo = '';
         for (const vendedor of vendedoresComTelefone) {
             try {
-                const response = await fetch(webhookUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        telefone: vendedor.telefone,
-                        mensagem: mensagemTeste,
-                        timestamp: new Date().toISOString()
-                    })
-                });
+                const resultado = await apiPost('/api/whatsapp/enviar', { telefone: vendedor.telefone, mensagem: mensagemTeste });
 
-                if (response.ok) {
+                if (resultado && resultado.enviado) {
                     sucesso++;
                 } else {
                     falha++;
+                    motivo = (resultado && resultado.motivo) || motivo;
                 }
             } catch (error) {
                 console.error(`Erro ao enviar para ${vendedor.telefone}:`, error);
@@ -1858,7 +1851,8 @@ async function testarWebhook() {
             }
         }
 
-        alert(`Teste de webhook concluído!\n\n✅ Sucesso: ${sucesso}\n❌ Falha: ${falha}\n\nTotal de vendedores: ${vendedoresComTelefone.length}`);
+        alert(`Teste de webhook concluído!\n\n✅ Sucesso: ${sucesso}\n❌ Falha: ${falha}\n\nTotal de vendedores: ${vendedoresComTelefone.length}` +
+              (motivo ? `\n\n${motivo}. O teste usa a URL e o "Ativo" já salvos.` : ''));
     } catch (error) {
         console.error('Erro ao testar webhook:', error);
         alert('Erro ao testar webhook. Verifique a URL e tente novamente.');

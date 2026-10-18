@@ -151,32 +151,21 @@ function montarMensagemMultiplosProdutos(tipoMovimento, produtos, dadosPedido = 
 }
 
 /**
- * Envia uma mensagem via webhook para um vendedor específico
- * @param {string} webhookUrl - URL do webhook
+ * Envia uma mensagem via webhook para um vendedor específico. Quem chama o webhook é o servidor
+ * (/api/whatsapp/enviar): ele pode ser um endereço que só o servidor alcança (o middleware do Evolution).
+ * @param {string} webhookUrl - URL do webhook (o servidor usa a das Configurações)
  * @param {string} telefone - Telefone do vendedor
  * @param {string} mensagem - Mensagem a ser enviada
  * @returns {Promise<boolean>}
  */
 async function enviarWebhook(webhookUrl, telefone, mensagem) {
     try {
-        const payload = {
-            telefone: telefone,
-            mensagem: mensagem,
-            timestamp: new Date().toISOString()
-        };
-        
-        const response = await fetch(webhookUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-        
-        if (response.ok) {
+        const resultado = await apiPost('/api/whatsapp/enviar', { telefone: telefone, mensagem: mensagem });
+
+        if (resultado && resultado.enviado) {
             return true;
         } else {
-            console.error(`[Webhook] Erro ao enviar para ${telefone}: ${response.status}`);
+            console.error(`[Webhook] Erro ao enviar para ${telefone}:`, resultado && (resultado.motivo || resultado.status));
             return false;
         }
     } catch (error) {

@@ -52,6 +52,7 @@ import routers.autopost_ia as autopost_ia
 import routers.transcricao as transcricao
 import routers.orcamentos as orcamentos
 import routers.ia as ia
+import routers.whatsapp as whatsapp
 
 from permissoes import permissao_modulo
 
@@ -243,6 +244,7 @@ app.include_router(autopost_ia.router, prefix="/api/autopost/ia", tags=["AutoPos
 app.include_router(transcricao.router, prefix="/api/transcricao", tags=["Transcrição de Áudio"])
 app.include_router(orcamentos.router, prefix="/api/orcamentos", tags=["Orçamentos"], dependencies=permissao_modulo("orcamentos"))
 app.include_router(ia.router, prefix="/api/ia", tags=["IA"], dependencies=permissao_modulo("ia"))
+app.include_router(whatsapp.router, prefix="/api/whatsapp", tags=["WhatsApp"])
 
 # Configuração para servir arquivos estáticos (uploads)
 import os

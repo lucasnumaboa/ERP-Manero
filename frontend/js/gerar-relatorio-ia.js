@@ -875,21 +875,10 @@ async function enviarRelatorioWhatsApp(mensagem) {
 
         for (const vendedor of vendedoresComTelefone) {
             try {
-                const payload = {
-                    telefone: vendedor.telefone,
-                    mensagem: mensagem,
-                    timestamp: new Date().toISOString()
-                };
+                // o servidor chama o webhook das Configurações (pode ser um endereço que só ele alcança)
+                const resultado = await apiPost('/api/whatsapp/enviar', { telefone: vendedor.telefone, mensagem: mensagem });
 
-                const response = await fetch(webhookUrl.valor, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                if (response.ok) {
+                if (resultado && resultado.enviado) {
                     sucesso++;
                 } else {
                     falha++;
