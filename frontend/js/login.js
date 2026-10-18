@@ -36,10 +36,36 @@ document.addEventListener('DOMContentLoaded', function () {
             if (emailInput) emailInput.value = savedEmail;
             if (rememberMe) rememberMe.checked = true;
             if (passwordInput) passwordInput.focus();
+            preencherSenhaSalva(savedEmail);
         }
     }
 
-    // Salva apenas o e-mail; a senha fica a cargo do gerenciador de senhas do navegador
+    // "Lembrar e-mail e senha": o e-mail fica aqui (localStorage) e a senha vai para o gerenciador de senhas do
+    // navegador, que a guarda criptografada (Chrome/Edge/Android pela Credential Management API; no iPhone o
+    // Chaves do iCloud usa o autocomplete do formulário). O ERP nunca grava a senha.
+    async function preencherSenhaSalva(email) {
+        if (!window.PasswordCredential || !navigator.credentials || !passwordInput) return;
+        try {
+            const salva = await navigator.credentials.get({ password: true, mediation: 'optional' });
+            if (salva && salva.password && (!emailInput.value || emailInput.value === salva.id || emailInput.value === email)) {
+                emailInput.value = salva.id;
+                passwordInput.value = salva.password;
+            }
+        } catch (e) { /* nenhuma senha salva ou o navegador não deixou */ }
+    }
+
+    async function guardarSenhaNoNavegador(email, password) {
+        if (!rememberMe || !rememberMe.checked || !window.PasswordCredential || !navigator.credentials) return;
+        try {
+            // no máximo 3 s: o aviso "Salvar senha?" do navegador não pode segurar a entrada no ERP
+            await Promise.race([
+                navigator.credentials.store(new PasswordCredential({ id: email, password, name: email })),
+                new Promise(ok => setTimeout(ok, 3000)),
+            ]);
+        } catch (e) { /* o navegador recusou ou não tem gerenciador de senhas */ }
+    }
+
+    // Salva o e-mail; a senha vai para o gerenciador de senhas do navegador (guardarSenhaNoNavegador)
     function saveCredentials(email) {
         if (rememberMe && rememberMe.checked) {
             localStorage.setItem('erp_remember_email', email);
@@ -141,8 +167,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 localStorage.setItem('erp_token', data.access_token);
                 localStorage.setItem('erp_token_type', data.token_type);
 
-                // Salvar credenciais se "lembrar senha" estiver marcado
-                saveCredentials(email, password);
+                // "Lembrar e-mail e senha": e-mail aqui, senha no gerenciador de senhas do navegador
+                saveCredentials(email);
+                await guardarSenhaNoNavegador(email, password);
 
                 // Exibir mensagem de sucesso
                 loginMessage.textContent = 'Login realizado com sucesso! Redirecionando...';

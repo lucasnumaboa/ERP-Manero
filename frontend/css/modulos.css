@@ -1656,5 +1656,17 @@ body.modal-open {
 .leitor-camera.leu .leitor-camera-mira { border-color: #2ecc71; background: rgba(46, 204, 113, 0.25); }
 .leitor-camera-status { margin: 0; text-align: center; font-size: 16px; min-height: 1.4em; overflow-wrap: anywhere; }
 .leitor-camera-pronto { width: 100%; max-width: 640px; padding: 14px; font-size: 17px; }
+.leitor-camera { gap: 10px; }
+.leitor-camera-video { cursor: crosshair; }
+.leitor-camera-controles { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%; max-width: 640px; }
+.leitor-camera-controles:empty { display: none; }
+.leitor-camera-controles button { min-width: 52px; padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.08); color: #e6f1ff; font-size: 15px; cursor: pointer; }
+.leitor-camera-controles button.ativo { background: rgba(100, 255, 218, 0.25); border-color: #64ffda; color: #64ffda; }
+.leitor-camera-dica { margin: 0; text-align: center; font-size: 13px; opacity: 0.75; }
+.leitor-camera-info { margin: 0; text-align: center; font-size: 11px; opacity: 0.5; }
+.leitor-camera-foco { position: absolute; width: 64px; height: 64px; margin: -32px 0 0 -32px; border: 2px solid #fff; border-radius: 50%;
+    pointer-events: none; animation: leitorCameraFoco 0.8s ease-out forwards; }
+@keyframes leitorCameraFoco { from { transform: scale(1.5); opacity: 1; } to { transform: scale(1); opacity: 0; } }
 body.leitor-camera-aberto #pcwBotao,
 body.leitor-camera-aberto #sessionTimerBar { display: none !important; }
