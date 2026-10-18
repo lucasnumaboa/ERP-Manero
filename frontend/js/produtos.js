@@ -838,6 +838,7 @@ function openProdutoModal(produtoId = null) {
 
             // Gera o próximo código de produto automaticamente
             gerarProximoCodigoProduto();
+            sugerirEanProduto();
         }
 
         // Resetar abas para a primeira
@@ -914,6 +915,9 @@ function preencherFormularioProduto(produto, produtoId) {
         // Verifica se os elementos existem antes de definir seus valores
         const codigoInput = document.getElementById('codigo');
         if (codigoInput) codigoInput.value = produto.codigo || '';
+
+        const eanInput = document.getElementById('ean13');
+        if (eanInput) eanInput.value = produto.ean13 || '';
 
         const nomeInput = document.getElementById('nome');
         if (nomeInput) nomeInput.value = produto.nome || '';
@@ -1018,6 +1022,7 @@ async function saveProduto() {
 
         // Coleta os dados do formulário
         const codigo = document.getElementById('codigo')?.value || '';
+        const ean13 = (document.getElementById('ean13')?.value || '').replace(/\D/g, '');
         const nome = document.getElementById('nome')?.value || '';
         const descricao = document.getElementById('descricao')?.value || '';
         const instrucoes_duvidas = document.getElementById('instrucoes_duvidas')?.value || '';
@@ -1127,6 +1132,7 @@ async function saveProduto() {
         // Cria FormData para envio
         const formData = new FormData();
         formData.append('codigo', codigo);
+        formData.append('ean13', ean13);
         formData.append('nome', nome);
         formData.append('descricao', descricao);
         formData.append('instrucoes_duvidas', instrucoes_duvidas);
@@ -1165,6 +1171,13 @@ async function saveProduto() {
             esconderLoadingProduto();
             return;
         }
+        const erroEan = conferirEan13(ean13);
+        if (erroEan) {
+            alert(erroEan);
+            document.getElementById('ean13')?.focus();
+            esconderLoadingProduto();
+            return;
+        }
 
         // Validações numéricas (preco_custo não é validado pois é opcional e já tem default 0)
         if (isNaN(preco_venda)) {
@@ -1200,7 +1213,7 @@ async function saveProduto() {
             } else {
                 // Se não tiver imagens nem vídeo novos, usar PUT normal com JSON
                 const jsonData = {
-                    codigo, nome, descricao, instrucoes_duvidas, preco_custo, preco_venda,
+                    codigo, ean13, nome, descricao, instrucoes_duvidas, preco_custo, preco_venda,
                     estoque_minimo, categoria_id, tipo_produto, comissao, faturavel, post_olx, post_facebook, ativo, usuario_id,
                     taxa_armazenagem_tipo, taxa_armazenagem_valor
                 };
@@ -1260,6 +1273,28 @@ async function saveProduto() {
 }
 
 // Gera o próximo código de produto automaticamente
+// EAN-13: 13 números com o último sendo o dígito verificador. Devolve a mensagem de erro ou ''.
+function conferirEan13(ean) {
+    if (!/^[0-9]{13}$/.test(ean)) return 'O EAN-13 precisa ter 13 números.';
+    let soma = 0;
+    for (let i = 0; i < 12; i++) soma += Number(ean[i]) * (i % 2 ? 3 : 1);
+    const digito = (10 - (soma % 10)) % 10;
+    if (Number(ean[12]) !== digito) return `EAN-13 inválido: o último número (dígito verificador) devia ser ${digito}.`;
+    return '';
+}
+
+// Produto novo: o próximo EAN-13 interno livre (prefixo 200); a pessoa pode trocar pelo da embalagem
+async function sugerirEanProduto() {
+    const campo = document.getElementById('ean13');
+    if (!campo) return;
+    try {
+        const r = await apiGet('/api/produtos/ean/sugestao');
+        if (r && r.ean13 && !campo.value) campo.value = r.ean13;
+    } catch (e) {
+        // sem sugestão: a pessoa digita; o servidor gera um se vier vazio
+    }
+}
+
 function gerarProximoCodigoProduto() {
 
     try {

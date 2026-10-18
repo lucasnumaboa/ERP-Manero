@@ -3,6 +3,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import List, Optional
 from database import get_db_cursor
+import ean
 from estoque_util import baixar_estoque, somar_estoque
 from auth import get_current_user
 from models import UserInDB
@@ -117,6 +118,7 @@ def _remover_arquivos_upload(caminhos_relativos: str, remover_thumb: bool = Fals
 # Modelos Pydantic
 class ProdutoBase(BaseModel):
     codigo: str
+    ean13: Optional[str] = None
     nome: str
     descricao: Optional[str] = None
     preco_custo: float
@@ -135,6 +137,7 @@ class ProdutoCreate(ProdutoBase):
 
 class ProdutoUpdate(BaseModel):
     codigo: Optional[str] = None
+    ean13: Optional[str] = None
     nome: Optional[str] = None
     descricao: Optional[str] = None
     preco_custo: Optional[float] = None
@@ -170,6 +173,13 @@ class Produto(ProdutoBase):
     taxa_armazenagem_valor: Optional[float] = None
 
 # Rotas
+@router.get("/ean/sugestao")
+async def sugerir_ean(current_user: UserInDB = Depends(get_current_user)):
+    """Próximo EAN-13 interno livre, para já vir preenchido no cadastro (a pessoa pode trocar)."""
+    with get_db_cursor() as cursor:
+        return {"ean13": ean.proximo_interno(cursor)}
+
+
 @router.get("/", response_model=List[Produto])
 async def listar_produtos(
     ativo: Optional[bool] = None,
@@ -446,6 +456,7 @@ async def obter_produto(
 async def criar_produto(
     codigo: str = Form(...),
     nome: str = Form(...),
+    ean13: Optional[str] = Form(None),
     descricao: str = Form(None),
     instrucoes_duvidas: str = Form(None),
     preco_custo: float = Form(...),
@@ -482,6 +493,8 @@ async def criar_produto(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Código já está em uso"
             )
+        # EAN-13 obrigatório: o informado é conferido; sem ele, o próximo interno livre (cadastro em massa)
+        ean13 = ean.validar(cursor, ean13) if (ean13 or "").strip() else ean.proximo_interno(cursor)
 
         # Verifica se a categoria existe
         cursor.execute(
@@ -577,15 +590,15 @@ async def criar_produto(
         cursor.execute(
             """
             INSERT INTO produtos (
-                codigo, nome, descricao, instrucoes_duvidas, preco_custo, preco_venda,
+                codigo, ean13, nome, descricao, instrucoes_duvidas, preco_custo, preco_venda,
                 estoque_atual, estoque_minimo, categoria_id, tipo_produto,
                 comissao, caminho_imagem, caminho_video, faturavel, post_olx, post_facebook, ativo,
                 usuario_id, deposito_id, taxa_armazenagem_tipo, taxa_armazenagem_valor
             )
-            VALUES (%s, %s, %s, %s, %s, %s, 0, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, 0, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
-                codigo, nome, descricao, instrucoes_duvidas, preco_custo, preco_venda,
+                codigo, ean13, nome, descricao, instrucoes_duvidas, preco_custo, preco_venda,
                 estoque_minimo, categoria_id, tipo_produto, comissao,
                 caminho_imagem, caminho_video, faturavel, post_olx, post_facebook, ativo,
                 current_user.id, deposito_id, taxa_armazenagem_tipo, taxa_armazenagem_valor
@@ -639,7 +652,9 @@ async def atualizar_produto(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Código já está em uso por outro produto"
                 )
-        
+        if produto.ean13 is not None:
+            produto.ean13 = ean.validar(cursor, produto.ean13, produto_id)
+
         # Verifica se a categoria existe
         if produto.categoria_id:
             cursor.execute(
@@ -668,6 +683,8 @@ async def atualizar_produto(
     update_data = {}
     if produto.codigo is not None:
         update_data["codigo"] = produto.codigo
+    if produto.ean13 is not None:
+        update_data["ean13"] = produto.ean13
     if produto.nome is not None:
         update_data["nome"] = produto.nome
     if produto.descricao is not None:
@@ -745,6 +762,7 @@ async def upload_imagens_produto(
     produto_id: int,
     codigo: str = Form(...),
     nome: str = Form(...),
+    ean13: Optional[str] = Form(None),
     descricao: str = Form(None),
     instrucoes_duvidas: str = Form(None),
     preco_custo: float = Form(...),
@@ -795,6 +813,11 @@ async def upload_imagens_produto(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Código já está em uso por outro produto"
             )
+        if (ean13 or "").strip():
+            ean13 = ean.validar(cursor, ean13, produto_id)
+        else:   # sem EAN no formulário: mantém o que o produto já tem
+            cursor.execute("SELECT ean13 FROM produtos WHERE id = %s", (produto_id,))
+            ean13 = (cursor.fetchone() or {}).get("ean13") or ean.proximo_interno(cursor)
 
         # Verifica se a categoria existe
         cursor.execute(
@@ -891,6 +914,7 @@ async def upload_imagens_produto(
             """
             UPDATE produtos SET
                 codigo = %s,
+                ean13 = %s,
                 nome = %s,
                 descricao = %s,
                 instrucoes_duvidas = %s,
@@ -912,7 +936,7 @@ async def upload_imagens_produto(
             WHERE id = %s
             """,
             (
-                codigo, nome, descricao, instrucoes_duvidas, preco_custo, preco_venda,
+                codigo, ean13, nome, descricao, instrucoes_duvidas, preco_custo, preco_venda,
                 estoque_minimo, categoria_id, tipo_produto, comissao,
                 caminho_imagem, caminho_video, faturavel, post_olx, post_facebook, ativo,
                 deposito_id, taxa_armazenagem_tipo, taxa_armazenagem_valor, produto_id
@@ -948,9 +972,9 @@ async def obter_produto_por_codigo(
     Obtém os detalhes de um produto pelo seu código.
     """
     with get_db_cursor() as cursor:
-        cursor.execute(
-            "SELECT * FROM produtos WHERE codigo = %s",
-            (codigo,)
+        cursor.execute(   # o código do ERP ou o EAN-13 lido no código de barras da etiqueta
+            "SELECT * FROM produtos WHERE codigo = %s OR ean13 = %s ORDER BY codigo = %s DESC LIMIT 1",
+            (codigo, codigo, codigo)
         )
         produto = cursor.fetchone()
     

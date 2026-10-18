@@ -1637,3 +1637,9 @@ body.modal-open {
 .tabela-texto-longo td {
     overflow-wrap: anywhere;
 }
+
+/* ---------- etiqueta de código de barras (estoque) ---------- */
+.etiqueta-modal { max-width: 480px; }
+.etiqueta-previa { background: #fff; border: 1px solid #d0d7e2; border-radius: 8px; padding: 10px; text-align: center; }
+.etiqueta-previa canvas { width: 100%; max-width: 400px; height: auto; image-rendering: pixelated; }
+.etiqueta-info { font-size: 13px; color: #6b7a90; margin: 8px 0; }

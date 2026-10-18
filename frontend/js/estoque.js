@@ -399,6 +399,11 @@ async function displayEstoque(produtos) {
                 </button>
             `;
         }
+        actionButtons += `
+            <button class="btn-icon" onclick="abrirEtiqueta(${produto.id})" title="Imprimir etiqueta (código de barras)">
+                <i class="fas fa-print"></i>
+            </button>
+        `;
 
         // A comissão já está em reais (valor fixo)
         const comissaoReais = produto.comissao || 0;
@@ -501,6 +506,11 @@ async function displayEstoqueGrid(produtos) {
                 </button>
             `;
         }
+        actionButtons += `
+            <button class="btn-icon" onclick="abrirEtiqueta(${produto.id})" title="Imprimir etiqueta (código de barras)">
+                <i class="fas fa-print"></i>
+            </button>
+        `;
 
         // Determina a classe de cor do estoque
         const estoqueClass = produto.estoque_atual < produto.estoque_minimo ? 'text-danger' :
@@ -585,6 +595,11 @@ async function displayEstoqueCompact(produtos) {
                 </button>
             `;
         }
+        actionButtons += `
+            <button class="btn-icon btn-sm" onclick="abrirEtiqueta(${produto.id})" title="Imprimir etiqueta (código de barras)">
+                <i class="fas fa-print"></i>
+            </button>
+        `;
 
         row.innerHTML = `
             <td>${escapeHtml(produto.codigo || '-')}</td>
@@ -997,6 +1012,73 @@ function openNovaMovimentacao() {
 }
 
 // Abre o modal para adicionar uma nova movimentação
+// ---------- etiqueta com código de barras (Niimbot D110 pelo Bluetooth deste computador, js/niimbot.js) ----------
+let etiquetaProduto = null;
+
+async function abrirEtiqueta(produtoId) {
+    let produto = loadedProducts.find(p => p.id === produtoId);
+    try {
+        produto = await apiGet(`/api/produtos/${produtoId}`) || produto;   // EAN-13 sempre o mais novo
+    } catch (e) { /* fica com o da lista */ }
+    if (!produto) return;
+    if (!produto.ean13) {
+        alert('Este produto ainda não tem EAN-13. Abra o produto em Produtos, confira o EAN-13 e salve.');
+        return;
+    }
+    etiquetaProduto = produto;
+    document.getElementById('etiquetaTitulo').value = (produto.nome || '').slice(0, 40);
+    document.getElementById('etiquetaCopias').value = 1;
+    document.getElementById('etiquetaEan').textContent = produto.ean13;
+    document.getElementById('etiquetaSituacao').textContent = Niimbot.disponivel()
+        ? (Niimbot.nomeImpressora() ? `Impressora: ${Niimbot.nomeImpressora()}` : 'Na 1ª impressão o navegador mostra a lista do Bluetooth: escolha a D110.')
+        : 'Este navegador não imprime pelo Bluetooth: use o Google Chrome ou o Microsoft Edge no computador.';
+    document.getElementById('btnImprimirEtiqueta').disabled = !Niimbot.disponivel();
+    desenharEtiquetaAtual();
+    document.getElementById('etiquetaModal').style.display = 'flex';
+}
+
+function desenharEtiquetaAtual() {
+    if (!etiquetaProduto) return;
+    try {
+        Niimbot.desenharEtiqueta(document.getElementById('etiquetaPreview'), {
+            titulo: document.getElementById('etiquetaTitulo').value, ean: etiquetaProduto.ean13,
+        });
+    } catch (e) {
+        document.getElementById('etiquetaSituacao').textContent = e.message;
+    }
+}
+
+async function imprimirEtiquetaAtual() {
+    const botao = document.getElementById('btnImprimirEtiqueta');
+    const situacao = document.getElementById('etiquetaSituacao');
+    const copias = Math.max(1, Math.min(99, parseInt(document.getElementById('etiquetaCopias').value, 10) || 1));
+    botao.disabled = true;
+    try {
+        desenharEtiquetaAtual();
+        situacao.textContent = 'Conectando na impressora…';
+        const nome = await Niimbot.conectar();
+        situacao.textContent = `Imprimindo em ${nome || 'D110'}…`;
+        await Niimbot.imprimir(document.getElementById('etiquetaPreview'), {
+            copias,
+            aoAndar: p => { situacao.textContent = `Imprimindo em ${nome || 'D110'}… ${Math.round(p * 100)}%`; },
+        });
+        situacao.textContent = `Pronto: ${copias} etiqueta(s) enviada(s) para ${nome || 'a D110'}.`;
+    } catch (e) {
+        const cancelou = e && (e.name === 'NotFoundError' || /cancel/i.test(e.message || ''));
+        situacao.textContent = cancelou ? 'Nenhuma impressora escolhida.' : `Não imprimiu: ${e.message || e}`;
+    } finally {
+        botao.disabled = false;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const titulo = document.getElementById('etiquetaTitulo');
+    if (!titulo) return;
+    titulo.addEventListener('input', desenharEtiquetaAtual);
+    document.getElementById('btnImprimirEtiqueta').addEventListener('click', imprimirEtiquetaAtual);
+    document.getElementById('btnFecharEtiqueta').addEventListener('click', () => closeModal('etiquetaModal'));
+});
+
 function addMovimentacao(produtoId) {
     // Limpa o formulário
     document.getElementById('movimentacaoForm').reset();

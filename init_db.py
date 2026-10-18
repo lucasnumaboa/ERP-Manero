@@ -127,6 +127,7 @@ tables = {
     CREATE TABLE IF NOT EXISTS produtos (
         id INT AUTO_INCREMENT PRIMARY KEY,
         codigo VARCHAR(50) NOT NULL UNIQUE,
+        ean13 VARCHAR(13) NULL UNIQUE,
         nome VARCHAR(100) NOT NULL,
         descricao TEXT,
         instrucoes_duvidas TEXT,
@@ -1106,6 +1107,37 @@ try:
 except mysql.connector.Error as err:
     if err.errno != 1060:   # 1060: a coluna já existe
         print(f"Ignorado erro ao criar versao_app em softwares: {err}")
+
+# EAN-13 dos produtos (obrigatório pela tela/API; quem não tem ganha um interno 200 + id + dígito, ver backend/ean.py)
+try:
+    cursor.execute("ALTER TABLE produtos ADD COLUMN ean13 VARCHAR(13) NULL UNIQUE AFTER codigo")
+    conn.commit()
+    print("Coluna ean13 criada em produtos")
+except mysql.connector.Error as err:
+    if err.errno != 1060:   # 1060: a coluna já existe
+        print(f"Ignorado erro ao criar ean13 em produtos: {err}")
+
+
+def _ean13_interno(numero):
+    doze = f"200{int(numero):09d}"
+    soma = sum(int(d) * (3 if i % 2 else 1) for i, d in enumerate(doze))
+    return doze + str((10 - soma % 10) % 10)
+
+
+try:
+    cursor.execute("SELECT id FROM produtos WHERE ean13 IS NULL OR ean13 = '' ORDER BY id")
+    sem_ean = [linha[0] for linha in cursor.fetchall()]
+    for produto_id in sem_ean:
+        cursor.execute("SELECT id FROM produtos WHERE ean13 = %s", (_ean13_interno(produto_id),))
+        if cursor.fetchone():   # alguém já digitou esse interno em outro produto: fica para a tela resolver
+            print(f"EAN interno do produto {produto_id} já está em uso; ficou sem EAN")
+            continue
+        cursor.execute("UPDATE produtos SET ean13 = %s WHERE id = %s", (_ean13_interno(produto_id), produto_id))
+    conn.commit()
+    if sem_ean:
+        print(f"EAN-13 interno gerado para {len(sem_ean)} produto(s)")
+except mysql.connector.Error as err:
+    print(f"Ignorado erro ao gerar EAN-13 dos produtos: {err}")
 
 # Insere um usuário administrador padrão (senha: admin123)
 try:

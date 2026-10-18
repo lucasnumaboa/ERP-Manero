@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="css/styles.css?v=4a2ec3f312">
     <link rel="stylesheet" href="css/permissions.css?v=f1df341f0a">
     <link rel="stylesheet" href="css/dashboard.css?v=1c79918a68">
-    <link rel="stylesheet" href="css/modulos.css?v=fdd4166201">
+    <link rel="stylesheet" href="css/modulos.css?v=552750208f">
     <link rel="stylesheet" href="css/produtos.css?v=2d4ef86bcf">
     <link rel="stylesheet" href="css/submenu.css?v=fc4e2a67d9">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -218,6 +218,11 @@
                             <div class="form-group">
                                 <label for="codigo">Código</label>
                                 <input type="text" id="codigo" name="codigo" required readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="ean13">EAN-13 (código de barras)</label>
+                                <input type="text" id="ean13" name="ean13" required inputmode="numeric" maxlength="13"
+                                    pattern="[0-9]{13}" title="13 números. Já vem um código interno; troque pelo da embalagem se tiver.">
                             </div>
                             <div class="form-group">
                                 <label for="nome">Nome</label>
@@ -881,7 +886,7 @@
     <script src="js/webhook-estoque.js?v=dedbcd83a1"></script>
     <script src="js/ia.js?v=3da10578a6"></script>
     <script src="js/gerar-descricao-ia.js?v=45024af144"></script>
-    <script src="js/produtos.js?v=df74fd10ea"></script>
+    <script src="js/produtos.js?v=4dbd45d1ce"></script>
     <script src="js/cadastro-massa.js?v=7cdc29885d"></script>
     <script src="js/setupModals.js?v=f3b8a1828f"></script>
     <script src="js/filtro-pesquisa.js?v=687a03eaf8"></script>

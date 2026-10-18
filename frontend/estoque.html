@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="css/styles.css?v=4a2ec3f312">
     <link rel="stylesheet" href="css/permissions.css?v=f1df341f0a">
     <link rel="stylesheet" href="css/dashboard.css?v=1c79918a68">
-    <link rel="stylesheet" href="css/modulos.css?v=fdd4166201">
+    <link rel="stylesheet" href="css/modulos.css?v=552750208f">
     <link rel="stylesheet" href="css/submenu.css?v=fc4e2a67d9">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="css/theme-dark.css?v=0137d572a5">
@@ -1131,6 +1131,33 @@
         </div>
     </div>
 
+    <!-- Modal de Etiqueta (Niimbot D110 pelo Bluetooth deste computador) -->
+    <div class="modal" id="etiquetaModal">
+        <div class="modal-content etiqueta-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-print"></i> Imprimir etiqueta</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="etiqueta-previa"><canvas id="etiquetaPreview" width="400" height="120"></canvas></div>
+                <p class="etiqueta-info">EAN-13: <b id="etiquetaEan"></b> · etiqueta 50 x 15 mm (T15x50)</p>
+                <div class="form-group">
+                    <label for="etiquetaTitulo">Texto em cima do código</label>
+                    <input type="text" id="etiquetaTitulo" maxlength="40">
+                </div>
+                <div class="form-group">
+                    <label for="etiquetaCopias">Quantas etiquetas</label>
+                    <input type="number" id="etiquetaCopias" min="1" max="99" value="1">
+                </div>
+                <p class="etiqueta-info" id="etiquetaSituacao"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="btnFecharEtiqueta">Fechar</button>
+                <button class="btn-primary" id="btnImprimirEtiqueta"><i class="fas fa-print"></i> Imprimir</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de Exportar Catálogo -->
     <div class="modal" id="exportarCatalogoModal">
         <div class="modal-content" style="max-width: 900px; max-height: 90vh;">
@@ -1464,7 +1491,8 @@
     <script src="js/permissions.js?v=8ad3de3eb5"></script>
     <script src="js/setupModals.js?v=f3b8a1828f"></script>
     <script src="js/webhook-estoque.js?v=dedbcd83a1"></script>
-    <script src="js/estoque.js?v=307e714cce"></script>
+    <script src="js/niimbot.js?v=f985dfacd9"></script>
+    <script src="js/estoque.js?v=36aa63586d"></script>
     <script src="js/exportar-catalogo.js?v=7ba97cb333"></script>
     <script src="js/internal-animation.js?v=7d7314b65d"></script>
     <script src="js/theme-switcher.js?v=2435969ea2"></script>
