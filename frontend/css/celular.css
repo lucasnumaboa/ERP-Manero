@@ -315,6 +315,25 @@
     .modal-footer {
         flex-wrap: wrap;
         gap: 8px;
+        align-items: stretch !important;
+    }
+
+    .modal-footer > button,
+    .modal-footer > a {
+        flex: 1 1 0;
+        min-width: 120px;
+        min-height: 46px;
+        margin: 0 !important;
+        justify-content: center;
+    }
+
+    /* lista dentro da janela (itens da venda etc.): sem altura máxima, a própria janela rola */
+    .modal .table-container,
+    .modal .table-container-compact,
+    .modal .tabela-container,
+    .modal .table-responsive {
+        max-height: none !important;
+        overflow: visible !important;
     }
 
     /* ---------- Tabelas em cartões (.tabela-cartoes) ---------- */
@@ -604,6 +623,10 @@
         column-gap: 8px;
     }
 
+    table.tabela-cartoes td[colspan] {
+        justify-content: center !important;   /* "nenhum registro" / carregando */
+    }
+
     /* dashboard: resumo em 2 colunas (o ícone em cima do valor) e o filtro de mês numa linha */
     .summary-section {
         padding: 14px !important;
@@ -660,5 +683,258 @@
     .date-filter input {
         width: 100% !important;
         min-width: 0;
+    }
+
+    /* telas sem o .content (ex.: Calendário): o mesmo recuo, senão o título fica embaixo do botão ☰ */
+    body.tem-menu-celular .main-content > :first-child:not(.content) {
+        padding: 60px 12px 96px !important;
+        margin: 0 !important;
+        max-width: 100%;
+    }
+
+    body.tem-menu-celular .main-content > :first-child:not(.content) > h1 {
+        font-size: 1.35rem !important;
+    }
+
+    /* cartões de configuração sem cabeçalho próprio: recuo no cartão, não em cada linha e campo */
+    .settings-card:not(:has(> .card-header)) {
+        padding: 16px !important;
+        margin: 12px 0 !important;
+    }
+
+    .settings-card .form-row,
+    .settings-card .form-group,
+    .card-body .form-row,
+    .card-body .form-group {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    .settings-card .form-row,
+    .card-body .form-row {
+        margin-bottom: 0 !important;
+    }
+
+    .settings-card .form-group,
+    .card-body .form-group {
+        margin-bottom: 14px !important;
+    }
+
+    .card-body .form-group > input,
+    .card-body .form-group > select,
+    .card-body .form-group > textarea {
+        width: 100% !important;
+    }
+
+    .settings-card > h2,
+    .settings-card > h3 {
+        font-size: 1.15rem !important;
+        margin: 0 0 12px !important;
+    }
+
+    /* Calendário: título do painel e o botão de ligar em linhas separadas */
+    .config-header {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .config-header h2 {
+        font-size: 1.05rem !important;
+    }
+
+    /* Controle financeiro: nome da categoria na linha toda; tipo e "Criar" embaixo */
+    .inline-form {
+        display: flex !important;
+        flex-wrap: wrap;
+        gap: 8px !important;
+    }
+
+    .inline-form > input {
+        flex: 1 1 100% !important;
+        min-width: 0;
+    }
+
+    .inline-form > select,
+    .inline-form > button {
+        flex: 1 1 0 !important;
+        min-width: 0;
+    }
+
+    /* Metas: Mês e Ano numa linha, os 4 botões em 2 colunas */
+    .filtros-metas {
+        display: grid !important;
+        grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);
+        gap: 8px !important;
+        align-items: center;
+    }
+
+    .filtros-metas > select {
+        width: 100% !important;
+        min-width: 0;
+    }
+
+    .filtros-metas > button {
+        grid-column: span 2;
+        width: 100%;
+        margin: 0 !important;
+        justify-content: center;
+    }
+
+    /* .card é flex em linha no dashboard.css/modulos.css: cabeçalho e corpo ficavam lado a lado (OLX) */
+    .card:has(> .card-body) {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        padding: 14px !important;
+    }
+
+    .card > .card-body {
+        padding: 12px 0 0 !important;
+        width: 100%;
+    }
+
+    /* Pesquisas OLX: busca e filtro na linha toda, botões em 2 colunas */
+    .toolbar {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px !important;
+        align-items: stretch !important;
+    }
+
+    .toolbar > .search-box,
+    .toolbar > .filter-select {
+        grid-column: 1 / -1;
+    }
+
+    .toolbar > .search-box input,
+    .toolbar > .filter-select select {
+        width: 100% !important;
+    }
+
+    .toolbar > button {
+        width: 100%;
+        margin: 0 !important;
+        justify-content: center;
+        padding: 10px 8px !important;
+        font-size: 14px;
+    }
+
+    /* campo de arquivo (Softwares): ocupa a largura do cartão */
+    input[type="file"] {
+        width: 100%;
+    }
+
+    /* Produtos 3D: rótulo em cima, busca e lista lado a lado */
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 10px;
+    }
+
+    .filter-bar > div {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px 8px !important;
+    }
+
+    .filter-bar > div > label {
+        grid-column: 1 / -1;
+        margin: 4px 0 0 !important;
+        font-size: 12px;
+    }
+
+    .filter-bar > div > input,
+    .filter-bar > div > select {
+        width: 100% !important;
+        min-width: 0;
+    }
+
+    /* Configurações > aba Configurações: o cabeçalho de 35px vira do tamanho dos outros títulos */
+    .configurations-header {
+        padding: 12px !important;
+        margin-bottom: 12px !important;
+    }
+
+    .configurations-header h1 {
+        font-size: 1.3rem !important;
+    }
+
+    .configurations-header > i,
+    .configurations-header .fa,
+    .configurations-header .fas {
+        font-size: 1.6rem !important;
+    }
+
+    /* janelas (modais): começam no topo e o fundo rola. Janela mais alta que a tela ficava centralizada,
+       com o título, as abas e o X para fora da tela (ex.: Nova Venda, que tem overflow: visible) */
+    .modal {
+        align-items: flex-start !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .modal-content {
+        flex-shrink: 0;
+    }
+
+    /* janelas (modais): menos recuo em volta dos campos (eram ~56px de cada lado) */
+    .modal-body,
+    .modal-tab-content {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    .modal .form-row {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        gap: 10px !important;
+    }
+
+    .modal .form-group {
+        padding: 10px !important;
+        margin-bottom: 10px !important;
+    }
+
+    .modal .form-group > input,
+    .modal .form-group > select,
+    .modal .form-group > textarea {
+        width: 100% !important;
+    }
+
+    .modal-header {
+        padding: 12px 14px !important;
+    }
+
+    .modal-header h2,
+    .modal-header h3 {
+        font-size: 1.1rem !important;
+    }
+
+    /* Filamentos 3D: as 4 abas em 2x2 (passavam da borda da tela) */
+    .tabs-filamentos {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px !important;
+    }
+
+    .tabs-filamentos > .tab-btn {
+        width: 100%;
+        margin: 0 !important;
+        justify-content: center;
+    }
+}
+
+
+/* com uma janela aberta, o botão ☰ e o do chat não ficam por cima dela */
+@media (max-width: 768px) {
+    body:has(.modal.active) #botaoMenuCelular,
+    body:has(.modal.active) #pcwBotao,
+    body:has(.modal.active) #sessionTimerBar,
+    body:has(.modal[style*="display: flex"]) #botaoMenuCelular,
+    body:has(.modal[style*="display: flex"]) #pcwBotao,
+    body:has(.modal[style*="display: flex"]) #sessionTimerBar,
+    body:has(.modal[style*="display: block"]) #botaoMenuCelular,
+    body:has(.modal[style*="display: block"]) #pcwBotao,
+    body:has(.modal[style*="display: block"]) #sessionTimerBar {
+        display: none !important;
     }
 }

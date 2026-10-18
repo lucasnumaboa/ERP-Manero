@@ -93,10 +93,13 @@
 
     // Tabelas com .tabela-cartoes viram cartões no celular: cada célula recebe o nome da coluna
     // (data-label), inclusive as linhas que a tela desenha depois, ao carregar ou filtrar.
-    // As listas (.data-table fora de janelas) entram sozinhas; .sem-cartoes deixa uma tabela rolando de lado.
+    // As listas (tabelas com cabeçalho, nas telas e nas janelas) entram sozinhas; .sem-cartoes deixa uma rolando de lado.
     function rotularTabelasEmCartoes() {
-        const marcar = () => document.querySelectorAll('.main-content table.data-table:not(.tabela-cartoes):not(.sem-cartoes)')
-            .forEach(tabela => { if (!tabela.closest('.modal')) tabela.classList.add('tabela-cartoes'); });
+        const marcar = () => document.querySelectorAll('.main-content table:not(.tabela-cartoes):not(.sem-cartoes), .modal table:not(.tabela-cartoes):not(.sem-cartoes)')
+            .forEach(tabela => {
+                // só listas de verdade (com cabeçalho), nas telas e nas janelas
+                if (tabela.querySelector('thead th')) tabela.classList.add('tabela-cartoes');
+            });
         const rotular = (tabela) => {
             const titulos = [...tabela.querySelectorAll('thead th')].map(th => th.textContent.trim());
             tabela.querySelectorAll('tbody tr').forEach(tr => {
